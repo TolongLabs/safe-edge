@@ -295,17 +295,6 @@
       "source_location": "L13"
     },
     {
-      "id": "ref_editorconfig_checker",
-      "label": "editorconfig-checker",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "package.json",
-      "file_type": "concept",
-      "norm_label": "editorconfig-checker",
-      "source_file": "package.json",
-      "source_location": "L14"
-    },
-    {
       "id": "ref_husky",
       "label": "husky",
       "_origin": "ast",
@@ -314,7 +303,7 @@
       "file_type": "concept",
       "norm_label": "husky",
       "source_file": "package.json",
-      "source_location": "L15"
+      "source_location": "L14"
     },
     {
       "id": "ref_lint_staged",
@@ -325,7 +314,7 @@
       "file_type": "concept",
       "norm_label": "lint-staged",
       "source_file": "package.json",
-      "source_location": "L16"
+      "source_location": "L15"
     },
     {
       "id": "ref_prettier",
@@ -336,7 +325,7 @@
       "file_type": "concept",
       "norm_label": "prettier",
       "source_file": "package.json",
-      "source_location": "L17"
+      "source_location": "L16"
     },
     {
       "id": "docs_references_markdown_style_better_is_better_than_best",
@@ -899,17 +888,6 @@
       "source_location": "L13"
     },
     {
-      "id": "package_devdependencies_editorconfig_checker",
-      "label": "editorconfig-checker",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "devDependencies",
-      "file_type": "code",
-      "norm_label": "editorconfig-checker",
-      "source_file": "package.json",
-      "source_location": "L14"
-    },
-    {
       "id": "package_devdependencies_husky",
       "label": "husky",
       "_origin": "ast",
@@ -918,7 +896,7 @@
       "file_type": "code",
       "norm_label": "husky",
       "source_file": "package.json",
-      "source_location": "L15"
+      "source_location": "L14"
     },
     {
       "id": "package_devdependencies_lint_staged",
@@ -929,7 +907,7 @@
       "file_type": "code",
       "norm_label": "lint-staged",
       "source_file": "package.json",
-      "source_location": "L16"
+      "source_location": "L15"
     },
     {
       "id": "package_devdependencies_prettier",
@@ -940,7 +918,7 @@
       "file_type": "code",
       "norm_label": "prettier",
       "source_file": "package.json",
-      "source_location": "L17"
+      "source_location": "L16"
     },
     {
       "id": "docs_agents_andrej_karpathy_skills",
@@ -1252,7 +1230,7 @@
     },
     {
       "source": "package",
-      "target": "ref_editorconfig_checker",
+      "target": "ref_husky",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -1264,7 +1242,7 @@
     },
     {
       "source": "package",
-      "target": "ref_husky",
+      "target": "ref_lint_staged",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -1276,18 +1254,6 @@
     },
     {
       "source": "package",
-      "target": "ref_lint_staged",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "package.json",
-      "source_location": "L16",
-      "weight": 1.0
-    },
-    {
-      "source": "package",
       "target": "ref_prettier",
       "relation": "imports",
       "_origin": "ast",
@@ -1295,7 +1261,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "package.json",
-      "source_location": "L17",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -2092,7 +2058,7 @@
     },
     {
       "source": "package_devdependencies",
-      "target": "package_devdependencies_editorconfig_checker",
+      "target": "package_devdependencies_husky",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -2103,7 +2069,7 @@
     },
     {
       "source": "package_devdependencies",
-      "target": "package_devdependencies_husky",
+      "target": "package_devdependencies_lint_staged",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -2114,24 +2080,13 @@
     },
     {
       "source": "package_devdependencies",
-      "target": "package_devdependencies_lint_staged",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "package.json",
-      "source_location": "L16",
-      "weight": 1.0
-    },
-    {
-      "source": "package_devdependencies",
       "target": "package_devdependencies_prettier",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "package.json",
-      "source_location": "L17",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -2234,5 +2189,6 @@
       "weight": 1.0
     }
   ],
-  "hyperedges": []
+  "hyperedges": [],
+  "built_at_commit": "13e81287bbc710d50b749382207c300aac2154e4"
 }
