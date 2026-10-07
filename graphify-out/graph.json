@@ -28,6 +28,18 @@
       "source_location": "L181"
     },
     {
+      "id": "docs_references_markdown_style_better_is_better_than_best",
+      "label": "Better is better than best",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "better is better than best",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L102"
+    },
+    {
       "id": "docs_references_markdown_style_capitalization",
       "label": "Capitalization",
       "_origin": "ast",
@@ -40,18 +52,6 @@
       "source_location": "L126"
     },
     {
-      "id": "docs_references_markdown_style_delete_dead_documentation",
-      "label": "Delete dead documentation",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Markdown style guide",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "delete dead documentation",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L779"
-    },
-    {
       "id": "docs_references_markdown_style_document_layout",
       "label": "Document layout",
       "_origin": "ast",
@@ -62,42 +62,6 @@
       "norm_label": "document layout",
       "source_file": "docs/references/markdown-style.md",
       "source_location": "L144"
-    },
-    {
-      "id": "docs_references_markdown_style_documentation_best_practices",
-      "label": "Documentation best practices",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Markdown style guide",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "documentation best practices",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L769"
-    },
-    {
-      "id": "docs_references_markdown_style_documentation_is_the_story_of_your_code",
-      "label": "Documentation is the story of your code",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Markdown style guide",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "documentation is the story of your code",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L791"
-    },
-    {
-      "id": "docs_references_markdown_style_duplication_is_evil",
-      "label": "Duplication is evil",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Markdown style guide",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "duplication is evil",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L828"
     },
     {
       "id": "docs_references_markdown_style_images",
@@ -148,6 +112,18 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_references_markdown_style_minimum_viable_documentation",
+      "label": "Minimum viable documentation",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "minimum viable documentation",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L90"
+    },
+    {
       "id": "docs_references_markdown_style_nested_list_spacing",
       "label": "Nested list spacing",
       "_origin": "ast",
@@ -160,6 +136,18 @@
       "source_location": "L351"
     },
     {
+      "id": "docs_references_markdown_style_philosophy",
+      "label": "Philosophy",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "philosophy",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L60"
+    },
+    {
       "id": "docs_references_markdown_style_place_the_contents_list_after_the_introduction",
       "label": "Place the contents list after the introduction",
       "_origin": "ast",
@@ -170,6 +158,30 @@
       "norm_label": "place the contents list after the introduction",
       "source_file": "docs/references/markdown-style.md",
       "source_location": "L198"
+    },
+    {
+      "id": "docs_references_markdown_style_radical_simplicity",
+      "label": "Radical simplicity",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "radical simplicity",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L68"
+    },
+    {
+      "id": "docs_references_markdown_style_readable_source_text",
+      "label": "Readable source text",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "readable source text",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L80"
     },
     {
       "id": "docs_references_markdown_style_see_also",
@@ -230,18 +242,6 @@
       "norm_label": "trailing whitespace",
       "source_file": "docs/references/markdown-style.md",
       "source_location": "L232"
-    },
-    {
-      "id": "docs_references_markdown_style_update_docs_with_code",
-      "label": "Update docs with code",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Markdown style guide",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "update docs with code",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L773"
     },
     {
       "id": "docs_references_markdown_style_use_lazy_numbering_for_long_lists",
@@ -454,64 +454,64 @@
       "source_location": "L16"
     },
     {
-      "id": "docs_references_markdown_style_better_is_better_than_best",
-      "label": "Better is better than best",
+      "id": "docs_references_markdown_style_delete_dead_documentation",
+      "label": "Delete dead documentation",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Philosophy",
+      "community_name": "Documentation best practices",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "better is better than best",
+      "norm_label": "delete dead documentation",
       "source_file": "docs/references/markdown-style.md",
-      "source_location": "L102"
+      "source_location": "L779"
     },
     {
-      "id": "docs_references_markdown_style_minimum_viable_documentation",
-      "label": "Minimum viable documentation",
+      "id": "docs_references_markdown_style_documentation_best_practices",
+      "label": "Documentation best practices",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Philosophy",
+      "community_name": "Documentation best practices",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "minimum viable documentation",
+      "norm_label": "documentation best practices",
       "source_file": "docs/references/markdown-style.md",
-      "source_location": "L90"
+      "source_location": "L769"
     },
     {
-      "id": "docs_references_markdown_style_philosophy",
-      "label": "Philosophy",
+      "id": "docs_references_markdown_style_documentation_is_the_story_of_your_code",
+      "label": "Documentation is the story of your code",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Philosophy",
+      "community_name": "Documentation best practices",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "philosophy",
+      "norm_label": "documentation is the story of your code",
       "source_file": "docs/references/markdown-style.md",
-      "source_location": "L60"
+      "source_location": "L791"
     },
     {
-      "id": "docs_references_markdown_style_radical_simplicity",
-      "label": "Radical simplicity",
+      "id": "docs_references_markdown_style_duplication_is_evil",
+      "label": "Duplication is evil",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Philosophy",
+      "community_name": "Documentation best practices",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "radical simplicity",
+      "norm_label": "duplication is evil",
       "source_file": "docs/references/markdown-style.md",
-      "source_location": "L68"
+      "source_location": "L828"
     },
     {
-      "id": "docs_references_markdown_style_readable_source_text",
-      "label": "Readable source text",
+      "id": "docs_references_markdown_style_update_docs_with_code",
+      "label": "Update docs with code",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Philosophy",
+      "community_name": "Documentation best practices",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "readable source text",
+      "norm_label": "update docs with code",
       "source_file": "docs/references/markdown-style.md",
-      "source_location": "L80"
+      "source_location": "L773"
     },
     {
       "id": "docs_sources_tot_kolaxus_net_privacy_policy_10_public_forums",
@@ -870,6 +870,42 @@
       "node_kind": "page",
       "norm_label": "gemini.md",
       "source_file": "GEMINI.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_tot_kolaxus_net_privacy_policy",
+      "label": "privacy-policy.md",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "Township of Tomorrow",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "privacy-policy.md",
+      "source_file": "docs/sources/tot.kolaxus.net/privacy-policy.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_tot_kolaxus_net_terms_and_conditions",
+      "label": "terms-and-conditions.md",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "Township of Tomorrow",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "terms-and-conditions.md",
+      "source_file": "docs/sources/tot.kolaxus.net/terms-and-conditions.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_tot_kolaxus_net_township_of_tomorrow",
+      "label": "township-of-tomorrow.md",
+      "_origin": "ast",
+      "community": 19,
+      "community_name": "Township of Tomorrow",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "township-of-tomorrow.md",
+      "source_file": "docs/sources/tot.kolaxus.net/township-of-tomorrow.md",
       "source_location": "L1"
     },
     {
@@ -1279,102 +1315,6 @@
       "norm_label": "what should my prototype look like?",
       "source_file": "docs/sources/tot.kolaxus.net/township-of-tomorrow.md",
       "source_location": "L189"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_privacy_policy",
-      "label": "privacy-policy.md",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "privacy-policy.md",
-      "source_file": "docs/sources/tot.kolaxus.net/privacy-policy.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_registration_form",
-      "label": "registration-form.md",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "registration-form.md",
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_registration_form_registration_form",
-      "label": "Registration form",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "registration form",
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_registration_form_see_also",
-      "label": "See also",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "see also",
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L27"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_registration_form_team_details",
-      "label": "Team details",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "team details",
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L11"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_registration_form_team_leader_information",
-      "label": "Team leader information",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "team leader information",
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L18"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_terms_and_conditions",
-      "label": "terms-and-conditions.md",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "terms-and-conditions.md",
-      "source_file": "docs/sources/tot.kolaxus.net/terms-and-conditions.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_sources_tot_kolaxus_net_township_of_tomorrow",
-      "label": "township-of-tomorrow.md",
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "Registration form",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "township-of-tomorrow.md",
-      "source_file": "docs/sources/tot.kolaxus.net/township-of-tomorrow.md",
-      "source_location": "L1"
     },
     {
       "id": "docs_references_markdown_style_code",
@@ -3111,50 +3051,6 @@
       "weight": 1.0
     },
     {
-      "source": "docs_sources_tot_kolaxus_net_registration_form",
-      "target": "docs_sources_tot_kolaxus_net_registration_form_registration_form",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L1",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_sources_tot_kolaxus_net_registration_form_registration_form",
-      "target": "docs_sources_tot_kolaxus_net_registration_form_team_details",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L11",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_sources_tot_kolaxus_net_registration_form_registration_form",
-      "target": "docs_sources_tot_kolaxus_net_registration_form_team_leader_information",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L18",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_sources_tot_kolaxus_net_registration_form_registration_form",
-      "target": "docs_sources_tot_kolaxus_net_registration_form_see_also",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/sources/tot.kolaxus.net/registration-form.md",
-      "source_location": "L27",
-      "weight": 1.0
-    },
-    {
       "source": "docs_sources_tot_kolaxus_net_terms_and_conditions",
       "target": "docs_sources_tot_kolaxus_net_terms_and_conditions_terms_and_conditions",
       "relation": "contains",
@@ -3871,7 +3767,7 @@
     },
     {
       "source": "docs_sources_tot_kolaxus_net_township_of_tomorrow",
-      "target": "docs_sources_tot_kolaxus_net_registration_form",
+      "target": "docs_sources_tot_kolaxus_net_privacy_policy",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -3882,7 +3778,7 @@
     },
     {
       "source": "docs_sources_tot_kolaxus_net_township_of_tomorrow",
-      "target": "docs_sources_tot_kolaxus_net_privacy_policy",
+      "target": "docs_sources_tot_kolaxus_net_terms_and_conditions",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -3890,19 +3786,8 @@
       "source_file": "docs/sources/tot.kolaxus.net/township-of-tomorrow.md",
       "source_location": "L223",
       "weight": 1.0
-    },
-    {
-      "source": "docs_sources_tot_kolaxus_net_township_of_tomorrow",
-      "target": "docs_sources_tot_kolaxus_net_terms_and_conditions",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/sources/tot.kolaxus.net/township-of-tomorrow.md",
-      "source_location": "L224",
-      "weight": 1.0
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "d4ce8e257c32e85fdd84cd298dc6c63c0165ef9c"
+  "built_at_commit": "f03a44594f1ad9128a78b92321f0e2dbb7e357ef"
 }

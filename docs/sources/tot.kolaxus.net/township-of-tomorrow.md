@@ -219,7 +219,6 @@ Your pitch covers two parts:
 
 ## See also
 
-- [Registration form](registration-form.md)
 - [Privacy policy](privacy-policy.md)
 - [Terms and conditions](terms-and-conditions.md)
 - [Original page](https://tot.kolaxus.net/), crawled 8 October 2026
