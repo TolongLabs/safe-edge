@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "graph": "graphify update .",
+    "lint": "EC_VERSION=v4.0.2 editorconfig-checker && prettier --check .",
+    "lint:fix": "prettier --write .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "editorconfig-checker": "^7.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9"
+  }
+}
