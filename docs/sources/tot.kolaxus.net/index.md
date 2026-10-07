@@ -1,102 +1,102 @@
-[Skip to content](https://tot.kolaxus.net/#main)
-
-![Sime Darby Property logo](https://tot.kolaxus.net/sdp.png)Sime Darby Property presents
-
 # Township of Tomorrow
 
-An innovation initiative by Sime Darby Property to transform blueprints into reality.
+Township of Tomorrow is the Sime Darby Property University Hackathon, an innovation initiative by Sime Darby Property to transform blueprints into reality. Sime Darby Property is seeking university talent to shape the next generation of smart townships. Registration opens 11 September 2026.
 
-Sime Darby Property is seeking university talent to shape the next generation of smart townships.
+Contents:
 
-[Register Now!](https://tot.kolaxus.net/register)
+1.  [Building more than townships](#building-more-than-townships)
+    1.  [Together we can](#together-we-can)
+1.  [What is Sime Darby Property University Hackathon?](#what-is-sime-darby-property-university-hackathon)
+1.  [Built by Sime Darby Property, solved by you](#built-by-sime-darby-property-solved-by-you)
+1.  [Challenge theme](#challenge-theme)
+    1.  [People](#people)
+    1.  [Planet](#planet)
+1.  [Who should join?](#who-should-join)
+1.  [How it works](#how-it-works)
+1.  [Key dates](#key-dates)
+1.  [Prizes](#prizes)
+    1.  [More than a hackathon](#more-than-a-hackathon)
+1.  [Frequently asked questions](#frequently-asked-questions)
+    1.  [How do I apply to join?](#how-do-i-apply-to-join)
+    1.  [Do I need a team?](#do-i-need-a-team)
+    1.  [I am not a coder. Can I join?](#i-am-not-a-coder-can-i-join)
+    1.  [Is it open to non-Malaysians?](#is-it-open-to-non-malaysians)
+    1.  [Is there a registration fee?](#is-there-a-registration-fee)
+    1.  [How does the participation mechanism work?](#how-does-the-participation-mechanism-work)
+    1.  [Can we compete in multiple tracks?](#can-we-compete-in-multiple-tracks)
+    1.  [What is the judging criteria?](#what-is-the-judging-criteria)
+    1.  [What should my prototype look like?](#what-should-my-prototype-look-like)
+    1.  [What makes a great submission?](#what-makes-a-great-submission)
+    1.  [What do we need to pitch?](#what-do-we-need-to-pitch)
+1.  [See also](#see-also)
 
-[Scroll to DiscoverScroll to Discover](https://tot.kolaxus.net/#why) Sime Darby PropertyUniversity Hackathon. Registration opens 11 September 2026.
-
-## Building More Than Townships
+## Building more than townships
 
 Tomorrow's townships demand more than great infrastructure. It requires innovative ideas that improve how people live, work, and connect.
 
 Sime Darby Property is looking beyond buildings to discover bold solutions that create smarter, greener, and more inclusive communities.
 
-### Together We Can
+### Together we can
 
-- 01Drive sustainable township innovation
-- 02Solve real-world urban challenges
-- 03Direct access to Sime Darby Property mentors and leadership
-- 04Turn ideas into impact
-
-Sound off
+1. Drive sustainable township innovation.
+2. Solve real-world urban challenges.
+3. Get direct access to Sime Darby Property mentors and leadership.
+4. Turn ideas into impact.
 
 ## What is Sime Darby Property University Hackathon?
 
 An innovation programme where university students collaborate to solve real challenges faced in future township development.
 
-### Over 10–12 weeks, participants will:
+Over 10–12 weeks, participants will:
 
 - Explore real business challenges
 - Learn from industry mentors
 - Develop innovative solutions
 - Pitch to Sime Darby Property leaders
 
-Innovation Power
-
-## Built by Sime Darby Property, Solved by You
+## Built by Sime Darby Property, solved by you
 
 This is more than a competition. Winning solutions are reviewed by Sime Darby Property leadership for potential real-world implementation across the townships we build and operate.
 
-- 01
+1.  **Reviewed by leadership**: Your work lands in front of the Sime Darby Property leadership panel, the people shaping our communities.
+2.  **Path to real-world implementation**: Standout solutions are considered for pilot programmes in live Sime Darby Property townships.
+3.  **Mentorship from the builders**: Learn directly from the teams designing, building, and operating today's townships.
 
-### Reviewed by leadership
+## Challenge theme
 
-Your work lands in front of the Sime Darby Property leadership panel — the people shaping our communities.
-
-- 02
-
-### Path to real-world implementation
-
-Standout solutions are considered for pilot programmes in live Sime Darby Property townships.
-
-- 03
-
-### Mentorship from the builders
-
-Learn directly from the teams designing, building, and operating today's townships.
-
-## Challenge Theme
-
-How might we reimagine the Township of Tomorrow wherepeople, businesses and nature thrive togetherthrough innovation, technology and sustainable living?
+How might we reimagine the Township of Tomorrow where people, businesses and nature thrive together through innovation, technology and sustainable living?
 
 ### People
 
 How might we enable every resident to live healthier, safer, more connected and more fulfilling lives?
 
-1. 01Community wellbeing
-2. 02Safety and security
-3. 03Accessibility and inclusion
-4. 04Getting around (mobility)
-5. 05Digital living
-6. 06Feeling connected to neighbours
-7. 07Healthy lifestyles
+1. Community wellbeing
+2. Safety and security
+3. Accessibility and inclusion
+4. Getting around (mobility)
+5. Digital living
+6. Feeling connected to neighbours
+7. Healthy lifestyles
 
 ### Planet
 
 How might we create townships that regenerate the environment while making sustainable living effortless for communities, residents and businesses?
 
-1. 01Waste management
-2. 02Circular economy (reuse, don't waste)
-3. 03Energy efficiency
-4. 04Water conservation
-5. 05Green transport
-6. 06Biodiversity
-7. 07Climate resilience
+1. Waste management
+2. Circular economy (reuse, don't waste)
+3. Energy efficiency
+4. Water conservation
+5. Green transport
+6. Biodiversity
+7. Climate resilience
 
-## Who Should Join?
+## Who should join?
 
 This Challenge welcomes students from universities across Malaysia who are passionate about creating solutions for the future.
 
 No Challenge experience needed. Bring curiosity, creativity, and a passion for solving real problems.
 
-### Perfect for students in
+Perfect for students in:
 
 - Engineering
 - Architecture
@@ -110,41 +110,15 @@ No Challenge experience needed. Bring curiosity, creativity, and a passion for s
 
 Or any multidisciplinary team with innovative ideas.
 
-## How It Works
+## How it works
 
-1. 01
+1.  **Challenge launch**: Register and form your team of 2–5 people.
+2.  **Innovation sprint**: Research, ideate and develop your solution.
+3.  **Evaluation**: Present your proposal for expert assessment.
+4.  **Top 10 mentoring sprint**: Selected finalists refine their ideas with industry mentors.
+5.  **Grand finale**: Pitch your innovation to Sime Darby Property's leadership panel.
 
-### Challenge Launch
-
-Register and form your team of 2–5 people.
-
-2. 02
-
-### Innovation Sprint
-
-Research, ideate and develop your solution.
-
-3. 03
-
-### Evaluation
-
-Present your proposal for expert assessment.
-
-4. 04
-
-### Top 10 Mentoring Sprint
-
-Selected finalists refine their ideas with industry mentors.
-
-5. 05
-
-### Grand Finale
-
-Pitch your innovation to Sime Darby Property's leadership panel.
-
-## Your Innovation Journey
-
-Key dates for the Sime Darby Property University Hackathon.
+## Key dates
 
 | Phase               | Timeline                      |
 | ------------------- | ----------------------------- |
@@ -159,29 +133,16 @@ Key dates for the Sime Darby Property University Hackathon.
 | Grand Finale        | 14 November 2026              |
 | Innovation Day      | 2 December 2026               |
 
-Key dates for the Sime Darby Property University Hackathon.
+## Prizes
 
-## Win recognition. Gain experience. Shape the future.
+| Place                         | Prize      |
+| ----------------------------- | ---------- |
+| Champion                      | RM6,000    |
+| 1st Runner-Up                 | RM3,000    |
+| 2nd Runner-Up                 | RM1,500    |
+| Consolation prizes (4th–10th) | RM500 each |
 
-### Champion
-
-RM6,000
-
-### 1st Runner-Up
-
-RM3,000
-
-### 2nd Runner-Up
-
-RM1,500
-
-### Consolation Prizes
-
-4th – 10th place
-
-RM500 each
-
-### More Than a Hackathon
+### More than a hackathon
 
 - Win cash prizes
 - Earn an internship with Sime Darby Property
@@ -191,9 +152,7 @@ RM500 each
 
 Your idea doesn't have to end when the hackathon ends. It could be where your career begins.
 
-## Frequently Asked Questions
-
-Everything you need to know before registering.
+## Frequently asked questions
 
 ### How do I apply to join?
 
@@ -205,7 +164,7 @@ Yes. Form a team of three to five students and appoint a team leader before appl
 
 ### I am not a coder. Can I join?
 
-You can, as long as you apply as a team with at least one technical member. Bring your strengths in design, research, business, or storytelling—the Challenge rewards cross-disciplinary teams.
+You can, as long as you apply as a team with at least one technical member. Bring your strengths in design, research, business, or storytelling: the Challenge rewards cross-disciplinary teams.
 
 ### Is it open to non-Malaysians?
 
@@ -255,14 +214,12 @@ The solution should be:
 
 Your pitch covers two parts:
 
-MechanismExplain your solution, how it works, who benefits and why it creates value for the township.
+1.  **Mechanism**: Explain your solution, how it works, who benefits and why it creates value for the township.
+2.  **Enabler**: Demonstrate how technology enables your solution, enhances the user experience and supports implementation at township scale.
 
-EnablerDemonstrate how technology enables your solution, enhances the user experience and supports implementation at township scale.
+## See also
 
-## Ready to Build the Township of Tomorrow?
-
-Bring your ideas to life, collaborate with future innovators, and solve meaningful challenges that create lasting impact.
-
-[Register Now!](https://tot.kolaxus.net/register)
-
-Teams of 2–5 from universities across Malaysia.
+- [Registration form](register.md)
+- [Privacy policy](privacy-policy.md)
+- [Terms and conditions](terms-and-conditions.md)
+- [Original page](https://tot.kolaxus.net/), crawled 8 October 2026

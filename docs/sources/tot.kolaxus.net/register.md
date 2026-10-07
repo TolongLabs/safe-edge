@@ -1,59 +1,29 @@
-[Skip to content](https://tot.kolaxus.net/register/#main)
+# Registration form
 
-Registration
+The Township of Tomorrow registration form for the Sime Darby Property University Hackathon. Teams of 2–5 from universities across Malaysia complete it to apply.
 
-## Register for the Township of Tomorrow
+Contents:
 
-Bring your ideas to life, collaborate with future innovators, and solve meaningful challenges in the Sime Darby Property University Hackathon.
+1.  [Team details](#team-details)
+1.  [Team leader information](#team-leader-information)
+1.  [See also](#see-also)
 
-Teams of 2–5 from universities across Malaysia. Complete the form below to apply.
+## Team details
 
-Township of Tomorrow Registration
+All fields are required.
 
-Page 1 of 4
+- Team name
+- Team size (including leader)
 
-# Township of Tomorrow Registration
+## Team leader information
 
-### Team Name
+All fields are required.
 
-\*
+- Team leader name
+- Team leader email
+- Team leader university
+- Team leader phone number: make sure you have WhatsApp access to this number
 
-Required
+## See also
 
-### Team Size (including leader)
-
-\*
-
-Required
-
----
-
-## Team Leader Information
-
-### Team Leader Name
-
-\*
-
-Required
-
-### Team Leader Email
-
-\*
-
-Required
-
-### Team Leader University
-
-\*
-
-Required
-
-### Team Leader Phone Number
-
-\*
-
-Required
-
-Please make sure you have WhatsApp access to this number.
-
-Next
+- [Original page](https://tot.kolaxus.net/register), crawled 8 October 2026. The form has 4 pages; the crawl captured page 1 only.
