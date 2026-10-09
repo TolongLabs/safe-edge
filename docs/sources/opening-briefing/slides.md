@@ -2,8 +2,6 @@
 
 Every slide shown during the Sime Darby Property University Hackathon 2026 opening briefing on 9 October 2026, each with its image and its text. The [transcript](transcript.md) covers what was said and the [meeting chat](chat.md) what attendees typed.
 
-Source: the screen-shared deck in the recording at `~/Downloads/opening-briefing.mp4` (not in the repo). The deck itself wasn't provided; the organisers said they'd share it on Telegram. One frame was captured per distinct slide (37 in all), its text was read at full resolution and in zoomed quarters, and its QR codes were decoded. Text is verbatim, with the slide's hierarchy kept in Markdown. The "UNIVERSITY HACKATHON 2026" eyebrow, the logo and the page numbers repeated on every slide are left out. `[illegible]` marks text that couldn't be read and `[?]` a doubtful word.
-
 Contents:
 
 1.  [Slide 01: Sime Darby Property logo](#slide-01-sime-darby-property-logo)

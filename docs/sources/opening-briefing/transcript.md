@@ -2,8 +2,6 @@
 
 What was said at the Sime Darby Property University Hackathon 2026 ("Township of Tomorrow") opening briefing, a Microsoft Teams webinar for students on 9 October 2026, 6:34 PM to 7:39 PM, with about 600 attendees. The [slides](slides.md) and the [meeting chat](chat.md) are transcribed separately.
 
-Source: the recording at `~/Downloads/opening-briefing.mp4` (1:04:08, an OBS capture of the Teams window; not in the repo). It starts just after the opening video message from Dato' Seri Azmir Merican, Group Managing Director & Chief Executive Officer of Sime Darby Property, so that message is missing. The audio was transcribed with OpenAI Whisper `medium` and checked against a second Whisper `large-v3` pass. Times are offsets into the recording. Filler, repeats and false starts are trimmed; names, numbers and dates are kept as said. `[?]` marks a doubtful word or speaker, `_(as heard: "x")_` gives the raw transcription of a corrected word, and `_(passes disagree: "x" / "y")_` marks a word the two passes heard differently.
-
 Contents:
 
 1.  [Speakers](#speakers)
