@@ -1,5 +1,7 @@
 # Graphify
 
+<!-- https://github.com/Graphify-Labs/graphify/blob/v8/tools/skillgen/fragments/always-on/claude-md.md -->
+
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:

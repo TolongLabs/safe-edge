@@ -1,5 +1,7 @@
 # Andrej Karpathy Skills
 
+<!-- https://github.com/multica-ai/andrej-karpathy-skills/blob/main/CLAUDE.md -->
+
 Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
