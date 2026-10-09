@@ -107,6 +107,7 @@ An idea that fails a gate is cut, whatever its score. The gates come from the br
   - wrote the idea docs.
 - **Seven research agents** on the same model did rounds 4 and 6. Each fetched the sources it cites.
 - **Three judge agents on Claude Sonnet 5.5** scored the four drafts in round 9. They used the anchors above, without seeing the author's scores.
+- **Two fact-check agents on Claude Sonnet 5.5** then checked the docs' quotes, numbers and dates against the cited pages, and their corrections were applied.
 - **No human has scored the ideas, and no resident has been interviewed.** Treat a gap of a few points as a tie.
 
 ### Assumptions
