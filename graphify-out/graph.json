@@ -1,7 +1,10 @@
 {
   "directed": false,
   "multigraph": false,
-  "graph": {},
+  "graph": {
+    "schema_version": 1,
+    "graphify_version": "0.9.82"
+  },
   "nodes": [
     {
       "id": "docs_references_markdown_style",
@@ -52,6 +55,18 @@
       "source_location": "L126"
     },
     {
+      "id": "docs_references_markdown_style_delete_dead_documentation",
+      "label": "Delete dead documentation",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "delete dead documentation",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L779"
+    },
+    {
       "id": "docs_references_markdown_style_document_layout",
       "label": "Document layout",
       "_origin": "ast",
@@ -62,6 +77,42 @@
       "norm_label": "document layout",
       "source_file": "docs/references/markdown-style.md",
       "source_location": "L144"
+    },
+    {
+      "id": "docs_references_markdown_style_documentation_best_practices",
+      "label": "Documentation best practices",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "documentation best practices",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L769"
+    },
+    {
+      "id": "docs_references_markdown_style_documentation_is_the_story_of_your_code",
+      "label": "Documentation is the story of your code",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "documentation is the story of your code",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L791"
+    },
+    {
+      "id": "docs_references_markdown_style_duplication_is_evil",
+      "label": "Duplication is evil",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "duplication is evil",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L828"
     },
     {
       "id": "docs_references_markdown_style_images",
@@ -242,6 +293,18 @@
       "norm_label": "trailing whitespace",
       "source_file": "docs/references/markdown-style.md",
       "source_location": "L232"
+    },
+    {
+      "id": "docs_references_markdown_style_update_docs_with_code",
+      "label": "Update docs with code",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Markdown style guide",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "update docs with code",
+      "source_file": "docs/references/markdown-style.md",
+      "source_location": "L773"
     },
     {
       "id": "docs_references_markdown_style_use_lazy_numbering_for_long_lists",
@@ -454,64 +517,460 @@
       "source_location": "L16"
     },
     {
-      "id": "docs_references_markdown_style_delete_dead_documentation",
-      "label": "Delete dead documentation",
+      "id": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "label": "Opening briefing slides",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Documentation best practices",
+      "community_name": "Opening briefing slides",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "delete dead documentation",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L779"
+      "norm_label": "opening briefing slides",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L1"
     },
     {
-      "id": "docs_references_markdown_style_documentation_best_practices",
-      "label": "Documentation best practices",
+      "id": "docs_sources_opening_briefing_slides_slide_01_sime_darby_property_logo",
+      "label": "Slide 01: Sime Darby Property logo",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Documentation best practices",
+      "community_name": "Opening briefing slides",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "documentation best practices",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L769"
+      "norm_label": "slide 01: sime darby property logo",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L45"
     },
     {
-      "id": "docs_references_markdown_style_documentation_is_the_story_of_your_code",
-      "label": "Documentation is the story of your code",
+      "id": "docs_sources_opening_briefing_slides_slide_02_message_from_the_group_managing_director_and_ceo",
+      "label": "Slide 02: Message from the Group Managing Director and CEO",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Documentation best practices",
+      "community_name": "Opening briefing slides",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "documentation is the story of your code",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L791"
+      "norm_label": "slide 02: message from the group managing director and ceo",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L51"
     },
     {
-      "id": "docs_references_markdown_style_duplication_is_evil",
-      "label": "Duplication is evil",
+      "id": "docs_sources_opening_briefing_slides_slide_03_meet_sime_darby_property",
+      "label": "Slide 03: Meet Sime Darby Property",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Documentation best practices",
+      "community_name": "Opening briefing slides",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "duplication is evil",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L828"
+      "norm_label": "slide 03: meet sime darby property",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L69"
     },
     {
-      "id": "docs_references_markdown_style_update_docs_with_code",
-      "label": "Update docs with code",
+      "id": "docs_sources_opening_briefing_slides_slide_04_purpose_vision_mission_and_core_values",
+      "label": "Slide 04: Purpose, vision, mission and core values",
       "_origin": "ast",
       "community": 10,
-      "community_name": "Documentation best practices",
+      "community_name": "Opening briefing slides",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "update docs with code",
-      "source_file": "docs/references/markdown-style.md",
-      "source_location": "L773"
+      "norm_label": "slide 04: purpose, vision, mission and core values",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L83"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_05_shaping_malaysia_s_urban_landscape_for_over_five_decades",
+      "label": "Slide 05: Shaping Malaysia's urban landscape for over five decades",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 05: shaping malaysia's urban landscape for over five decades",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L110"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_06_recent_company_highlights_and_milestones",
+      "label": "Slide 06: Recent company highlights and milestones",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 06: recent company highlights and milestones",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L158"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_07_business_segments_overview",
+      "label": "Slide 07: Business segments overview",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 07: business segments overview",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L173"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_08_property_development_footprint",
+      "label": "Slide 08: Property development footprint",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 08: property development footprint",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L237"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_09_commitment_to_sustainability",
+      "label": "Slide 09: Commitment to sustainability",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 09: commitment to sustainability",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L320"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_10_university_hackathon_2026_section_title",
+      "label": "Slide 10: University Hackathon 2026 section title",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 10: university hackathon 2026 section title",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L378"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_11_message_from_the_chief_digital_and_technology_officer",
+      "label": "Slide 11: Message from the Chief Digital and Technology Officer",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 11: message from the chief digital and technology officer",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L384"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_12_video_message_still_elmen_tan",
+      "label": "Slide 12: Video message still, Elmen Tan",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 12: video message still, elmen tan",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L402"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_13_why_township_of_tomorrow",
+      "label": "Slide 13: Why Township of Tomorrow",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 13: why township of tomorrow",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L414"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_14_how_might_we_reimagine_the_township_of_tomorrow",
+      "label": "Slide 14: How might we reimagine the Township of Tomorrow",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 14: how might we reimagine the township of tomorrow",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L436"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_15_challenge_theme_1_people",
+      "label": "Slide 15: Challenge theme 1, People",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 15: challenge theme 1, people",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L452"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_16_people_problems_and_ideas",
+      "label": "Slide 16: People problems and ideas",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 16: people problems and ideas",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L472"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_17_challenge_theme_2_planet",
+      "label": "Slide 17: Challenge theme 2, Planet",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 17: challenge theme 2, planet",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L490"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_18_planet_problems_and_ideas",
+      "label": "Slide 18: Planet problems and ideas",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 18: planet problems and ideas",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L510"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_19_from_a_big_challenge_to_a_great_idea",
+      "label": "Slide 19: From a big challenge to a great idea",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 19: from a big challenge to a great idea",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L529"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_20_what_makes_a_strong_solution",
+      "label": "Slide 20: What makes a strong solution",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 20: what makes a strong solution",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L547"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_21_the_journey_begins",
+      "label": "Slide 21: The journey begins",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 21: the journey begins",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L579"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_22_your_hackathon_journey",
+      "label": "Slide 22: Your hackathon journey",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 22: your hackathon journey",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L591"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_23_submission_deadline",
+      "label": "Slide 23: Submission deadline",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 23: submission deadline",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L616"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_24_what_your_pitch_deck_should_cover",
+      "label": "Slide 24: What your pitch deck should cover",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 24: what your pitch deck should cover",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L635"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_25_example_pitch_deck_walkthrough",
+      "label": "Slide 25: Example pitch deck walkthrough",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 25: example pitch deck walkthrough",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L665"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_26_judges_criteria",
+      "label": "Slide 26: Judges criteria",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 26: judges criteria",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L713"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_27_top_10_ideas_refined_by_industry_experts",
+      "label": "Slide 27: Top 10 ideas refined by industry experts",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 27: top 10 ideas refined by industry experts",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L730"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_28_top_10_pitch_and_talent_spotlight",
+      "label": "Slide 28: Top 10 pitch and talent spotlight",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 28: top 10 pitch and talent spotlight",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L748"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_29_final_presentation_and_award_ceremony",
+      "label": "Slide 29: Final presentation and award ceremony",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 29: final presentation and award ceremony",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L797"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_30_prize_structure_and_winner_pathway",
+      "label": "Slide 30: Prize structure and winner pathway",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 30: prize structure and winner pathway",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L833"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_31_journey_to_build_your_idea_and_career",
+      "label": "Slide 31: Journey to build your idea and career",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 31: journey to build your idea and career",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L860"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_32_other_matters",
+      "label": "Slide 32: Other matters",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 32: other matters",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L900"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_33_terms_of_hackathon",
+      "label": "Slide 33: Terms of hackathon",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 33: terms of hackathon",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L912"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_34_selected_finalists_must_attend_physically",
+      "label": "Slide 34: Selected finalists must attend physically",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 34: selected finalists must attend physically",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L958"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_35_stay_connected",
+      "label": "Slide 35: Stay connected",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 35: stay connected",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L988"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_36_your_next_move",
+      "label": "Slide 36: Your next move",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 36: your next move",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L1012"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides_slide_37_questions",
+      "label": "Slide 37: Questions",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Opening briefing slides",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "slide 37: questions",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L1042"
     },
     {
       "id": "docs_sources_tot_kolaxus_net_privacy_policy_10_public_forums",
@@ -1317,6 +1776,294 @@
       "source_location": "L189"
     },
     {
+      "id": "docs_brief",
+      "label": "BRIEF.md",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "brief.md",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_brief_advice_from_the_organisers",
+      "label": "Advice from the organisers",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "advice from the organisers",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L198"
+    },
+    {
+      "id": "docs_brief_conflicts_and_open_questions",
+      "label": "Conflicts and open questions",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "conflicts and open questions",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L217"
+    },
+    {
+      "id": "docs_brief_eligibility_and_teams",
+      "label": "Eligibility and teams",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "eligibility and teams",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L81"
+    },
+    {
+      "id": "docs_brief_fit_sime_darby_property_s_business",
+      "label": "Fit Sime Darby Property's business",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "fit sime darby property's business",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L71"
+    },
+    {
+      "id": "docs_brief_hackathon_brief",
+      "label": "Hackathon brief",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "hackathon brief",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_brief_how_it_is_judged",
+      "label": "How it is judged",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "how it is judged",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L126"
+    },
+    {
+      "id": "docs_brief_key_dates",
+      "label": "Key dates",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "key dates",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L31"
+    },
+    {
+      "id": "docs_brief_links",
+      "label": "Links",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "links",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L206"
+    },
+    {
+      "id": "docs_brief_pitch_deck",
+      "label": "Pitch deck",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "pitch deck",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L104"
+    },
+    {
+      "id": "docs_brief_prizes_and_career",
+      "label": "Prizes and career",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "prizes and career",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L180"
+    },
+    {
+      "id": "docs_brief_rules",
+      "label": "Rules",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "rules",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L146"
+    },
+    {
+      "id": "docs_brief_the_challenge",
+      "label": "The challenge",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "the challenge",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L46"
+    },
+    {
+      "id": "docs_brief_top_10_and_the_finals",
+      "label": "Top 10 and the finals",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "top 10 and the finals",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L159"
+    },
+    {
+      "id": "docs_brief_video_and_prototype",
+      "label": "Video and prototype",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "video and prototype",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L119"
+    },
+    {
+      "id": "docs_brief_what_to_submit",
+      "label": "What to submit",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "Hackathon brief",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "what to submit",
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L89"
+    },
+    {
+      "id": "docs_sources_opening_briefing_chat",
+      "label": "chat.md",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "chat.md",
+      "source_file": "docs/sources/opening-briefing/chat.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_opening_briefing_chat_messages",
+      "label": "Messages",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "messages",
+      "source_file": "docs/sources/opening-briefing/chat.md",
+      "source_location": "L9"
+    },
+    {
+      "id": "docs_sources_opening_briefing_chat_opening_briefing_meeting_chat",
+      "label": "Opening briefing meeting chat",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "opening briefing meeting chat",
+      "source_file": "docs/sources/opening-briefing/chat.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_opening_briefing_slides",
+      "label": "slides.md",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "slides.md",
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_opening_briefing_transcript",
+      "label": "transcript.md",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "transcript.md",
+      "source_file": "docs/sources/opening-briefing/transcript.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_opening_briefing_transcript_messages",
+      "label": "Messages",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "messages",
+      "source_file": "docs/sources/opening-briefing/transcript.md",
+      "source_location": "L22"
+    },
+    {
+      "id": "docs_sources_opening_briefing_transcript_opening_briefing_transcript",
+      "label": "Opening briefing transcript",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "opening briefing transcript",
+      "source_file": "docs/sources/opening-briefing/transcript.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_sources_opening_briefing_transcript_speakers",
+      "label": "Speakers",
+      "_origin": "ast",
+      "community": 22,
+      "community_name": "chat.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "speakers",
+      "source_file": "docs/sources/opening-briefing/transcript.md",
+      "source_location": "L10"
+    },
+    {
       "id": "docs_references_markdown_style_code",
       "label": "Code",
       "_origin": "ast",
@@ -1417,7 +2164,7 @@
       "label": "issue-tracker.md",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Issue tracker: GitHub",
+      "community_name": "Issue tracker",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "issue-tracker.md",
@@ -1429,22 +2176,22 @@
       "label": "Conventions",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Issue tracker: GitHub",
+      "community_name": "Issue tracker",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "conventions",
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L5"
+      "source_location": "L7"
     },
     {
-      "id": "docs_agents_issue_tracker_issue_tracker_github",
-      "label": "Issue tracker: GitHub",
+      "id": "docs_agents_issue_tracker_issue_tracker",
+      "label": "Issue tracker",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Issue tracker: GitHub",
+      "community_name": "Issue tracker",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "issue tracker: github",
+      "norm_label": "issue tracker",
       "source_file": "docs/agents/issue-tracker.md",
       "source_location": "L1"
     },
@@ -1453,48 +2200,48 @@
       "label": "Pull requests as a triage surface",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Issue tracker: GitHub",
+      "community_name": "Issue tracker",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "pull requests as a triage surface",
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L16"
+      "source_location": "L19"
     },
     {
       "id": "docs_agents_issue_tracker_wayfinding_operations",
       "label": "Wayfinding operations",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Issue tracker: GitHub",
+      "community_name": "Issue tracker",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "wayfinding operations",
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L36"
+      "source_location": "L39"
     },
     {
       "id": "docs_agents_issue_tracker_when_a_skill_says_fetch_the_relevant_ticket",
       "label": "When a skill says \"fetch the relevant ticket\"",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Issue tracker: GitHub",
+      "community_name": "Issue tracker",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "when a skill says \"fetch the relevant ticket\"",
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L32"
+      "source_location": "L35"
     },
     {
       "id": "docs_agents_issue_tracker_when_a_skill_says_publish_to_the_issue_tracker",
       "label": "When a skill says \"publish to the issue tracker\"",
       "_origin": "ast",
       "community": 4,
-      "community_name": "Issue tracker: GitHub",
+      "community_name": "Issue tracker",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "when a skill says \"publish to the issue tracker\"",
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L28"
+      "source_location": "L31"
     },
     {
       "id": "docs_sources_tot_kolaxus_net_terms_and_conditions_10_representations",
@@ -1782,7 +2529,7 @@
       "node_kind": "heading",
       "norm_label": "1. think before coding",
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L7"
+      "source_location": "L9"
     },
     {
       "id": "docs_agents_andrej_karpathy_skills_2_simplicity_first",
@@ -1794,7 +2541,7 @@
       "node_kind": "heading",
       "norm_label": "2. simplicity first",
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L18"
+      "source_location": "L20"
     },
     {
       "id": "docs_agents_andrej_karpathy_skills_3_surgical_changes",
@@ -1806,7 +2553,7 @@
       "node_kind": "heading",
       "norm_label": "3. surgical changes",
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L30"
+      "source_location": "L32"
     },
     {
       "id": "docs_agents_andrej_karpathy_skills_4_goal_driven_execution",
@@ -1818,7 +2565,7 @@
       "node_kind": "heading",
       "norm_label": "4. goal-driven execution",
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L48"
+      "source_location": "L50"
     },
     {
       "id": "docs_agents_andrej_karpathy_skills_andrej_karpathy_skills",
@@ -1854,7 +2601,7 @@
       "node_kind": "heading",
       "norm_label": "before exploring, read these",
       "source_file": "docs/agents/domain.md",
-      "source_location": "L5"
+      "source_location": "L7"
     },
     {
       "id": "docs_agents_domain_domain_docs",
@@ -1878,7 +2625,7 @@
       "node_kind": "heading",
       "norm_label": "file structure",
       "source_file": "docs/agents/domain.md",
-      "source_location": "L13"
+      "source_location": "L15"
     },
     {
       "id": "docs_agents_domain_flag_adr_conflicts",
@@ -1890,7 +2637,7 @@
       "node_kind": "heading",
       "norm_label": "flag adr conflicts",
       "source_file": "docs/agents/domain.md",
-      "source_location": "L47"
+      "source_location": "L49"
     },
     {
       "id": "docs_agents_domain_use_the_glossary_s_vocabulary",
@@ -1902,7 +2649,7 @@
       "node_kind": "heading",
       "norm_label": "use the glossary's vocabulary",
       "source_file": "docs/agents/domain.md",
-      "source_location": "L41"
+      "source_location": "L43"
     },
     {
       "id": "docs_references_markdown_style_add_spacing_to_headings",
@@ -2123,7 +2870,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -2134,7 +2881,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -2145,7 +2892,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L48",
+      "source_location": "L50",
       "weight": 1.0
     },
     {
@@ -2156,7 +2903,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/andrej-karpathy-skills.md",
-      "source_location": "L7",
+      "source_location": "L9",
       "weight": 1.0
     },
     {
@@ -2178,7 +2925,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/domain.md",
-      "source_location": "L13",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -2189,7 +2936,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/domain.md",
-      "source_location": "L41",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -2200,7 +2947,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/domain.md",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -2211,7 +2958,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/domain.md",
-      "source_location": "L5",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -2227,7 +2974,7 @@
     },
     {
       "source": "docs_agents_issue_tracker",
-      "target": "docs_agents_issue_tracker_issue_tracker_github",
+      "target": "docs_agents_issue_tracker_issue_tracker",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -2237,58 +2984,58 @@
       "weight": 1.0
     },
     {
-      "source": "docs_agents_issue_tracker_issue_tracker_github",
+      "source": "docs_agents_issue_tracker_issue_tracker",
       "target": "docs_agents_issue_tracker_pull_requests_as_a_triage_surface",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L16",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
-      "source": "docs_agents_issue_tracker_issue_tracker_github",
+      "source": "docs_agents_issue_tracker_issue_tracker",
       "target": "docs_agents_issue_tracker_when_a_skill_says_publish_to_the_issue_tracker",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L28",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
-      "source": "docs_agents_issue_tracker_issue_tracker_github",
+      "source": "docs_agents_issue_tracker_issue_tracker",
       "target": "docs_agents_issue_tracker_when_a_skill_says_fetch_the_relevant_ticket",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L32",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
-      "source": "docs_agents_issue_tracker_issue_tracker_github",
+      "source": "docs_agents_issue_tracker_issue_tracker",
       "target": "docs_agents_issue_tracker_wayfinding_operations",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L36",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
-      "source": "docs_agents_issue_tracker_issue_tracker_github",
+      "source": "docs_agents_issue_tracker_issue_tracker",
       "target": "docs_agents_issue_tracker_conventions",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/agents/issue-tracker.md",
-      "source_location": "L5",
+      "source_location": "L7",
       "weight": 1.0
     },
     {
@@ -2311,6 +3058,171 @@
       "confidence_score": 1.0,
       "source_file": "docs/agents/triage-labels.md",
       "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief",
+      "target": "docs_brief_hackathon_brief",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_how_it_is_judged",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L126",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_rules",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_top_10_and_the_finals",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L159",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_prizes_and_career",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L180",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_advice_from_the_organisers",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L198",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_links",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L206",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_conflicts_and_open_questions",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L217",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_key_dates",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_the_challenge",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L46",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_eligibility_and_teams",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L81",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_hackathon_brief",
+      "target": "docs_brief_what_to_submit",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L89",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_the_challenge",
+      "target": "docs_brief_fit_sime_darby_property_s_business",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_what_to_submit",
+      "target": "docs_brief_pitch_deck",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L104",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_brief_what_to_submit",
+      "target": "docs_brief_video_and_prototype",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/BRIEF.md",
+      "source_location": "L119",
       "weight": 1.0
     },
     {
@@ -2839,6 +3751,479 @@
       "confidence_score": 1.0,
       "source_file": "docs/references/project-conventions.md",
       "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_chat",
+      "target": "docs_sources_opening_briefing_chat_opening_briefing_meeting_chat",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/chat.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_chat_opening_briefing_meeting_chat",
+      "target": "docs_sources_opening_briefing_chat_messages",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/chat.md",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_36_your_next_move",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L1012",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_37_questions",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L1042",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_05_shaping_malaysia_s_urban_landscape_for_over_five_decades",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_06_recent_company_highlights_and_milestones",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L158",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_07_business_segments_overview",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L173",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_08_property_development_footprint",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L237",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_09_commitment_to_sustainability",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L320",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_10_university_hackathon_2026_section_title",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L378",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_11_message_from_the_chief_digital_and_technology_officer",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L384",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_12_video_message_still_elmen_tan",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L402",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_13_why_township_of_tomorrow",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L414",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_14_how_might_we_reimagine_the_township_of_tomorrow",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L436",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_01_sime_darby_property_logo",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_15_challenge_theme_1_people",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L452",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_16_people_problems_and_ideas",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L472",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_17_challenge_theme_2_planet",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L490",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_02_message_from_the_group_managing_director_and_ceo",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_18_planet_problems_and_ideas",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L510",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_19_from_a_big_challenge_to_a_great_idea",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L529",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_20_what_makes_a_strong_solution",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L547",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_21_the_journey_begins",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L579",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_22_your_hackathon_journey",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L591",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_23_submission_deadline",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L616",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_24_what_your_pitch_deck_should_cover",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L635",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_25_example_pitch_deck_walkthrough",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L665",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_03_meet_sime_darby_property",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L69",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_26_judges_criteria",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L713",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_27_top_10_ideas_refined_by_industry_experts",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L730",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_28_top_10_pitch_and_talent_spotlight",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L748",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_29_final_presentation_and_award_ceremony",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L797",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_04_purpose_vision_mission_and_core_values",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_30_prize_structure_and_winner_pathway",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L833",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_31_journey_to_build_your_idea_and_career",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L860",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_32_other_matters",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L900",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_33_terms_of_hackathon",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L912",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_34_selected_finalists_must_attend_physically",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L958",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_slides_slide_35_stay_connected",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L988",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_transcript",
+      "target": "docs_sources_opening_briefing_transcript_opening_briefing_transcript",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/transcript.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_transcript_opening_briefing_transcript",
+      "target": "docs_sources_opening_briefing_transcript_speakers",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/transcript.md",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_transcript_opening_briefing_transcript",
+      "target": "docs_sources_opening_briefing_transcript_messages",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/transcript.md",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -3766,6 +5151,39 @@
       "weight": 1.0
     },
     {
+      "source": "docs_sources_opening_briefing_chat",
+      "target": "docs_sources_opening_briefing_slides",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/chat.md",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_chat",
+      "target": "docs_sources_opening_briefing_transcript",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/chat.md",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_sources_opening_briefing_slides",
+      "target": "docs_sources_opening_briefing_transcript",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/sources/opening-briefing/slides.md",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "docs_sources_tot_kolaxus_net_township_of_tomorrow",
       "target": "docs_sources_tot_kolaxus_net_privacy_policy",
       "relation": "references",
@@ -3789,5 +5207,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "f03a44594f1ad9128a78b92321f0e2dbb7e357ef"
+  "built_at_commit": "78f0de94301b4edd208066b0480ba4c3add9d28b"
 }
