@@ -141,7 +141,7 @@ Each row's evidence is cited in its section under [Source notes](#source-notes).
 - **Building or point level:** OpenStreetMap, both building-footprint sets, PVGIS, NASA POWER, Open-Meteo and Google Solar take a coordinate or a building. Their grids are coarser than one township, except the footprints.
 - **District or route level only:** population, income, weather, ridership, GTFS and SEDA statistics.
 - **State or national only:** CPI, water use, recycling rate, air pollution.
-- Inference: no public source gives household-level energy, waste or water data for an SDP township. A team that needs that must collect its own, with consent, which also counts as real data.
+- **Our read:** no public source gives household-level energy, waste or water data for an SDP township. A team that needs that must collect its own, with consent, which also counts as real data.
 
 ## Gotchas
 

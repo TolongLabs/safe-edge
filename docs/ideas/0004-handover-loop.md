@@ -91,7 +91,7 @@ A compulsory deposit is probably out. Regulation 11(2) of the housing regulation
   - Recyclers get sorted inert feedstock.
 - **Scale:** every new landed phase SDP hands over.
 
-[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20(Mobile).pdf
+[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 [dun dev]: https://dewan.selangor.gov.my/question/pemaju-yang-tidak-menyelenggara-infra-sebelum-serahan-kepada-pihak-berkuasa-tempatan-pbt/
 
 ## Pilot

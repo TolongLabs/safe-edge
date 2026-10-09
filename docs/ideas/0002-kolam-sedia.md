@@ -101,7 +101,7 @@ Contents:
 - **Value to two sides:** residents get fewer and shorter floods. SDP protects sales of new Bandar Bukit Raja phases, gets data to answer residents' anger, and gets evidence to work with JPS and the Klang city council (MBDK).
 - **Scale:** to Bandar Universiti Pagoh, then to any SDP township with retention ponds.
 
-[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20(Mobile).pdf
+[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 [star]: https://www.thestar.com.my/starpicks/2026/04/30/bandar-bukit-raja-a-space-to-grow-built-to-last
 
 ## Pilot

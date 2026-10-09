@@ -110,7 +110,7 @@ Name one or two on a slide, only where the idea truly serves them. Older documen
 
 - **Titles:** address Dato', Datuk, Tan Sri and Tun holders by their formal title; the formal written style is "Yang Berbahagia" ([Public Service Department guide][jpa]). SDP's CEO is Dato' Seri Azmir Merican.
 - **Language:** no single rule exists. At least one 2024 student pitching event allowed English or Malay ([Politeknik Sandakan][famb]). Our briefing was in English.
-- **Income and disability terms:** B40, M40 and T20 are DOSM's income groups ([DOSM, 2023][dosm-b40]), and JKM registers OKU in seven categories ([JKM][jkm]). No guide says judges require these terms. Inference: using them correctly shows local understanding.
+- **Income and disability terms:** B40, M40 and T20 are DOSM's income groups ([DOSM, 2023][dosm-b40]), and JKM registers OKU in seven categories ([JKM][jkm]). No guide says judges require these terms. **Our read:** using them correctly shows local understanding.
 - **Culture:** the 4IR policy asks technology to preserve "humanistic and societal values as well as cultural heritage" ([4IR policy][4ir]); corporate etiquette training covers cultural norms ([SSM][ssm]).
 - **Structure:** Malaysian pitch guides follow the familiar order: problem, solution, product, traction, market, competition, business model ([PlaTCOM Ventures, 2018][platcom]).
 

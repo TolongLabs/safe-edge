@@ -41,7 +41,7 @@ Contents:
 
 SDP calls its plan the Sustainability Strategy and Roadmap 2030 (SSR2030), themed "Fostering Resilient Communities", launched in mid-2025. Its four pillars are Energy & Carbon, Urban Biodiversity, Climate Resilience and Community Experience ([Sustainability Report 2025][sr2025]).
 
-[sr2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR%202025%20Mobile.pdf
+[sr2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 
 ### Targets
 
@@ -67,13 +67,13 @@ Source: [Sustainability Report 2025][sr2025]. No numeric target exists for Scope
 
 Source: [Sustainability Report 2025][sr2025], checked against the PDF text. The 2025 Scope 1 and 2 figures had external limited assurance.
 
-- **Emissions are rising, not falling.** Scope 1 and 2 grew 24% from the 2023 baseline. Reaching the 40% cut means getting to about 9,800 tCO2e by 2030, half the 2025 level. Inference from the table.
+- **Emissions are rising, not falling.** Scope 1 and 2 grew 24% from the 2023 baseline. Reaching the 40% cut means getting to about 9,800 tCO2e by 2030, half the 2025 level. **Our read**, from the table.
 - **Electricity is the problem.** SDP used 24.9 GWh in 2025. Its asset-management segment (malls and offices) emitted 10,218 tCO2e from electricity, leisure (golf, convention) 6,315 and property development 2,757 ([SR 2025][sr2025]).
 - **Scope 1 rose 21%,** partly from "significant refrigerant refills following major air-conditioning repairs" ([SR 2025][sr2025]).
 - **Solar is still small.** 603 kWp across nine sites generated 495 MWh and avoided 383 tCO2e in 2025, about 2% of electricity use. SDP also bought 2,312 MWh through TNB's Green Electricity Tariff ([SR 2025][sr2025]).
 - **Green ratings are mostly design-stage.** GreenRE lists 19 SDP ratings issued from 2024 to 2026, and only Maya Ara Residences (Gold, January 2026) is final. City of Elmina Phases 1 to 3 hold provisional township Platinum from June 2025 ([GreenRE database][greenre]). No SDP township is among the five Smart Township Malaysia ratings of 2025; see [Green developments](/docs/research/green-developments.md#where-sdp-stands).
 - **Scope 3 covers only travel and commuting.** Construction materials and the energy used in homes SDP sold aren't counted yet; a broader inventory is planned for 2026 ([SR 2025][sr2025]).
-- Inference: the report doesn't explain the Scope 2 rise. New malls opened in this period (Elmina Lakeside Mall, launched January 2025; KLGCC Mall, opened October 2025), which likely adds load.
+- **Our read:** the report doesn't explain the Scope 2 rise. New malls opened in this period (Elmina Lakeside Mall, launched January 2025; KLGCC Mall, opened October 2025), which likely adds load.
 
 [greenre]: https://www.greenre.org/iframe/project_full
 
@@ -118,7 +118,7 @@ Source: [Sustainability Report 2025][sr2025], checked against the PDF text. The 
 - SDP draws its reporting boundary by "level of ownership and management control" and leaves out premises where a tenant has full management control ([SR 2024][sr2024]). It keeps running its malls and leisure assets ([IAR 2025][iar2025]).
 - For strata property, the developer manages common property until the joint management body (JMB) or management corporation takes over ([Seremban City Council JMB guide][jmb]).
 - The city council maintains public roads, drains, traffic signs and street lights; for Elmina that is Shah Alam City Council, MBSA ([MBSA engineering department][mbsa], search excerpt only).
-- Inference: a pilot is easiest where SDP still has control: its malls, Innovation Park, sales galleries, parks under SDP management, or homes before handover. Anything on public roads needs the council, and anything on strata common property needs the JMB or management corporation.
+- **Our read:** a pilot is easiest where SDP still has control: its malls, Innovation Park, sales galleries, parks under SDP management, or homes before handover. Anything on public roads needs the council, and anything on strata common property needs the JMB or management corporation.
 
 [jmb]: https://www.mbs.gov.my/en/citizens/services/municipality-services/joint-management-body
 [mbsa]: https://www.mbsa.gov.my/en-my/mbsa/pengurusan/jabatan/Pages/jab_kejuruteraan.aspx
@@ -127,7 +127,7 @@ Source: [Sustainability Report 2025][sr2025], checked against the PDF text. The 
 
 - **IFRS S1 and S2 now apply.** SDP's market value was RM11.5 billion at the end of 2024 ([IAR 2024][iar2024]), above the RM2 billion line for Group 1 of the National Sustainability Reporting Framework, which starts in FY2025 ([SC media release][nsrf]). Group 1's wider Scope 3 disclosures start in FY2027 ([NSRF response paper][nsrf-paper]).
 - **Assurance is coming.** Reasonable assurance of Scope 1 and 2 emissions starts for Group 1 for periods beginning 1 January 2028 ([SC, September 2026][assurance]).
-- **Energy law:** the Energy Efficiency and Conservation Act 2024 covers sites using at least 21,600 GJ a year and office buildings of 8,000 m² or more. Details are in [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md). Inference: SDP's malls and convention centre are likely candidates.
+- **Energy law:** the Energy Efficiency and Conservation Act 2024 covers sites using at least 21,600 GJ a year and office buildings of 8,000 m² or more. Details are in [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md). **Our read:** SDP's malls and convention centre are likely candidates.
 - **Mall recycling:** from June 2026, malls need recycling facilities to apply for or renew a council business licence, phased in ([Malay Mail][mall-recycling]). SDP runs three malls.
 - **Green finance:** SDP's New Economy Venture set up a RM2.6 billion sukuk programme in July 2026, with a Gold-rated green finance framework covering a hyperscale data centre and a warehouse in City of Elmina ([sukuk release][sukuk]).
 
@@ -159,7 +159,7 @@ Elmen Tan's start date comes from his own announcement ([LinkedIn][elmen]). "Din
 
 ## What this means for an idea
 
-Each point is our inference from the evidence above.
+Each point is our read of the evidence above.
 
 - **The Energy & Carbon pillar is off track,** and grid electricity in malls and leisure assets drives it. An idea that measurably cuts that electricity, or the refrigerant losses, speaks to the most urgent number in SDP's own report.
 - **SDP has no township-wide resident platform.** Its app ends at handover, so post-handover resident experience is open ground, but an app alone risks the "existing app plus AI" label.

@@ -26,7 +26,7 @@ Kolaxus runs this hackathon, so its past events predict the format best. It call
 - **AI Anti-Scam Student Micro-Challenge** (June 2026) used a structured Innovation Canvas and required no coding. Winners were Import Pandas, The GoatX and Ring Reason ([challenge page][antiscam]).
 - **URIIS 2026** (Ministry of Higher Education): Kolaxus was the proof-of-concept challenge partner ([Siva's post][uriis]). Accounts of the student champion conflict ([TBS Graduates][tbs]; [Kolaxus page][kolaxus-li]). One finalist says judges "pressed" on its operational model; another team cut its deck from 14 slides to 7 after mentoring ([Kolaxus page][kolaxus-li]).
 - Kolaxus's GodamLah! terms, like ours, make every submission the organiser's property ([GodamLah! terms][godamlah-tc]).
-- Inference: Kolaxus winners fix a friction in a real public process, design for the people a normal app leaves out (no smartphone, no signal, elderly users), and protect privacy.
+- **Our read:** Kolaxus winners fix a friction in a real public process, design for the people a normal app leaves out (no smartphone, no signal, elderly users), and protect privacy.
 
 [antiscam]: https://ai-antiscam.kolaxus.net/
 [godamlah]: https://godamlah.kolaxus.net/
@@ -116,7 +116,7 @@ Kolaxus runs this hackathon, so its past events predict the format best. It call
 
 ## Patterns mapped to our criteria
 
-Each pattern is our inference from the winners above.
+Each pattern is our read of the winners above.
 
 | Our criterion (weight)          | What winners did                                                                                               |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------- |

@@ -21,7 +21,7 @@ Contents:
 
 ## What is normal now
 
-Each practice below appears at many of the roughly 50 properties checked. The grouping is our inference.
+Each practice below appears at many of the roughly 50 properties checked. The grouping is our read.
 
 - **Green ratings:** GBI, GreenRE, LEED or BCA Green Mark on nearly every flagship. Sunway's Green Township Policy, adopted in 2023, requires every new township from 2025 to be green-certified ([Sunway Property][sunway-prop]).
 - **Rooftop solar, mostly reported as a group total:** Sunway generated 22 GWh across 34 assets in 2025 ([Sunway SR 2025][sunway-sr25]); EcoWorld met 20% of its electricity from 3,351 kWp of on-site solar ([EcoWorld SR 2025][ecoworld-sr25]). S P Setia, EcoWorld and Mah Sing sell solar-ready homes.
@@ -68,7 +68,7 @@ Each practice below was found at only one or two properties.
   - Gamuda's arboretum centre, above.
 - **Design figures read like results.** Merdeka 118's LEED Platinum (2024) comes with 43% less water and 28% better energy efficiency than a baseline, which are LEED design figures, not meter readings ([Terrapin][terrapin]). JTC reports 35% lower carbon at Punggol Digital District without a baseline or method ([JTC, September 2026][jtc-pdd]).
 - **Sources disagree.** IOI City Mall's solar appears as 7.56, 7.569 and 7.9 MWp ([The Edge][edge-1u]; [IOI, November 2024][ioi-roadmap]; [IOI, October 2024][ioi-ceo]). Paramount calls Uptown Residences 1 GreenRE Gold while the GreenRE database lists final Bronze ([Paramount AR 2025][paramount]). Sunway City Kuala Lumpur fell from a 3-Diamond Low Carbon City rating in 2024 to 2-Diamond in 2025, unexplained ([Sunway SR 2025][sunway-sr25]).
-- **Solar covers little of a mall.** IOI City Mall's 8.2% is the best found; solar was 1.75% of Sunway REIT's electricity in FY2025 ([Sunway REIT SR 2025][sreit-25]). Inference: in malls and offices, cooling moves the bill more than rooftop solar.
+- **Solar covers little of a mall.** IOI City Mall's 8.2% is the best found; solar was 1.75% of Sunway REIT's electricity in FY2025 ([Sunway REIT SR 2025][sreit-25]). **Our read:** in malls and offices, cooling moves the bill more than rooftop solar.
 
 [greenre]: https://www.greenre.org/iframe/project_full
 [gamuda-esg]: https://gamuda.com/sustainability-esg/
@@ -181,11 +181,11 @@ Each practice below was found at only one or two properties.
 | Green lease        | Sunway REIT, CICT         | Tenants commit to standards; no savings-sharing terms published                    |
 | Tenant rebate      | CDL Republic Plaza        | The landlord pays vouchers equal to tenants' energy savings                        |
 
-Sources are in the sections above. Inference: an idea that saves energy should say which of these models it uses, or who keeps the saving.
+Sources are in the sections above. **Our read:** an idea that saves energy should say which of these models it uses, or who keeps the saving.
 
 ## What this means for an idea
 
-Each point is our inference from the evidence above.
+Each point is our read of the evidence above.
 
 - **Features and ratings don't stand out.** Solar-ready homes, LEDs, rainwater tanks, EV bays and green ratings are normal among SDP's peers.
 - **Proof stands out.** Few owners show measured results for one property, and all but one of SDP's ratings are provisional. An idea that measures a green feature after handover and shows the result in kWh, litres, species or ringgit fills a real gap, and could help a rating become final.
