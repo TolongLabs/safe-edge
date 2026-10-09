@@ -25,7 +25,8 @@ Contents:
     1.  [Round 9: independent panel](#round-9-independent-panel)
     1.  [Round 10: rank and stress-test](#round-10-rank-and-stress-test)
 1.  [Cut ideas](#cut-ideas)
-1.  [Additions and corrections to CONTEXT](#additions-and-corrections-to-context)
+1.  [Next steps for the team](#next-steps-for-the-team)
+    1.  [What changed from the suite proposal](#what-changed-from-the-suite-proposal)
 1.  [Open questions](#open-questions)
 1.  [See also](#see-also)
 
@@ -287,7 +288,7 @@ Killed or parked in round 8:
   - Reopen it only if a test shows Google, Waze and Grab can't find most Elmina homes. Nominatim, the OpenStreetMap search, found 0 of 12 real addresses in our test.
 
 [wct]: https://www.wct.com.my/pdf/Sustainability%20Statement%202025.pdf
-[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20(Mobile).pdf
+[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 [seoul]: https://futureiot.tech/seoul-expands-iot-based-smart-plug-program/
 [birdnet test]: https://curis.ku.dk/ws/files/529531919/A_global_assessment_of_BirdNET_performance.pdf
 [birdnet]: https://github.com/birdnet-team/BirdNET-Analyzer
@@ -298,24 +299,56 @@ Killed or parked in round 8:
 [gmcp]: https://cities.google/google-maps-content-partners
 [nas]: https://www.bernama.com/en/news.php?id=2497923
 
-## Additions and corrections to CONTEXT
+## Next steps for the team
 
-Rounds 4 and 6 found one addition and one correction for [CONTEXT]. [Issue #19][i19] tracks them.
+The ten rounds were desk research by AI. These steps put residents and the team's own judgement back in, before and after the pick in [issue #18][i18]. Name four roles first: a timekeeper, a researcher who runs the interviews, a builder and a storyteller who owns the deck.
 
-- **River levels:** CONTEXT lists Public Infobanjir, the national portal, as web tables only. JPS Selangor's own site also serves live river levels and alert thresholds as JSON, with no key needed; the endpoint is undocumented ([JPS Selangor][jps api]).
-- **Amanita** is a national police programme ([PDRM][amanita]). SDP and the Selangor police launched "Taman Angkat Amanita" for Taman Bukit Subang, Denai Alam and Elmina on 4 October 2025 (SR2025 p. 96).
+1.  **Ask, by Tue 13 Oct.** Interview five residents in each area of the top two:
+    - Ask about what happened to them last time, not about our idea ([evidence judges trust][evidence]).
+    - Record counts and exact quotes.
+    - Drop a problem that nobody has.
+    - Collect consent for personal data, as the PDPA requires ([personal data][pdpa]).
+1.  **Pick, by Wed 14 Oct.**
+    - Each member scores the finalists alone with the [judging matrix](#judging-matrix) before anyone speaks, because the first number said aloud anchors everyone.
+    - Discuss, then score again the next morning ([choosing an idea][choosing]).
+    - Apply one more gate: residents in the Ask step must have the problem.
+1.  **Prove, on Wed 14 Oct.**
+    - Imagine it is 3 December and we lost, and list why.
+    - Answer the organisers' question: what improved, measured how, compared with what?
+    - Name who pays and who gains ([who pays][payers]).
+    - If the pick needs hardware, such as Kolam Sedia's sensor, run the [IoT test][iot] and order parts that day.
+1.  **Build, from Thu 15 to Tue 20 Oct.** Run five interviews on the idea, then five on the prototype. Shoot the video by 20 October.
+1.  **Submit, on Thu 22 to Fri 23 Oct.** Get a review from someone outside the team, and submit early. Registration closes at 11:59 PM on Wed 21 October ([brief]).
 
-[i19]: https://github.com/TolongLabs/sdp-hack/issues/19
-[jps api]: https://infobanjirjps.selangor.gov.my/JPSAPI/api/StationRiverLevels/GetWLAllStationData/6
-[amanita]: https://www.rmp.gov.my/program-pdrm/amanita
+[evidence]: /docs/research/best-practices.md#evidence-judges-trust
+[pdpa]: /docs/research/best-practices.md#personal-data-in-surveys-and-pilots
+[choosing]: /docs/research/ideation-methods.md#choosing-an-idea
+[payers]: /docs/research/green-developments.md#who-pays
+[iot]: /docs/research/iot.md#a-go-or-no-go-test
+
+### What changed from the suite proposal
+
+The team's ideation suite proposal, from PR #16, is folded in here and deleted.
+
+- **Kept:**
+  - one numbered file per idea, and a ranking that records cut ideas and why;
+  - scores against the real rubric, with checks that remove ideas first;
+  - an independent review at the end;
+  - the resident-first steps above.
+- **Changed:**
+  - Ten AI rounds replaced the proposal's five steps (Spot, Ask, Spark, Pick and Prove) for generating ideas. The proposal's Ask, Pick and Prove steps now come after the shortlist, as the steps above.
+  - The "A 5 looks like" column became the three-anchor [judging matrix](#judging-matrix).
+- **Dropped:**
+  - the cheat sheet, templates and the Obsidian scoreboard, because the ranking table is the scoreboard;
+  - the proposal's tool list, apart from consent for surveys.
+- **Reconciled:**
+  - All docs now cite the Sustainability Report 2025 file that SDP's sustainability page links. Its text matches both earlier files page for page, so page numbers didn't change.
+  - [CONTEXT] and `docs/research/` now share the "Our read" label for inference.
 
 ## Open questions
 
 - **Do residents and SDP confirm the problems?** No resident or SDP staff member has been interviewed for any idea. The deciding tests are in [issue #18][i18].
-- **Do these docs fit the planned suite?** The team's [ideation suite proposal][proposal], tracked in [issue #17][i17], puts resident interviews first. These ranked ideas can serve as its starting board, and its Ask and Pick steps can confirm or overturn them.
-
-[i17]: https://github.com/TolongLabs/sdp-hack/issues/17
-[proposal]: ideation-suite-proposal.md
+- **Does the team score the top two the same way?** Nobody on the team has scored them yet; the Pick step above settles it.
 
 ## See also
 
