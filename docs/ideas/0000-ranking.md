@@ -344,6 +344,7 @@ The team's ideation suite proposal, from PR #16, is folded in here and deleted.
 - **Reconciled:**
   - All docs now cite the Sustainability Report 2025 file that SDP's sustainability page links. Its text matches both earlier files page for page, so page numbers didn't change.
   - [CONTEXT] and `docs/research/` now share the "Our read" label for inference.
+  - 17 facts that [CONTEXT] and `docs/research/` stated differently were checked against their sources and corrected on the wrong side. Examples: SDP's 2025 emissions rise is partly a wider reporting boundary, its NPS is published, and CREAM covers 450 homes in two townships.
 
 ## Open questions
 

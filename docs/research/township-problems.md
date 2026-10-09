@@ -126,7 +126,7 @@ Contents:
 
 ### Energy
 
-Energy has its own page: [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md). The headline numbers: 68.8% of households own an air-conditioner (2024), and SDP's own Scope 1 and 2 emissions rose 24% from 2023 to 2025.
+Energy has its own page: [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md). The headline numbers: 68.8% of households own an air-conditioner (2024), and SDP's own reported Scope 1 and 2 emissions rose 24% from 2023 to 2025, partly from a wider reporting boundary.
 
 ### Green transport
 
@@ -165,7 +165,7 @@ Energy has its own page: [Energy, HVAC and solar](/docs/research/energy-hvac-sol
 
 Each point is our read.
 
-- **Fast-rising problems:** older people living alone (×3 since 2018), scams (RM2.7 billion in 11 months), SDP's own emissions (+24%), and dengue's 2026 rebound.
+- **Fast-rising problems:** older people living alone (×3 since 2018), scams (RM2.7 billion in 11 months), SDP's own reported emissions (+24%, partly a wider boundary), and dengue's 2026 rebound.
 - **Problems with a fresh rule change:** waste separation in Selangor (Act 672, July 2026), mandatory mall recycling facilities (June 2026), Selangor water prices (September 2025), and building energy labels under the Energy Efficiency Act.
 - **Problems SDP can act on directly:** waste facilities in neighbourhoods, which the national blueprint asks developers to build; flood and heat at its named townships; and energy in the malls it runs.
 

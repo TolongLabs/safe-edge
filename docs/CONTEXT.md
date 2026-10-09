@@ -49,7 +49,7 @@ Contents:
 1.  **Measure an outcome against a baseline,** with a comparison group where possible, and report interviews as counts, quotes and past behaviour ([evidence](#evidence-from-users), [impact](#impact-measurement)).
 1.  **Write the pilot the way SDP wrote its own:** a bounded site and unit count, a scale-up path in numbers, and who pays ([pilot](#pilot-proposal)).
 1.  **Give value to two sides,** residents plus SDP, a tenant or a township business. That covers the 10% commercial criterion ([patterns](#patterns-across-winners)).
-1.  **Expect polished rivals.** Asia Pacific University (APU) teams won a track at Kolaxus's last hackathon and placed at another smart-city hackathon in 2025 ([Kolaxus](#kolaxus-the-organiser), [Malaysian hackathons](#malaysian-township-and-smart-city-hackathons)).
+1.  **Expect polished rivals.** Asia Pacific University (APU) teams won a track at Kolaxus's GODAMLah! 2.0 hackathon in January 2026 and placed at another smart-city hackathon in 2025 ([Kolaxus](#kolaxus-the-organiser), [Malaysian hackathons](#malaysian-township-and-smart-city-hackathons)).
 
 ## Past winners
 
@@ -57,7 +57,7 @@ Contents:
 
 - **No earlier SDP University Hackathon was found.** The [launch release] and press coverage mention no previous edition or past winners. Dr Lam Su Ki did refer to "previous challenges" where students submitted their university research ([transcript], 54:11).
 - **Concept Home 2030 (2021 to 2022)** was SDP's design competition with the Malaysian Institute of Architects (PAM) for registered architects, not students ([CH2030 results]). The winner, "Non-Fungible Terraces", was a blockchain-based digital and physical twin home with generative design, the metaverse and net-zero living, and took RM100,000. Judges called it "a truly futuristic idea" ([The Star, 2022][ch2030 star], _secondary_). We found no evidence it was ever built.
-- **Concept Home 2035 (2026)** is the sequel, on a real 171.93-acre site at Elmina Hills. Its pillars are "Climate-Responsive Planning", "Cost-Effective and Marketable", "Pragmatic and Scalable", "Flexible Planning" and "Biophilic and Sustainability" ([CH2035 release]).
+- **Concept Home 2035 (2026)** is the sequel, for a proposed 171.93-acre site at Elmina Hills. Its pillars are "Climate-Responsive Planning", "Cost-Effective and Marketable", "Pragmatic and Scalable", "Flexible Planning" and "Biophilic and Sustainability" ([CH2035 release]).
   - **Our read:** SDP's taste moved from futuristic to pragmatic in four years, which matches the hackathon's weights.
 - **Sime Darby Young Innovators Challenge** is the group foundation's annual challenge for secondary schools. Winners get grants to build and deploy their prototypes in their communities. The 2024 winners built a gamified maths app, a fire alarm that alerts the fire department directly, and a buoy-based warning for upstream water surges ([YSD 2024]).
 - **The hackathon release** says ideas should "combine practical community solutions with technology, data or AI", and that selected ideas may go on to "potential proof-of-concept development" ([launch release]).
@@ -119,13 +119,15 @@ Contents:
 **Our read** of the cases above:
 
 - **One named user, one named place:** dementia patients who wander, people with physical disabilities, elderly people without smartphones, a specific waterfront or street fair.
-- **A working demo of the core flow.** The one Malaysian placing with a stated reason credits its working prototype (UMPSA), a Sunway winner advised "if you have a prototype, that's even better", and Kolaxus's final round asked for a demo link.
+- **A working demo of the core flow.** Malaysian placings credit execution: UMPSA's second runner-up said its working prototype "truly impressed the judges", and MySelamat's team "impressed the judges with their concept and seamless execution" at the Great Malaysia AI Hackathon 2025 ([DNA][gmai]). A Sunway winner advised "if you have a prototype, that's even better", and Kolaxus's final round asked for a demo link.
 - **Pilots happen on the sponsor's own assets, through a route set up in advance:** CapitaLand's buildings and fund, Swire's street fair and apprenticeship.
 - **A narrow claim with a number:** 99.8% less blowdown water, 70 to 90% less subsidy leakage. Student winners rarely publish numbers, so a team that does stands out.
 - **Value for two sides:** ULI's winner paired "financial feasibility with community-first thinking". SDP's own CREAM scheme pays homeowners for roof space and powers SDP's Innovation Park ([CREAM launch]).
 - **Affected people on the team:** ENpower included an ambassador for the Society for the Physically Disabled (Frasers).
 - **Judges probe regulatory blockers.** Name the approval route before a judge does (SITEC).
 - **SDP's own taste has turned pragmatic,** from a metaverse home in 2022 to "Pragmatic and Scalable" in 2026.
+
+[gmai]: https://www.digitalnewsasia.com/digital-economy/apus-ctrl-chill-team-crowned-champion-great-malaysia-ai-hackathon-2025
 
 ## What Sime Darby Property wants
 
@@ -168,14 +170,14 @@ Build on these; don't rebuild them:
 
 - **SDP App:** progress billing, construction progress, e-documents, key-handover booking, defect reporting and tracking, events and referrals ([SDP App FAQ]). A central command centre handles defects ([SR2025] p. 46).
 - **Elmina Valley Community app:** visitor registration, maintenance-fee payment and residents' association announcements, for selected Elmina phases ([community app]).
-- **Energy:** CREAM rooftop solar leasing in Elmina with TNB and GSPARX, wheeling power to Innovation Park ([CREAM launch]); solar with batteries at Elmina Ridge; EV chargers at Elmina Lakeside Mall and sales galleries ([SR2025] pp. 46, 50, 57).
+- **Energy:** CREAM rooftop solar leasing in City of Elmina and Bandar Bukit Raja with TNB and GSPARX, wheeling power to Innovation Park ([CREAM launch]); solar with batteries at Elmina Ridge; EV chargers at Elmina Lakeside Mall and sales galleries ([SR2025] pp. 46, 50, 57).
 - **Waste:** KITARecycle drive-thrus at Nilai Impian and Bandar Ainsdale, reverse vending at KL East, a food-waste digester at Elmina Lakeside Mall, composting at KLGCC and KL East Mall, and fabric recycling with Kloth ([SR2025] pp. 75 to 78). The PANTAS system tracks waste data ([SR2025] p. 75).
 - **Nature:** the Elmina Urban Biodiversity Corridor with community planting, Hamilton Biodiversity Park, and the Elmina Rainforest Knowledge Centre ([SR2025] pp. 66 to 68, 98).
 - **Flood:** the Bandar Bukit Raja Wetland Townpark, retention ponds, flap gates and pumps, permeable paving and pre-monsoon desilting ([SR2025] pp. 58, 87 to 88).
 - **Safety:**
   - On 4 October 2025, SDP's Property Security Management team and the Selangor police launched "Taman Angkat Amanita", covering Taman Bukit Subang, Denai Alam and Elmina ([SR2025] p. 96).
   - Amanita itself is a national police programme that recruits housewives as police partners for neighbourhood crime prevention ([PDRM][amanita]).
-  - SDP also uses AI tools for construction-site safety ([SR2025] p. 47).
+  - SDP is also piloting AI tools for construction-site safety ([SR2025] p. 47).
 - **Community:** an Economic Empowerment Programme for micro-entrepreneurs ([SR2025] p. 97).
 - **The briefing's own examples** are taken too; see the [brief].
 
@@ -241,7 +243,7 @@ Under the [Strata Management Act 2013][strata act], the developer's management p
 ### Evidence of township pain points
 
 - **Floods:** the late-2021 and early-2022 floods cost Malaysia RM6.1 billion ([DOSM floods]). By 22 December 2021, 14 people had died in Shah Alam, including in Taman Sri Muda ([The Star][sri muda], _secondary_). On 12 November 2024 a flash flood covered Persiaran Sungai Keramat in Bandar Bukit Raja with up to 0.4 m of water ([RTM][bbr flood]).
-- **Ageing:** people aged 60 and over rose from 10.6% to 13.5% of Petaling district (where Elmina is) between 2020 and 2026, and from 10.5% to 12.7% of Klang district. We computed these from DOSM's [district population data][dosm pop]. Malaysia is expected to become an ageing nation by 2030, when 15% of people are 60 or over, according to the National Population and Family Development Board ([Bernama clipping][DOSM ageing], _secondary_).
+- **Ageing:** people aged 60 and over rose from 10.6% to 13.5% of Petaling district (where Elmina is) between 2020 and 2026, and from 10.5% to 12.7% of Klang district. We computed these from DOSM's [district population data][dosm pop]. Malaysia officially became an ageing nation in 2021, when 7% of people were 65 or over, and is projected to become an aged nation, at 14%, by 2048, the Second Finance Minister told Parliament in August 2025 ([Malay Mail][aged], _secondary_).
 - **Public transport:** Elmina has no rail station. Our analysis of Rapid KL's [GTFS feeds][gtfs] on 10 October 2026 found only two MRT feeder routes inside Elmina, each running about every 25 to 30 minutes. Bandar Bukit Raja's LRT3 station isn't built; construction starts in late 2026 ([paultan.org][lrt3], _secondary_).
 - **Illegal dumping:** Klang's council runs 507 CCTV cameras at dumping hotspots and issued 393 compounds in 2024 ([The Star][dumping], _secondary_).
 - **Water:** domestic use in Selangor, Kuala Lumpur and Putrajaya averaged 241 litres per person per day in 2023, against the 160 litres the World Health Organization recommends ([Air Selangor]; [Air Selangor on WHO][air who]).
@@ -251,7 +253,7 @@ Under the [Strata Management Act 2013][strata act], the developer's management p
 [sri muda]: https://www.thestar.com.my/news/nation/2021/12/22/floods-two-more-bodies-found-in-taman-sri-muda-bringing-total-to-14-says-the-police
 [bbr flood]: https://berita.rtm.gov.my/nasional/senarai-berita-nasional/senarai-artikel/banjir-kilat-tujuh-laluan-di-klang-dinaiki-air/
 [dosm pop]: https://open.dosm.gov.my/data-catalogue/population_district
-[DOSM ageing]: https://www.dosm.gov.my/uploads/content-downloads/file_20221004145130.pdf
+[aged]: https://www.malaymail.com/news/malaysia/2025/08/26/second-finance-minister-says-malaysia-to-be-aged-nation-by-2048-govt-planning-blueprint-as-births-fall-lifespans-rise/188944
 [gtfs]: https://developer.data.gov.my/realtime-api/gtfs-static
 [lrt3]: https://paultan.org/2026/06/30/construction-of-5-reinstated-lrt3-stations-to-start-late-2026-tropicana-temasya-bukit-raja-bandar-botanik/
 [dumping]: https://www.thestar.com.my/metro/metro-news/2025/03/22/507-cctv-cameras-to-deter-illegal-dumping-in-klang
@@ -301,7 +303,7 @@ The rules ask for real data ([brief]). These sources are public:
 | Source                                      | What it has                                                                           | Access                                                                                                                                          |
 | ------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | [data.gov.my]                               | Every open public-sector dataset, under [CC BY 4.0][dgm faq]                          | API without a key ([quickstart]), limited to [4 requests per minute][rate limit]                                                                |
-| [OpenDOSM][dosm pop]                        | Population by district, age and sex; household income and poverty by district         | API or CSV download                                                                                                                             |
+| [OpenDOSM][dosm pop]                        | Population by district, age and sex; household income and poverty by district         | CSV download for population (its API returned an empty array on 10 October); API or CSV for household income                                    |
 | [GTFS static][gtfs] and [realtime][gtfs-rt] | Rapid KL rail, bus and feeder stops, routes and live bus positions                    | API without a key                                                                                                                               |
 | [Weather API][weather]                      | MET Malaysia forecasts and weather warnings                                           | API without a key                                                                                                                               |
 | [JPS Selangor river levels][jps selangor]   | Live river levels and alert thresholds per gauge; district 6 is Klang, with 29 gauges | JSON without a key; the endpoint is undocumented                                                                                                |
@@ -367,7 +369,7 @@ Put the interview log, data sources, cost breakdown, risks and backup answers in
 
 - "Explain what your app does … in the first few seconds of your video", and prefer "a screencast (a video screen capture with audio narration)" to a marketing video. Write a script and rehearse it ([Devpost video guide][dp-video]).
 - "Most hackathons require demo videos to be less than three minutes." Don't speed up the audio to fit, and check the video isn't private ([Devpost video tips][dp-tips]).
-- Open on the problem, show it resolved, and "skip mundane flows such as creating user credentials" ([Devpost demo guide][dp-demo]).
+- Start with the pitch, give the problem "in a few sentences" and keep it "short and to the point", show it resolved, and "skip mundane flows such as creating user credentials" ([Devpost demo guide][dp-demo]).
 
 **Our read:** treat 5 minutes as a ceiling. A workable split: the pitch and the problem in a real township scene by 0:20; the user and the evidence by 0:50; the narrated core flow by 3:00; impact and the pilot by 4:00; why it's new and the ask by 4:30.
 
@@ -436,9 +438,10 @@ If the pilot needs a regulatory exemption, MOSTI's National Technology and Innov
 - **Pillar name:** slide 9 calls the first pillar "Energy Low Carbon"; the FY2025 report calls it "Energy and Carbon" ([SR2025] p. 33). Use the report's name in the deck. The slide's target is a 40% cut in emissions "intensity"; the report says emissions.
 - **Township count:** the slides say 28 active townships; the FY2025 annual report says 27 ([IAR2025] p. 35).
 - **Video length:** is 5 minutes a cap or a target? Ask on Telegram.
-- **Unverified:** whether SDP's venture entities invest in startups, and how many homes CREAM covers. The launch release gives no figure; EdgeProp reports more than 6,000 eligible homes ([EdgeProp][cream homes], _secondary_).
+- **Unverified:** whether SDP's venture entities invest in startups, and CREAM's uptake. SDP's launch release gives no size, but TNB says GSPARX and SDP will "deliver 4.5 MWp for 450 homes at City of Elmina and Bandar Bukit Raja" ([TNB IAR2025][tnb cream] p. 103). EdgeProp says the Elmina project's 5 km radius covers more than 6,000 homes ([EdgeProp][cream homes], _secondary_).
 
 [cream homes]: https://www.edgeprop.my/content/1913891/sime-darby-property-launches-nation%E2%80%99s-first-residential-solar-project
+[tnb cream]: https://www.tnb.com.my/assets/annual_report/TNB_IAR2025_Sustainability_Statement.pdf
 [SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 [IAR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20IAR2025%20Mobile.pdf
 [CREAM launch]: https://www.simedarbyproperty.com/press-releases/sime-darby-property-launches-nations-first-residential-solar-project-under-netr
