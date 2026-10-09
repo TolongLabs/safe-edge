@@ -172,12 +172,16 @@ Build on these; don't rebuild them:
 - **Waste:** KITARecycle drive-thrus at Nilai Impian and Bandar Ainsdale, reverse vending at KL East, a food-waste digester at Elmina Lakeside Mall, composting at KLGCC and KL East Mall, and fabric recycling with Kloth ([SR2025] pp. 75 to 78). The PANTAS system tracks waste data ([SR2025] p. 75).
 - **Nature:** the Elmina Urban Biodiversity Corridor with community planting, Hamilton Biodiversity Park, and the Elmina Rainforest Knowledge Centre ([SR2025] pp. 66 to 68, 98).
 - **Flood:** the Bandar Bukit Raja Wetland Townpark, retention ponds, flap gates and pumps, permeable paving and pre-monsoon desilting ([SR2025] pp. 58, 87 to 88).
-- **Safety:** Amanita, a women-led neighbourhood crime-prevention scheme with the Selangor police in Elmina and Denai Alam ([SR2025] p. 96), and AI tools for construction-site safety ([SR2025] p. 47).
+- **Safety:**
+  - On 4 October 2025, SDP's Property Security Management team and the Selangor police launched "Taman Angkat Amanita", covering Taman Bukit Subang, Denai Alam and Elmina ([SR2025] p. 96).
+  - Amanita itself is a national police programme that recruits housewives as police partners for neighbourhood crime prevention ([PDRM][amanita]).
+  - SDP also uses AI tools for construction-site safety ([SR2025] p. 47).
 - **Community:** an Economic Empowerment Programme for micro-entrepreneurs ([SR2025] p. 97).
 - **The briefing's own examples** are taken too; see the [brief].
 
 [SDP App FAQ]: https://www.simedarbyproperty.com/app/faq.html
 [community app]: https://apps.apple.com/us/app/sime-darby-property-community/id1488080665
+[amanita]: https://www.rmp.gov.my/program-pdrm/amanita
 
 ### Candidate pilot sites
 
@@ -294,16 +298,17 @@ An idea that only re-skins one of these will score low on innovation:
 
 The rules ask for real data ([brief]). These sources are public:
 
-| Source                                      | What it has                                                                   | Access                                                                                                                                          |
-| ------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| [data.gov.my]                               | Every open public-sector dataset, under [CC BY 4.0][dgm faq]                  | API without a key ([quickstart]), limited to [4 requests per minute][rate limit]                                                                |
-| [OpenDOSM][dosm pop]                        | Population by district, age and sex; household income and poverty by district | API or CSV download                                                                                                                             |
-| [GTFS static][gtfs] and [realtime][gtfs-rt] | Rapid KL rail, bus and feeder stops, routes and live bus positions            | API without a key                                                                                                                               |
-| [Weather API][weather]                      | MET Malaysia forecasts and weather warnings                                   | API without a key                                                                                                                               |
-| [Public Infobanjir][infobanjir]             | Live river levels and rainfall with alert thresholds                          | Web tables only; we found no documented API                                                                                                     |
-| [APIMS][apims]                              | Hourly air-pollutant index by station, including Shah Alam                    | Web only; we found no documented API                                                                                                            |
-| [OpenStreetMap][osm]                        | Roads, buildings, paths and bus stops                                         | Overpass API. Addresses are nearly absent: 145 of 2,166 buildings in Elmina and 7 of 3,791 in Bandar Bukit Raja had one in our 10 October count |
-| [SR2025]                                    | SDP's own diversion rates, species counts, solar capacity and water use       | PDF; usable as baselines                                                                                                                        |
+| Source                                      | What it has                                                                           | Access                                                                                                                                          |
+| ------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| [data.gov.my]                               | Every open public-sector dataset, under [CC BY 4.0][dgm faq]                          | API without a key ([quickstart]), limited to [4 requests per minute][rate limit]                                                                |
+| [OpenDOSM][dosm pop]                        | Population by district, age and sex; household income and poverty by district         | API or CSV download                                                                                                                             |
+| [GTFS static][gtfs] and [realtime][gtfs-rt] | Rapid KL rail, bus and feeder stops, routes and live bus positions                    | API without a key                                                                                                                               |
+| [Weather API][weather]                      | MET Malaysia forecasts and weather warnings                                           | API without a key                                                                                                                               |
+| [JPS Selangor river levels][jps selangor]   | Live river levels and alert thresholds per gauge; district 6 is Klang, with 29 gauges | JSON without a key; the endpoint is undocumented                                                                                                |
+| [Public Infobanjir][infobanjir]             | Live river levels and rainfall with alert thresholds                                  | Web tables only; we found no documented API                                                                                                     |
+| [APIMS][apims]                              | Hourly air-pollutant index by station, including Shah Alam                            | Web only; we found no documented API                                                                                                            |
+| [OpenStreetMap][osm]                        | Roads, buildings, paths and bus stops                                                 | Overpass API. Addresses are nearly absent: 145 of 2,166 buildings in Elmina and 7 of 3,791 in Bandar Bukit Raja had one in our 10 October count |
+| [SR2025]                                    | SDP's own diversion rates, species counts, solar capacity and water use               | PDF; usable as baselines                                                                                                                        |
 
 [data.gov.my]: https://data.gov.my/
 [dgm faq]: https://developer.data.gov.my/faq
@@ -311,6 +316,7 @@ The rules ask for real data ([brief]). These sources are public:
 [rate limit]: https://developer.data.gov.my/rate-limit
 [gtfs-rt]: https://developer.data.gov.my/realtime-api/gtfs-realtime
 [weather]: https://developer.data.gov.my/realtime-api/weather
+[jps selangor]: https://infobanjirjps.selangor.gov.my/JPSAPI/api/StationRiverLevels/GetWLAllStationData/6
 [infobanjir]: https://publicinfobanjir.water.gov.my/aras-air/data-paras-air/?lang=en
 [apims]: https://eqms.doe.gov.my/APIMS/main
 [osm]: https://www.openstreetmap.org/
@@ -433,6 +439,6 @@ If the pilot needs a regulatory exemption, MOSTI's National Technology and Innov
 - **Unverified:** whether SDP's venture entities invest in startups, and how many homes CREAM covers. The launch release gives no figure; EdgeProp reports more than 6,000 eligible homes ([EdgeProp][cream homes], _secondary_).
 
 [cream homes]: https://www.edgeprop.my/content/1913891/sime-darby-property-launches-nation%E2%80%99s-first-residential-solar-project
-[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20(Mobile).pdf
+[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 [IAR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20IAR2025%20Mobile.pdf
 [CREAM launch]: https://www.simedarbyproperty.com/press-releases/sime-darby-property-launches-nations-first-residential-solar-project-under-netr
