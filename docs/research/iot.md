@@ -30,7 +30,7 @@ The reward is real but unproven, and in this format the risk is smaller than usu
 
 ## What this hackathon's format changes
 
-Each point is our inference from [BRIEF](/docs/BRIEF.md).
+Each point is our read of [BRIEF](/docs/BRIEF.md).
 
 - **Round 1 is a recorded 5-minute video plus a prototype link,** due 23 October. A video can be re-shot until it works, so the classic live-demo failure doesn't apply to the first cut.
 - **Live risk starts only in the Top 10:** the 14 November pitch and the 3 December booth at Elmina. By then the mentoring sprint (2 to 6 November) gives time to harden the build, and the organisers say they will arrange physical prototypes for finalists (Dr Lam, 58:38).
@@ -41,7 +41,7 @@ Each point is our inference from [BRIEF](/docs/BRIEF.md).
 - **Partial digital twins are legitimate.** NIST describes a digital twin as a virtual representation that can be partial and purpose-built from relevant data and models ([NIST][nist]). The EU's Local Digital Twin Toolbox frames city twins as tools for "simulation rather than real-time operations" ([EU toolbox][eu-ldt]).
 - **Simulators:** Wokwi simulates ESP32 boards and their firmware, and its virtual DHT22 sensor lets you change temperature and humidity during a run ([Wokwi ESP32][wokwi-esp32]; [Wokwi DHT22][wokwi-dht]).
 - **Wizard of Oz:** a 2026 review of 194 HCI papers describes prototypes that look automatic but are run by a hidden person ([CHI 2026 review, excerpt][woz]).
-- Inference: one real node that collects genuine local readings, plus a twin that replays clearly labelled real data for the rest of the township, shows scale honestly. No winner's write-up documented this exact format.
+- **Our read:** one real node that collects genuine local readings, plus a twin that replays clearly labelled real data for the rest of the township, shows scale honestly. No winner's write-up documented this exact format.
 
 [nist]: https://tsapps.nist.gov/publication/get_pdf.cfm?pub_id=932289
 [eu-ldt]: https://interoperable-europe.ec.europa.eu/collection/ldttoolbox?page=0
@@ -140,7 +140,7 @@ These matter for the feasibility story, not for a prototype on a desk.
 
 ## A go or no-go test
 
-Our inference, for the ideation suite to refine. Use IoT only if all four hold:
+**Our read**, for the team to refine. Use IoT only if all four hold:
 
 1.  **The sensor data is the innovation.** Without the readings, the idea doesn't work. If the sensor is decoration, drop it.
 2.  **One node proves it.** A single working node plus real recorded data shows the mechanism; the rest can be a labelled twin.

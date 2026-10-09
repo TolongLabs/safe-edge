@@ -162,7 +162,7 @@ A recycling guide is taken; rewards-for-recycling apps are crowded.
 
 ## Crowded and open ground
 
-Each point is our inference from the evidence above.
+Each point is our read of the evidence above.
 
 - **Crowded:** visitor and guardhouse apps, complaint channels, recycling-for-rewards apps, parking payment, solar monitoring apps, EV charging maps, flood alerts.
 - **Thin or missing in Malaysia:** home demand response or energy coaching tied to the new time-of-use tariff; township-level sharing of solar or storage beyond SDP's own pilot; resident-facing tools for older people living alone; anything that measures resident outcomes rather than app usage; and neighbourhood waste facilities, which the national blueprint asks developers to build.

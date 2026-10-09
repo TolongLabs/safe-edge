@@ -40,11 +40,11 @@ Use these coordinates for City of Elmina: **3.185889, 101.518667**. This is the 
 
 | Source                        | What it gives                            | Auth                       | Licence                   | Live result, 2026-10-10                        |
 | ----------------------------- | ---------------------------------------- | -------------------------- | ------------------------- | ---------------------------------------------- |
-| data.gov.my catalogue API     | National datasets as JSON                | Keyless, 4 requests a min  | Varies; many CC BY 4.0    | 200                                            |
+| data.gov.my catalogue API     | National datasets as JSON                | Keyless, 4 requests a min  | CC BY 4.0                 | 200                                            |
 | OpenDOSM                      | Population, household income, CPI        | Keyless, 4 requests a min  | CC BY 4.0                 | 200; population API empty, CSV works           |
-| data.gov.my weather           | MET 7-day forecasts and warnings         | Keyless, 4 requests a min  | Not stated                | 200 for Selangor districts; no Elmina entry    |
+| data.gov.my weather           | MET 7-day forecasts and warnings         | Keyless, 4 requests a min  | CC BY 4.0                 | 200 for Selangor districts; no Elmina entry    |
 | MET Malaysia API              | Forecasts, warnings, radar               | Token needed               | Not stated                | 401 without a token                            |
-| GTFS static and realtime      | Schedules, stops and live bus positions  | Keyless, 4 requests a min  | Not stated                | Static 200; Rapid Bus live 200; Rapid Rail 404 |
+| GTFS static and realtime      | Schedules, stops and live bus positions  | Keyless, 4 requests a min  | CC BY 4.0                 | Static 200; Rapid Bus live 200; Rapid Rail 404 |
 | JPS flood-warning endpoint    | River level and rainfall stations        | Keyless                    | Not stated                | 200, but sampled rows dated February 2024      |
 | Monthly air pollution         | National monthly pollutant means         | Keyless                    | CC BY 4.0                 | 200; ends in 2024, no station field            |
 | MyEnergyStats (ST)            | Energy statistics, tariffs, grid factor  | Public pages               | Not stated                | 200 and PDFs                                   |
@@ -69,12 +69,13 @@ Each row's evidence is cited in its section under [Source notes](#source-notes).
 
 ### Government open API
 
-- **data.gov.my** needs no token. It allows 4 requests a minute per API and returns HTTP 429 above that ([rate limits][dgm-rate]).
+- **data.gov.my** needs no token. It allows 4 requests a minute per API and returns HTTP 429 above that ([rate limits][dgm-rate]). Its FAQ says the data "is made open under the Creative Commons Attribution 4.0 International License (CC BY 4.0)", which covers its weather and GTFS APIs ([FAQ][dgm-faq]).
 - **OpenDOSM population** covers every administrative district for 2020 to 2026, by sex, age and ethnicity. It was updated on 7 October 2026. The API returned an empty array, but the CSV downloads normally ([population table][dosm-pop]).
 - **OpenDOSM household income** (`hies_district`) gives mean and median income, spending, Gini and poverty by district, based on HIES 2022 ([income table][dosm-hies]). A sample row: Batu Pahat, mean RM7,419, median RM6,347.
 - **OpenDOSM CPI** gives monthly state CPI for 13 spending groups, through August 2026 ([CPI table][dosm-cpi]).
 
 [dgm-rate]: https://developer.data.gov.my/rate-limit
+[dgm-faq]: https://developer.data.gov.my/faq
 [dosm-pop]: https://open.dosm.gov.my/data-catalogue/population_district
 [dosm-hies]: https://open.dosm.gov.my/data-catalogue/hies_district
 [dosm-cpi]: https://open.dosm.gov.my/data-catalogue/cpi_state
@@ -141,7 +142,7 @@ Each row's evidence is cited in its section under [Source notes](#source-notes).
 - **Building or point level:** OpenStreetMap, both building-footprint sets, PVGIS, NASA POWER, Open-Meteo and Google Solar take a coordinate or a building. Their grids are coarser than one township, except the footprints.
 - **District or route level only:** population, income, weather, ridership, GTFS and SEDA statistics.
 - **State or national only:** CPI, water use, recycling rate, air pollution.
-- Inference: no public source gives household-level energy, waste or water data for an SDP township. A team that needs that must collect its own, with consent, which also counts as real data.
+- **Our read:** no public source gives household-level energy, waste or water data for an SDP township. A team that needs that must collect its own, with consent, which also counts as real data.
 
 ## Gotchas
 

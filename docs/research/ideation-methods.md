@@ -1,6 +1,6 @@
 # Ideation methods and tools
 
-What research says about generating and choosing ideas as a team, what AI does to that process, and which tools fit a Markdown repo like ours, as of 2026-10-10. Most findings on group methods come from foundational studies older than 2024; we keep them because no newer study replaces them. The AI findings are from 2024 to 2026. This page is evidence for designing our ideation suite, not the suite itself.
+What research says about generating and choosing ideas as a team, what AI does to that process, and which tools fit a Markdown repo like ours, as of 2026-10-10. Most findings on group methods come from foundational studies older than 2024; we keep them because no newer study replaces them. The AI findings are from 2024 to 2026. This page is evidence for how we ideate; the results are in the [idea ranking](/docs/ideas/0000-ranking.md).
 
 Contents:
 
@@ -45,7 +45,7 @@ Contents:
 - **AI ideas look novel and then underdeliver.** Over 100 NLP researchers rated LLM research ideas more novel but slightly less feasible than expert ideas ([Si et al., 2024][si2024]). When 43 researchers then built the ideas, the LLM ideas lost more ground on novelty, effectiveness and overall rating ([Si et al., 2025][si2025]).
 - **Prompting can restore variety.** Chain-of-thought prompts brought GPT-4's idea pool close to human diversity, and staged prompts asking for bold, different ideas worked best ([Meincke, Mollick and Terwiesch, 2024][meincke]). Ten different AI personas kept story diversity near the human-only baseline ([Wan and Kalman, 2026][personas]).
 - **Seeing AI ideas as examples differs from outsourcing to them.** In an 800-person experiment, exposure to AI ideas as examples raised collective diversity without raising individual creativity ([dynamic experiment, 2025][dynamic]).
-- Inference for us: every member writes ideas alone before anyone opens an AI tool. Then use AI with several distinct personas or resident roles, compare outputs for overlap, and check feasibility with real people, because novelty and feasibility move separately.
+- **Our read:** every member writes ideas alone before anyone opens an AI tool. Then use AI with several distinct personas or resident roles, compare outputs for overlap, and check feasibility with real people, because novelty and feasibility move separately.
 
 [doshi]: https://www.science.org/doi/10.1126/sciadv.adn5290
 [wharton-nature]: https://mackinstitute.wharton.upenn.edu/2025/new-in-nature-chatgpt-decreases-idea-diversity-in-brainstorming/

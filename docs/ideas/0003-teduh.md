@@ -32,7 +32,7 @@ Contents:
   - A simulation of four George Town street sections found that mature street trees, by 2050, cut felt heat (the UTCI index) by 3 to 7 °C ([Climate][georgetown]).
 - **Avoid a "getting hotter" story.** Across Kuala Lumpur, Petaling and Putrajaya, land-surface temperature didn't rise significantly between 2014 and 2021; Petaling's urban areas rose slightly, by 0.5 °C ([JAGST][petaling]). The case is exposure, not a trend.
 
-[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20(Mobile).pdf
+[SR2025]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 [mortality]: https://pmc.ncbi.nlm.nih.gov/articles/PMC9661948/
 [stewardship]: https://research.fs.usda.gov/treesearch/50768
 [CONTEXT]: /docs/CONTEXT.md

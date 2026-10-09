@@ -17,10 +17,10 @@ Contents:
 
 ## The deck
 
-- **Readers skim.** DocSend's 2025 data shows investors spend "less than 3 minutes reviewing pitch decks", and that companies "can no longer get by with a 'Minimum Viable PowerPoint'" ([DocSend, April 2025][docsend]). Judges reading 200 or more submissions likely behave the same; that is our inference.
+- **Readers skim.** DocSend's 2025 data shows investors spend "less than 3 minutes reviewing pitch decks", and that companies "can no longer get by with a 'Minimum Viable PowerPoint'" ([DocSend, April 2025][docsend]). Judges reading 200 or more submissions likely behave the same; that is our read.
 - **Ten slides is a known ceiling.** Guy Kawasaki's 10/20/30 rule: "ten slides, last no more than twenty minutes, and contain no font smaller than thirty points", because a person "cannot comprehend more than ten concepts in a meeting" ([Kawasaki, 2005][kawasaki]). Our cap is the same: 10 main slides, with an appendix allowed.
 - **One problem through every slide.** The organisers' slide 25 walks one parking example through all eight areas ([BRIEF, pitch deck](/docs/BRIEF.md#pitch-deck)).
-- **Say what it is first.** One judge writes that opening with background "costs ground", and that the first sentence should say what the product does ([judge's notes, 2026][devto]). Practitioner advice.
+- **Say what it is first.** One judge writes that teams who "opened with context", including "a problem statement that took forty seconds to arrive at the product", lost ground, while those who scored well "opened with a plain declarative: this is a tool that does X for Y" ([judge's notes, 2026][devto]). Practitioner advice.
 
 [docsend]: https://www.dropbox.com/resources/docsend-pitch-deck-research
 [kawasaki]: https://guykawasaki.com/the_102030_rule/
@@ -42,9 +42,9 @@ Contents:
 - **The organisers want validation with people, not AI output:** end users, investors and the people affected (Dr Lam, 24:09 to 24:26), and real data (Dina, 55:40) ([BRIEF, how it is judged](/docs/BRIEF.md#how-it-is-judged)).
 - **Specific beats general.** "Specificity tells me whether you talked to anyone or guessed" ([judge's notes, 2026][devto]).
 - **Malaysian rubrics ask for it outright:** IEEE Innovation Nation Malaysia wants a market or impact survey, and UMK's ITeLIC'25 scores "Evidence" ([Malaysian judges](/docs/research/malaysian-judges.md#what-malaysian-rubrics-reward)).
-- **How many interviews:** for qualitative work, five users per round find "almost as many" problems as many more, and rounds should repeat; for statistics, test at least 20 ([Nielsen Norman Group, 2012][nng]). A canonical method, kept despite its age.
+- **How many test users:** in a qualitative usability study, five users per round find "almost as many usability problems" as many more, and rounds should repeat; quantitative studies need at least 20 ([Nielsen Norman Group, 2012][nng]). That sizes prototype tests; it doesn't prove demand. A canonical method, kept despite its age.
 - **How to ask:** The Mom Test's rules are to talk about the person's life rather than your idea, ask about specific past events rather than opinions, and listen more than you talk ([book summary][momtest]).
-- Inference: three rounds of five residents, each round changing the idea, fits our deadline and gives a slide of quotes and counts.
+- **Our read:** three rounds of five residents, each round changing the idea, fits our deadline. Report past behaviour as counts and quotes; five per round finds usability problems but doesn't prove demand.
 
 [nng]: https://www.nngroup.com/articles/how-many-test-users/
 [momtest]: https://mtlynch.io/book-reports/the-mom-test/
@@ -84,7 +84,7 @@ Contents:
 
 ## Who pays
 
-- **Maintenance fees are fragile.** In March 2025 Bernama reported unpaid strata maintenance fees at "worrying levels" ([Bernama][arrears]). Inference: a service paid from maintenance fees competes with arrears.
+- **Maintenance fees are fragile.** In March 2025 Bernama reported unpaid strata maintenance fees at "worrying levels" ([Bernama][arrears]). **Our read:** a service paid from maintenance fees competes with arrears.
 - **Pilots, then funding:** CapitaLand says "if innovators can prove that their solutions will work in our properties, the funding will follow" ([Past winners](/docs/research/past-winners.md#developer-and-township-challenges-abroad)).
 - **Third-party finance exists:** UEM Sunrise's The Beat 2.0 solar runs on a power purchase agreement with no developer capital ([Energy, HVAC and solar](/docs/research/energy-hvac-solar.md#what-peer-developers-do)); Solar ATAP allows zero-upfront leases ([Energy, HVAC and solar](/docs/research/energy-hvac-solar.md#home-solar-economics)); SDP raised green sukuk for its data centres ([Sime Darby Property](/docs/research/sime-darby-property.md#reporting-pressure-on-sdp)).
 - **SDP can pay for what it runs:** malls, leisure assets and the Innovation Park sit on SDP's own books ([Sime Darby Property](/docs/research/sime-darby-property.md#who-runs-a-township-after-handover)).
@@ -96,14 +96,14 @@ Contents:
 - **Likely questions:** who pays, what you actually built, and what breaks first at scale ([judge's notes, 2026][devto]); cost, approvals, maintenance and data security for Malaysian developers ([Malaysian judges](/docs/research/malaysian-judges.md#what-developers-need-before-a-pilot)).
 - **Privacy is often scored:** Philadelphia's public pilot programme scores "Attention to privacy and data security" ([City of Philadelphia][phila]).
 - **Admit known weaknesses.** One judge reports that teams naming their own weak spots scored higher ([judge's notes, 2026][devto]). Practitioner observation.
-- Inference: build an appendix with one slide per likely question, so the 5-minute Q&A on 14 November becomes pointing, not inventing.
+- **Our read:** build an appendix with one slide per likely question, so the 5-minute Q&A on 14 November becomes pointing, not inventing.
 
 [phila]: https://www.phila.gov/programs/pitch-and-pilot
 
 ## Unverified and not found
 
 - No research measures how long judges spend per slide or how much of a video they watch.
-- The often-quoted "85% of problems found by five users" is not in the Nielsen Norman Group article.
+- The often-quoted "85% of problems found by five users" isn't in NN/g's 2012 article, but its 2000 article says it: "After the first study with five participants has found 85% of the usability problems" ([NN/g, 2000](https://www.nngroup.com/articles/why-you-only-need-to-test-with-5-users/)). It covers usability problems, not demand.
 - No 2024 or later Malaysian evidence of a green premium for certified homes or offices was found.
 - How Malaysian proptech startups charge developers, and revenue-share models, weren't found.
 - The PDPA's 72-hour breach limit comes from the 2025 guideline, seen only in a search excerpt; the Act says "as soon as practicable".

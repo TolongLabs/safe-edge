@@ -31,14 +31,14 @@ Mostly true for energy, not proven as "the top ESG priority".
 - **The law now pushes HVAC.** The Energy Efficiency and Conservation Act 2024 forces large energy users to hire energy managers and run audits, and office buildings to carry energy labels. Air-conditioner standards rose in 2026, and government offices must keep air-conditioning at 24°C or warmer.
 - **Cooling is the biggest load in commercial buildings.** The newest national figure found is 42% of commercial electricity (2016 data).
 - **But no survey ranks HVAC or solar first.** The pain points companies report are ESG data quality, skills, financing and measuring impact ([PwC, gaps in reporting][pwc-gaps]; [Deloitte, 2025][deloitte]).
-- **For SDP, energy is the whole story.** Purchased electricity is 95% of its Scope 1 and 2 emissions, and those emissions rose 24% from 2023 to 2025 ([SDP Sustainability Report 2025][sdp-sr]).
+- **For SDP, energy is the whole story.** Purchased electricity is 95% of its Scope 1 and 2 emissions, and reported emissions rose 24% from 2023 to 2025, partly because the reporting boundary widened ([SDP Sustainability Report 2025][sdp-sr] p. 44).
 - **The pattern holds abroad.** HVAC and cooling products recur among CapitaLand's challenge winners ([Past winners](/docs/research/past-winners.md#developer-and-township-challenges-abroad)).
 
 [ey]: https://www.ey.com/en_my/newsroom/2026/01/ey-research-malaysian-businesses-expect-electricity-demand-to-surge-by-2028-as-electrification-accelerates
 [pwc-energy]: https://www.pwc.com/my/en/publications/2024/2024-energy-transition-playbook.html
 [pwc-gaps]: https://www.pwc.com/my/en/publications/2024/gaps-in-sustainability-reporting.html
 [deloitte]: https://www.deloitte.com/southeast-asia/en/about/press-room/sustainability-meets-finance-the-cfo-role-in-driving-esg-success.html
-[sdp-sr]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR%202025%20Mobile.pdf
+[sdp-sr]: https://www.simedarbyproperty.com/sites/default/files/2026-04/SDP%20SR2025%20%28Website%29.pdf
 
 ## Air-conditioning and cooling
 
@@ -89,7 +89,7 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 
 - **Peak hours** are 2 p.m. to 10 p.m., Monday to Friday. Off-peak covers 10 p.m. to 2 p.m. on weekdays, all weekend and 15 public holidays ([TNB][tnb-tou]).
 - **Energy Efficiency Incentive:** homes using up to 1,000 kWh a month get a rebate from 25 sen/kWh down to 0.5 sen/kWh ([ST release][st-tariff]).
-- Inference: peak cooling costs 4.09 sen/kWh more than off-peak, so pre-cooling before 2 p.m. or shifting load matters most for medium-voltage sites, which also pay for peak demand.
+- **Our read:** peak cooling costs 4.09 sen/kWh more than off-peak, so pre-cooling before 2 p.m. or shifting load matters most for medium-voltage sites, which also pay for peak demand.
 
 [tariff]: https://myenergystats.st.gov.my/documents/d/guest/tariff-tnb-pdf-1
 [st-tariff]: https://www.st.gov.my/jadual-elektrik-baharu-lebih-236-juta-pengguna-domestik-semenanjung-nikmati-kadar-lebih-adil
@@ -124,18 +124,18 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 
 ### Schemes in 2026
 
-| Scheme                   | What it does                                                                                      | Key rules                                                                                                                                                                                                             |
-| ------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Solar ATAP               | Rooftop solar for self-use, exporting the surplus; replaced NEM, applications from 1 January 2026 | Homes up to 5 kW (single-phase) or 15 kW (three-phase). Home exports credited at the energy charge only; credits can't offset AFA; unused credit is lost; up to 10 years ([ST guideline][atap-st]; [SEDA][atap-seda]) |
-| NEM 3.0                  | Net metering with one-for-one offset                                                              | Closed on 30 June 2025 ([SEDA][nem])                                                                                                                                                                                  |
-| SELCO                    | Self-consumption with no export                                                                   | Non-domestic systems above 1 MWac need at least 1 hour of battery storage from 1 July 2026 ([ST][selco])                                                                                                              |
-| CREAM                    | Pools home rooftops to supply nearby green buyers over the grid; launched March 2025              | Community access charge 9 sen/kWh ([Single Buyer][cream]; [PETRA][cress-charge])                                                                                                                                      |
-| CRESS                    | Companies buy green power from a developer's plant over the grid; from September 2024             | Plants at least 30 MW; access charge 20 sen (firm) or 40 sen (non-firm) per kWh; a 2026 acceleration package offers 14 sen ([ST][cress]; [PETRA, September 2026][cress-2026])                                         |
-| Green Electricity Tariff | TNB customers pay a premium for renewable certificates                                            | 3 to 5 sen/kWh; the 2025 quota of 6,600 GWh was fully subscribed by July 2026 ([mGATS][get])                                                                                                                          |
-| Large Scale Solar 6      | Utility-scale bidding                                                                             | 2,500 MW solar with storage plus 150 MW, announced July 2026, operating by end-2029 ([PETRA][lss6])                                                                                                                   |
+| Scheme                   | What it does                                                                                      | Key rules                                                                                                                                                                                                                                                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Solar ATAP               | Rooftop solar for self-use, exporting the surplus; replaced NEM, applications from 1 January 2026 | Homes up to 5 kW (single-phase) or 15 kW (three-phase) need no study; larger home systems need a Connection Confirmation Check (fee up to RM1,000). Home exports credited at the energy charge only; credits can't offset AFA; unused credit is lost; up to 10 years ([ST guideline][atap-st]; [SEDA][atap-seda]) |
+| NEM 3.0                  | Net metering with one-for-one offset                                                              | Closed on 30 June 2025 ([SEDA][nem])                                                                                                                                                                                                                                                                              |
+| SELCO                    | Self-consumption with no export                                                                   | Non-domestic systems above 1 MWac need at least 1 hour of battery storage from 1 July 2026 ([ST][selco])                                                                                                                                                                                                          |
+| CREAM                    | Pools home rooftops to supply nearby green buyers over the grid; launched March 2025              | Community access charge 9 sen/kWh ([Single Buyer][cream]; [PETRA][cress-charge])                                                                                                                                                                                                                                  |
+| CRESS                    | Companies buy green power from a developer's plant over the grid; from September 2024             | Plants at least 30 MW; access charge 20 sen (firm) or 40 sen (non-firm) per kWh; a 2026 acceleration package offers 14 sen ([ST][cress]; [PETRA, September 2026][cress-2026])                                                                                                                                     |
+| Green Electricity Tariff | TNB customers pay a premium for renewable certificates                                            | 3 to 5 sen/kWh; the 2025 quota of 6,600 GWh was fully subscribed by July 2026 ([mGATS][get])                                                                                                                                                                                                                      |
+| Large Scale Solar 6      | Utility-scale bidding                                                                             | 2,500 MW solar with storage plus 150 MW, announced July 2026, operating by end-2029 ([PETRA][lss6])                                                                                                                                                                                                               |
 
 - Solar ATAP has no fixed overall quota, but the government may cap it if grid stability is threatened ([PETRA, December 2025][atap-petra]).
-- Inference: crediting home exports at the energy charge, not one-for-one as under NEM, makes self-consumption matter more. Using solar power at home during the day, for example for pre-cooling, is worth more than exporting it.
+- **Our read:** crediting home exports at the energy charge, not one-for-one as under NEM, makes self-consumption matter more. Using solar power at home during the day, for example for pre-cooling, is worth more than exporting it.
 
 [atap-st]: https://www.st.gov.my/sites/default/files/2026-03/GUIDELINES-FOR-SOLAR-ACCELERATED_0.pdf
 [atap-seda]: https://www.seda.gov.my/reportal/atap/
@@ -192,7 +192,7 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 - **Monitoring apps already exist:** Pekat's Solaroo app sends system alerts and performance updates ([Solaroo][solaroo]); Sunview lets owners monitor their system in real time from a phone ([Sunview][sunview]); Solarvest monitors systems through Powertrack ([Solarvest, search excerpt][solarvest]).
 - **Quotes and calculators:** GSPARX, TNB's solar arm, offers home packages and a quotation calculator ([GSPARX, search excerpt][gsparx]).
 - **Roof-level potential:** Google's Solar API now covers Malaysian homes ([Open data](/docs/research/open-data.md#energy-and-solar)), and a "solar opportunity mapper" is already taken.
-- Inference: "a solar app that shows generation" is not new. New ground is in how solar power gets used, shared or timed across a township.
+- **Our read:** "a solar app that shows generation" is not new. New ground is in how solar power gets used, shared or timed across a township.
 
 [solaroo]: https://solaroo.com/solaroo-app/
 [sunview]: https://www.sunview.com.my/solar/residential
@@ -228,7 +228,7 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 | Gamuda Land | Smart Township Malaysia 2025 Gold for twentyfive7 ([Gamuda Land][gamuda])                                                                                      |
 | Mah Sing    | EV charging, automated waste collection and a smart community app at M Azura ([Mah Sing][mahsing])                                                             |
 
-Inference: solar readiness, green certification and EV charging are now standard among SDP's peers, so they don't count as innovation on their own.
+**Our read:** solar readiness, green certification and EV charging are now standard among SDP's peers, so they don't count as innovation on their own.
 
 [sunway]: https://www.sunway.com.my/corporate-sustainability/sustainability-reports-policies/
 [setia]: https://spsetia.com/Sustainability/
