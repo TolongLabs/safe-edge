@@ -51,6 +51,7 @@ Mean judge scores by criterion, out of 5, with the weights from the [brief]:
 [i2]: 0002-kolam-sedia.md
 [i3]: 0003-teduh.md
 [i4]: 0004-handover-loop.md
+[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
 [brief]: /docs/BRIEF.md
 
 ## Recommendation
@@ -68,6 +69,7 @@ Mean judge scores by criterion, out of 5, with the weights from the [brief]:
 - **[Teduh][i3] is the fallback** if the team wants the cheapest build and evidence, at the cost of impact.
 - **Drop [Handover Loop][i4]** unless contractor interviews prove it beats MBSA's RM290 bin on price.
 - **Innovation is every finalist's weakest or joint-weakest criterion.** At best each is new in Malaysia but exists abroad, which scores 3. The deck has to show why it is new here, as the brief advises.
+- **Flood ideas have won before.** Recent Malaysian hackathons crowned USM's "Smart Manhole" and APU's MySelamat flood-rescue planner ([past winners][winners]). Either flood idea must show how it differs from them.
 
 ## Scoring method
 
@@ -310,11 +312,13 @@ Rounds 4 and 6 found one addition and one correction for [CONTEXT]. [Issue #19][
 ## Open questions
 
 - **Do residents and SDP confirm the problems?** No resident or SDP staff member has been interviewed for any idea. The deciding tests are in [issue #18][i18].
-- **Do these docs fit the planned suite?** The team's ideation suite, proposed in PR #16 and tracked in [issue #17][i17], puts resident interviews first. These ranked ideas can serve as its starting board.
+- **Do these docs fit the planned suite?** The team's [ideation suite proposal][proposal], tracked in [issue #17][i17], puts resident interviews first. These ranked ideas can serve as its starting board, and its Ask and Pick steps can confirm or overturn them.
 
 [i17]: https://github.com/TolongLabs/sdp-hack/issues/17
+[proposal]: ideation-suite-proposal.md
 
 ## See also
 
 - [BRIEF][brief]: rules, dates, deliverables and judging weights.
 - [CONTEXT]: past winners, SDP's strategy and gaps, Malaysian context and pitch practice.
+- [Research](/docs/research/): the team's vetted research, including [past winners][winners] and [what already exists](/docs/research/existing-solutions.md).

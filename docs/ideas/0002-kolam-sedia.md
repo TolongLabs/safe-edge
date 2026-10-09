@@ -63,14 +63,16 @@ Contents:
 
 ## Why it's new
 
-| Closest analogue                                                                                 | What it does                                                                      | What it lacks                             |
-| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- | ----------------------------------------- |
-| Continuous monitoring and adaptive control, Ormond Beach, US ([EPA][epa])                        | Forecast-driven pumps on ponds; released about 70 acre-feet before Hurricane Irma | Not tidal; a city system                  |
-| Japan's farm-ministry guide for irrigation ponds ([MAFF][maff]) and NARO's system ([NARO][naro]) | Pre-release from rain forecasts, and seasonal low-level rules                     | Farm ponds, not township flood ponds      |
-| Delfland water board, Netherlands ([Delfland][delfland])                                         | Pumps polder water out ahead of forecast rain                                     | Canals, not ponds                         |
-| SMART tunnel, Kuala Lumpur ([JPS][smart])                                                        | Switches modes on a flow forecast                                                 | Diverts flow; doesn't empty storage first |
+| Closest analogue                                                                                 | What it does                                                                      | What it lacks                               |
+| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- | ------------------------------------------- |
+| Continuous monitoring and adaptive control, Ormond Beach, US ([EPA][epa])                        | Forecast-driven pumps on ponds; released about 70 acre-feet before Hurricane Irma | Not tidal; a city system                    |
+| Japan's farm-ministry guide for irrigation ponds ([MAFF][maff]) and NARO's system ([NARO][naro]) | Pre-release from rain forecasts, and seasonal low-level rules                     | Farm ponds, not township flood ponds        |
+| Delfland water board, Netherlands ([Delfland][delfland])                                         | Pumps polder water out ahead of forecast rain                                     | Canals, not ponds                           |
+| SMART tunnel, Kuala Lumpur ([JPS][smart])                                                        | Switches modes on a flow forecast                                                 | Diverts flow; doesn't empty storage first   |
+| "Smart Manhole", winner of USM's Varsity Hackathon 2025 ([past winners][winners])                | Sensors for flood prevention and drain maintenance                                | Manholes, not ponds; no seasonal level rule |
 
 - **Malaysia:** we found no developer or council running ponds this way. The drainage department "would consider smart monitoring tools" for selected projects ([NST][nst], _secondary_).
+- **Malaysian judges have seen sensors for drain upkeep.** A student team won USM's Varsity Hackathon 2025 with one ([past winners][winners]), so the pitch must lead with the ponds and the tide, not the sensor.
 - **Our read:** new in Malaysia, not globally. The new part here is checking each pond's outlet health from how fast it drains, and setting levels around the tide.
 
 [epa]: https://www.epa.gov/npdes/smart-sewers
@@ -78,6 +80,7 @@ Contents:
 [naro]: https://www.naro.go.jp/project/results/5th_laboratory/nire/2023/23_032.html
 [delfland]: https://www.hhdelfland.nl/loket/wegwijzer/melden-anoniem/hoog-water/kans-hevige-regen-neemt-toe/
 [smart]: https://www.water.gov.my/index.php/pages/view/430
+[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
 [nst]: https://www.pressreader.com/malaysia/new-straits-times/20260724/281616722149538
 
 ## Impact and how we measure it

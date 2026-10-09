@@ -21,6 +21,7 @@ Contents:
 ## Problem
 
 - **Floods in Bandar Bukit Raja.**
+  - It had about 40,000 residents in 2022, with 105,000 expected at full development ([Sime Darby Property research][sdp research]).
   - It is one of the two townships where SDP rates flooding a key acute risk ([CONTEXT]).
   - In November 2024 a flash flood reached "2,000 homes across 10 neighbourhoods". Residents asked SDP to "halt ongoing projects", and said Taman Kyra had had "five floods since 2021" ([FMT][fmt bbr], _secondary_).
   - It flooded again on 20 April and 8 May 2026 ([RTM][rtm apr]; [RTM][rtm may]).
@@ -44,6 +45,7 @@ Contents:
 [nhms alone]: https://www.bharian.com.my/berita/nasional/2026/04/1535870/188-peratus-warga-emas-di-malaysia-tinggal-sendirian-meningkat-3
 [nadma dgim]: https://www.nadma.gov.my/bm/media-2/program-dan-aktiviti/4444-sesi-perbincangan-perkongsian-maklumat-lokasi-orang-kurang-upaya-oku-warga-emas-dan-pesakit-terlantar-bagi-operasi-menyelamat-semasa-bencana
 [nadma rentan]: https://www.nadma.gov.my/bm/korporat/sektor-bahagian/bahagian-perancangan-dan-kesiapsiagaan-bencana-bppb/seksyen-logistik/90-korporat/5466-menjaga-golongan-rentan-ketika-banjir
+[sdp research]: /docs/research/sime-darby-property.md
 
 ## Target user
 
@@ -74,17 +76,21 @@ The residents' association holds the register; SDP convenes the scheme and suppl
 
 ## Why it's new
 
-| Closest analogue                                                                 | What it does                                                                                           | What it lacks                                  |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
-| Japan, Disaster Countermeasures Basic Act ([Cabinet Office][jp list])            | Lists of people needing help have been mandatory since 2013; individual plans since 2021 (effort duty) | Run by municipalities; patchy coverage (below) |
-| NADMA's planned location data ([NADMA][nadma dgim])                              | Would give rescuers the homes of disabled, elderly and bedridden people                                | No neighbour, no plan, no trigger              |
-| Washington State, Map Your Neighborhood ([WA EMD][myn])                          | Neighbours map who needs help                                                                          | Checks happen after the disaster               |
-| Penang's community preparedness programme ([Buletin Mutiara][cepa], _secondary_) | Maps vulnerable groups for rescuers                                                                    | No named buddy or trigger                      |
+| Closest analogue                                                                    | What it does                                                                                           | What it lacks                                           |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Japan, Disaster Countermeasures Basic Act ([Cabinet Office][jp list])               | Lists of people needing help have been mandatory since 2013; individual plans since 2021 (effort duty) | Run by municipalities; patchy coverage (below)          |
+| NADMA's planned location data ([NADMA][nadma dgim])                                 | Would give rescuers the homes of disabled, elderly and bedridden people                                | No neighbour, no plan, no trigger                       |
+| Washington State, Map Your Neighborhood ([WA EMD][myn])                             | Neighbours map who needs help                                                                          | Checks happen after the disaster                        |
+| Penang's community preparedness programme ([Buletin Mutiara][cepa], _secondary_)    | Maps vulnerable groups for rescuers                                                                    | No named buddy or trigger                               |
+| MySelamat, winner of the Great Malaysia AI Hackathon 2025 ([past winners][winners]) | Plans flood rescues from social media posts and map routing                                            | Starts after people post for help; no pre-agreed helper |
+| NADMA's SMS flood alerts, since 2024 ([existing solutions][existing])               | Free flood alerts to every phone                                                                       | Warns everyone, but assigns nobody to act               |
 
 - **Japan shows the gap:** 1,451,097 people had individual plans on 1 April 2025, but in 920 of Japan's 1,741 municipalities (52.8%), 20% or fewer of listed people had one ([Cabinet Office][jp survey]).
 - **Our read:** what's new is a named neighbour pair, triggered by a live gauge and measured in minutes, convened by the developer while the township is young. It is new in Malaysia, which Dr Lam accepts ([brief]), but not globally.
 
 [jp list]: https://www.bousai.go.jp/taisaku/hisaisyagyousei/yoshiensha.html
+[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
+[existing]: /docs/research/existing-solutions.md#floods-and-weather
 [myn]: https://m.mil.wa.gov/asset/5ba4202849a61
 [cepa]: https://www.buletinmutiara.com/cepa-perkasa-kesiapsiagaan-komuniti-tingkat-kesedaran-hadapi-risiko-banjir/
 [jp survey]: https://www.bousai.go.jp/taisaku/hisaisyagyousei/pdf/r7chosa1.pdf
