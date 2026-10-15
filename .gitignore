@@ -89,3 +89,7 @@ node_modules/
 # Graphify
 graphify-out/*
 !graphify-out/graph.json
+
+# Impeccable
+.agents/skills/impeccable/scripts/bin/
+.claude/skills/impeccable/scripts/bin/
