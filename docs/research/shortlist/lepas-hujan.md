@@ -2,7 +2,7 @@
 
 "We help new Sime Darby Property homeowners find roof and window leaks while the defect liability period still covers them." When heavy rain falls on their phase, the SDP App asks them to look, and one tap files a defect report stamped with the rainfall. _Lepas hujan_ is Malay for "after the rain".
 
-**Track:** Planet, climate resilience. **Rank:** see the [ranking](0000-ranking.md).
+**Track:** Planet, climate resilience. **Rank:** see the [ranking](/docs/archive/ideas/0000-ranking.md).
 
 Contents:
 
@@ -130,7 +130,7 @@ Contents:
 
 ## Scorecard
 
-**Rank 1 of 8** in the merged ranking, with a mean judge score of 74.0 out of 100. It drops to fifth if strategic fit counts for 50% ([ranking](0000-ranking.md#pass-2-round-10-rank-and-stress-test)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
+**Rank 1 of 8** in the merged ranking, with a mean judge score of 74.0 out of 100. It drops to fifth if strategic fit counts for 50% ([ranking](/docs/archive/ideas/0000-ranking.md#pass-2-round-10-rank-and-stress-test)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](/docs/archive/ideas/0000-ranking.md#judging-matrix).
 
 | Scorer                  | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
 | ----------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |

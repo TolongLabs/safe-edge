@@ -2,7 +2,7 @@
 
 What past winners, Sime Darby Property's own reports, Malaysian policy and data, and pitch best practices tell our team about winning Township of Tomorrow. The [brief] has the rules, dates, deliverables and judging weights; this file doesn't repeat them.
 
-Researched on 10 October 2026; facts from the [second ideation](/docs/ideas/0000-ranking.md#second-ideation-ten-more-rounds) added on 16 October 2026. Each fact links its source. SDP report citations give printed page numbers. Items marked **Our read** are our inferences, not findings. Sources marked _secondary_ are press or third-party write-ups, used where no primary source was found.
+Researched on 10 October 2026; facts from the [second ideation](/docs/archive/ideas/0000-ranking.md#second-ideation-ten-more-rounds) added on 16 October 2026. Each fact links its source. SDP report citations give printed page numbers. Items marked **Our read** are our inferences, not findings. Sources marked _secondary_ are press or third-party write-ups, used where no primary source was found.
 
 [brief]: /docs/BRIEF.md
 

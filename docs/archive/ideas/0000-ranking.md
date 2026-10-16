@@ -1,5 +1,7 @@
 # Idea ranking
 
+Archived on 17 October 2026. The team now chooses from the [shortlist](/docs/research/shortlist.md); Lepas Hujan moved to [its own pitch](/docs/research/shortlist/lepas-hujan.md).
+
 Eight candidate solutions for our Township of Tomorrow entry, ranked after two ten-round ideations against the judging matrix and the brief's rules: the first on 10 October 2026 and the second on 16 October 2026. This is evidence for the team's pick in [issue #18][i18], not the pick itself. Each idea has its own file: 0001 to 0004 come from the first ideation and 0005 to 0008 from the second, each numbered by its rank within its own ideation.
 
 [i18]: https://github.com/TolongLabs/sdp-hack/issues/18
@@ -74,7 +76,7 @@ Mean judge scores by criterion, out of 5, with the weights from the [brief], and
 [i2]: 0002-kolam-sedia.md
 [i3]: 0003-teduh.md
 [i4]: 0004-handover-loop.md
-[i5]: 0005-lepas-hujan.md
+[i5]: /docs/research/shortlist/lepas-hujan.md
 [i6]: 0006-jiran-projek.md
 [i7]: 0007-waktu-lancar.md
 [i8]: 0008-rumah-dijaga.md
