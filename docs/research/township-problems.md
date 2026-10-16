@@ -1,6 +1,6 @@
 # Township problems
 
-The strongest recent Malaysian statistics for each People and Planet focus area, as of 2026-10-10. Use them to size a problem on the first slide and to set a baseline for the impact criterion. Sources are 2024 to 2026; figures that rest on a search excerpt rather than an opened page are marked "excerpt". Local data sources are in [Open data](/docs/research/open-data.md).
+The strongest recent Malaysian statistics for each People and Planet focus area, as of 2026-10-10, with Elmina traffic, dengue and haze added on 2026-10-16. Use them to size a problem on the first slide and to set a baseline for the impact criterion. Sources are 2024 to 2026; figures that rest on a search excerpt rather than an opened page are marked "excerpt". Local data sources are in [Open data](/docs/research/open-data.md).
 
 Contents:
 
@@ -66,11 +66,14 @@ Contents:
 ### Mobility
 
 - An average Klang Valley commuter spends over 500 hours a year in traffic, about 2 hours 15 minutes a day, by a UKM lecturer's 2025 estimate ([TheVibes, excerpt][traffic]).
+- In City of Elmina, a resident told Focus Malaysia in April 2025 that "An 1km exit to my house takes an hour" ([Focus Malaysia][elmina-traffic]). Before its 2025 AGM, SDP blamed non-residents using its roads "as shortcuts to GCE and DASH highway" ([SDP AGM answers][sdp-agm] p. 6).
 - The 13th Malaysia Plan puts Klang Valley public transport's share of trips at 25.9%, with a 40% target for 2030 ([Bernama, excerpt][13mp-transport]). Ridership grew 18.6% a year from 2021 to 2024 (same source).
 - From 16 January 2026, 19 low-ridership bus routes, 16 of them MRT feeders, moved to on-demand vans ([Malay Mail, excerpt][drt]). The Shah Alam LRT line logged 60,000 trips on its first full day in June 2026 ([Malay Mail, excerpt][lrt3]).
 - Road safety: an average of 434 children died on Malaysian roads each year from 2014 to 2023, about eight a week ([NST, September 2025][kids]). Motorcyclists are about two thirds of road deaths ([TheVibes, August 2026, excerpt][moto]).
 
 [traffic]: https://www.thevibes.com/articles/lifestyle/112260/klang-valley-commuters-lose-over-500-hours-a-year-to-traffic-congestion
+[elmina-traffic]: https://focusmalaysia.my/lack-of-planning-foresight-leads-to-city-of-elminas-traffic-woes-stretches-far-and-wide-beyond-township/
+[sdp-agm]: https://www.simedarbyproperty.com/sites/default/files/2025-07/Pre-Meeting_Questions.pdf
 [13mp-transport]: https://www.bernama.com/en/news.php?id=2451628
 [drt]: https://www.malaymail.com/news/malaysia/2026/01/11/rapid-bus-to-restructure-klang-valley-routes-shift-lowridership-lines-to-ondemand-service-starting-jan-16/205032
 [lrt3]: https://www.malaymail.com/amp/news/malaysia/2026/06/30/strong-start-for-shah-alam-lrt3-as-rapid-kl-reports-60000-trips-on-first-full-day-of-service/225845
@@ -141,25 +144,28 @@ Energy has its own page: [Energy, HVAC and solar](/docs/research/energy-hvac-sol
 ### Biodiversity and urban nature
 
 - Selangor's wildlife department logged 18,444 complaints from 2023 to May 2025; nearly 80% were about monkeys ([Bernama, excerpt][wildlife]).
-- Dengue in Selangor fell 61% in 2025, to 23,565 cases from 60,364 ([Malay Mail, January 2026][dengue]). It rose again in 2026: by week 28 Selangor had 24 deaths, against five a year earlier ([Selangor Health Department, excerpt][dengue-2026]).
+- Dengue in Selangor fell 61% in 2025, to 23,565 cases from 60,364 ([Malay Mail, January 2026][dengue]). It rose again in 2026: by week 40 Selangor had 31,782 cases, up 72.6% from 18,419 a year earlier, and 31 deaths against 6. Petaling district had 12,313 cases against 6,872 (+79.2%), and Klang 3,735 against 3,471 (+7.6%) ([Selangor Health Department, week 40][dengue-2026]).
 - SDP's own nature targets and partners are in [Sime Darby Property](/docs/research/sime-darby-property.md#climate-risk-nature-and-community).
 
 [wildlife]: https://www.bernama.com/en/news.php?id=2456087
 [dengue]: https://www.malaymail.com/news/malaysia/2026/01/15/selangor-posts-sharp-61pc-fall-in-dengue-cases-deaths-nearly-halved-says-state-exco/205577
-[dengue-2026]: https://jknselangor.moh.gov.my/images/2026/denggi/ME28_26%20UPDATE.pdf
+[dengue-2026]: https://jknselangor.moh.gov.my/images/2026/denggi/ME40_26.pdf
 
 ### Climate resilience: floods, heat and haze
 
 - **Floods:** national flood losses were RM636.9 million in 2025, down from RM933.4 million in 2024; Selangor lost RM52.9 million ([RinggitPlus, citing DOSM][floods]). Flash floods on 11 April 2025 hit Petaling, Klang, Sepang, Hulu Langat and Gombak ([NST, excerpt][flash]).
 - **SDP's own exposure:** a Swiss Re assessment found flood exposure at Bandar Bukit Raja and Bandar Universiti Pagoh ([Sime Darby Property](/docs/research/sime-darby-property.md#climate-risk-nature-and-community)).
 - **Heat:** MetMalaysia issues a Level 1 heat alert at 35 to 37°C for three or more days. Parts of Selangor were on Level 1 in April 2026 and again in August 2026 ([Malay Mail, excerpt][heat]). A 2024 small-scale test found a ventilated cool roof kept a model house up to 4.8°C cooler indoors ([UTHM][coolroof]).
-- **Haze:** Johan Setia in Selangor reached an air-pollutant index of 193 on 18 September 2026 ([Malay Mail, excerpt][haze]).
+- **Haze:** Johan Setia in Selangor reached an air-pollutant index of 193 on 18 September 2026 ([Malay Mail, excerpt][haze]). In October, haze closed Selangor schools; they were due to reopen on 15 October ([The Star][haze-reopen]), then schools in eight districts, including Klang and both Petaling districts, closed again on 16 October ([The Star][haze-close]). In Singapore on 15 October, people queued for N95 masks, while air-conditioned haze shelters "appeared to be less popular" ([The Straits Times][sg-shelters]).
 
 [floods]: https://ringgitplus.com/en/blog/personal-finance-news/dosm-malaysias-flood-losses-ease-to-rm636-9-million-in-2025.html
 [flash]: https://www.nst.com.my/amp/news/nation/2025/04/1200305/5-selangor-districts-hit-floods-after-overnight-rain-watch
 [heat]: https://www.malaymail.com/news/malaysia/2026/08/25/metmalaysia-warns-of-sustained-hot-spell-17-areas-nationwide-placed-under-caution-status/232545
 [coolroof]: https://periodical.uthm.edu.my/index.php/rtcebe/article/view/5894
 [haze]: https://www.malaymail.com/news/malaysia/2026/09/18/haze-update-35-areas-now-with-unhealthy-api-selangors-johan-setia-tops-193/235635
+[haze-reopen]: https://www.thestar.com.my/news/nation/2026/10/14/haze-all-schools-in-selangor-to-reopen-tomorrow
+[haze-close]: https://www.thestar.com.my/news/nation/2026/10/15/schools-in-eight-selangor-districts-now-announced-to-be-closed-friday-as-haze-worsens
+[sg-shelters]: https://www.straitstimes.com/singapore/lines-form-for-n95-masks-as-haze-situation-persists-but-haze-centres-see-few-people
 
 ## Where the numbers point
 

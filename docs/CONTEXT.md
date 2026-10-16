@@ -2,7 +2,7 @@
 
 What past winners, Sime Darby Property's own reports, Malaysian policy and data, and pitch best practices tell our team about winning Township of Tomorrow. The [brief] has the rules, dates, deliverables and judging weights; this file doesn't repeat them.
 
-Researched on 10 October 2026. Each fact links its source. SDP report citations give printed page numbers. Items marked **Our read** are our inferences, not findings. Sources marked _secondary_ are press or third-party write-ups, used where no primary source was found.
+Researched on 10 October 2026; facts from the [second ideation](/docs/ideas/0000-ranking.md#second-ideation-ten-more-rounds) added on 16 October 2026. Each fact links its source. SDP report citations give printed page numbers. Items marked **Our read** are our inferences, not findings. Sources marked _secondary_ are press or third-party write-ups, used where no primary source was found.
 
 [brief]: /docs/BRIEF.md
 
@@ -163,6 +163,9 @@ Each is in SDP's own words, so it doubles as a problem statement SDP already acc
 - **Biodiversity:** SDP began piloting data-enabled nature-risk tools in 2025 and has "begun establishing baseline data" ([SR2025] pp. 60 to 64).
 - **Solar:** for the Elmina rooftop solar scheme, "scale-up opportunities are being explored with potential off-takers including petrol stations, commercial hubs, and even nearby schools" ([CREAM launch]).
 - **Micro-entrepreneurs** "face challenges due to limited access to digital tools and business expertise" ([SR2025] p. 97).
+- **Traffic:** asked before its 2025 AGM about congestion in "areas like Elmina and Denai Alam", SDP answered in writing that the roads it has opened over the years "led to a surge in external traffic, as non-residents increasingly use these routes as shortcuts to GCE and DASH highway contributing to congestion within the area". Its fixes are a GCE interchange upgrade, a planned DASH link via Elmina Ridge and "coordinated traffic measures alongside relevant authorities" ([AGM answers][agm] p. 6).
+
+[agm]: https://www.simedarbyproperty.com/sites/default/files/2025-07/Pre-Meeting_Questions.pdf
 
 ### Already done by SDP
 
@@ -218,15 +221,17 @@ Under the [Strata Management Act 2013][strata act], the developer's management p
 
 ### Policy that shapes feasibility
 
-- **Waste:** Selangor hasn't adopted the national solid waste law (Act 672), so SWCorp doesn't collect there. A phased extension to Selangor was announced on 29 July 2026, without dates ([The Edge][act 672], _secondary_). Selangor's own company, KDEB Waste Management, runs collection, the [iClean Selangor] complaint app and [SELKitar] door-to-door recycling. Only 20.7% of Selangor households separate recyclables, according to KDEBWM's managing director ([Media Selangor][separation], _secondary_).
+- **Waste:** Selangor hasn't adopted the national solid waste law (Act 672), so SWCorp doesn't collect there. A phased extension to Selangor was announced on 29 July 2026, without dates ([The Edge][act 672], _secondary_). Selangor's own company, KDEB Waste Management, runs collection, the [iClean Selangor] complaint app and [SELKitar] door-to-door recycling. SELKitar's first phase ends in SDP's [Serenia City], where 2,518 households in nine housing areas were due to join in September 2026 ([The Star][selkitar star], _secondary_). Only 20.7% of Selangor households separate recyclables, according to KDEBWM's managing director ([Media Selangor][separation], _secondary_).
 - **Rooftop solar:** the [Solar ATAP guideline] took effect on 1 January 2026. Domestic systems above 5 kW single-phase or 15 kW three-phase need an extra connection check, exports earn credit at the energy charge, and unused credit is forfeited at the end of each billing period. Developers can submit a "Domestic Group" plan for a new development. SDP was the first company to join [CREAM], the scheme that lets homeowners lease roofs to a third party selling power nearby ([SDP CREAM release]).
 - **Smart features as planning conditions:** a [PLANMalaysia guideline] lets councils require smart parking, smart crossings, micromobility lanes, rainwater harvesting, recycling bins, food composting and facilities for disabled and elderly people as conditions of development approval.
 - **Personal data:** the Personal Data Protection (Amendment) Act 2024 came into force in phases during 2025 ([PDP]), and the Commissioner's 2025 circulars cover data breach notification and data protection officers.
+- **Defect liability:** the standard sale contracts give buyers a 24-month defect liability period, and the developer must repair "within thirty (30) days of the Developer having received written notice" ([VCC Law][vcc], _secondary_). Buyers can still claim at the Homebuyers' Tribunal for up to 12 months after the period ends, up to RM50,000 ([Thomas Philip][tribunal], _secondary_). Singapore's HDB adds a "5-year warranty for ceiling leaks and external wall seepage" ([MND][mnd]), and Japan makes sellers liable for 10 years for the parts of a home that keep rain out ([MLIT][mlit]). In Malaysia, Trinity Group offers a "10-Years Warranty for Roof Leaks" on two of its developments ([Trinity][trinity]).
 - **EV charging:** Malaysia had 6,416 public chargers on 31 May 2026 ([Bernama][ev], _secondary_), against an earlier target of 10,000 by the end of 2025 and a new one of 30,000 by 2030 ([paultan.org][ev targets], _secondary_).
 
-**Our read:** waste separation sits in a policy gap. A mandate is coming without dates, and SELKitar is only considering strata homes for 2027 ([The Star][selkitar], _secondary_), so an idea that makes separation measurable in SDP townships before the mandate has a clear story. For solar, forfeited export credit makes using power at home during solar hours worth more than exporting it; check that arithmetic against the [July 2025 tariff][tnb] (_secondary_) before pitching it.
+**Our read:** waste separation sits in a policy gap. A mandate is coming without dates, and SELKitar is only considering strata homes for 2027 ([The Star][selkitar star], _secondary_), so an idea that makes separation measurable in SDP townships before the mandate has a clear story. For solar, forfeited export credit makes using power at home during solar hours worth more than exporting it; check that arithmetic against the [July 2025 tariff][tnb] (_secondary_) before pitching it.
 
 [act 672]: https://theedgemalaysia.com/node/812464
+[Serenia City]: https://www.simedarbyproperty.com/serenia-city
 [iClean Selangor]: https://www.kdebwm.com/centralized-command-centre/i-clean-selangor-smart-application/
 [SELKitar]: https://www.selkitar.com.my/en
 [separation]: https://mediaselangor.com/en/2026/07/386712
@@ -234,10 +239,15 @@ Under the [Strata Management Act 2013][strata act], the developer's management p
 [CREAM]: https://www.singlebuyer.com.my/market/market-operations/programs/cream
 [SDP CREAM release]: https://www.simedarbyproperty.com/press-releases/sime-darby-property-leads-nations-first-community-solar-rollout-under-netr-tnb
 [PLANMalaysia guideline]: https://www.planmalaysia.gov.my/uploads/content-downloads/file_20251114204343.pdf
+[vcc]: https://www.vcclaw.com.my/articles/liability-of-a-developer-after-the-defect-liability-period-in-housing-development-control-and-licen
+[tribunal]: https://www.thomasphilip.com.my/articles/what-you-need-to-know-about-homebuyerrs-tribunal/
+[mnd]: https://www.mnd.gov.sg/newsroom/speeches/view/written-answer-by-ministry-of-national-development-on-recourse-for-residents-of-new-hdb-bto-projects-should-defects-that-surfaced-and-are-rectified-during-the-defects-liability-period-(dlp)-recur-after-the-dlp
+[mlit]: https://www.mlit.go.jp/jutakukentiku/house/content/001586555.pdf
+[trinity]: https://www.trinitygroup.com.my/news/trinity-group-launches-malaysias-first-gold-assurance-programme-malaysian-business/
 [PDP]: https://www.pdp.gov.my/ppdpv1/en/akta/personal-data-protection-amendment-act-2024-appointment-of-date-of-coming-into-operation/
 [ev]: https://www.bernama.com/en/general/news.php?id=2578523
 [ev targets]: https://paultan.org/2026/07/09/a-total-of-6416-public-ev-chargers-installed-as-of-may-31-2026-30000-chargers-targeted-by-2030-miti/
-[selkitar]: https://www.thestar.com.my/metro/metro-news/2026/08/24/selangor-ramps-up-recycling-efforts
+[selkitar star]: https://www.thestar.com.my/metro/metro-news/2026/08/24/selangor-ramps-up-recycling-efforts
 [tnb]: https://paultan.org/2025/06/20/big-changes-to-domestic-tnb-bill-structure-no-more-tiered-rates-base-tariff-up-by-13-64-from-july-2025/
 
 ### Evidence of township pain points
@@ -245,9 +255,12 @@ Under the [Strata Management Act 2013][strata act], the developer's management p
 - **Floods:** the late-2021 and early-2022 floods cost Malaysia RM6.1 billion ([DOSM floods]). By 22 December 2021, 14 people had died in Shah Alam, including in Taman Sri Muda ([The Star][sri muda], _secondary_). On 12 November 2024 a flash flood covered Persiaran Sungai Keramat in Bandar Bukit Raja with up to 0.4 m of water ([RTM][bbr flood]).
 - **Ageing:** people aged 60 and over rose from 10.6% to 13.5% of Petaling district (where Elmina is) between 2020 and 2026, and from 10.5% to 12.7% of Klang district. We computed these from DOSM's [district population data][dosm pop]. Malaysia officially became an ageing nation in 2021, when 7% of people were 65 or over, and is projected to become an aged nation, at 14%, by 2048, the Second Finance Minister told Parliament in August 2025 ([Malay Mail][aged], _secondary_).
 - **Public transport:** Elmina has no rail station. Our analysis of Rapid KL's [GTFS feeds][gtfs] on 10 October 2026 found only two MRT feeder routes inside Elmina, each running about every 25 to 30 minutes. Bandar Bukit Raja's LRT3 station isn't built; construction starts in late 2026 ([paultan.org][lrt3], _secondary_).
+- **Traffic:** Focus Malaysia reported in April 2025 on "some 40,000 residents" of City of Elmina, quoting one: "An 1km exit to my house takes an hour" ([Focus Malaysia][focus], _secondary_). In September 2026 the Kota Damansara state assemblyman said Subang Bestari's congestion "sudah berlarutan lebih 15 tahun dan kini semakin teruk apabila penempatan di Elmina bertambah" (has dragged on for over 15 years and is getting worse as Elmina grows) ([Newswav][newswav], _secondary_). SDP's own answer is under [Gaps SDP admits](#gaps-sdp-admits).
 - **Illegal dumping:** Klang's council runs 507 CCTV cameras at dumping hotspots and issued 393 compounds in 2024 ([The Star][dumping], _secondary_).
 - **Water:** domestic use in Selangor, Kuala Lumpur and Putrajaya averaged 241 litres per person per day in 2023, against the 160 litres the World Health Organization recommends ([Air Selangor]; [Air Selangor on WHO][air who]).
+- **Dengue:** Selangor recorded 31,782 cases by week 40 of 2026, up 72.6% on the same period of 2025, with 31 deaths against 6. Cases in Petaling district rose 79.2%, to 12,313 ([JKN Selangor][jkns40]).
 - **Heat:** the health ministry recorded 56 heat-related cases nationally, including 2 deaths, between 1 January and 3 May 2026 ([Malay Mail][heat], _secondary_). We found no official township-level heat data.
+- **Haze:** haze closed Selangor schools in October 2026. They were due to reopen on 15 October ([The Star][haze reopen], _secondary_), then schools in eight districts, including Klang and both Petaling districts, closed again on 16 October ([The Star][haze close], _secondary_).
 
 [DOSM floods]: https://www.dosm.gov.my/portal-main/release-content/special-report-on-impact-of-floods-in-malaysia-2021
 [sri muda]: https://www.thestar.com.my/news/nation/2021/12/22/floods-two-more-bodies-found-in-taman-sri-muda-bringing-total-to-14-says-the-police
@@ -256,10 +269,15 @@ Under the [Strata Management Act 2013][strata act], the developer's management p
 [aged]: https://www.malaymail.com/news/malaysia/2025/08/26/second-finance-minister-says-malaysia-to-be-aged-nation-by-2048-govt-planning-blueprint-as-births-fall-lifespans-rise/188944
 [gtfs]: https://developer.data.gov.my/realtime-api/gtfs-static
 [lrt3]: https://paultan.org/2026/06/30/construction-of-5-reinstated-lrt3-stations-to-start-late-2026-tropicana-temasya-bukit-raja-bandar-botanik/
+[focus]: https://focusmalaysia.my/lack-of-planning-foresight-leads-to-city-of-elminas-traffic-woes-stretches-far-and-wide-beyond-township/
+[newswav]: https://newswav.com/article/usaha-atasi-kesesakan-subang-bestari-masuk-peringkat-awal-satu-pemaju-setuj-A2609_439KCr
 [dumping]: https://www.thestar.com.my/metro/metro-news/2025/03/22/507-cctv-cameras-to-deter-illegal-dumping-in-klang
 [air who]: https://hydrohub.airselangor.com/publication/stemming-the-tide-in-water-loss/
 [Air Selangor]: https://hydrohub.airselangor.com/publication/air-selangor-implements-various-measures-to-promote-water-conservation-ensuring-sustainable-water-supply-for-the-future/
+[jkns40]: https://jknselangor.moh.gov.my/images/2026/denggi/ME40_26.pdf
 [heat]: https://www.malaymail.com/news/malaysia/2026/05/03/health-ministry-says-56-heat-related-illnesses-two-deaths-reported-since-january/218567
+[haze reopen]: https://www.thestar.com.my/news/nation/2026/10/14/haze-all-schools-in-selangor-to-reopen-tomorrow
+[haze close]: https://www.thestar.com.my/news/nation/2026/10/15/schools-in-eight-selangor-districts-now-announced-to-be-closed-friday-as-haze-worsens
 
 ### Already on the market in Malaysia
 
