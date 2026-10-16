@@ -45,11 +45,12 @@ Contents:
 
 ## Solution and how it works
 
-1.  **Measure.** The engineer walks one phase and records each water-edge segment: path distance, bank profile, drain depth, barriers and gaps, lighting, and nearby schools, playgrounds and fishing spots.
-2.  **Check against the rules.** Each segment is checked against MSMA and the council's handover checklist. Every flag shows the rule, the measurement, its source and anything missing. Safe Edge ranks segments for inspection; it never gives a drowning probability.
-3.  **Hold the unknowns.** A segment with unknown depth stays unresolved and can never be cleared.
-4.  **Fix and prove.** A flag becomes a work order. It closes only after the reviewer accepts the fix, installed evidence is uploaded and a reinspection confirms it; rejected evidence reopens it. Prevention (barriers, covers, slopes), escape and rescue equipment are tracked separately, so a ring buoy never cancels a dangerous drop.
-5.  **Hand over and stay accountable.** The handover pack lists every edge, its custodian and its verified fixes. After handover, a later defect becomes an ISF-ready work package for the council: hazard, owner, rule, quote and fund line.
+1.  **Set up the asset.** Record the asset and phase, the local authority, the current custodian, the approved drawing revision and the responsible engineer before anyone walks the site.
+2.  **Measure one access route.** The unit of work is a route from a path to an exposed edge and the control that should stop it: a cover, a rail, a barrier end or a gate. The engineer records a plan sketch, a section and labelled photos of both ends, with the method and its uncertainty. Drain depth and water depth are kept apart.
+3.  **Check against the rules.** Each check returns a finding, no finding, not applicable or needs information, with the clause, the measurement and its source. Continuity and bypass checks are labelled as human observations. Safe Edge never computes a drowning risk; the engineer sets urgency.
+4.  **Act now on what is visible.** A missing cover or broken barrier gets interim protection at once. Missing depth blocks only the checks that need it, and that data request goes back to the field with an owner and a due date.
+5.  **Fix and prove.** The engineer approves the remedy and its acceptance test before any work is issued, and a budget holder authorises it. The contractor submits installed evidence; a reviewer who did not install it checks it on site. Rejection keeps the earlier evidence and states the failed item. Assessment, repair and custody each keep their own status.
+6.  **Hand over and stay accountable.** The pack lists every route, its open findings and its verified repairs. The receiving authority records acceptance, and each edge keeps a next inspection date. Later damage opens a linked defect. A maintenance funding request, for example from the ISF, comes after the first pilot.
 
 The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
 
@@ -63,7 +64,7 @@ The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6P
 | Smart Dublin ring buoys ([lake edges][lake-edges])       | Alerts when rescue equipment goes missing                           | Equipment only; says nothing about the edge itself             |
 | England's Infrastructure Funding Statements ([ISF][isf]) | Councils report developer contributions received and spent          | Fund level, not asset by asset, and not in Malaysia            |
 
-- **Our read:** no tool we found joins a water-edge rule check, verified repair and a record that carries the ISF past handover.
+- **Our read:** no tool we found joins a water-edge rule check, a repair accepted against an agreed test and a record that carries custody past handover.
 
 [pub]: https://www.pub.gov.sg/Resources/News-Room/PressReleases/2024/09/Media-Factsheet-on-Alkaff-Lake
 [lake-edges]: /docs/research/niche-problems/lake-edges.md
@@ -71,8 +72,9 @@ The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6P
 
 ## Impact and how we measure it
 
-- **Primary outcome:** hazardous edge metres closed and verified before handover, against what the current checklist finds on the same phase.
-- **Repair quality:** reopened fixes and protection still intact at reinspection.
+- **Primary outcome:** controls verified on site, against defects confirmed, with the inspected coverage shown. Edge metres are a secondary count.
+- **Decision quality:** on the same evidence, the current checklist against Safe Edge; a practitioner judges useful findings, false flags, unresolved items and review time.
+- **Repair quality:** rejected submissions, reopened fixes and protection still intact at reinspection.
 - **Accountability:** share of edges handed over with a named custodian, and time from a later defect report to a verified fix.
 - **What we won't claim:** drowning deaths are too rare to count in a pilot, so the pilot measures hazards and repairs, not lives saved.
 
@@ -88,30 +90,31 @@ The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6P
 
 ## Pilot
 
-| Element       | Plan                                                                                                                         |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Where         | One SDP phase before handover, plus one SDP lake park (Elmina Central Park is reported to be under a 21-year SDP leaseback)  |
-| Owner         | SDP's project team for the phase, with township management for the park                                                      |
-| Duration      | One phase from final inspections to handover, about 6 months                                                                 |
-| Cost          | App work and field time; physical fixes are priced per edge from contractor quotes                                           |
-| Approvals     | SDP alone before handover; the receiving council for the post-handover record                                                |
-| Success       | More verified hazards closed than the current checklist finds, fewer reopened fixes, every edge handed over with a custodian |
-| Decision gate | If met, add it to every phase handover with water edges                                                                      |
-| Risks         | No budget for fixes: price them first. Council won't accept the record: start with SDP-retained parks                        |
+| Element       | Plan                                                                                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Where         | One pre-handover drain asset in one SDP phase. A lake park (Elmina Central Park is reported to be under a 21-year SDP leaseback) comes second |
+| Owner         | One SDP project engineer, with one budget approver                                                                                            |
+| Duration      | One asset from final inspections to handover, about 6 months                                                                                  |
+| Cost          | A quantity-based sheet: survey and review, interim controls, installed work, repeat inspection and software support                           |
+| Approvals     | SDP alone before handover; the receiving authority records acceptance of the handover pack                                                    |
+| Success       | More confirmed defects found and verified than the current checklist, fewer reopened fixes, a custodian and inspection date for every edge    |
+| Decision gate | If met, add it to every phase handover with water edges, then lake parks, then council funding requests                                       |
+| Risks         | No budget for fixes: price them first. The recipient can't use the pack: test one hand-off before promising more                              |
 
 ## Prototype by 23 October
 
-- **What it is:** a web app, built with React, Three.js and a map library.
+- **What it is:** a web app built with React, Leaflet, Three.js and Supabase. The vet rated it buildable in 7 days with cuts.
 - **Software components:**
-  - Edge register: segments drawn on an OpenStreetMap base map of one SDP area, each with its measurements, photos and source.
-  - Rule engine: a JSON rule file with MSMA clauses and council checklist items; each flag carries the rule, the value and the missing data.
-  - Measured cutaway: a Three.js section of one real edge, current against proposed fix, at normal and storm water levels.
-  - Work-order flow: assign, upload evidence, reviewer accept or reject, reinspect, close.
-  - Handover pack and ISF work package: CSV or PDF export.
-- **Real data:** one edge the team measures with tape, level and, if access allows, a consumer sonar; OpenStreetMap paths, schools and playgrounds; MSMA and council thresholds.
-- **Labelled simulation:** reviewer and contractor accounts, and a staged repair, clearly marked in the demo.
-- **Build plan:** days 1 to 2 measure one edge and interview a drainage practitioner; days 3 to 4 register, rules, cutaway and work orders; day 5 compare against the current checklist; days 6 to 7 deck and video.
-- **Evidence before submission:** one measured edge with a bypass around existing protection, a side-by-side with the current checklist, and an itemised repair quote.
+  - Edge register and field form: one edge and its access routes on a saved OpenStreetMap extract, with measurements, photos, sources and uncertainty.
+  - Rule checks: plain TypeScript checks from a small JSON rule file. Start with one MSMA cover check, one human-recorded continuity check and one maintenance-access review.
+  - Review-and-repair flow: saved state changes with required fields. The installer can't verify their own repair, and nothing is accepted without reinspection evidence.
+  - Measured view: a plan, one section and photos; a short Three.js view shows only measured geometry and labels the rest unknown.
+  - Evidence pack: a printable record plus CSV or JSON and the original files. It attaches by hand to SDP's Procore item with that item's ID.
+- **Cut from the build:** a live Procore API, council acceptance and ISF funding flows, sonar, flood simulation and a computed risk score.
+- **Real data:** one permitted edge the team measures; OpenStreetMap paths, schools and playgrounds; MSMA clause text, confirmed by the project engineer.
+- **Labelled simulation:** reviewer and contractor accounts, and a rehearsed repair, clearly marked in the demo.
+- **Build plan:** days 1 to 2 site access, measurements and rule review; days 3 to 4 the saved case, rules, review flow and export; day 5 the practitioner comparison on identical evidence; days 6 to 7 deck and video. Drop the 3D view if the saved flow is not done by day 4.
+- **Evidence before submission:** one measured route with a documented gap or bypass, the practitioner comparison and an itemised repair quote. Don't stage a defect to fit the story.
 
 ## Scorecard
 
@@ -126,6 +129,7 @@ Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 u
 - **Experts in round 4:** a drainage and water-safety engineer and a developer project director both said "wounded, back it with fixes"; no fatal attacks remained.
 - **Biggest weakness:** no proof yet that it finds hazards the current checklist misses, and no priced repair.
 - **The change that would raise it most:** one measured edge with a real bypass that makes the cheap fix wrong, shown against the current checklist.
+- **Solution vet, 17 October:** a drainage and water-safety engineer said "needs changes", nothing fatal. The top fix is to agree each repair's acceptance test before work starts, then prove it on one real access route. All its workflow and build changes are folded in above.
 
 ## Risks and open questions
 
@@ -141,3 +145,4 @@ Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 u
 - **Round 3:** became Safe Edge with a 3D lake view; the stricter judge found the underwater geometry unmeasured.
 - **Round 4:** narrowed to an explainable rule check with verified repair, a measured cutaway and the ISF accountability layer from the practitioner; the fatal attack was cleared.
 - **Round 5:** held at 66; the remaining gap is field evidence.
+- **Solution vet:** the unit of work became one access route and its control; the pilot shrank to one drain asset; ISF funding moved after the first pilot.

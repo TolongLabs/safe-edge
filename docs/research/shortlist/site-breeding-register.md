@@ -1,6 +1,6 @@
 # Site breeding register
 
-"We help Sime Darby Property's contractors find every place Aedes can breed on a building site, floor by floor, and prove each fix, so no spot shows clear without a check." Heavy rain adds checks, a verifier accepts or rejects each fix, and neighbours get a monthly summary of verified results. Working name; first called Rain Check.
+"We help Sime Darby Property's contractors show, floor by floor, which areas of a building site were searched for Aedes breeding, what was found, and which fixes were checked." Heavy rain adds checks, a separate checker accepts or rejects each fix, and SDP can share a dated summary with neighbours. Working name; first called Rain Check.
 
 **Track:** People, health and wellbeing. **Rank:** see the [shortlist](/docs/research/shortlist.md).
 
@@ -41,17 +41,19 @@ Contents:
 ## Target user
 
 - **Primary:** the main contractor's site environmental officer on an SDP building site next to occupied homes.
-- **Secondary:** SDP's clerk of works, who verifies fixes, the foremen who carry them out, and the neighbouring residents who read the monthly summary.
+- **Secondary:** the contractor's site manager, who owns resources and unresolved work; a trained checker who did not do the fix; and SDP as sponsor and auditor. Neighbouring residents benefit and read the summary; they don't use the app.
 
 ## Solution and how it works
 
-1.  **Register every spot.** Each breeding-prone location from the MOH guide sits on its floor, with an owner and the age of its last check.
-2.  **Keep routine checks; let rain add more.** When the site's rain gauge or the nearest JPS gauge passes a threshold, the register adds a due check for exposed locations.
-3.  **Walk the floors.** The officer gives every location a state: not checked, blocked, finding open or verified. A missed or blocked location can never show clear.
-4.  **Fix and verify.** A finding goes to a named foreman, the fix needs photo evidence, and the clerk of works accepts or rejects it. A repeat finding reopens the same location with its history.
-5.  **Escalate and share.** Overdue or blocked locations escalate to SDP's project manager, and neighbours get a monthly summary of verified results, with no health-outcome claims.
+1.  **Register areas, not just spots.** Each floor and ground zone is a named area. Sources found there, from the MOH guide's list of targets, get stable IDs and their own history.
+2.  **Plan dated rounds; let rain add more.** Routine rounds follow the site's control plan; the 2015 MOH guide sets weekly searches ([MOH guide 2015, §6.1][moh-2015]). When the officer records heavy rain, they add areas to an extra round. A second shower never resets an open finding's clock.
+3.  **Sweep each area.** The officer searches the whole area, not only known pins, and records the sweep as complete, partial or blocked. An unswept area stays visible even when every known pin is checked. A dry check closes without creating a task.
+4.  **Fix, then check separately.** The officer can fix a safe problem on the spot, or assign it to a named person. A checker who did not do the fix rechecks it on site; nobody approves their own fix. A repeat finding opens a new incident linked to the same source, and needs a cause.
+5.  **Escalate and report.** Blocked, overdue and unchecked work goes to the contractor manager first, then to SDP. A dated report shows every state, including unswept and unresolved areas. Official orders from health officers are tracked apart, and only they can close them.
 
 The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
+
+[moh-2015]: https://dosh.gov.my/wp-content/uploads/2024/10/Garis-Panduan-Pengawalan-Nyamuk-Aedes-Di-Tapak-Tapak-Pembinaan-2015.pdf
 
 ## Why it's new
 
@@ -62,15 +64,16 @@ The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6P
 | Construction apps such as Procore and BuildTrack ([screen][screen]) | General site inspections and tasks; SDP uses Procore          | No Aedes location register or verified close-out       |
 | MOH construction-site guide ([MOH guide][moh-guide])                | Lists what to inspect and who is responsible                  | Paper guidance; no record of what was checked or fixed |
 
-- **Our read:** the new part is a register in which a location cannot show clear without a check and a verified fix, joined to rain and to a summary neighbours can read.
+- **Our read:** the new part is dated area sweeps that keep unsearched areas visible, joined to separately checked fixes, recurrence history and rain. Procore already has floor locations and rejection, so the pilot tests whether these controls add value on top of it.
 
 [raincheck]: https://www.raincheckhq.com/resources/rain-event-inspections
 [idengue]: https://idengue.mysa.gov.my/ide_v3/introduction.html
 
 ## Impact and how we measure it
 
-- **Primary outcome:** audited coverage, the share of registered locations checked on schedule and after heavy rain.
-- **Breeding:** positive locations per containers inspected, and repeat findings at the same location.
+- **Primary outcome:** checks done on time against checks due in each round, with unswept areas shown.
+- **Omissions:** sources found by a separate area audit that the round missed, against areas searched.
+- **Breeding:** positive water-holding containers against inspected water-holding containers, and repeat findings at the same source.
 - **Speed:** time from finding to verified fix.
 - **Cost:** staff minutes per inspection round, including verification.
 - **What we won't claim:** dengue cases prevented; nearby cases don't prove a site caused them.
@@ -86,31 +89,34 @@ The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6P
 
 ## Pilot
 
-| Element       | Plan                                                                                         |
-| ------------- | -------------------------------------------------------------------------------------------- |
-| Where         | One active SDP phase beside occupied homes, with a comparison site                           |
-| Owner         | SDP's project team, with the main contractor's environmental officer                         |
-| Duration      | 8 to 12 weeks for the first stage, then a monsoon season                                     |
-| Cost          | App work and verification time; corrective work is already the contractor's duty             |
-| Approvals     | SDP and the main contractor; no public body needed                                           |
-| Success       | Higher audited coverage, fewer repeat findings and faster verified fixes than the comparison |
-| Decision gate | If met, add the register to SDP's contract requirements for sites next to homes              |
-| Risks         | Paperwork without fixes: spot rechecks. Staff time: measure it and keep the form short       |
+| Element       | Plan                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Where         | One active SDP phase beside occupied homes, with a comparison site                                                                |
+| Owner         | SDP's project team, with the main contractor's environmental officer                                                              |
+| Duration      | 8 to 12 weeks for the first stage, then a monsoon season                                                                          |
+| Cost          | App work and verification time; corrective work is already the contractor's duty                                                  |
+| Approvals     | SDP and the main contractor; no public body needed                                                                                |
+| Success       | More on-time checks, fewer omissions and repeat findings, and faster checked fixes than the comparison, with targets agreed first |
+| Decision gate | If met, add the register to SDP's contract requirements for sites next to homes                                                   |
+| Risks         | Paperwork without fixes: spot rechecks. Staff time: measure it and keep the form short                                            |
+| Baseline      | Start with the current process; match comparison areas by work stage; log weather and site changes                                |
 
 ## Prototype by 23 October
 
-- **What it is:** a mobile-first web app that works offline, built with React and Three.js.
+- **What it is:** a mobile-first web app that works offline, built with React, Dexie and Supabase. The vet rated it buildable in 7 days with cuts.
 - **Software components:**
-  - Location register: floors and breeding-prone locations from a real floor plan, each with an owner and last-check age.
-  - Rain trigger: polls the nearest JPS Public Infobanjir gauge and adds due checks above a threshold.
-  - Phone checklist: a state for every location, with photo and timestamp, saved offline.
-  - Task and verification flow: foreman task, photo proof, verifier accept or reject, repeat findings reopen, overdue items escalate.
-  - Exploded floor view: a Three.js stack of floors showing unchecked floors, blocked spots and open findings.
-  - Resident summary: a monthly page of verified results.
-- **Real data:** one consenting site's floor plan and inspection records; JPS rainfall; MOH guide targets.
-- **Labelled simulation:** if site access fails, a campus building with documented records, said plainly in the demo.
-- **Build plan:** day 1 site access and an interview with the environmental officer; days 2 to 4 register, checklist, verification and floor view; day 5 test with the officer against the current checklist; days 6 to 7 deck and video.
-- **Evidence before submission:** one location the current checklist misses, or a fix closed without a recheck, and staff minutes for both methods on the same floor.
+  - Area and source register with dated rounds: areas, sources, rounds and observations kept as separate records, from a hand-made CSV and area sketch.
+  - Phone inspection form: water state, immature mosquitoes seen, containers inspected and action needed, saved offline in an upload queue.
+  - Fix, recheck and escalation flow: separate test accounts, server-enforced roles, an append-only history and an in-app overdue queue.
+  - Rain events: entered by hand with their source; a reading from a station off site is labelled as such.
+  - Exploded floor view: Three.js slabs built from the same area records, capped at half a day and kept only if a user test shows it helps.
+  - Report: one internal, printable snapshot with scope, dates and unresolved work.
+- **Cut from the build:** automatic JPS polling, SMS, WhatsApp and push alerts, a live public feed, a "dengue-safe" badge and a live Procore link. A CSV with stable IDs stands in for Procore.
+- **Real data:** one consenting site's areas and observations; MOH guide targets.
+- **Labelled simulation:** if site access fails, a campus building with documented records, said plainly in the demo. Never create standing water for the demo.
+- **Build plan:** day 1 agree the field method and collect a small consented dataset; days 2 to 3 the sweep, fix and recheck path; day 4 offline upload, then the floor view; day 5 test with the site user and time the work; days 6 to 7 deck and video.
+- **Day 5 pass checks:** an offline save survives a restart; a repeated upload creates one record; a foreman can't approve their own fix; a dry check creates no task; new rain can't reset an old finding; an unswept area never counts as covered.
+- **Evidence before submission:** one area omission found by an audit, or a fix closed without a recheck, and staff minutes for both methods on the same floor. If no omission appears, report that.
 
 ## Scorecard
 
@@ -125,6 +131,7 @@ Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 u
 - **Experts in round 4:** a vector-control health officer and a contractor's safety, health and environment manager both said "wounded, back it with fixes"; no fatal attacks.
 - **Biggest weakness:** no proof yet that it catches what the current checklist misses.
 - **The change that would raise it most:** one site visit that finds a missed location or an unverified close-out.
+- **Solution vet, 17 October:** a vector-control specialist said "needs changes", nothing fatal. The top fix is to replace spot-only status with dated area sweeps, linked to source and fix histories, and to prove one omission-to-recheck journey. All its workflow and build changes are folded in above.
 
 ## Risks and open questions
 
@@ -139,3 +146,4 @@ Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 u
 - **Round 3:** narrowed to Aedes on building sites as Rain Check, with rain-triggered, floor-aware checks; panel 67, the leader.
 - **Round 4:** rebuilt as a register that can't be faked clear, with verified close-out and an exploded floor view; panel 71 and strategic fit 5.
 - **Round 5:** renamed after finding the US product RainCheck; panel 64 on a rerun.
+- **Solution vet:** spots became dated area sweeps, the clerk of works became an independent checker, and rain polling became manual event entry.
