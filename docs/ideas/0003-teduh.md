@@ -124,20 +124,26 @@ Contents:
 
 ## Scorecard
 
-**Rank 3 of 4**, with a mean judge score of 65.3 out of 100 ([ranking](0000-ranking.md)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
+**First panel, 10 October: rank 3 of 4**, with a mean judge score of 65.3 out of 100 ([ranking](0000-ranking.md)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
 
-| Scorer                  | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
-| ----------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
-| Author (round 9)        | 3      | 3          | 4           | 4   | 2          | 3        | 65       |
-| SDP sustainability head | 3      | 3          | 4           | 4   | 4          | 4        | 71       |
-| SDP township manager    | 3      | 2          | 4           | 4   | 4          | 4        | 67       |
-| Innovation mentor       | 2      | 2          | 4           | 4   | 3          | 3        | 58       |
+**Second panel, 16 October: rank 5 of 8** in the merged ranking, with a mean of 66.7 ([ranking](0000-ranking.md#pass-2-round-10-rank-and-stress-test)). Its three judges scored all eight ideas from both ideations with earlier scores removed.
+
+| Scorer                            | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| --------------------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
+| Author (round 9)                  | 3      | 3          | 4           | 4   | 2          | 3        | 65       |
+| First panel: sustainability head  | 3      | 3          | 4           | 4   | 4          | 4        | 71       |
+| First panel: township manager     | 3      | 2          | 4           | 4   | 4          | 4        | 67       |
+| First panel: innovation mentor    | 2      | 2          | 4           | 4   | 3          | 3        | 58       |
+| Second panel: sustainability head | 3      | 3          | 4           | 4   | 3          | 4        | 69       |
+| Second panel: township manager    | 3      | 3          | 4           | 4   | 3          | 4        | 69       |
+| Second panel: innovation mentor   | 2      | 3          | 4           | 4   | 3          | 3        | 62       |
 
 - **Biggest weakness:**
   - The headline is a modelled projection.
   - Few people wait at stops served every 25 to 30 minutes.
   - Citizen tree tagging and watering logs already exist in Malaysia (GeoTrees).
 - **The change that would raise it most:** lead with measured exposure: the person-minutes spent waiting in midday sun at the top 10 stops, and SDP's actual survival rate for the trees it has already planted. Sell the siting and the survival reporting, not adoption.
+- **Second panel's main critique:** lead with a survival audit of saplings SDP has already planted in Elmina, which gives a real baseline by 23 October. No judge thought adopters would keep watering without rewards.
 
 ## Risks and open questions
 

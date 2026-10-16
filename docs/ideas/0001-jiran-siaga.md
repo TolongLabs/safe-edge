@@ -146,19 +146,25 @@ The residents' association holds the register; SDP convenes the scheme and suppl
 
 ## Scorecard
 
-**Rank 1 of 4**, with a mean judge score of 69.3 out of 100. Its lead over Kolam Sedia is about 0.7 points, which is a tie in practice ([ranking](0000-ranking.md)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
+**First panel, 10 October: rank 1 of 4**, with a mean judge score of 69.3 out of 100. Its lead over Kolam Sedia is about 0.7 points, which is a tie in practice ([ranking](0000-ranking.md)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
 
-| Scorer                  | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
-| ----------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
-| Author (round 9)        | 4      | 4          | 3           | 4   | 2          | 4        | 72       |
-| SDP sustainability head | 4      | 3          | 3           | 4   | 3          | 4        | 70       |
-| SDP township manager    | 4      | 3          | 3           | 4   | 3          | 3        | 68       |
-| Innovation mentor       | 4      | 3          | 3           | 4   | 3          | 4        | 70       |
+**Second panel, 16 October: rank 4 of 8** in the merged ranking, with a mean of 68.0 ([ranking](0000-ranking.md#pass-2-round-10-rank-and-stress-test)). Its three judges scored all eight ideas from both ideations with earlier scores removed.
+
+| Scorer                            | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| --------------------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
+| Author (round 9)                  | 4      | 4          | 3           | 4   | 2          | 4        | 72       |
+| First panel: sustainability head  | 4      | 3          | 3           | 4   | 3          | 4        | 70       |
+| First panel: township manager     | 4      | 3          | 3           | 4   | 3          | 3        | 68       |
+| First panel: innovation mentor    | 4      | 3          | 3           | 4   | 3          | 4        | 70       |
+| Second panel: sustainability head | 4      | 3          | 3           | 4   | 3          | 3        | 68       |
+| Second panel: township manager    | 4      | 3          | 3           | 4   | 3          | 3        | 68       |
+| Second panel: innovation mentor   | 4      | 3          | 3           | 4   | 3          | 3        | 68       |
 
 - **Biggest weakness:**
   - **The trigger:** there is no gauge on Sungai Puloh, and past warnings came hours late.
   - **Liability:** SDP's name sits on a life-safety scheme that depends on residents' associations, PDPA consent and untested buddy liability.
 - **The change that would raise it most:** get one residents' association on one flooded street to commit. Run and film a timed drill there, get a lawyer to review the buddy commitment, and count the residents on two streets who can't evacuate alone.
+- **Second panel's main critique:** run one timed drill on one street and back-test the trigger against the three 2026 floods, to show real lead time in minutes; and get a written yes from one residents' association and APM Klang.
 
 ## Risks and open questions
 
