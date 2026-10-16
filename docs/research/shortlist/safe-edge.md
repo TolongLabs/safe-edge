@@ -52,7 +52,9 @@ Contents:
 5.  **Fix and prove.** The engineer approves the remedy and its acceptance test before any work is issued, and a budget holder authorises it. The contractor submits installed evidence; a reviewer who did not install it checks it on site. Rejection keeps the earlier evidence and states the failed item. Assessment, repair and custody each keep their own status.
 6.  **Hand over and stay accountable.** The pack lists every route, its open findings and its verified repairs. The receiving authority records acceptance, and each edge keeps a next inspection date. Later damage opens a linked defect. A maintenance funding request, for example from the ISF, comes after the first pilot.
 
-The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
+![Safe Edge workflow in five lanes: the engineer measures a route; the app registers it, runs the rule check and explains each finding; unknown depth is held as needs information; the engineer approves the remedy and budget; the contractor fixes it and an independent reviewer rechecks it, returning rejected work; accepted repairs go into the handover pack, the authority records acceptance, and later defects become a funding request](/docs/images/shortlist/safe-edge-workflow.png)
+
+The rough workflow above was checked with Archify and vetted on 17 October; the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W) links an interactive version.
 
 ## Why it's new
 
