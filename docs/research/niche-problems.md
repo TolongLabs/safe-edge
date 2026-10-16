@@ -215,7 +215,7 @@ Drop it from the data-centre idea.
 
 ## Dropped or held back
 
-- **Living inside an unfinished township, held back.** Dengue reached 65,979 cases by week 35 of 2026, against 39,616 a year earlier, with deaths up from 32 to 62 ([Bernama][bernama-dengue]). MetMalaysia expects a strong El Niño, and temperatures of 41°C or more are forecast for March to May 2027 ([Bernama][bernama-elnino]). SDP controls its sites, and Dad's contracting work fits. But local vendors already sell construction dashboards with air and noise sensors ([pack](/docs/research/niche-problems/unfinished-township.md#what-already-exists)).
+- **Living inside an unfinished township, held back.** Dengue reached 65,979 cases by week 35 of 2026, against 39,616 a year earlier, with deaths up from 32 to 62 ([Bernama][bernama-dengue]). MetMalaysia expects a strong El Niño, and temperatures of 41°C or more are forecast for March to May 2027 ([Bernama][bernama-elnino]). SDP controls its sites, and a contractor's project director we consulted can advise on site practice. But local vendors already sell construction dashboards with air and noise sensors ([pack](/docs/research/niche-problems/unfinished-township.md#what-already-exists)).
 - **Lightning, dropped.** A study of 2008 to 2017 recorded about 12.5 deaths a year ([UNITEN][uniten]). Malaysian suppliers already sell detection networks and sirens, and golf clubs run stop-play protocols ([pack](/docs/research/niche-problems/lightning.md#what-already-exists)).
 - **Struggling local businesses, dropped.** NAPIC's 5,699 unsold completed shops in H1 2025 are developer overhang, not rental vacancy, and no public shop-vacancy data exists for SDP townships. Grants, government kiosks and online marketplaces already operate ([pack](/docs/research/niche-problems/local-businesses.md#what-already-exists)).
 - **Not yet researched:** families moving in before schools and clinics open, water-supply cuts, new addresses missing from maps, monkey conflict at the forest edge, and tenants' green-rating proof.
@@ -244,7 +244,7 @@ The [idea ranking](/docs/ideas/0000-ranking.md) scores eight ideas from two idea
 
 ## How to use this
 
-- **With Dad:** ask his open questions on township pain points and his own ideas first, then show him the top three. Showing our list first would anchor his answers.
+- **With practitioners we consult:** ask open questions on township pain points and their own ideas first, then show the top three. Showing our list first would anchor their answers.
 - **In the practitioner survey:** add an importance and satisfaction grid with these rows: drowning at drains and ponds, death and cemetery planning, data-centre neighbours, living beside construction, plus flood and recycling as popular controls. Shuffle the rows.
 - **In the pitch:** the rival simulation is evidence for the innovation criterion. "We asked AI 24 times; it never suggested this" is a checkable claim.
 
