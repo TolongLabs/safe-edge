@@ -1,6 +1,6 @@
 # Shortlist
 
-The three ideas the team chooses between on 17 October 2026, how expert roasts reshaped them, and what each still needs. The ideas came from [Niche township problems](/docs/research/niche-problems.md) and the team's [idea ranking](/docs/ideas/0000-ranking.md). Simulated consultants and judging panels attacked each pitch, then checked the attacks against our evidence, over five rounds on 16 and 17 October 2026.
+The three ideas the team chooses between on 17 October 2026, how expert roasts reshaped them, and what each still needs. The ideas came from [Niche township problems](/docs/research/niche-problems.md) and the team's [idea ranking](/docs/archive/ideas/0000-ranking.md). Simulated consultants and judging panels attacked each pitch, then checked the attacks against our evidence, over five rounds on 16 and 17 October 2026.
 
 Contents:
 
@@ -18,7 +18,7 @@ Contents:
 | ---------------------------------------------------------------------------- | ----------------------- | ----------------: | ------------------- | ------------: | -------------------------------------------------------------------------------------------------------------------- |
 | [Safe Edge](/docs/research/shortlist/safe-edge.md)                           | People, safety          |                66 | Wounded, with fixes |             0 | An explainable rule check and verified-repair record for drain, pond and lake edges, before and after handover       |
 | [Site breeding register](/docs/research/shortlist/site-breeding-register.md) | People, health          |          64 to 71 | Wounded, with fixes |             0 | A floor-by-floor Aedes location register on SDP building sites that cannot show a location clear without proof       |
-| [Lepas Hujan](/docs/ideas/0005-lepas-hujan.md)                               | People (pitched Planet) |                55 | Wounded, with fixes |             0 | After heavy rain, the SDP App asks new owners to check for leaks while the defect liability period still covers them |
+| [Lepas Hujan](/docs/research/shortlist/lepas-hujan.md)                       | People (pitched Planet) |                55 | Wounded, with fixes |             0 | After heavy rain, the SDP App asks new owners to check for leaks while the defect liability period still covers them |
 
 - **No idea reached the bar we set** (every expert "Reinforced" and a panel score of 75). The last panel put none in the top 10 "on the supplied evidence today"; all three survive in narrower form.
 - **Safe Edge and the register are close.** The same panel prompt gave the register 71 in round 4 and 64 in round 5, so a gap of a few points between them is noise.
@@ -74,4 +74,4 @@ A former Head of Township at Sime Darby Property, consulted on 16 October 2026 (
 - [Niche township problems](/docs/research/niche-problems.md), including the crowding map from 240 simulated rival ideas.
 - [Quick screens](/docs/research/niche-problems/screens/) of six further problems, not fact-checked.
 - [Township practitioner consultation](/docs/research/consultations/township-practitioner.md).
-- [Idea ranking](/docs/ideas/0000-ranking.md) from the team's two ten-round ideations.
+- [Idea ranking](/docs/archive/ideas/0000-ranking.md) from the team's two ten-round ideations.

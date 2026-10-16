@@ -1,6 +1,6 @@
 # Ideation methods and tools
 
-What research says about generating and choosing ideas as a team, what AI does to that process, and which tools fit a Markdown repo like ours, as of 2026-10-10. Most findings on group methods come from foundational studies older than 2024; we keep them because no newer study replaces them. The AI findings are from 2024 to 2026. This page is evidence for how we ideate; the results are in the [idea ranking](/docs/ideas/0000-ranking.md).
+What research says about generating and choosing ideas as a team, what AI does to that process, and which tools fit a Markdown repo like ours, as of 2026-10-10. Most findings on group methods come from foundational studies older than 2024; we keep them because no newer study replaces them. The AI findings are from 2024 to 2026. This page is evidence for how we ideate; the results are in the [idea ranking](/docs/archive/ideas/0000-ranking.md).
 
 Contents:
 

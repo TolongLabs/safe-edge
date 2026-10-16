@@ -35,7 +35,7 @@ Contents:
 **Our read**, each backed by a section below:
 
 1.  **AI rivals converge hard.** In 24 simulated runs, shade and heat on walking routes came up in 19, accessibility maps in 18, and flood or drain alerts, water reuse and biodiversity monitoring in 17 each ([crowding map](#crowding-map)).
-1.  **Our earlier ideas sit in crowded clusters.** All four ideas in `docs/ideas/` fall under shade, flood or renovation debris.
+1.  **Our earlier ideas sit in crowded clusters.** All four ideas in `docs/archive/ideas/` fall under shade, flood or renovation debris.
 1.  **Asking AI for "niche" ideas gives a second crowd:** noise, tree survival, light pollution and dengue.
 1.  **Children drowning in township drains and ponds ranks first** by a wide margin: high pain, an SDP lever, little prior work ([ranking](#ranking)).
 1.  **Death in the township and data-centre neighbours follow.** Each has a fresh 2026 trigger and almost no prior hackathon work.
@@ -226,7 +226,7 @@ Drop it from the data-centre idea.
 
 ## The team's ranking through the crowding lens
 
-The [idea ranking](/docs/ideas/0000-ranking.md) scores eight ideas from two ideation rounds. Mapping each onto the rival simulation shows which ones rivals' AI would also reach. Counts are runs out of 24, from keyword matches checked by hand.
+The [idea ranking](/docs/archive/ideas/0000-ranking.md) scores eight ideas from two ideation rounds. Mapping each onto the rival simulation shows which ones rivals' AI would also reach. Counts are runs out of 24, from keyword matches checked by hand.
 
 | Team rank | Idea                                          | Nearest rival cluster                  | Rival runs |
 | --------: | --------------------------------------------- | -------------------------------------- | ---------: |
@@ -267,6 +267,6 @@ The [idea ranking](/docs/ideas/0000-ranking.md) scores eight ideas from two idea
 - Deep dives: [drowning incidents](/docs/research/niche-problems/drowning-incidents.md), [drowning prevention](/docs/research/niche-problems/drowning-prevention.md), [drowning custody](/docs/research/niche-problems/drowning-custody.md), [data-centre residents](/docs/research/niche-problems/data-centre-residents.md), [data-centre rules](/docs/research/niche-problems/data-centre-rules.md), [data-centre good neighbour](/docs/research/niche-problems/data-centre-good-neighbour.md)
 - Solar: [pre-cooling tariff and evidence](/docs/research/niche-problems/solar-precooling.md), [pre-cooling market](/docs/research/niche-problems/solar-precooling-market.md), [pre-cooling behaviour and competition](/docs/research/niche-problems/solar-precooling-behaviour.md), [CREAM and data centres](/docs/research/niche-problems/solar-cream-data-centre.md)
 - [SDP townships](/docs/research/niche-problems/sdp-townships.md), a table of 27 current and 10 older townships, not yet fact-checked
-- [Idea ranking](/docs/ideas/0000-ranking.md), the team's eight ranked ideas
+- [Idea ranking](/docs/archive/ideas/0000-ranking.md), the team's eight ranked ideas
 - [Township problems](/docs/research/township-problems.md), for the mainstream problem statistics
 - [Ideation methods](/docs/research/ideation-methods.md), for why AI narrows ideas

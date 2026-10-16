@@ -1,8 +1,8 @@
 # Lepas Hujan
 
-"We help new Sime Darby Property homeowners find roof and window leaks while the defect liability period still covers them." When heavy rain falls on their phase, the SDP App asks them to look, and one tap files a defect report stamped with the rainfall. _Lepas hujan_ is Malay for "after the rain".
+"We help new Sime Darby Property homeowners find roof and window leaks while the defect liability period still covers them, and follow each repair until a later storm shows it held." When heavy rain falls on their phase, owners get one prompt to check; any report keeps the rainfall and goes to a named person at SDP. _Lepas hujan_ is Malay for "after the rain".
 
-**Track:** Planet, climate resilience. **Rank:** see the [ranking](0000-ranking.md).
+**Track:** People, housing quality (first pitched as Planet, climate resilience; the round-5 judging panel called that framing weak). **Rank:** see the [shortlist](/docs/research/shortlist.md); its earlier rank is in the [archived ranking](/docs/archive/ideas/0000-ranking.md).
 
 Contents:
 
@@ -56,11 +56,14 @@ Contents:
 
 ## Solution and how it works
 
-1.  **Watch the rain.** For each phase, read the nearest JPS rain gauges from Public Infobanjir's public table, which updates through the day and needs no key: Paya Jaras, Rem KTM Sungai Buloh, Kampung Melayu Subang and Bukit Jelutong for Elmina, and Pekan Meru and Bandar Klang for Bandar Bukit Raja.
-2.  **Ask at the right moment.** When 24-hour rainfall passes a threshold, about 40 mm to start, the SDP App sends owners in that phase one message: "Heavy rain on your street today. Check ceilings, window frames and the car porch." Two storms passed that threshold near Elmina in one week this month.
-3.  **One tap.** The owner answers dry, damp or leaking. Damp or leaking opens a photo and files a defect into SDP's existing process, stamped with the rainfall in mm, the gauge and the time. Dry costs one tap and tells SDP that house passed that storm.
-4.  **Learn by house type.** SDP sees which house types leak at what rainfall, and fixes the whole batch before owners report it. The data goes to the designers of the next phase.
-5.  **Close the gap.** In month 22, owners get one reminder to do a full check in the next heavy rain, before the period ends.
+1.  **Enrol first.** Each home is enrolled with its verified defect-period dates, taken from a named document, and the owner or a nominated occupant who will answer.
+2.  **Watch the rain.** For each phase, read the nearest JPS rain gauges: Paya Jaras, Rem KTM Sungai Buloh, Kampung Melayu Subang and Bukit Jelutong for Elmina, and Pekan Meru and Bandar Klang for Bandar Bukit Raja. Each reading keeps its station, time and window. Missing or stale data means "unknown", never zero rain.
+3.  **Ask once per storm.** When rainfall passes a pilot threshold, about 40 mm in 24 hours, or an operator approves an event, each home gets one prompt. Homes with a past leak repair are asked to look at that spot first.
+4.  **A short guided check.** The owner answers no visible damp, damp, leaking, unsure or not checked. A report records the room, surface and photo, and the owner reviews it before sending. The app shows "saved", "handed to SDP" and "SDP received" as separate steps.
+5.  **Follow the repair.** SDP's customer team triages the report, an inspector visits and a technical lead assigns the repair. The 30-day repair clock runs from SDP's receipt of written notice. After the repair, the next storm prompts a recheck; a recurrence goes back to the technical lead with the old repair evidence.
+6.  **Close the gap.** In month 22, every owner gets one full-check reminder, even if no heavy rain has come.
+
+The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
 
 ## Why it's new
 
@@ -74,7 +77,7 @@ Contents:
 | Defect reporting in the SDP App ([SDP App FAQ][sdp faq]) and Gamuda Land's app ([Gamuda][gll], _excerpt_) | Owners report defects whenever they notice them                                                                     | No prompt at the moment leaks appear                   |
 
 - **We found no developer, snagging app or insurer that asks homeowners to check for defects when it rains,** in Malaysia or abroad.
-- **Our read:** innovation 4. Rain-triggered inspections exist abroad, but only for construction sites, insurers and disasters. The new part is pairing the trigger with the warranty clock, and tagging every report with rainfall so SDP can learn by house type.
+- **Our read:** innovation 4. Rain-triggered inspections exist abroad, but only for construction sites, insurers and disasters. The new part is pairing the trigger with the warranty clock and with a post-rain recheck of every repair. SDP's app already exports cases and shows before-and-after photos, so those are not the innovation.
 
 [epa]: https://www.epa.gov/npdes/construction-general-permit-cgp-frequent-questions
 [raincheck]: https://www.raincheckhq.com/resources/rain-event-inspections
@@ -86,10 +89,10 @@ Contents:
 
 ## Impact and how we measure it
 
-- **Primary outcome:** the share of all leaks that are caught inside the defect period, counting leaks reported up to 12 months after it ends, against a matched phase without prompts.
-- **Design outcome:** the rainfall at which each house type first leaks, which becomes a design standard for heavier rain in the next phase.
-- **Speed:** hours from the first storm that causes a leak to the report.
-- **Repeat leaks:** repaired leaks that come back in a later storm of similar rainfall.
+- **Primary outcome:** confirmed new leak reports per enrolled home, rain prompts against calendar prompts. Longer-term, the share of all leaks caught inside the defect period, counting leaks reported up to 12 months after it ends.
+- **Repair follow-up:** completed post-rain checks per repair due for one, and recurrences assessed against those still unverified.
+- **Speed:** days from SDP's receipt of the report to inspection.
+- **Design learning:** rainfall at each leak, by house type, is a later technical study, not a pilot claim.
 - **After the period:** leak complaints and Tribunal claims in the 12 months after the defect period ends, when claims of up to RM50,000 can still be filed ([Thomas Philip][tribunal]).
 - **Baseline:** SDP's defect logs for the comparison phase, which we must ask SDP for, and interviews with owners of phases handed over in 2024 and 2025.
 
@@ -106,31 +109,39 @@ Contents:
 
 ## Pilot
 
-| Element       | Plan                                                                                                                                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Where         | Two comparable City of Elmina landed phases between months 6 and 24 after handover. One gets prompts; the other is the comparison                                         |
-| Owner         | SDP's customer experience team and PACC, with the SDP App team                                                                                                            |
-| Duration      | Six months, across the northeast monsoon from November to March                                                                                                           |
-| Cost          | App work and push messages. Rain data is free. An optional rain gauge per phase. Extra repairs inside the period fall on contractors under their contracts (to confirm)   |
-| Approvals     | SDP alone. Owners consent to photos under the PDPA. SDP legal decides whether an in-app report counts as written notice                                                   |
-| Success       | More leak reports inside the period, faster reports after storms and fewer repeat leaks than the comparison phase                                                         |
-| Decision gate | If met, add it to every landed handover, then strata units                                                                                                                |
-| Risks         | Prompt fatigue: cap prompts at the threshold. Few leaks in a dry season: count "dry" answers as storm passes. Fear of more claims: SDP is liable for these defects anyway |
+| Element       | Plan                                                                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Where         | One City of Elmina landed phase between months 6 and 24 after handover, with a consented cohort sized to SDP's inspection capacity. Half get rain prompts, half calendar prompts |
+| Owner         | One accountable township customer experience lead, with a technical lead and the SDP App team                                                                                    |
+| Duration      | Six months, across the northeast monsoon from November to March                                                                                                                  |
+| Cost          | App work and push messages. Rain data is free. An optional rain gauge per phase. Extra repairs inside the period fall on contractors under their contracts (to confirm)          |
+| Approvals     | SDP alone. Owners consent to photos under the PDPA. SDP legal decides whether an in-app report counts as written notice                                                          |
+| Success       | More confirmed leak reports and completed repair rechecks than calendar prompts, within a staff workload agreed first                                                            |
+| Decision gate | If met, add it to every landed handover, then strata units                                                                                                                       |
+| Risks         | Prompt fatigue: cap prompts at the threshold. Few leaks in a dry season: count "dry" answers as storm passes. Fear of more claims: SDP is liable for these defects anyway        |
 
 ## Prototype by 23 October
 
-- **Build:**
-  - A rainfall watcher for Elmina and Bandar Bukit Raja gauges, scraped from the JPS table. The table is undocumented, so ask JPS Selangor for access.
-  - A threshold rule that messages test users through Telegram or web push.
-  - A one-tap form with a photo, and a dashboard by house type and rainfall.
-- **Real triggers:** replay the two storms of 13 and 15 October 2026 and any heavy rain before submission.
+- **What it is:** a web app that stands in for the SDP App, built with React and Supabase. The vet rated it buildable in 7 days, with a manual SDP hand-off and a recorded rain replay.
+- **Software components:**
+  - Enrolment and case import: one consented, redacted case export from an owner, with key fields entered by hand.
+  - Rain record and event rule: a saved, source-linked JPS reading; a server-side reader only if access is confirmed. One prompt per home per event.
+  - Test message: Telegram `sendMessage` from the server with a neutral link, no photos or addresses.
+  - Guided check and private photo storage: rows and files limited to the owner's own home.
+  - Hand-off record: a printable evidence summary; "SDP received" is entered by staff and marked simulated in the demo.
+  - Staff queue: triage, inspection, access slot, repair and recheck, with each recurrence linked to its original item.
+- **Cut from the build:** a live SDP App link, house-type prediction, automatic batch repairs and a 3D model.
+- **Real data:** JPS gauges near Elmina, a replay of the 13 and 15 October 2026 storms, and one consented owner case if obtained.
+- **Labelled simulation:** test owners and SDP's side of the flow, clearly marked in the demo.
+- **Build plan:** days 1 to 2 secure one case and one rain capture, and test the wording with owners; days 3 to 4 the check, evidence, staff queue and recurrence link; day 5 test with owners and a defect practitioner; days 6 to 7 deck and video.
+- **Pass checks:** replaying an event twice sends one prompt; a failed hand-off never shows "SDP received"; a recurrence keeps the original history; one household can't open another's photos.
 - **Evidence before submission:**
-  - Interview ten owners of Elmina homes handed over in 2024 and 2025: when they found leaks, whether after rain, and whether inside the period.
+  - Interview ten owners of Elmina homes handed over in 2024 and 2025, including leak-free homes: when they found leaks, whether after rain, and whether inside the period.
   - Ask SDP what share of leak reports arrive after the period ends.
 
 ## Scorecard
 
-**Rank 1 of 8** in the merged ranking, with a mean judge score of 74.0 out of 100. It drops to fifth if strategic fit counts for 50% ([ranking](0000-ranking.md#pass-2-round-10-rank-and-stress-test)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
+**Rank 1 of 8** in the merged ranking, with a mean judge score of 74.0 out of 100. It drops to fifth if strategic fit counts for 50% ([ranking](/docs/archive/ideas/0000-ranking.md#pass-2-round-10-rank-and-stress-test)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](/docs/archive/ideas/0000-ranking.md#judging-matrix).
 
 | Scorer                  | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
 | ----------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
@@ -142,6 +153,16 @@ Contents:
 - **Biggest weakness:** nobody knows how many leaks surface after the defect period, and all three judges called the climate label a stretch for what is defect management.
 - **The change that would raise it most:** one real figure for the share of leaks first reported after month 24, from SDP's defect log or from ten owner interviews. Then lead with leaks caught inside the period out of all leaks, and with rainfall at each leak as a design standard. Both are folded in above.
 - **The only idea all three judges scored 4 on innovation.** All three also said owners would use it repeatedly: it is "one tap, tied to the owner's own money and a deadline".
+
+Our expert roast on 17 October 2026, by simulated consultants on Codex gpt-6-astra (xhigh), scored it lower:
+
+| Scorer                 | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| ---------------------- | -----: | ---------: | ----------: | --: | ---------: | -------: | -------: |
+| Judging panel, round 5 |      2 |          3 |           4 |   3 |          2 |        2 |       55 |
+
+- **Experts:** a developer's defect manager and a building surveyor both said "wounded, back it with fixes"; no fatal attacks.
+- **Their main points:** late discovery of leaks is not yet quantified, more reports don't prove better repairs, and rainfall data doesn't become a design standard. Pitch it under People, and drop 3D.
+- **Solution vet, 17 October:** a developer's customer experience and defect-management head said "needs changes", nothing fatal. The top fix is to make the post-rain recheck a separate status on the original defect, so a recurrence returns to a named technical lead. All its workflow and build changes are folded in above.
 
 ## Risks and open questions
 
@@ -161,3 +182,4 @@ Contents:
 - **Round 6:** a check against gauges showed modelled rain missed both storms near Elmina in October, so the trigger moved to JPS gauges. Research found Trinity Group's 10-year roof-leak warranty, the closest Malaysian offer.
 - **Round 8:** asked "Why not just copy Trinity's warranty?" Because a warranty only pays if someone notices the leak; rain-tagged reports by house type are also the data SDP would need to price its own extended warranty.
 - **Round 9:** judges scored it 70 to 76, the highest mean of the eight. Their critique moved the headline outcome to the share of all leaks caught inside the period, and the fit to design standards for heavier rain.
+- **Solution vet:** "one tap files a defect" became a guided check with an honest hand-off, the repair recheck became the core, and house-type learning moved to a later study.
