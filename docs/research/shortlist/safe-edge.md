@@ -1,58 +1,143 @@
 # Safe Edge
 
-A water-edge inspection and verified-repair record, from before handover to long after. This is the pitch as the consultants roasted it in rounds 4 and 5 on 16 and 17 October 2026; see the [shortlist](/docs/research/shortlist.md) for scores and open gaps.
+"We help Sime Darby Property find and fix the drain, pond and lake edges where people can reach deep water, prove every repair before handover, and keep someone accountable after." An explainable rule check flags each edge, a reviewer accepts or rejects each fix, and the record passes to the council at handover.
+
+**Track:** People, safety and security. **Rank:** see the [shortlist](/docs/research/shortlist.md).
 
 Contents:
 
 1.  [Problem](#problem)
-1.  [Winning solution](#winning-solution)
-1.  [Why SDP](#why-sdp)
-1.  [Risks we already know](#risks-we-already-know)
-
-Track: People (Safety and security).
+1.  [Target user](#target-user)
+1.  [Solution and how it works](#solution-and-how-it-works)
+1.  [Why it's new](#why-its-new)
+1.  [Impact and how we measure it](#impact-and-how-we-measure-it)
+1.  [Fit with Sime Darby Property](#fit-with-sime-darby-property)
+1.  [Pilot](#pilot)
+1.  [Prototype by 23 October](#prototype-by-23-october)
+1.  [Scorecard](#scorecard)
+1.  [Risks and open questions](#risks-and-open-questions)
+1.  [How the idea changed across rounds](#how-the-idea-changed-across-rounds)
 
 ## Problem
 
-Townships are full of drains, ponds and lakes, and people drown at their edges, mostly in normal weather. Before handover, nobody is required to check whether people can reach deep water; after handover, the money for upkeep exists but nobody is visibly accountable for safety at a given edge.
+- **People drown at township water edges, mostly in normal weather.**
+  - On 15 October 2026 a 30-year-old man went missing while fishing at Tasik Bukit Raja in Bandar Bukit Raja, an SDP township; Bomba recovered his body the next day ([Utusan][utusan]). We cite this as a reason to inspect, not as a claim about what caused his death.
+  - In August 2026 two boys aged 11 and 12 drowned at a township dam in Pasir Gudang, and residents asked for fencing and CCTV ([Bernama][bernama-pg]; [MalaysiaGazette][mgazette]).
+  - The Fire and Rescue Department counted 371 child and teen drowning deaths from January 2023 to August 2026 ([The Star][star-371]).
+  - Of 21 news-reported cases in Selangor and Kuala Lumpur township waters since 2023, rain featured in only 4 ([incident table][incidents]).
+- **The rules exist, but nobody checks access to the water.** MSMA asks for covers on drains deeper than 0.6 m beside footpaths, a 1.2 m rail or grating where flow runs at 2 to 4 m/s, and pond banks of 1V:4H or gentler ([water-edge checks][checks]). Form G17, the road and drain certificate, ties work to approved plans and has no item for pedestrian access to water. Only some councils check it at handover: MBSP's July 2026 checklist asks for a barrier beside drains 1.2 m wide or deeper than 0.9 m, and pond warning signs ([MBSP][mbsp]).
+- **After handover, money exists but accountability doesn't.** Developers prepay councils an Improvement Service Fund (ISF) under the Street, Drainage and Building Act 1974; MBDK charges RM5,000 per acre for drainage, paid into an ISF trust fund ([MBDK][mbdk]). A former Head of Township at SDP we consulted: "The bigger issue is not who owns the drain or pond after handover, but whether there is clear accountability for maintenance and public safety" ([consultation][consult]).
 
-- 15–16 October 2026: a 30-year-old man who went fishing at Tasik Bukit Raja, Bandar Bukit Raja (an SDP township), was found drowned. We use this as a reason to inspect, not as a claim about what caused his death.
-- August 2026: two boys aged 11 and 12 drowned at a township dam in Pasir Gudang; residents asked for fencing. September 2026: four boys drowned in an open drain in Kulim (Bernama, reported).
-- Of 21 news-reported township-water cases in Selangor and KL since 2023, rain featured in only 4.
-- Form G17 (road and drain certification) ties work to approved plans and has no item for pedestrian access to water. Only some councils check it at handover: MBSP's July 2026 CCC checklist requires a barrier beside drains 1.2 m wide or deeper than 0.9 m, and pond warning signs.
-- Developers already pay councils an Improvement Service Fund (ISF) under the Street, Drainage and Building Act 1974; MBDK charges RM5,000 per acre for drainage, paid into an ISF trust fund before planning permission. A former Head of Township at SDP we consulted says the bigger issue after handover "is not who owns the drain or pond … but whether there is clear accountability for maintenance and public safety", and that ISF money is used "for post-township development maintenance work".
+[utusan]: https://www.utusan.com.my/nasional/tragedi/2026/10/pemancing-ditemukan-lemas/
+[bernama-pg]: https://www.bernama.com/en/news.php?id=2592495
+[mgazette]: https://malaysiagazette.com/2026/08/10/2-budak-lemas-penduduk-mahu-kawasan-empangan-dipagar-pasang-cctv/
+[star-371]: https://www.thestar.com.my/news/nation/2026/10/16/371-youngsters-lost-to-drowning
+[incidents]: /docs/research/niche-problems/drowning-incidents.md
+[checks]: /docs/research/niche-problems/water-edge-checks.md
+[mbsp]: https://www.mbsp.gov.my/brgonline/kej/jalanparit/jp7-ccc.pdf
+[mbdk]: https://www.mbdk.gov.my/sites/default/files/media/document/2024-03/9.%20SENARAI%20SEMAK%20IMPROVEMENT%20SERVICE%20FUND%20%28ISF%29.pdf
+[consult]: /docs/research/consultations/township-practitioner.md
 
-## Winning solution
+## Target user
 
-**One user, one job first:** an SDP project engineer checking one phase before handover.
+- **Primary:** an SDP project engineer checking one township phase before handover.
+- **Secondary:** the reviewer who signs off repairs (the responsible engineer, with a water-safety assessor where needed), and after handover the council engineer and the residents' association.
 
-**Mechanism, an explainable rule check:** each edge segment is checked against MSMA and council handover rules (cover on drains deeper than 0.6 m beside paths, 1.2 m rail or grating at 2–4 m/s, bank slopes 1V:4H to 1V:6H, safety bench, signs, lighting, distance to paths, playgrounds, schools and fishing spots). Every flag shows the rule, the measurement, its source and any missing data. Safe Edge ranks segments for inspection; it does not claim a drowning probability, and a segment with unknown depth can never be cleared.
+## Solution and how it works
 
-**Verified repair, not instant green:** a flag becomes a work order. It closes only after a reviewer (the responsible engineer, with a water-safety assessor where needed) accepts the fix, installed evidence is uploaded, and a reinspection confirms it. Rejected evidence reopens it. Prevention (barriers, cover, slope), escape and rescue equipment are tracked separately, so a ring buoy never cancels a dangerous drop.
+1.  **Measure.** The engineer walks one phase and records each water-edge segment: path distance, bank profile, drain depth, barriers and gaps, lighting, and nearby schools, playgrounds and fishing spots.
+2.  **Check against the rules.** Each segment is checked against MSMA and the council's handover checklist. Every flag shows the rule, the measurement, its source and anything missing. Safe Edge ranks segments for inspection; it never gives a drowning probability.
+3.  **Hold the unknowns.** A segment with unknown depth stays unresolved and can never be cleared.
+4.  **Fix and prove.** A flag becomes a work order. It closes only after the reviewer accepts the fix, installed evidence is uploaded and a reinspection confirms it; rejected evidence reopens it. Prevention (barriers, covers, slopes), escape and rescue equipment are tracked separately, so a ring buoy never cancels a dangerous drop.
+5.  **Hand over and stay accountable.** The handover pack lists every edge, its custodian and its verified fixes. After handover, a later defect becomes an ISF-ready work package for the council: hazard, owner, rule, quote and fund line.
 
-**After handover, an ISF-ready work package:** the same record passes to the council and residents' association at handover. Any later defect becomes a costed package (hazard, custodian, rule, quote, ISF line) that the council can fund, and residents can see what was fixed and what is still open.
+The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
 
-**3D that earns its place:** a measured cutaway of one real edge: the path, the barrier gap, the bank profile and the water depth at stated water levels, current versus proposed fix, side by side in plan and section. The team measures the geometry itself (tape and level on the bank; a consumer sonar for depth if access allows). Google's photorealistic tiles appear only as location context, for under 30 seconds of video.
+## Why it's new
 
-**90-second demo:**
+| Closest analogue                                         | What it does                                                        | What it lacks                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Procore, Novade, PlanRadar ([checks][checks])            | Configurable inspections, punch lists and defects; SDP uses Procore | No water-edge rule set, and nothing about access to deep water |
+| MBSP's road and drain handover checklist ([MBSP][mbsp])  | A site visit with drain-edge barriers and pond signs before the CCC | One council, a paper form, no record carried past handover     |
+| Alkaff Lake, Singapore ([PUB][pub])                      | Level sensors, lights and four-language warnings as banks flood     | Storm-only; most township drownings happen in normal weather   |
+| Smart Dublin ring buoys ([lake edges][lake-edges])       | Alerts when rescue equipment goes missing                           | Equipment only; says nothing about the edge itself             |
+| England's Infrastructure Funding Statements ([ISF][isf]) | Councils report developer contributions received and spent          | Fund level, not asset by asset, and not in Malaysia            |
 
-1. A real observed defect at a real edge, with photo and source (15 s).
-2. Its measured cutaway, current state (25 s).
-3. Two controls compared; the cheap one rejected because it leaves a bypass; one engineering check left open (20 s).
-4. Work order assigned; completion photo rejected as inadequate; reinspection required (20 s).
-5. A segment with unknown depth refuses clearance (10 s).
+- **Our read:** no tool we found joins a water-edge rule check, verified repair and a record that carries the ISF past handover.
 
-**Evidence plan for the 7 days:** days 1–2 measure one accessible edge with permission and interview a drainage practitioner and a park or township manager; days 3–4 build the rule check, cutaway and export; day 5 compare against an ordinary inspection checklist with a practitioner; days 6–7 deck and video.
+[pub]: https://www.pub.gov.sg/Resources/News-Room/PressReleases/2024/09/Media-Factsheet-on-Alkaff-Lake
+[lake-edges]: /docs/research/niche-problems/lake-edges.md
+[isf]: /docs/research/niche-problems/screens/isf-accountability.md
 
-**Pilot (1–2 years):** one SDP phase before handover, plus one post-handover repair funded through the council's ISF. Measures: defects found versus the standard checklist, time to verified repair, reopened defects, reviewer disagreements, and protection still intact at reinspection.
+## Impact and how we measure it
 
-## Why SDP
+- **Primary outcome:** hazardous edge metres closed and verified before handover, against what the current checklist finds on the same phase.
+- **Repair quality:** reopened fixes and protection still intact at reinspection.
+- **Accountability:** share of edges handed over with a named custodian, and time from a later defect report to a verified fix.
+- **What we won't claim:** drowning deaths are too rare to count in a pilot, so the pilot measures hazards and repairs, not lives saved.
 
-- It smooths handover acceptance, the compliance step the practitioner calls a hidden cost.
-- It turns ISF that SDP already pays into visible safety outcomes, which the practitioner says preserves community trust and township value.
-- SDP already uses Procore for inspections and defects; the export fits that workflow.
+## Fit with Sime Darby Property
 
-## Risks we already know
+- **Pillars:** Community Experience and Climate Resilience in SDP's Sustainability Strategy and Roadmap 2030 ([SDP][sdp]).
+- **SDP's own process:** SDP uses Procore for construction quality, inspections and defects ([Procore case study][procore]); Safe Edge exports into that workflow.
+- **Value:** smoother handover acceptance, a compliance step the practitioner calls a hidden cost; less legal exposure at ponds and lakes; and visible upkeep from the ISF SDP already pays, which the practitioner says preserves "community trust and township value".
+- **Scale:** every SDP phase with drains, ponds or lakes across 27 active townships, then other developers and councils.
 
-- Physical fixes still need budgets and approvals; Safe Edge organises and proves them, it does not pay for them.
-- The custodian of each post-handover edge must be confirmed case by case.
-- No controlled study proves that planted benches or lighting cut drownings; prevention barriers have the strongest evidence.
+[sdp]: /docs/research/sime-darby-property.md
+[procore]: https://www.procore.com/en-sg/casestudies/sime-darby-property
+
+## Pilot
+
+| Element       | Plan                                                                                                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Where         | One SDP phase before handover, plus one SDP lake park (Elmina Central Park is reported to be under a 21-year SDP leaseback)  |
+| Owner         | SDP's project team for the phase, with township management for the park                                                      |
+| Duration      | One phase from final inspections to handover, about 6 months                                                                 |
+| Cost          | App work and field time; physical fixes are priced per edge from contractor quotes                                           |
+| Approvals     | SDP alone before handover; the receiving council for the post-handover record                                                |
+| Success       | More verified hazards closed than the current checklist finds, fewer reopened fixes, every edge handed over with a custodian |
+| Decision gate | If met, add it to every phase handover with water edges                                                                      |
+| Risks         | No budget for fixes: price them first. Council won't accept the record: start with SDP-retained parks                        |
+
+## Prototype by 23 October
+
+- **What it is:** a web app, built with React, Three.js and a map library.
+- **Software components:**
+  - Edge register: segments drawn on an OpenStreetMap base map of one SDP area, each with its measurements, photos and source.
+  - Rule engine: a JSON rule file with MSMA clauses and council checklist items; each flag carries the rule, the value and the missing data.
+  - Measured cutaway: a Three.js section of one real edge, current against proposed fix, at normal and storm water levels.
+  - Work-order flow: assign, upload evidence, reviewer accept or reject, reinspect, close.
+  - Handover pack and ISF work package: CSV or PDF export.
+- **Real data:** one edge the team measures with tape, level and, if access allows, a consumer sonar; OpenStreetMap paths, schools and playgrounds; MSMA and council thresholds.
+- **Labelled simulation:** reviewer and contractor accounts, and a staged repair, clearly marked in the demo.
+- **Build plan:** days 1 to 2 measure one edge and interview a drainage practitioner; days 3 to 4 register, rules, cutaway and work orders; day 5 compare against the current checklist; days 6 to 7 deck and video.
+- **Evidence before submission:** one measured edge with a bypass around existing protection, a side-by-side with the current checklist, and an itemised repair quote.
+
+## Scorecard
+
+Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 used Codex gpt-6-astra (xhigh).
+
+| Scorer                 | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| ---------------------- | -----: | ---------: | ----------: | --: | ---------: | -------: | -------: |
+| Judging panel, round 3 |      3 |          3 |           2 |   4 |          2 |        3 |       57 |
+| Judging panel, round 4 |      4 |          3 |           3 |   4 |          2 |        3 |       66 |
+| Judging panel, round 5 |      4 |          3 |           3 |   4 |          2 |        3 |       66 |
+
+- **Experts in round 4:** a drainage and water-safety engineer and a developer project director both said "wounded, back it with fixes"; no fatal attacks remained.
+- **Biggest weakness:** no proof yet that it finds hazards the current checklist misses, and no priced repair.
+- **The change that would raise it most:** one measured edge with a real bypass that makes the cheap fix wrong, shown against the current checklist.
+
+## Risks and open questions
+
+- **Who pays for the fixes?** Safe Edge organises and proves repairs; it does not fund them.
+- **Who is the custodian after handover?** It must be confirmed edge by edge.
+- **Does it beat a good engineer?** Only a field comparison will show it.
+- **Evidence for planted benches and lighting is thin.** Barriers have the strongest evidence; benches follow design guidance, not trials.
+
+## How the idea changed across rounds
+
+- **Round 1:** pitched as drowning alerts for children at drains and ponds; strongest impact, but close to flood alerts.
+- **Round 2:** reframed as a pre-handover audit; experts showed guards can't rescue anyone from a fast drain and that a public "deadly edge" map is a legal trap.
+- **Round 3:** became Safe Edge with a 3D lake view; the stricter judge found the underwater geometry unmeasured.
+- **Round 4:** narrowed to an explainable rule check with verified repair, a measured cutaway and the ISF accountability layer from the practitioner; the fatal attack was cleared.
+- **Round 5:** held at 66; the remaining gap is field evidence.

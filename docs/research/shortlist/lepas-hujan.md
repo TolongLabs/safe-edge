@@ -2,7 +2,7 @@
 
 "We help new Sime Darby Property homeowners find roof and window leaks while the defect liability period still covers them." When heavy rain falls on their phase, the SDP App asks them to look, and one tap files a defect report stamped with the rainfall. _Lepas hujan_ is Malay for "after the rain".
 
-**Track:** Planet, climate resilience. **Rank:** see the [ranking](/docs/archive/ideas/0000-ranking.md).
+**Track:** People, housing quality (first pitched as Planet, climate resilience; the round-5 judging panel called that framing weak). **Rank:** see the [shortlist](/docs/research/shortlist.md); its earlier rank is in the [archived ranking](/docs/archive/ideas/0000-ranking.md).
 
 Contents:
 
@@ -62,6 +62,8 @@ Contents:
 4.  **Learn by house type.** SDP sees which house types leak at what rainfall, and fixes the whole batch before owners report it. The data goes to the designers of the next phase.
 5.  **Close the gap.** In month 22, owners get one reminder to do a full check in the next heavy rain, before the period ends.
 
+The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
+
 ## Why it's new
 
 | Closest analogue                                                                                          | What it does                                                                                                        | What it lacks                                          |
@@ -119,13 +121,18 @@ Contents:
 
 ## Prototype by 23 October
 
-- **Build:**
-  - A rainfall watcher for Elmina and Bandar Bukit Raja gauges, scraped from the JPS table. The table is undocumented, so ask JPS Selangor for access.
-  - A threshold rule that messages test users through Telegram or web push.
-  - A one-tap form with a photo, and a dashboard by house type and rainfall.
-- **Real triggers:** replay the two storms of 13 and 15 October 2026 and any heavy rain before submission.
+- **What it is:** a web app that stands in for the SDP App, with a rainfall watcher behind it, built with React.
+- **Software components:**
+  - Rainfall watcher: reads the nearest JPS gauges for Elmina and Bandar Bukit Raja from the Public Infobanjir table. The table is undocumented, so ask JPS Selangor for access.
+  - Threshold rule: about 40 mm in 24 hours per phase, which messages test owners through Telegram or web push.
+  - One-tap check: dry, damp or leaking, with a photo, stamped with the rainfall, gauge and time; "dry" is logged as "no visible leak", not a pass.
+  - Receipt and repair tracker: each report gets an acknowledgement, a repair due date and a link to any later leak at the same spot.
+  - SDP dashboard: reports by phase, house type and rainfall.
+- **Real data:** JPS gauges near Elmina, and a replay of the 13 and 15 October 2026 storms and any heavy rain before submission.
+- **Labelled simulation:** test owners and the defect team's side of the flow, clearly marked in the demo.
+- **Build plan:** days 1 to 2 interview owners; days 3 to 4 watcher, rule, check and receipt; day 5 compare a rain prompt with an ordinary reminder; days 6 to 7 deck and video.
 - **Evidence before submission:**
-  - Interview ten owners of Elmina homes handed over in 2024 and 2025: when they found leaks, whether after rain, and whether inside the period.
+  - Interview ten owners of Elmina homes handed over in 2024 and 2025, including leak-free homes: when they found leaks, whether after rain, and whether inside the period.
   - Ask SDP what share of leak reports arrive after the period ends.
 
 ## Scorecard
@@ -142,6 +149,15 @@ Contents:
 - **Biggest weakness:** nobody knows how many leaks surface after the defect period, and all three judges called the climate label a stretch for what is defect management.
 - **The change that would raise it most:** one real figure for the share of leaks first reported after month 24, from SDP's defect log or from ten owner interviews. Then lead with leaks caught inside the period out of all leaks, and with rainfall at each leak as a design standard. Both are folded in above.
 - **The only idea all three judges scored 4 on innovation.** All three also said owners would use it repeatedly: it is "one tap, tied to the owner's own money and a deadline".
+
+Our expert roast on 17 October 2026, by simulated consultants on Codex gpt-6-astra (xhigh), scored it lower:
+
+| Scorer                 | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| ---------------------- | -----: | ---------: | ----------: | --: | ---------: | -------: | -------: |
+| Judging panel, round 5 |      2 |          3 |           4 |   3 |          2 |        2 |       55 |
+
+- **Experts:** a developer's defect manager and a building surveyor both said "wounded, back it with fixes"; no fatal attacks.
+- **Their main points:** late discovery of leaks is not yet quantified, more reports don't prove better repairs, and rainfall data doesn't become a design standard. Pitch it under People, and drop 3D.
 
 ## Risks and open questions
 
