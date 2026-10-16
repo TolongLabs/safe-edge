@@ -21,7 +21,7 @@ Contents:
 ## Problem
 
 - **Leaks show up only in heavy rain, so owners find them late.**
-  - An Elmina owner, 21 March 2024: "Yesterday raining, now leaking again. This is so called fix but every time raining sure hv surprise from the house." The source was "From rooftop and wall crack" ([Lowyat][lowyat 2024]).
+  - An Elmina owner, 21 March 2024: "Yesterday raining, now leaking again. This is so called fix but every time raining sure hv surprise from the house." Asked on 25 March whether it was the toilet or the roof, the owner answered "From rooftop and wall crack" ([Lowyat][lowyat 2024]).
   - Another Elmina owner, 11 February 2022, unit type EV5: "full of defect, especially the water leakage at car porch". A reply: "Most of them have the same water leakage problem at car porch" ([Lowyat][lowyat 2022]).
   - A buyer of an SDP home, December 2020: "The defect surficed out immediately after warranty period expried" ([PropertyGuru][askguru], _secondary_).
   - An inspection firm advises owners that "Some roof problems only become apparent during heavy or wind-driven rain" ([TAJ Tasneem][taj]).
@@ -29,9 +29,9 @@ Contents:
 - **Malaysia's cover is short.**
   - The standard sale contracts give a 24-month defect liability period, and the developer must repair "within thirty (30) days of the Developer having received written notice" ([VCC Law][vcc]).
   - Singapore's HDB adds a "5-year warranty for ceiling leaks and external wall seepage" to its one-year defect period ([MND][mnd]). Japan makes sellers liable for 10 years for the parts of a home that keep rain out ([MLIT][mlit]).
-- **Leaks are few but serious.** A 2026 survey of 160 terraces in Kuala Terengganu counted 164 cases of "Watermark at ceiling due to roof leakage" and 104 blocked gutters or downpipes, out of about 4,800 defects, most of them finishes ([Planning Malaysia][pm 2026]; the total is our sum of its Table 1). A leak can ruin a ceiling, wiring and furniture; a paint defect can't.
-- **The scale at SDP.** SDP delivered 2,346 units in FY2024 and 3,440 in FY2023 ([SDP Integrated Report 2024][ir2024]), so roughly 5,800 homes sit inside their defect period at any time (our arithmetic, including strata units).
-- **Heavy rain is frequent, and only gauges see it.** Near Elmina, the JPS gauge at Rem KTM Sungai Buloh recorded 47.0 mm on 13 October 2026 and 40.5 mm on 15 October; Paya Jaras recorded 48.0 mm and 31.0 mm. Open-Meteo's modelled rain for the same days showed 4.4 mm and 2.1 mm, so the trigger has to come from gauges ([JPS][jps rain]; our check against [Open-Meteo][open-meteo]).
+- **Leaks are few but serious.** A 2026 study of defect lists from 160 terraces in Kuala Terengganu counted 164 cases of "Watermark at ceiling due to roof leakage" and 104 blocked gutters or downpipes, out of about 4,800 defects, most of them finishes ([Planning Malaysia][pm 2026]; the total is our sum of its Table 1). A leak can ruin a ceiling, wiring and furniture; a paint defect can't.
+- **The scale at SDP.** SDP delivered 2,346 units in FY2024 and 3,440 in FY2023 ([SDP Integrated Report 2024][ir2024]), so roughly 5,800 units sit inside a 24-month defect period at once (our arithmetic; the report does not split landed, strata and industrial units).
+- **Heavy rain is frequent, and only gauges see it.** Near Elmina, the JPS gauge at Rem KTM Sungai Buloh recorded 47.0 mm on 13 October 2026 and 40.5 mm on 15 October; Paya Jaras recorded 48.0 mm and 31.0 mm. Open-Meteo's modelled rain for the same days showed under 5 mm, so the trigger has to come from gauges ([JPS][jps rain]; our check against [Open-Meteo][open-meteo]).
 
 [lowyat 2024]: https://forum.lowyat.net/topic/4690221/+4540
 [lowyat 2022]: https://forum.lowyat.net/topic/4690221/+2400
@@ -56,7 +56,7 @@ Contents:
 
 ## Solution and how it works
 
-1.  **Watch the rain.** For each phase, read the nearest JPS rain gauges from Public Infobanjir's public table, which updates about every 15 minutes without a key: Paya Jaras, Rem KTM Sungai Buloh, Kampung Melayu Subang and Bukit Jelutong for Elmina, and Pekan Meru and Bandar Klang for Bandar Bukit Raja.
+1.  **Watch the rain.** For each phase, read the nearest JPS rain gauges from Public Infobanjir's public table, which updates through the day and needs no key: Paya Jaras, Rem KTM Sungai Buloh, Kampung Melayu Subang and Bukit Jelutong for Elmina, and Pekan Meru and Bandar Klang for Bandar Bukit Raja.
 2.  **Ask at the right moment.** When 24-hour rainfall passes a threshold, about 40 mm to start, the SDP App sends owners in that phase one message: "Heavy rain on your street today. Check ceilings, window frames and the car porch." Two storms passed that threshold near Elmina in one week this month.
 3.  **One tap.** The owner answers dry, damp or leaking. Damp or leaking opens a photo and files a defect into SDP's existing process, stamped with the rainfall in mm, the gauge and the time. Dry costs one tap and tells SDP that house passed that storm.
 4.  **Learn by house type.** SDP sees which house types leak at what rainfall, and fixes the whole batch before owners report it. The data goes to the designers of the next phase.
@@ -64,14 +64,14 @@ Contents:
 
 ## Why it's new
 
-| Closest analogue                                                                                          | What it does                                                                                     | What it lacks                                          |
-| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| US EPA Construction General Permit ([EPA][epa])                                                           | Requires a site inspection "within 24 hours once a storm event has produced 0.25 inches of rain" | Construction sites, not homes                          |
-| RainCheck, US software ([RainCheck][raincheck])                                                           | Hourly rainfall checks per site; creates an inspection deadline at the threshold                 | Contractors' stormwater compliance                     |
-| USAA, US insurer ([USAA][usaa])                                                                           | Texts members about coming storms and claims                                                     | Disasters and insurance, not warranty                  |
-| Sekisui House's disaster-visit app, Japan ([Sekisui House][sekisui], _excerpt_)                           | Staff check owners' homes after earthquakes and typhoons                                         | Disaster-level, staff-run                              |
-| Trinity Group's Gold Assurance Programme, Malaysia ([Trinity][trinity])                                   | A "36-Months Defects Liability Period" and a "10-Years Warranty for Roof Leaks"                  | Longer cover, but someone still has to notice the leak |
-| Defect reporting in the SDP App ([SDP App FAQ][sdp faq]) and Gamuda Land's app ([Gamuda][gll], _excerpt_) | Owners report defects whenever they notice them                                                  | No prompt at the moment leaks appear                   |
+| Closest analogue                                                                                          | What it does                                                                                                        | What it lacks                                          |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| US EPA Construction General Permit ([EPA][epa])                                                           | Requires a site inspection "within 24 hours once a storm event has produced 0.25 inches of rain"                    | Construction sites, not homes                          |
+| RainCheck, US software ([RainCheck][raincheck])                                                           | Hourly rainfall checks per site; creates an inspection deadline at the threshold                                    | Contractors' stormwater compliance                     |
+| USAA, US insurer ([USAA][usaa])                                                                           | Texts members about coming storms and claims                                                                        | Disasters and insurance, not warranty                  |
+| Sekisui House's disaster-visit app, Japan ([Sekisui House][sekisui], _excerpt_)                           | Staff check owners' homes after earthquakes and typhoons                                                            | Disaster-level, staff-run                              |
+| Trinity Group's Gold Assurance Programme, Malaysia ([Trinity][trinity])                                   | A "36-Months Defects Liability Period" and a "10-Years Warranty for Roof Leaks", on two flagship high-rise projects | Longer cover, but someone still has to notice the leak |
+| Defect reporting in the SDP App ([SDP App FAQ][sdp faq]) and Gamuda Land's app ([Gamuda][gll], _excerpt_) | Owners report defects whenever they notice them                                                                     | No prompt at the moment leaks appear                   |
 
 - **We found no developer, snagging app or insurer that asks homeowners to check for defects when it rains,** in Malaysia or abroad.
 - **Our read:** innovation 4. Rain-triggered inspections exist abroad, but only for construction sites, insurers and disasters. The new part is pairing the trigger with the warranty clock, and tagging every report with rainfall so SDP can learn by house type.
@@ -79,7 +79,7 @@ Contents:
 [epa]: https://www.epa.gov/npdes/construction-general-permit-cgp-frequent-questions
 [raincheck]: https://www.raincheckhq.com/resources/rain-event-inspections
 [usaa]: https://www.usaa.com/support/insurance/claims/natural-disaster/
-[sekisui]: https://www.sekisuihouse.co.jp/company/sustainable/social/valuechain/activity5/act_11/
+[sekisui]: http://web.archive.org/web/20240423112544/https://www.sekisuihouse.co.jp/company/sustainable2020/social/valuechain/activity5/act_11/
 [trinity]: https://www.trinitygroup.com.my/news/trinity-group-launches-malaysias-first-gold-assurance-programme-malaysian-business/
 [sdp faq]: https://www.simedarbyproperty.com/app/faq.html
 [gll]: https://www.gamudaland.com.my/gl-lifestyle
@@ -100,7 +100,7 @@ Contents:
 - **Pillar:** Climate Resilience. SDP's 2030 target is "Adaptation and resilience plans for high-risk assets" ([CONTEXT]). Rain-tagged leak reports show the rainfall at which each house type fails, which is the evidence such a plan needs for homes facing heavier rain. The Community Experience pillar gains too: SDP's customer net promoter score was 88% in FY2025 ([CONTEXT]).
 - **SDP's own aim:** its contact centre "has strengthened a proactive quality and defect management … This has helped identify recurring defects, reduce rework" ([SR2025] p. 46). Lepas Hujan gives that work a rainfall trigger.
 - **Value to two sides:** owners avoid paying for leaks after the period ends. SDP gets defects fixed while the original contractor is still liable, fewer disputes after the period, and design data for the next phase.
-- **Scale:** every SDP landed handover, about 2,000 to 3,000 homes a year, then strata units, then other townships.
+- **Scale:** every SDP handover, starting with landed homes (2,346 units delivered in FY2024 and 3,440 in FY2023, all types), then strata units, then other townships.
 
 [CONTEXT]: /docs/CONTEXT.md
 
@@ -147,7 +147,7 @@ Contents:
 
 - **How many leaks surface after the period?** We found no figure. It decides how big the impact is, and only SDP has it.
 - **Will owners answer?** Prompts are occasional and driven by the warranty deadline, not habit. Most answers will be "dry".
-- **Does the defect flow work?** An App Store review from June 2024 says: "Cannot submit defect report… it has been two months and it is still not working" ([App Store][appstore]). The prompt is only as good as the form behind it.
+- **Does the defect flow work?** An App Store review from December 2025 says: "Cannot submit defect report… it has been two months and it is still not working" ([App Store][appstore]). The prompt is only as good as the form behind it.
 - **Is a tap written notice?** If not, the app must send a formal notice for the owner.
 - **The killer question:** "Why pay to find more defects during the defect period?" Because SDP is liable for them anyway, after the period too, and finding them early makes the original contractor fix them.
 

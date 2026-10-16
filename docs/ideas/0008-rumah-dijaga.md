@@ -20,15 +20,15 @@ Contents:
 
 ## Problem
 
-- **Many new homes stand empty.** The 2020 census found "1.9 million (19.4%)" of Malaysia's living quarters vacant. In Petaling district, which includes City of Elmina, 62.9% of vacant ones were "newly completed/ for rent or sale" ([DOSM][dosm]).
+- **Many homes stand empty, often new ones.** The 2020 census's preliminary findings put "1.9 million (19.4%)" of Malaysia's living quarters as vacant. In Petaling district, which includes City of Elmina, 62.9% of vacant ones were "newly completed/ for rent or sale" ([DOSM][dosm]).
 - **Empty houses are a known nuisance, and councils step back.**
   - Selangor's councils reported 4,907 abandoned houses in 2018; Shah Alam's council had 1,995, the most. Councils cut the grass "dua (2) kali dalam tempoh setahun" (twice a year) and bill owners who ignore notices ([Selangor State Assembly][dun 2018]).
   - In November 2024 the state said "Pihak Berkuasa Tempatan tidak akan memasuki rumah hak milik persendirian yang terbiar dan semak untuk membuat pembersihan" (councils will not enter abandoned, overgrown private houses to clean them) ([Selangor State Assembly][dun 2024]).
-- **Dengue makes it urgent.** Selangor had 31,782 cases by week 40 of 2026, up 72.6% on 2025, with 31 deaths against 6. Petaling rose 79.2% ([JKN Selangor][jkns40]). Owners face a RM500 compound for larvae, and a council nuisance notice for an unoccupied house goes to the owner ([Selangor State Assembly][dun aedes]).
+- **Dengue makes it urgent.** Selangor had 31,782 cases by week 40 of 2026, up 72.6% on 2025, with 31 deaths against 6. Petaling rose 79.2% ([JKN Selangor][jkns40]). Owners face a RM500 compound for larvae ([Selangor State Assembly][dun aedes], 2015), and a council nuisance notice for an unoccupied house goes to the owner ([Selangor State Assembly][dun 2024]).
 - **Absent owners carry risks they can't see.**
   - A home insurer excludes burglary "if the premise is unoccupied for more than thirty (30) consecutive days" ([Berjaya Sompo][sompo]).
   - The 24-month defect period still runs, but nobody is there to spot a leak or let the contractor in. A developer's handover guide notes owners "may also appoint a representative to be present during the rectification period" ([Mah Sing][mahsing], _excerpt_).
-- **Nobody sells this in Malaysia.** We found property managers for tenanted units, at "8–12% of rent" ([SuperHomes][superhomes], _excerpt_), and grass-cutting gigs, but no service that checks empty landed homes.
+- **Nobody sells this in Malaysia.** We found property managers for tenanted units, charging 8% to 12% of the monthly rent ([SuperHomes][superhomes], _excerpt_), and grass-cutting gigs, but no service that checks empty landed homes.
 
 [dosm]: https://www.dosm.gov.my/portal-main/release-content/key-findings-population-and-housing-census-of-malaysia-2020-administrative-district
 [dun 2018]: https://dewan.selangor.gov.my/question/rumah-terbiar-dan-tidak-berpenghuni/
@@ -59,12 +59,12 @@ Price is to be tested: Japan Post charges "4,280円/月（税込）" (4,280 yen 
 
 ## Why it's new
 
-| Closest analogue                                                  | What it does                                                                                                                   | What it lacks                             |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| Japan Post's empty-house watch ([Japan Post][jp akiya])           | Monthly 7-point outside check with up to 5 photos; trialled from 2023, nationwide from January 2025 ([Impress Watch][impress]) | Japan's ageing countryside, not new homes |
-| US "home watch" firms ([Propertihc][homewatch], _excerpt_)        | Regular checks of second homes                                                                                                 | Not tied to a developer or warranty       |
-| Malaysian property managers ([SuperHomes][superhomes], _excerpt_) | Manage tenanted units for a share of rent                                                                                      | Nothing for empty homes                   |
-| Council clean-ups ([Selangor State Assembly][dun 2018])           | Cut grass twice a year and bill owners                                                                                         | Councils won't enter private homes        |
+| Closest analogue                                                          | What it does                                                                                                                   | What it lacks                             |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| Japan Post's empty-house watch ([Japan Post][jp akiya])                   | Monthly 7-point outside check with up to 5 photos; trialled from 2023, nationwide from January 2025 ([Impress Watch][impress]) | Japan's ageing countryside, not new homes |
+| US "home watch" firms ([Propertihc][homewatch], _excerpt_)                | Regular checks of second homes                                                                                                 | Not tied to a developer or warranty       |
+| Malaysian property managers ([SuperHomes][superhomes], _excerpt_)         | Manage tenanted units for a share of rent                                                                                      | Nothing for empty homes                   |
+| Council clean-ups ([Selangor State Assembly][dun 2018]; [2024][dun 2024]) | Cut grass twice a year and bill owners                                                                                         | Councils won't enter private homes        |
 
 - **We found no empty-home check for landed homes in Malaysia,** in English or Malay, and nothing like it at SDP.
 - **Our read:** innovation 3. The mechanism runs in Japan; the new parts are selling it at handover, tying it to the defect period and using local retirees.
@@ -84,7 +84,7 @@ Price is to be tested: Japan Post charges "4,280円/月（税込）" (4,280 yen 
 
 - **Pillar:** Community Experience, and the health of the township while it fills up.
 - **Value to two sides:** owners protect their asset and avoid compounds from a distance. Neighbours get a cared-for street. SDP earns a small service fee, gets defects reported inside the period and calmer streets in new phases. Retirees get paid work near home, which Selangor says it will "meneroka" (explore) ([Selangor State Assembly][dun silver]).
-- **Scale:** SDP delivered 2,346 homes in FY2024 ([SDP Integrated Report 2024][ir2024]), across its townships.
+- **Scale:** SDP delivered 2,346 units in FY2024 ([SDP Integrated Report 2024][ir2024]), across its townships.
 
 [dun silver]: https://dewan.selangor.gov.my/question/kebajikan-mesra-warga-emas/
 [ir2024]: https://www.simedarbyproperty.com/sites/default/files/2025-05/SDP-IR2024.pdf
@@ -132,7 +132,7 @@ Price is to be tested: Japan Post charges "4,280円/月（税込）" (4,280 yen 
 
 - **How many SDP homes are empty?** No figure is public. We found no 2024 to 2026 complaints about empty houses in Elmina, Denai Alam or Bandar Bukit Raja; our walked count must create the evidence.
 - **Will investors pay?** Japan Post went nationwide, but its subscriber numbers aren't published.
-- **The killer question:** "Why would an investor pay when compounds are rare?" Because dengue is up 79% in Petaling, insurers exclude empty homes, councils won't enter, and the defect period is running out unseen.
+- **The killer question:** "Why would an investor pay when compounds are rare?" Because dengue is up 79% in Petaling, one insurer excludes burglary cover on homes empty for over 30 days, councils won't enter, and the defect period is running out unseen.
 
 ## How the idea changed across rounds
 

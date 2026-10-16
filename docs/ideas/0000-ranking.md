@@ -78,7 +78,6 @@ Mean judge scores by criterion, out of 5, with the weights from the [brief], and
 [i6]: 0006-jiran-projek.md
 [i7]: 0007-waktu-lancar.md
 [i8]: 0008-rumah-dijaga.md
-[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
 [brief]: /docs/BRIEF.md
 
 ## Recommendation
@@ -95,8 +94,10 @@ Mean judge scores by criterion, out of 5, with the weights from the [brief], and
 - **[Jiran Projek][i6] is the People option,** if the team prefers that track: it scored 4 on evidence, and every judge said residents beside a site would use it.
 - **Pitch one idea.** Show [Waktu Lancar][i7]'s four-week count only in the appendix or the Q&A: the township manager judge would approve it "today", but no judge thought residents would keep changing departure times without prizes.
 - **Drop [Rumah Dijaga][i8] and [Handover Loop][i4].**
-- **The repeat-use test split the eight in half.** Judges expected repeat use for the four ideas tied to a person's own money, safety or a deadline, and for none of the four that rely on prizes, volunteering or a once-a-year decision.
+- **The repeat-use test split the eight in half.** Judges expected repeat use for the four ideas tied to a person's own money, safety or a deadline, and for none of the four that rely on prizes, volunteers or people paying before anything goes wrong.
 - **Flood ideas have won before.** Recent Malaysian hackathons crowned USM's "Smart Manhole" and APU's MySelamat flood-rescue planner ([past winners][winners]). Kolam Sedia or Jiran Siaga must show how they differ.
+
+[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
 
 ## Scoring method
 
@@ -144,13 +145,13 @@ The first ideation, on 10 October 2026:
 
 The second ideation, on 16 October 2026, ran in a new Claude Code session on Claude Opus 5.5:
 
-- **X research** used the team's second X account through X's web API. It hit rate limits and server errors for about an hour, then returned 1013 posts across 82 queries. Brave's index of x.com, and fxtwitter for full post text, filled the gap.
+- **X research** used the team's second X account through X's web API. It hit rate limits and server errors for about an hour, then returned 1,013 posts across 82 queries. Brave's index of x.com, and fxtwitter for full post text, filled the gap.
 - **Five persona agents on Claude Sonnet 5.5** each brainstormed alone from one resident's week, and one research agent collected neighbourhood schemes with published usage numbers.
 - **Seven research agents** on Claude Opus 5.5 did rounds 4 and 6. Each fetched the sources it cites.
 - **Three new judge agents on Claude Sonnet 5.5** scored all eight ideas from both ideations in round 9, on the same anchors, with every earlier score, rank and judge comment removed from the docs they read.
 - **Two fact-check agents on Claude Sonnet 5.5** checked the new docs' quotes, numbers and dates against the cited pages, and their corrections were applied.
 
-- **No human has scored the ideas, and no resident has been interviewed.** Treat a gap of a few points as a tie.
+**No human has scored the ideas, and no resident has been interviewed.** Treat a gap of a few points as a tie.
 
 ### Assumptions
 
@@ -278,21 +279,21 @@ The first ideation's finalists all scored 3 or less on innovation, and none was 
 
 ### Pass 2, round 1: diverge from X and personas
 
-77 seeds came from four sources:
+Two signals fed three routes, which gave 77 seeds:
 
 - **X**, where the loudest signal was City of Elmina's daily gridlock:
   - "Traffic jams at Denai Alam & Elmina in Shah Alam are UNBEARABLE, but Sime Darby Property is still busy building news home for profits" (March 2025, tagging SDP and the Prime Minister) ([X][x tajuddin]).
-  - Focus Malaysia's write-up of a resident: "An 1km exit to my house takes an hour" ([X][x focus]).
+  - A resident quoted by Focus Malaysia: "An 1km exit to my house takes an hour. I'm stressed." ([Focus Malaysia][focus]).
   - "Elmina Lakeside Mall currently has ZERO transit access" (August 2024, 16,000 views) ([X][x nat]).
-  - Owners hiring inspectors before the defect period ends: "Banyak betul defect rumah ni" (so many defects in this house), 5,142 likes ([X][x aidasue]).
-  - Selangor schools stayed open in the haze on 15 October 2026, with masks advised ([X][x haze]).
-- **SDP's own words:** at its 2025 AGM a shareholder wrote that "Sime Darby Property seems not to care" about Elmina's traffic, and SDP blamed "a surge in external traffic" using its roads as shortcuts ([SDP AGM][agm] p. 7).
+  - An owner recommending a defect inspector, November 2021: "Banyak betul defect rumah ni" (so many defects in this house), 5,142 likes ([X][x aidasue]).
+  - Selangor said on 14 October 2026 that schools would open as usual the next day, with masks advised in the haze ([X][x haze]).
+- **SDP's own words:** at its 2025 AGM a shareholder wrote that "Sime Darby Property seems not to care" about Elmina's traffic, and SDP blamed "a surge in external traffic" using its roads as shortcuts ([SDP AGM][agm]).
 - **Our own lenses:** SDP-owned flows and assets, extreme users, moments when habits break, timely shocks such as the haze and the 2026 dengue surge, and analogies from abroad: 34 seeds.
 - **Five persona agents,** each brainstorming alone from one resident's week, because asking one model for ideas makes them alike ([ideation methods][methods]): a working parent in Elmina West, a retired couple in Bandar Bukit Raja, a renter and delivery rider in Denai Alam, SDP's Elmina township manager, and an engineer in a Serenia City condo: 40 seeds.
 - **A research agent** that found 30 neighbourhood schemes worldwide with published usage numbers. Its pattern: schemes stick when the service comes to the door on a schedule, rides a payment people already make, or gives a named neighbour a role. It gave 3 seeds.
 
 [x tajuddin]: https://x.com/TajuddinKamil/status/1899648539199971332
-[x focus]: https://x.com/FocusMalaysiaMY/status/1917378258670346641
+[focus]: https://focusmalaysia.my/lack-of-planning-foresight-leads-to-city-of-elminas-traffic-woes-stretches-far-and-wide-beyond-township/
 [x nat]: https://x.com/Natcromancer/status/1827898116466737427
 [x aidasue]: https://x.com/AidaSue/status/1464900884769345536
 [x haze]: https://x.com/Media_Selangor/status/2110291874800136431
@@ -312,7 +313,7 @@ The 34 survivors were scored against the [judging matrix](#judging-matrix). The 
 Five research agents took the 12 by theme: traffic, new-home life, construction and dengue, empty homes and seniors, and household waste. Round 4 then:
 
 - **killed** Pindah Dalam Taman, SDP buying older residents' homes when they downsize within the township;
-- **merged** pooled school vans and SDP's lorries into Waktu Lancar, Aedes traps into Jiran Projek, and crew pay for clean recyclables into Dapur Asing;
+- **merged** pooled school vans and SDP's lorries into Waktu Lancar, Aedes traps into Jiran Projek, and Bin-room share, crew pay for clean recyclables, into Dapur Asing;
 - **raised** Rain-Check to innovation 4, after finding no weather-triggered warranty check anywhere, and renamed it Lepas Hujan, because a US product is called RainCheck;
 - **narrowed** Waktu Lancar to strata precincts, after Subang Jaya's council removed RFID barriers from public roads on 2 October 2026 ([Media Selangor][kinrara]).
 
@@ -322,9 +323,9 @@ Five research agents took the 12 by theme: traffic, new-home life, construction 
 
 New seeds built on what round 4 found:
 
-- **Penjaga Taman:** one paid network of retiree watchers selling two products, checks on empty homes and visits to parents living alone, as Japan Post and La Poste each sell one.
+- **Penjaga Taman:** one paid network of retiree watchers selling two products, checks on empty homes and visits to parents living alone, as Japan Post does.
 - **Sedia Asing:** recycling defaults set at key handover, merging Hari Pertama's habit kit with Dapur Asing's kitchen bins, and compared across the roughly 30 phases SDP hands over a year.
-- **Considered and dropped:** clean-air rooms during the haze, because Singapore's haze centres were "less used" on 15 October 2026 while residents queued for masks ([The Straits Times][st haze]); and haze kits for homes, because masks are already handed out.
+- **Considered and dropped:** clean-air rooms during the haze, because Singapore's haze shelters "appeared to be less popular" on 15 October 2026 while residents queued for masks ([The Straits Times][st haze]); and haze kits for homes, because masks are already handed out.
 
 [st haze]: https://www.straitstimes.com/singapore/lines-form-for-n95-masks-as-haze-situation-persists-but-haze-centres-see-few-people
 
@@ -333,12 +334,13 @@ New seeds built on what round 4 found:
 Two research agents checked the round 5 seeds and the gaps in the leaders:
 
 - **Penjaga Taman** narrowed back to empty homes: paid visits to seniors already exist in Malaysia, from Teman at RM13 to RM17 an hour ([The Edge][teman]) and Selangor's own Rakan Penjaga.
-- **Sedia Asing** scored 2 on innovation: Selangor's SELKitar already gives listed households recycling bins and weekly collection ([Selangor State Assembly][selkitar]).
-- **Waktu Lancar** can run on the RFID gate logs Elmina's strata precincts already have, and TomTom's free tier covers the speed data.
-- **Lepas Hujan** must trigger from JPS rain gauges: modelled rain showed 4.4 mm near Elmina on 13 October 2026, when gauges recorded 47 to 48 mm.
+- **Sedia Asing** scored 2 on innovation: Selangor's SELKitar already gives listed households recycling bins and door-to-door collection ([Selangor State Assembly][selkitar]).
+- **Waktu Lancar** can run on the access-card or RFID gate logs Elmina's strata precincts already have, with traffic speeds from TomTom.
+- **Lepas Hujan** must trigger from JPS rain gauges: modelled rain showed under 5 mm near Elmina on 13 October 2026, when gauges recorded 47 to 48 mm ([JPS][jps rain]).
 
 [teman]: https://theedgemalaysia.com/article/aged-care-offering-companionship-elderly
 [selkitar]: https://dewan.selangor.gov.my/question/program-selkitar/
+[jps rain]: https://publicinfobanjir.water.gov.my/wp-content/themes/shapely/agency/searchresultrainfall.php?state=SEL&district=ALL&station=ALL&lang=en&loginStatus=0
 
 ### Pass 2, round 7: pilot and prototype
 
@@ -348,11 +350,13 @@ Each survivor got a pilot on SDP land or processes, with an owner, duration, app
 
 Each survivor faced its killer question and was then killed or changed:
 
-- **Lepas Hujan:** "Why not just copy Trinity Group's 10-year roof-leak warranty?" A warranty only pays if someone notices the leak.
+- **Lepas Hujan:** "Why not just copy Trinity Group's 10-year roof-leak warranty ([Trinity][trinity])?" A warranty only pays if someone notices the leak.
 - **Waktu Lancar:** "Our own AGM says outsiders cause the jam." Measurement became the first phase, with a decision gate.
 - **Jiran Projek:** "Why hand residents ammunition?" It publishes a grade per site before naming contractors.
 - **Rumah Dijaga:** "How many homes are empty, and will investors pay?" Outside checks only, no keys, and two prices tested first.
 - **Killed:** Kedai Jaga and Sedia Asing; reasons under [Second ideation cut ideas](#second-ideation-cut-ideas).
+
+[trinity]: https://www.trinitygroup.com.my/news/trinity-group-launches-malaysias-first-gold-assurance-programme-malaysian-business/
 
 ### Pass 2, round 9: independent panel
 
@@ -487,7 +491,7 @@ Cut in pass 2, round 2 by a [gate](#gates):
 - **Not buildable on real data (gate 5):** spotting repeated defects across units, which needs SDP's internal data.
 - **No specific evidence (gate 6):** data-centre neighbours, school-holiday camps, a right to dry laundry outdoors.
 - **No real use (gate 7):**
-  - Clean-air rooms in sales galleries during haze: on 15 October 2026 Singapore's haze centres were "less used", some "empty or locked", while residents queued for N95 masks ([The Straits Times][st haze]).
+  - Clean-air rooms in sales galleries during haze: on 15 October 2026 Singapore's haze shelters "appeared to be less popular" and some "appeared to be locked", while residents queued for N95 masks ([The Straits Times][st haze]).
   - Roadkill surveys, a participatory budget, pond water for landscaping, paying landscapers for verge cover.
 - **Repeats the first pass (gate 8):** kids' safe walking routes (the safe-routes audit), flood-depth posts (flood), drill maps from as-built plans (the as-built logbook).
 
@@ -501,27 +505,30 @@ Cut in pass 2, round 3 on score (author scores out of 100):
 
 Killed or merged in pass 2, round 4:
 
-- **Pindah Dalam Taman (killed):** SDP buying older residents' homes at full value when they move to a smaller SDP unit, as Yamaman has done at Yukarigaoka since 2005 ([Yukarigaoka][yukari]). It is used once, ties up about RM1 million a house, and SDP already markets single-storey homes to downsizers: Seroja Gardens in Nilai Impian sold 52 units "within three hours" ([SDP][seroja]).
-- **Bas Taman (merged into Waktu Lancar):** licensed school vans already carry 27% of Selangor pupils ([DriveInMalaysia][drive], _secondary_), and SDP's Elmina Valley community app already registers "a routine school transport service provider" at the gate ([Google Play][play]).
+- **Pindah Dalam Taman (killed):** SDP buying older residents' homes at full value when they move to a smaller SDP unit, as Yamaman has done at Yukarigaoka since 2005 ([Yukarigaoka][yukari]; [Yamaman][yamaman]). It is used once, ties up close to RM1 million a house, and SDP already sells single-storey homes: Seroja Gardens in Nilai Impian sold 52 units "within three hours" ([SDP][seroja]).
+- **Bas Taman (merged into Waktu Lancar):** a MIROS survey of 5,426 parents at 59 Selangor schools found 27% of children travel by school bus or van ([DriveInMalaysia][drive], _secondary_), and SDP's Elmina Valley community app already registers "a routine school transport service provider" at the gate ([Google Play][play]).
 - **Lorry windows (merged into Waktu Lancar):** SDP keeping its own lorries off the peak became "SDP goes first".
-- **Tip-It Friday (merged into Jiran Projek):** Singapore already alerts residents from its about 72,000 Gravitraps ([NEA][nea]), and trap counts predict cases only modestly.
-- **Bin-room share (merged into Dapur Asing):** Ampang Jaya's ReFAST already pays strata janitors from recyclables ([Marea][marea]).
+- **Tip-It Friday (merged into Jiran Projek):** Singapore already publishes monthly maps of high-mosquito areas from about 72,000 Gravitraps ([NEA][nea]), and trap counts give only "modest early-warning signals" ([PMC][ovitrap]).
+- **Bin-room share (merged into Dapur Asing):** a recycler in Ampang Jaya's programme with Marea already pays strata janitors for sorting recyclables ([Marea][marea]).
 
 [yukari]: https://realestate.yukarigaoka.jp/town/happycircle/
+[yamaman]: https://kyodonewsprwire.jp/release/202206273019
 [seroja]: https://www.simedarbyproperty.com/press-releases/sime-darby-property-achieves-100-take-seroja-gardens-phase-1-nilai-impian
 [drive]: https://driveinmalaysia.com/blog/2023/school-bus-history-color-choice-and-school-transportation-in-malaysia/
 [play]: https://play.google.com/store/apps/details?id=com.framework7.simedarbycommunity
 [nea]: https://www.nea.gov.sg/dengue-zika/Aedes
+[ovitrap]: https://pmc.ncbi.nlm.nih.gov/articles/PMC13274206/
 [marea]: https://www.marea.com.my/marea-mpaj-to-spur-better-practices-of-solid-waste-separation-provide-collection-for-recycling/
 
 Killed in pass 2, round 8:
 
 - **Kedai Jaga:** stallholders noticing when a senior living alone stops coming. SDP controls no kopitiam, surau or market where daily regulars go, and paid visits already exist: Teman charges RM13 to RM17 an hour ([The Edge][teman]), and Selangor runs its own Rakan Penjaga companions ([Selangor State Assembly][rakan]; [Media Selangor][rakan ms]).
-- **Sedia Asing,** which had absorbed Hari Pertama and Dapur Asing: recycling set up at key handover. Selangor's SELKitar already gives listed households recycling bins and weekly collection, and the state and KDEBWM choose the areas ([Selangor State Assembly][selkitar]). The transport half had no bus to use in Elmina, and Munich's free-ticket pilot for new residents found its effect on car use "nicht signifikant" (not significant) ([SSOAR][munich]).
+- **Sedia Asing,** which had absorbed Hari Pertama and Dapur Asing: recycling set up at key handover. Selangor's SELKitar already gives listed households recycling bins and door-to-door collection ([Selangor State Assembly][selkitar]), and KDEBWM and the councils choose the areas ([Radio MPSepang][mpsepang]). The transport half had no bus to use in Elmina, and Munich's new-resident package, information and a one-week free ticket, raised public-transport use 7.6%, but its effect on car use was "nicht signifikant" (not significant) ([SSOAR][munich]).
 
 [rakan]: https://dewan.selangor.gov.my/question/kebajikan-mesra-warga-emas/
 [rakan ms]: https://mediaselangor.com/ms/2026/08/391674
 [munich]: https://www.ssoar.info/ssoar/handle/document/35941
+[mpsepang]: https://radiompsepang.my/info/program-selkitar-babit-lebih-50-taman-perumahan-mula-hari-ini
 
 ## Next steps for the team
 
