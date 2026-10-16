@@ -1,6 +1,6 @@
 # Idea ranking
 
-Four candidate solutions for our Township of Tomorrow entry, ranked after a ten-round ideation against the judging matrix and the brief's rules, as of 10 October 2026. This is evidence for the team's pick in [issue #18][i18], not the pick itself. Each idea has its own file, numbered by its rank here.
+Eight candidate solutions for our Township of Tomorrow entry, ranked after two ten-round ideations against the judging matrix and the brief's rules: the first on 10 October 2026 and the second on 16 October 2026. This is evidence for the team's pick in [issue #18][i18], not the pick itself. Each idea has its own file: 0001 to 0004 come from the first ideation and 0005 to 0008 from the second, each numbered by its rank within its own ideation.
 
 [i18]: https://github.com/TolongLabs/sdp-hack/issues/18
 
@@ -13,7 +13,7 @@ Contents:
     1.  [Gates](#gates)
     1.  [Who scored this](#who-scored-this)
     1.  [Assumptions](#assumptions)
-1.  [The ten rounds](#the-ten-rounds)
+1.  [First ideation: ten rounds](#first-ideation-ten-rounds)
     1.  [Round 1: diverge](#round-1-diverge)
     1.  [Round 2: gates](#round-2-gates)
     1.  [Round 3: first score](#round-3-first-score)
@@ -24,7 +24,19 @@ Contents:
     1.  [Round 8: red team](#round-8-red-team)
     1.  [Round 9: independent panel](#round-9-independent-panel)
     1.  [Round 10: rank and stress-test](#round-10-rank-and-stress-test)
+1.  [Second ideation: ten more rounds](#second-ideation-ten-more-rounds)
+    1.  [Pass 2, round 1: diverge from X and personas](#pass-2-round-1-diverge-from-x-and-personas)
+    1.  [Pass 2, round 2: two new gates](#pass-2-round-2-two-new-gates)
+    1.  [Pass 2, round 3: first score](#pass-2-round-3-first-score)
+    1.  [Pass 2, round 4: novelty and evidence](#pass-2-round-4-novelty-and-evidence)
+    1.  [Pass 2, round 5: re-diverge](#pass-2-round-5-re-diverge)
+    1.  [Pass 2, round 6: check the new ideas](#pass-2-round-6-check-the-new-ideas)
+    1.  [Pass 2, round 7: pilot and prototype](#pass-2-round-7-pilot-and-prototype)
+    1.  [Pass 2, round 8: red team](#pass-2-round-8-red-team)
+    1.  [Pass 2, round 9: independent panel](#pass-2-round-9-independent-panel)
+    1.  [Pass 2, round 10: rank and stress-test](#pass-2-round-10-rank-and-stress-test)
 1.  [Cut ideas](#cut-ideas)
+1.  [Second ideation cut ideas](#second-ideation-cut-ideas)
 1.  [Next steps for the team](#next-steps-for-the-team)
     1.  [What changed from the suite proposal](#what-changed-from-the-suite-proposal)
 1.  [Open questions](#open-questions)
@@ -32,45 +44,59 @@ Contents:
 
 ## Ranking
 
-| Rank | Idea                | Track  | Judges /100 | Verdict                                                                            |
-| ---: | ------------------- | ------ | ----------: | ---------------------------------------------------------------------------------- |
-|    1 | [Jiran Siaga][i1]   | People |        69.3 | Tied lead. Highest impact, a risk to life; the trigger and liability are its risks |
-|    2 | [Kolam Sedia][i2]   | Planet |        68.7 | Tied lead. SDP can approve it alone; first on first-place votes and at 50% fit     |
-|    3 | [Teduh][i3]         | Planet |        65.3 | Cheapest to build and prove; small, slow impact                                    |
-|    4 | [Handover Loop][i4] | Planet |        59.7 | No lever after handover; only worth it if contractors confirm the price case       |
+The second ideation's panel scored all eight ideas, from both ideations, on the same anchors, so this table uses its scores. The first panel's scores for the first four are in [round 9](#round-9-independent-panel).
 
-Mean judge scores by criterion, out of 5, with the weights from the [brief]:
+| Rank | Idea                | Track  | Ideation | Judges /100 | Verdict                                                                                       |
+| ---: | ------------------- | ------ | -------- | ----------: | --------------------------------------------------------------------------------------------- |
+|    1 | [Lepas Hujan][i5]   | Planet | Second   |        74.0 | Tied lead. The most original, and SDP can run it alone; its climate fit is weak               |
+|    2 | [Kolam Sedia][i2]   | Planet | First    |        72.7 | Tied lead. First on two of three first-place votes and at 50% fit; SDP must confirm its ponds |
+|    3 | [Jiran Projek][i6]  | People | Second   |        69.3 | The strongest People idea; SDP's safety team must agree to publish site grades                |
+|    4 | [Jiran Siaga][i1]   | People | First    |        68.0 | Highest impact, a risk to life; the trigger and partners are its risks                        |
+|    5 | [Teduh][i3]         | Planet | First    |        66.7 | Cheapest to build and prove; small, slow impact                                               |
+|    6 | [Waktu Lancar][i7]  | People | Second   |        64.3 | Tackles the loudest complaint, but residents won't keep shifting without prizes               |
+|    7 | [Handover Loop][i4] | Planet | First    |        62.0 | No lever after handover                                                                       |
+|    8 | [Rumah Dijaga][i8]  | People | Second   |        52.3 | No evidence the problem exists or that owners will pay                                        |
 
-| Idea          | Impact 25% | Innovation 20% | Feasibility 20% | Fit 15% | Commercial 10% | Evidence 10% |
-| ------------- | ---------: | -------------: | --------------: | ------: | -------------: | -----------: |
-| Jiran Siaga   |        4.0 |            3.0 |             3.0 |     4.0 |            3.0 |          3.7 |
-| Kolam Sedia   |        3.0 |            3.0 |             3.7 |     4.3 |            4.0 |          3.0 |
-| Teduh         |        2.7 |            2.3 |             4.0 |     4.0 |            3.7 |          3.7 |
-| Handover Loop |        3.0 |            2.7 |             3.0 |     3.3 |            3.0 |          3.0 |
+Mean judge scores by criterion, out of 5, with the weights from the [brief], and how many of the three judges said the named user would use it repeatedly without prizes:
+
+| Idea          | Impact 25% | Innovation 20% | Feasibility 20% | Fit 15% | Commercial 10% | Evidence 10% | Repeat use |
+| ------------- | ---------: | -------------: | --------------: | ------: | -------------: | -----------: | ---------: |
+| Lepas Hujan   |        3.0 |            4.0 |             4.7 |     3.0 |            4.0 |          3.7 |        3/3 |
+| Kolam Sedia   |        3.3 |            3.0 |             4.0 |     4.7 |            4.0 |          3.0 |        3/3 |
+| Jiran Projek  |        3.0 |            3.0 |             4.0 |     3.7 |            3.7 |          4.0 |        3/3 |
+| Jiran Siaga   |        4.0 |            3.0 |             3.0 |     4.0 |            3.0 |          3.0 |        3/3 |
+| Teduh         |        2.7 |            3.0 |             4.0 |     4.0 |            3.0 |          3.7 |        0/3 |
+| Waktu Lancar  |        3.0 |            3.0 |             3.0 |     3.3 |            3.7 |          4.0 |        0/3 |
+| Handover Loop |        3.0 |            3.0 |             3.0 |     3.0 |            3.3 |          3.7 |        0/3 |
+| Rumah Dijaga  |        2.0 |            2.7 |             3.0 |     2.3 |            3.7 |          2.7 |        0/3 |
 
 [i1]: 0001-jiran-siaga.md
 [i2]: 0002-kolam-sedia.md
 [i3]: 0003-teduh.md
 [i4]: 0004-handover-loop.md
+[i5]: 0005-lepas-hujan.md
+[i6]: 0006-jiran-projek.md
+[i7]: 0007-waktu-lancar.md
+[i8]: 0008-rumah-dijaga.md
 [winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
 [brief]: /docs/BRIEF.md
 
 ## Recommendation
 
-- **Pick [Jiran Siaga][i1] or [Kolam Sedia][i2]; they are tied.**
-  - They are about 0.7 points apart, and they swap places if strategic fit weighs 50% (see [round 10](#round-10-rank-and-stress-test)).
-  - Two of the three judges, both playing SDP roles, put Kolam Sedia first. The mean puts Jiran Siaga first because its impact is higher.
-  - Both target Bandar Bukit Raja, which SDP rates at key acute flood risk. Residents there blamed SDP for the November 2024 flood.
-- **Settle the tie by Wed 14 Oct** with the tests in [issue #18][i18]:
-  - **Jiran Siaga** passes if a residents' association agrees to a timed drill on one street.
-  - **Kolam Sedia** passes if SDP's Bandar Bukit Raja team confirms which pond outlets can be controlled and shares one pond's records.
-  - **If neither passes,** default to Jiran Siaga: impact is the heaviest criterion, and its demo runs on public data.
-  - **The choice also sets the track:** People or Planet.
-- **Pitch one idea, not both.** The two share data, and Kolam Sedia's pond sensors can feed Jiran Siaga's trigger. Show the other idea only as a scale-up in the appendix: "If you try to solve everything, you solve nothing" ([brief]).
-- **[Teduh][i3] is the fallback** if the team wants the cheapest build and evidence, at the cost of impact.
-- **Drop [Handover Loop][i4]** unless contractor interviews prove it beats MBSA's RM290 bin on price.
-- **Innovation is every finalist's weakest or joint-weakest criterion.** At best each is new in Malaysia but exists abroad, which scores 3. The deck has to show why it is new here, as the brief advises.
-- **Flood ideas have won before.** Recent Malaysian hackathons crowned USM's "Smart Manhole" and APU's MySelamat flood-rescue planner ([past winners][winners]). Either flood idea must show how it differs from them.
+- **Pick [Lepas Hujan][i5] or [Kolam Sedia][i2]; they are tied, and both are Planet, climate resilience, so the track is the same either way.**
+  - They are 1.3 points apart. Two of the three judges put Kolam Sedia first; the innovation mentor put Lepas Hujan first.
+  - **Lepas Hujan is the answer to "unique, and people will actually use it".** It is the only idea all three judges scored 4 on innovation, SDP can run it alone on its own app and data, and every judge said owners would use it, because it is one tap tied to their own money and the warranty deadline.
+  - **Kolam Sedia is the safer fit.** It closes two gaps SDP quotes in its own report, on ponds SDP owns, and it leads if strategic fit weighs 50%; Lepas Hujan then falls to fifth (see [pass 2, round 10](#pass-2-round-10-rank-and-stress-test)).
+- **Settle it by Sun 18 Oct:**
+  - **Lepas Hujan** passes if at least 3 of 10 owners of City of Elmina homes handed over in 2024 or 2025 say they found a leak only in heavy rain, or too late to claim, or if SDP shares the share of leak reports that arrive after the defect period.
+  - **Kolam Sedia** passes the test already in [issue #18][i18]: SDP's Bandar Bukit Raja team confirms which pond outlets are gated or pumped, and shares one pond's desilting or water-level records.
+  - **If both pass,** pick Lepas Hujan, which leads on the official weights. If the organisers confirm on Telegram that strategic fit weighs 50%, pick Kolam Sedia.
+  - **If neither passes,** default to Lepas Hujan: it needs no outside party, and its demo runs on public rain-gauge data.
+- **[Jiran Projek][i6] is the People option,** if the team prefers that track: it scored 4 on evidence, and every judge said residents beside a site would use it.
+- **Pitch one idea.** Show [Waktu Lancar][i7]'s four-week count only in the appendix or the Q&A: the township manager judge would approve it "today", but no judge thought residents would keep changing departure times without prizes.
+- **Drop [Rumah Dijaga][i8] and [Handover Loop][i4].**
+- **The repeat-use test split the eight in half.** Judges expected repeat use for the four ideas tied to a person's own money, safety or a deadline, and for none of the four that rely on prizes, volunteering or a once-a-year decision.
+- **Flood ideas have won before.** Recent Malaysian hackathons crowned USM's "Smart Manhole" and APU's MySelamat flood-rescue planner ([past winners][winners]). Kolam Sedia or Jiran Siaga must show how they differ.
 
 ## Scoring method
 
@@ -99,10 +125,14 @@ An idea that fails a gate is cut, whatever its score. The gates come from the br
 1.  **No unrouted blocker:** no licence or law blocks it without a named route through.
 1.  **Buildable:** one coder can demo the core flow on real data by 23 October.
 1.  **Specific:** one named user in one named SDP place.
+1.  **Real use** (added in the second ideation): the idea names the moment it is used, how often, and the hook that brings the user back without prizes: their own money, time, safety, or an obligation they already carry. An idea used less than once a year needs a money hook.
+1.  **Beyond the first ideation** (added in the second): not a variant of a first-ideation finalist or cut seed.
 
 [CONTEXT]: /docs/CONTEXT.md
 
 ### Who scored this
+
+The first ideation, on 10 October 2026:
 
 - **One Claude Code session on Claude Opus 5.5** did most of the work:
   - generated the ideas, wrote the anchors and gates;
@@ -111,15 +141,26 @@ An idea that fails a gate is cut, whatever its score. The gates come from the br
 - **Seven research agents** on the same model did rounds 4 and 6. Each fetched the sources it cites.
 - **Three judge agents on Claude Sonnet 5.5** scored the four drafts in round 9. They used the anchors above, without seeing the author's scores.
 - **Two fact-check agents on Claude Sonnet 5.5** then checked the docs' quotes, numbers and dates against the cited pages, and their corrections were applied.
+
+The second ideation, on 16 October 2026, ran in a new Claude Code session on Claude Opus 5.5:
+
+- **X research** used the team's second X account through X's web API. It hit rate limits and server errors for about an hour, then returned 1013 posts across 82 queries. Brave's index of x.com, and fxtwitter for full post text, filled the gap.
+- **Five persona agents on Claude Sonnet 5.5** each brainstormed alone from one resident's week, and one research agent collected neighbourhood schemes with published usage numbers.
+- **Seven research agents** on Claude Opus 5.5 did rounds 4 and 6. Each fetched the sources it cites.
+- **Three new judge agents on Claude Sonnet 5.5** scored all eight ideas from both ideations in round 9, on the same anchors, with every earlier score, rank and judge comment removed from the docs they read.
+- **Two fact-check agents on Claude Sonnet 5.5** checked the new docs' quotes, numbers and dates against the cited pages, and their corrections were applied.
+
 - **No human has scored the ideas, and no resident has been interviewed.** Treat a gap of a few points as a tie.
 
 ### Assumptions
 
 - **Team:** 3 to 5 students, at least one of whom codes ([brief]). The team can travel to City of Elmina and Bandar Bukit Raja for interviews before 23 October.
-- **Track:** not chosen yet. The ideation covered both.
+- **Track:** not chosen yet. Both ideations covered both tracks; the tied leaders are both Planet.
 - **Weights:** strategic fit is 15%, as the brief acts on. The 50% figure from the briefing is tested in [round 10](#round-10-rank-and-stress-test).
 
-## The ten rounds
+## First ideation: ten rounds
+
+The first ideation ran on 10 October 2026.
 
 ### Round 1: diverge
 
@@ -231,6 +272,136 @@ The ranking uses the judges' mean, a rule set before they reported. Two checks t
 
 The top two swap, and the bottom two hold. Hence the tie in the [recommendation](#recommendation).
 
+## Second ideation: ten more rounds
+
+The first ideation's finalists all scored 3 or less on innovation, and none was something residents would use every week. The team asked for ideas that are unique and that people will actually use, so on 16 October a second ten rounds started from what residents post on X and from five resident personas, and added two [gates](#gates).
+
+### Pass 2, round 1: diverge from X and personas
+
+77 seeds came from four sources:
+
+- **X**, where the loudest signal was City of Elmina's daily gridlock:
+  - "Traffic jams at Denai Alam & Elmina in Shah Alam are UNBEARABLE, but Sime Darby Property is still busy building news home for profits" (March 2025, tagging SDP and the Prime Minister) ([X][x tajuddin]).
+  - Focus Malaysia's write-up of a resident: "An 1km exit to my house takes an hour" ([X][x focus]).
+  - "Elmina Lakeside Mall currently has ZERO transit access" (August 2024, 16,000 views) ([X][x nat]).
+  - Owners hiring inspectors before the defect period ends: "Banyak betul defect rumah ni" (so many defects in this house), 5,142 likes ([X][x aidasue]).
+  - Selangor schools stayed open in the haze on 15 October 2026, with masks advised ([X][x haze]).
+- **SDP's own words:** at its 2025 AGM a shareholder wrote that "Sime Darby Property seems not to care" about Elmina's traffic, and SDP blamed "a surge in external traffic" using its roads as shortcuts ([SDP AGM][agm] p. 7).
+- **Our own lenses:** SDP-owned flows and assets, extreme users, moments when habits break, timely shocks such as the haze and the 2026 dengue surge, and analogies from abroad: 34 seeds.
+- **Five persona agents,** each brainstorming alone from one resident's week, because asking one model for ideas makes them alike ([ideation methods][methods]): a working parent in Elmina West, a retired couple in Bandar Bukit Raja, a renter and delivery rider in Denai Alam, SDP's Elmina township manager, and an engineer in a Serenia City condo: 40 seeds.
+- **A research agent** that found 30 neighbourhood schemes worldwide with published usage numbers. Its pattern: schemes stick when the service comes to the door on a schedule, rides a payment people already make, or gives a named neighbour a role. It gave 3 seeds.
+
+[x tajuddin]: https://x.com/TajuddinKamil/status/1899648539199971332
+[x focus]: https://x.com/FocusMalaysiaMY/status/1917378258670346641
+[x nat]: https://x.com/Natcromancer/status/1827898116466737427
+[x aidasue]: https://x.com/AidaSue/status/1464900884769345536
+[x haze]: https://x.com/Media_Selangor/status/2110291874800136431
+[agm]: https://www.simedarbyproperty.com/sites/default/files/2025-07/Pre-Meeting_Questions.pdf
+[methods]: /docs/research/ideation-methods.md#what-ai-does-to-ideas
+
+### Pass 2, round 2: two new gates
+
+The [gates](#gates), including the new real-use and beyond-the-first-ideation gates, cut 34 seeds, and 9 merged into others, leaving 34. All are listed under [Second ideation cut ideas](#second-ideation-cut-ideas).
+
+### Pass 2, round 3: first score
+
+The 34 survivors were scored against the [judging matrix](#judging-matrix). The top 10, scoring 65 to 76, advanced, plus two Planet waste ideas tied at 64, so both tracks stayed in play.
+
+### Pass 2, round 4: novelty and evidence
+
+Five research agents took the 12 by theme: traffic, new-home life, construction and dengue, empty homes and seniors, and household waste. Round 4 then:
+
+- **killed** Pindah Dalam Taman, SDP buying older residents' homes when they downsize within the township;
+- **merged** pooled school vans and SDP's lorries into Waktu Lancar, Aedes traps into Jiran Projek, and crew pay for clean recyclables into Dapur Asing;
+- **raised** Rain-Check to innovation 4, after finding no weather-triggered warranty check anywhere, and renamed it Lepas Hujan, because a US product is called RainCheck;
+- **narrowed** Waktu Lancar to strata precincts, after Subang Jaya's council removed RFID barriers from public roads on 2 October 2026 ([Media Selangor][kinrara]).
+
+[kinrara]: https://mediaselangor.com/ms/2026/10/399047
+
+### Pass 2, round 5: re-diverge
+
+New seeds built on what round 4 found:
+
+- **Penjaga Taman:** one paid network of retiree watchers selling two products, checks on empty homes and visits to parents living alone, as Japan Post and La Poste each sell one.
+- **Sedia Asing:** recycling defaults set at key handover, merging Hari Pertama's habit kit with Dapur Asing's kitchen bins, and compared across the roughly 30 phases SDP hands over a year.
+- **Considered and dropped:** clean-air rooms during the haze, because Singapore's haze centres were "less used" on 15 October 2026 while residents queued for masks ([The Straits Times][st haze]); and haze kits for homes, because masks are already handed out.
+
+[st haze]: https://www.straitstimes.com/singapore/lines-form-for-n95-masks-as-haze-situation-persists-but-haze-centres-see-few-people
+
+### Pass 2, round 6: check the new ideas
+
+Two research agents checked the round 5 seeds and the gaps in the leaders:
+
+- **Penjaga Taman** narrowed back to empty homes: paid visits to seniors already exist in Malaysia, from Teman at RM13 to RM17 an hour ([The Edge][teman]) and Selangor's own Rakan Penjaga.
+- **Sedia Asing** scored 2 on innovation: Selangor's SELKitar already gives listed households recycling bins and weekly collection ([Selangor State Assembly][selkitar]).
+- **Waktu Lancar** can run on the RFID gate logs Elmina's strata precincts already have, and TomTom's free tier covers the speed data.
+- **Lepas Hujan** must trigger from JPS rain gauges: modelled rain showed 4.4 mm near Elmina on 13 October 2026, when gauges recorded 47 to 48 mm.
+
+[teman]: https://theedgemalaysia.com/article/aged-care-offering-companionship-elderly
+[selkitar]: https://dewan.selangor.gov.my/question/program-selkitar/
+
+### Pass 2, round 7: pilot and prototype
+
+Each survivor got a pilot on SDP land or processes, with an owner, duration, approvals and cost items, and a prototype a single coder can build on real data by 23 October. These are in each idea doc's "Pilot" and "Prototype by 23 October" sections.
+
+### Pass 2, round 8: red team
+
+Each survivor faced its killer question and was then killed or changed:
+
+- **Lepas Hujan:** "Why not just copy Trinity Group's 10-year roof-leak warranty?" A warranty only pays if someone notices the leak.
+- **Waktu Lancar:** "Our own AGM says outsiders cause the jam." Measurement became the first phase, with a decision gate.
+- **Jiran Projek:** "Why hand residents ammunition?" It publishes a grade per site before naming contractors.
+- **Rumah Dijaga:** "How many homes are empty, and will investors pay?" Outside checks only, no keys, and two prices tested first.
+- **Killed:** Kedai Jaga and Sedia Asing; reasons under [Second ideation cut ideas](#second-ideation-cut-ideas).
+
+### Pass 2, round 9: independent panel
+
+Three new judge agents played the same roles as the first panel:
+
+- SDP's head of sustainability;
+- an SDP township general manager;
+- an external innovation mentor.
+
+Each read only the brief, CONTEXT, the judging matrix and all eight idea docs, with every earlier score, rank and judge comment removed. Their weighted scores, with the author's round 9 scores for the new four shown but not counted:
+
+| Idea          | Author | Sustainability head | Township manager | Innovation mentor | Judges' mean |
+| ------------- | -----: | ------------------: | ---------------: | ----------------: | -----------: |
+| Lepas Hujan   |     77 |                  76 |               70 |                76 |         74.0 |
+| Kolam Sedia   |      – |                  77 |               72 |                69 |         72.7 |
+| Jiran Projek  |     64 |                  66 |               71 |                71 |         69.3 |
+| Jiran Siaga   |      – |                  68 |               68 |                68 |         68.0 |
+| Teduh         |      – |                  69 |               69 |                62 |         66.7 |
+| Waktu Lancar  |     74 |                  64 |               64 |                65 |         64.3 |
+| Handover Loop |      – |                  62 |               64 |                60 |         62.0 |
+| Rumah Dijaga  |     64 |                  54 |               55 |                48 |         52.3 |
+
+The first four ideas scored within 4 points of their first-panel means, so the two panels broadly agree; Kolam Sedia gained most. Each judge also named every idea's biggest weakness and the change that would raise its score most; those are in each idea doc's "Scorecard". Three were folded into the new drafts:
+
+- Lepas Hujan now leads with the share of all leaks caught inside the defect period, and rainfall at each leak as a design standard for heavier rain.
+- Jiran Projek's prototype now checks its readings against DOE's Shah Alam station, on a real SDP boundary.
+- Waktu Lancar now leads with the residents' share of the exit flow.
+
+### Pass 2, round 10: rank and stress-test
+
+The ranking uses this panel's mean, a rule set before the judges reported. Three checks test how stable it is:
+
+- **First-place votes:** the sustainability head and the township manager ranked Kolam Sedia first; the mentor ranked Lepas Hujan first.
+- **Repeat use:** each judge said whether the named user would use the idea repeatedly without prizes. All three said yes for Lepas Hujan, Kolam Sedia, Jiran Projek and Jiran Siaga, and no for the other four.
+- **50% strategic fit:** with fit at 50% and the other weights scaled down in proportion, as in the first ideation's [round 10](#round-10-rank-and-stress-test):
+
+| Idea          | Slide 26 weights | Fit at 50% |
+| ------------- | ---------------: | ---------: |
+| Lepas Hujan   |             74.0 |       68.2 |
+| Kolam Sedia   |             72.7 |       81.2 |
+| Jiran Projek  |             69.3 |       71.0 |
+| Jiran Siaga   |             68.0 |       72.9 |
+| Teduh         |             66.7 |       72.2 |
+| Waktu Lancar  |             64.3 |       65.3 |
+| Handover Loop |             62.0 |       61.2 |
+| Rumah Dijaga  |             52.3 |       50.0 |
+
+Kolam Sedia leads at 50%, and Lepas Hujan falls to fifth because every judge scored its fit 3. Hence the tie, and the Telegram question, in the [recommendation](#recommendation).
+
 ## Cut ideas
 
 Merged into a survivor in round 2:
@@ -299,26 +470,79 @@ Killed or parked in round 8:
 [gmcp]: https://cities.google/google-maps-content-partners
 [nas]: https://www.bernama.com/en/news.php?id=2497923
 
+## Second ideation cut ideas
+
+Merged in pass 2, round 2:
+
+- Construction-site Aedes surveillance into Tip-It Friday; Jam-Day Desks and the persona's "gridlock-free desk" into Galeri Kerja; Pos Pinjam into Guardhouse Shelf; Cikgu Tunggu into Rumah Singgah; scheduled grocery vans as watchers into Kedai Jaga; Rider Rehat into Mall bike pit; haze mode into clean-air rooms; night-market reusables into Kenduri Kongsi.
+
+Cut in pass 2, round 2 by a [gate](#gates):
+
+- **Taken or nearly taken (gate 1):** Four-minute rule, a shared rule for handing food to guards (visitor apps); visitor-bay night passes for bikes (pre-booked parking); paying riders for photos of drains and lamps (one reporting channel, as with the first pass's Drain watch).
+- **Re-skins (gate 2):**
+  - Kenduri Kongsi, reusable event crockery: OPACK already rents reusable foodware in Malaysia, 22,319 items in two years ([OPACK][opack]).
+  - Bulky-waste swap: Buy Nothing groups and Carousell. Elmina Loop shuttle: mall shuttles and Rapid KL On-Demand. Clinic escorts: Homage. Mall walking. Adaptive street lights. Pickup authorisation at tuition centres. Move-out swaps. Standing orders at the market.
+- **Outside SDP's reach (gate 3):** reusable delivery containers (delivery platforms), smart roof-tank filling (Air Selangor), steering through traffic away from Elmina (council roads and navigation apps), dark-sky lighting (council lamps), alerts to move cars blocking bin lorries (KDEB), a township calendar of bin days and water cuts (agency data), longer crossing times for seniors (council signals).
+- **Unrouted blockers (gate 4):** donating unused solar credits to neighbours (reselling electricity needs a licence); resident-only rush-hour access on cut-through roads (public roads; Leonia, New Jersey, tried it); parametric flood cover (an insurance licence, and the first pass's flood territory).
+- **Not buildable on real data (gate 5):** spotting repeated defects across units, which needs SDP's internal data.
+- **No specific evidence (gate 6):** data-centre neighbours, school-holiday camps, a right to dry laundry outdoors.
+- **No real use (gate 7):**
+  - Clean-air rooms in sales galleries during haze: on 15 October 2026 Singapore's haze centres were "less used", some "empty or locked", while residents queued for N95 masks ([The Straits Times][st haze]).
+  - Roadkill surveys, a participatory budget, pond water for landscaping, paying landscapers for verge cover.
+- **Repeats the first pass (gate 8):** kids' safe walking routes (the safe-routes audit), flood-depth posts (flood), drill maps from as-built plans (the as-built logbook).
+
+[opack]: https://www.linkedin.com/posts/opack-my_sustainability-zerowaste-circulareconomy-activity-7381237517443874816-YRz8
+
+Cut in pass 2, round 3 on score (author scores out of 100):
+
+- Tukang Lorong, fixed-price odd jobs for seniors by SDP's crews (64; the People track was already crowded); Mall batch run, one rider for many mall orders (62); Beli Sekampung, neighbourhood group buying (61).
+- Signed-Off Mowing, residents signing off contractor work before invoices are paid (59); e-bike library (59); same-house-type energy comparisons (58); a tool shelf at the guardhouse (57); dementia QR stickers (57); safe after-school homes run by retirees (57; child-safeguarding risk); macaque alerts (about 55; no Elmina evidence found); repair-quote benchmarks (56); work desks in empty mall units (55).
+- Below 55: tenancy files for renters, separately sold parking bays, quiet hours for night-shift lanes, food-waste charges by weight, a bike workshop at the mall, owner checks against rental scams, billing kitchen-pipe blockages by stack, low-sugar breakfasts after blood tests, sharps take-back, masked messages to owners of blocking cars.
+
+Killed or merged in pass 2, round 4:
+
+- **Pindah Dalam Taman (killed):** SDP buying older residents' homes at full value when they move to a smaller SDP unit, as Yamaman has done at Yukarigaoka since 2005 ([Yukarigaoka][yukari]). It is used once, ties up about RM1 million a house, and SDP already markets single-storey homes to downsizers: Seroja Gardens in Nilai Impian sold 52 units "within three hours" ([SDP][seroja]).
+- **Bas Taman (merged into Waktu Lancar):** licensed school vans already carry 27% of Selangor pupils ([DriveInMalaysia][drive], _secondary_), and SDP's Elmina Valley community app already registers "a routine school transport service provider" at the gate ([Google Play][play]).
+- **Lorry windows (merged into Waktu Lancar):** SDP keeping its own lorries off the peak became "SDP goes first".
+- **Tip-It Friday (merged into Jiran Projek):** Singapore already alerts residents from its about 72,000 Gravitraps ([NEA][nea]), and trap counts predict cases only modestly.
+- **Bin-room share (merged into Dapur Asing):** Ampang Jaya's ReFAST already pays strata janitors from recyclables ([Marea][marea]).
+
+[yukari]: https://realestate.yukarigaoka.jp/town/happycircle/
+[seroja]: https://www.simedarbyproperty.com/press-releases/sime-darby-property-achieves-100-take-seroja-gardens-phase-1-nilai-impian
+[drive]: https://driveinmalaysia.com/blog/2023/school-bus-history-color-choice-and-school-transportation-in-malaysia/
+[play]: https://play.google.com/store/apps/details?id=com.framework7.simedarbycommunity
+[nea]: https://www.nea.gov.sg/dengue-zika/Aedes
+[marea]: https://www.marea.com.my/marea-mpaj-to-spur-better-practices-of-solid-waste-separation-provide-collection-for-recycling/
+
+Killed in pass 2, round 8:
+
+- **Kedai Jaga:** stallholders noticing when a senior living alone stops coming. SDP controls no kopitiam, surau or market where daily regulars go, and paid visits already exist: Teman charges RM13 to RM17 an hour ([The Edge][teman]), and Selangor runs its own Rakan Penjaga companions ([Selangor State Assembly][rakan]; [Media Selangor][rakan ms]).
+- **Sedia Asing,** which had absorbed Hari Pertama and Dapur Asing: recycling set up at key handover. Selangor's SELKitar already gives listed households recycling bins and weekly collection, and the state and KDEBWM choose the areas ([Selangor State Assembly][selkitar]). The transport half had no bus to use in Elmina, and Munich's free-ticket pilot for new residents found its effect on car use "nicht signifikant" (not significant) ([SSOAR][munich]).
+
+[rakan]: https://dewan.selangor.gov.my/question/kebajikan-mesra-warga-emas/
+[rakan ms]: https://mediaselangor.com/ms/2026/08/391674
+[munich]: https://www.ssoar.info/ssoar/handle/document/35941
+
 ## Next steps for the team
 
-The ten rounds were desk research by AI. These steps put residents and the team's own judgement back in, before and after the pick in [issue #18][i18]. Name four roles first: a timekeeper, a researcher who runs the interviews, a builder and a storyteller who owns the deck.
+The ten rounds were desk research by AI. These steps put residents and the team's own judgement back in, before and after the pick in [issue #18][i18]. Seven days remain, so the dates are tight. Name four roles first: a timekeeper, a researcher who runs the interviews, a builder and a storyteller who owns the deck.
 
-1.  **Ask, by Tue 13 Oct.** Interview five residents in each area of the top two:
+1.  **Ask, by Sat 17 Oct.** Run the two tests in the [recommendation](#recommendation): ten City of Elmina owners for Lepas Hujan, and SDP's Bandar Bukit Raja team for Kolam Sedia.
     - Ask about what happened to them last time, not about our idea ([evidence judges trust][evidence]).
     - Record counts and exact quotes.
     - Drop a problem that nobody has.
     - Collect consent for personal data, as the PDPA requires ([personal data][pdpa]).
-1.  **Pick, by Wed 14 Oct.**
+1.  **Pick, by Sun 18 Oct.**
     - Each member scores the finalists alone with the [judging matrix](#judging-matrix) before anyone speaks, because the first number said aloud anchors everyone.
-    - Discuss, then score again the next morning ([choosing an idea][choosing]).
-    - Apply one more gate: residents in the Ask step must have the problem.
-1.  **Prove, on Wed 14 Oct.**
+    - Discuss, then score again ([choosing an idea][choosing]).
+    - Ask on Telegram whether strategic fit weighs 15% or 50%, because the answer can flip the top two.
+1.  **Prove, on Sun 18 Oct.**
     - Imagine it is 3 December and we lost, and list why.
     - Answer the organisers' question: what improved, measured how, compared with what?
     - Name who pays and who gains ([who pays][payers]).
     - If the pick needs hardware, such as Kolam Sedia's sensor, run the [IoT test][iot] and order parts that day.
-1.  **Build, from Thu 15 to Tue 20 Oct.** Run five interviews on the idea, then five on the prototype. Shoot the video by 20 October.
-1.  **Submit, on Thu 22 to Fri 23 Oct.** Get a review from someone outside the team, and submit early. Registration closes at 11:59 PM on Wed 21 October ([brief]).
+1.  **Build, from Mon 19 to Wed 21 Oct.** Run five interviews on the prototype, and shoot the video by 21 October. Registration closes at 11:59 PM on Wed 21 October ([brief]).
+1.  **Submit, on Thu 22 to Fri 23 Oct.** Get a review from someone outside the team, and submit early.
 
 [evidence]: /docs/research/best-practices.md#evidence-judges-trust
 [pdpa]: /docs/research/best-practices.md#personal-data-in-surveys-and-pilots
@@ -348,11 +572,13 @@ The team's ideation suite proposal, from PR #16, is folded in here and deleted.
 
 ## Open questions
 
-- **Do residents and SDP confirm the problems?** No resident or SDP staff member has been interviewed for any idea. The deciding tests are in [issue #18][i18].
+- **Do residents and SDP confirm the problems?** No resident or SDP staff member has been interviewed for any idea. The deciding tests are in the [recommendation](#recommendation) and [issue #18][i18].
+- **How many leaks surface after the defect period?** Only SDP knows, and it decides how big Lepas Hujan's impact is.
+- **Does strategic fit weigh 15% or 50%?** The answer flips the top two. Ask on Telegram.
 - **Does the team score the top two the same way?** Nobody on the team has scored them yet; the Pick step above settles it.
 
 ## See also
 
 - [BRIEF][brief]: rules, dates, deliverables and judging weights.
 - [CONTEXT]: past winners, SDP's strategy and gaps, Malaysian context and pitch practice.
-- [Research](/docs/research/): the team's vetted research, including [past winners][winners] and [what already exists](/docs/research/existing-solutions.md).
+- [Research](/docs/research/): the team's vetted research, including [past winners][winners], [what already exists](/docs/research/existing-solutions.md) and [ideation methods][methods].

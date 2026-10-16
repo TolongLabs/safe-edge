@@ -139,18 +139,24 @@ Contents:
 
 ## Scorecard
 
-**Rank 2 of 4**, with a mean judge score of 68.7 out of 100. It comes first if strategic fit counts for 50% ([ranking](0000-ranking.md#round-10-rank-and-stress-test)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
+**First panel, 10 October: rank 2 of 4**, with a mean judge score of 68.7 out of 100. It comes first if strategic fit counts for 50% ([ranking](0000-ranking.md#round-10-rank-and-stress-test)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
 
-| Scorer                  | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
-| ----------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
-| Author (round 9)        | 3      | 4          | 3           | 5   | 3          | 4        | 72       |
-| SDP sustainability head | 3      | 3          | 4           | 5   | 4          | 3        | 72       |
-| SDP township manager    | 3      | 3          | 4           | 4   | 4          | 3        | 69       |
-| Innovation mentor       | 3      | 3          | 3           | 4   | 4          | 3        | 65       |
+**Second panel, 16 October: rank 2 of 8** in the merged ranking, with a mean of 72.7 ([ranking](0000-ranking.md#pass-2-round-10-rank-and-stress-test)). Its three judges scored all eight ideas from both ideations with earlier scores removed.
+
+| Scorer                            | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| --------------------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
+| Author (round 9)                  | 3      | 4          | 3           | 5   | 3          | 4        | 72       |
+| First panel: sustainability head  | 3      | 3          | 4           | 5   | 4          | 3        | 72       |
+| First panel: township manager     | 3      | 3          | 4           | 4   | 4          | 3        | 69       |
+| First panel: innovation mentor    | 3      | 3          | 3           | 4   | 4          | 3        | 65       |
+| Second panel: sustainability head | 4      | 3          | 4           | 5   | 4          | 3        | 77       |
+| Second panel: township manager    | 3      | 3          | 4           | 5   | 4          | 3        | 72       |
+| Second panel: innovation mentor   | 3      | 3          | 4           | 4   | 4          | 3        | 69       |
 
 - **Biggest weakness:** nothing yet shows that sensors and maintenance shorten standing water. We don't know which outlets can be controlled, and the only real sensor is on a campus.
 - **The change that would raise it most:** get SDP's Bandar Bukit Raja team to confirm which outlets are gated or pumped, and to share its desilting records and one real pond's drain-down record. Then lead with outlet faults caught before a storm.
 - **Two judges ranked it first:** SDP can approve the core alone, on ponds it owns.
+- **Second panel's main critique:** get SDP's Bandar Bukit Raja team to confirm in writing which ponds it runs, lead with faults found before the monsoon, drop the seasonal drawdown that needs JPS, and put an RM figure on the pilot. Two of three judges ranked it first again, and it comes first of eight if strategic fit counts for 50%.
 
 ## Risks and open questions
 

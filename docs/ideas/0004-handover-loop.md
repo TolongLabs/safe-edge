@@ -129,14 +129,19 @@ A compulsory deposit is probably out. Regulation 11(2) of the housing regulation
 
 ## Scorecard
 
-**Rank 4 of 4**, with a mean judge score of 59.7 out of 100 ([ranking](0000-ranking.md)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
+**First panel, 10 October: rank 4 of 4**, with a mean judge score of 59.7 out of 100 ([ranking](0000-ranking.md)). The judges are AI agents playing SDP roles, scoring the draft against the [judging matrix](0000-ranking.md#judging-matrix).
 
-| Scorer                  | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
-| ----------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
-| Author (round 9)        | 3      | 3          | 3           | 3   | 2          | 3        | 58       |
-| SDP sustainability head | 3      | 2          | 3           | 3   | 3          | 3        | 56       |
-| SDP township manager    | 3      | 3          | 3           | 4   | 3          | 3        | 63       |
-| Innovation mentor       | 3      | 3          | 3           | 3   | 3          | 3        | 60       |
+**Second panel, 16 October: rank 7 of 8** in the merged ranking, with a mean of 62.0 ([ranking](0000-ranking.md#pass-2-round-10-rank-and-stress-test)). Its three judges scored all eight ideas from both ideations with earlier scores removed.
+
+| Scorer                            | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| --------------------------------- | ------ | ---------- | ----------- | --- | ---------- | -------- | -------- |
+| Author (round 9)                  | 3      | 3          | 3           | 3   | 2          | 3        | 58       |
+| First panel: sustainability head  | 3      | 2          | 3           | 3   | 3          | 3        | 56       |
+| First panel: township manager     | 3      | 3          | 3           | 4   | 3          | 3        | 63       |
+| First panel: innovation mentor    | 3      | 3          | 3           | 3   | 3          | 3        | 60       |
+| Second panel: sustainability head | 3      | 3          | 3           | 3   | 3          | 4        | 62       |
+| Second panel: township manager    | 3      | 3          | 3           | 3   | 4          | 4        | 64       |
+| Second panel: innovation mentor   | 3      | 3          | 3           | 3   | 3          | 3        | 60       |
 
 - **Biggest weakness:**
   - Nothing makes contractors use the drop point after handover: inert disposal is cheap, and private skip operators likely compete (our read).
@@ -146,6 +151,7 @@ A compulsory deposit is probably out. Regulation 11(2) of the housing regulation
   - Interview contractors and homeowners at The Nine about what they paid and where their debris went.
   - Get MBSA's position on a drop point.
   - Ask SDP for the real handover schedule.
+- **Second panel's main critique:** interview three renovation contractors for skip and lorry quotes, to show the drop point beats free dumping. The sustainability judge warned that renovation waste sits outside SDP's reported waste boundary, so counting it would probably lower the 69% diversion rate.
 
 ## Risks and open questions
 
