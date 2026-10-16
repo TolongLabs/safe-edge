@@ -51,7 +51,9 @@ Contents:
 4.  **Fix, then check separately.** The officer can fix a safe problem on the spot, or assign it to a named person. A checker who did not do the fix rechecks it on site; nobody approves their own fix. A repeat finding opens a new incident linked to the same source, and needs a cause.
 5.  **Escalate and report.** Blocked, overdue and unchecked work goes to the contractor manager first, then to SDP. A dated report shows every state, including unswept and unresolved areas. Official orders from health officers are tracked apart, and only they can close them.
 
-The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
+![Site breeding register workflow in four lanes: the area register and recorded heavy rain set a dated round; the officer sweeps each area, a finding goes to a fix, and an independent person rechecks it, returning rejected fixes; checked fixes stay on future rounds; areas not searched are held as blocked or unswept and escalate to the contractor, then SDP; a dated report covers every state](/docs/images/shortlist/breeding-register-workflow.png)
+
+The rough workflow above was checked with Archify and vetted on 17 October; the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W) links an interactive version.
 
 [moh-2015]: https://dosh.gov.my/wp-content/uploads/2024/10/Garis-Panduan-Pengawalan-Nyamuk-Aedes-Di-Tapak-Tapak-Pembinaan-2015.pdf
 

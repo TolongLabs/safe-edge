@@ -63,7 +63,9 @@ Contents:
 5.  **Follow the repair.** SDP's customer team triages the report, an inspector visits and a technical lead assigns the repair. The 30-day repair clock runs from SDP's receipt of written notice. After the repair, the next storm prompts a recheck; a recurrence goes back to the technical lead with the old repair evidence.
 6.  **Close the gap.** In month 22, every owner gets one full-check reminder, even if no heavy rain has come.
 
-The rough workflow is in the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W).
+![Lepas Hujan workflow in four lanes: a saved JPS rain reading feeds the event rule, which picks enrolled homes; each home gets one guided check; a dry answer is logged, not a pass; damp or leaking creates a report and hand-off to SDP for triage and inspection, then a repair assigned by the technical lead; the owner rechecks after the next storm, and leaking again creates a new linked report](/docs/images/shortlist/lepas-hujan-workflow.png)
+
+The rough workflow above was checked with Archify and vetted on 17 October; the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W) links an interactive version.
 
 ## Why it's new
 
