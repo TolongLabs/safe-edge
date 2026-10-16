@@ -1,6 +1,6 @@
 # What already exists
 
-Products and services already used in Malaysian townships, condominiums and cities for each focus area, as of 2026-10-10. The organisers reject "an existing app plus AI" and have named ideas that are already taken ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)), so check an idea against this page before scoring it. Evidence is from 2024 to 2026 unless marked; scale figures are company claims unless stated. Absence from this page doesn't prove absence from the market; see [Checking that an idea is new](/docs/research/ideation-methods.md#checking-that-an-idea-is-new).
+Products and services already used in Malaysian townships, condominiums and cities for each focus area, as of 2026-10-10, with SELKitar and SDP App reviews added on 2026-10-16. The organisers reject "an existing app plus AI" and have named ideas that are already taken ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)), so check an idea against this page before scoring it. Evidence is from 2024 to 2026 unless marked; scale figures are company claims unless stated. Absence from this page doesn't prove absence from the market; see [Checking that an idea is new](/docs/research/ideation-methods.md#checking-that-an-idea-is-new).
 
 Contents:
 
@@ -37,7 +37,10 @@ Pre-booked parking, one reporting channel, secure parcel collection, a recycling
 | JaGaApp                 | Red Ideas                            | Guardhouse app: visitor pre-registration, calls to guards, emergency alerts                                     | [KrASIA, 2020][jaga]; still behind Setia Go in 2024 |
 | i-Neighbour             | TimeTec                              | QR visitor registration, guardhouse tablet, blacklist, intercom; 86% of visits are walk-ins (vendor data, 2022) | [TimeTec][ineighbour]                               |
 
+- **SDP App reviews:** a December 2025 App Store review says "Cannot submit defect report… it has been two months and it is still not working" ([App Store][sdp-appstore]).
+
 [sdp-app]: https://www.simedarbyproperty.com/app/faq.html
+[sdp-appstore]: https://apps.apple.com/my/app/sime-darby-property-app/id6474657954
 [elmina-app]: https://apps.apple.com/us/app/id1488080665
 [gl]: https://gamudaland.com.my/gl-lifestyle
 [setiago]: https://technode.global/2024/05/31/malaysias-sp-setia-partners-with-chinas-ant-digital-technologies-to-unveil-setia-go-app/
@@ -104,7 +107,9 @@ Pre-booked parking, one reporting channel, secure parcel collection, a recycling
 | Value Food                | Value Food               | Surplus meals sold as surprise bags; 100,000+ downloads, 300+ merchants        | [Malay Mail, July 2026][valuefood]    |
 | Kompostri                 | Kompostri                | Bokashi composting kits, RM159                                                 | [Bernama, March 2026][kompostri]      |
 | Mah Sing M Azura          | Mah Sing                 | Automated waste collection in a condominium                                    | [Mah Sing][mazura]                    |
+| SELKitar                  | KDEB Waste Management    | Kerbside pickup of separated recyclables; 380,000+ houses in its first phase   | [The Star, Aug 2026][selkitar-star]   |
 
+[selkitar-star]: https://www.thestar.com.my/metro/metro-news/2026/08/24/selangor-ramps-up-recycling-efforts
 [apps-recycle]: https://www.malaymail.com/news/malaysia/2026/07/16/dont-just-bin-the-plastics-these-three-apps-could-turn-them-into-credit-to-pay-some-bills-video/224641
 [klean]: https://www.grab.com/inside-grab/stories/grab-klean-machine-recycling-grabfood-vouchers/
 [prasarana-rvm]: https://www.packaginginsights.com/news/reverse-vending-machines-malayasia-prasarana.html
