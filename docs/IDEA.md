@@ -1,6 +1,6 @@
 # Idea
 
-The idea our team submits to the Sime Darby Property University Hackathon 2026, "Township of Tomorrow". The team picked [Safe Edge](/docs/research/shortlist/safe-edge.md) from the [shortlist](/docs/research/shortlist.md) ([ADR 0001](/docs/adr/0001-pick-safe-edge.md)); the sections below stay placeholders until the pick is grilled. See the [brief](/docs/BRIEF.md) for the rules and judging criteria.
+The idea our team submits to the Sime Darby Property University Hackathon 2026, "Township of Tomorrow". This is a placeholder until the team locks one of the three ideas in the [shortlist](/docs/research/shortlist.md). See the [brief](/docs/BRIEF.md) for the rules and judging criteria.
 
 Contents:
 
