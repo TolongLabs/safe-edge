@@ -1,0 +1,313 @@
+{
+  "type": "FeatureCollection",
+  "name": "barriers",
+  "attribution": "\u00a9 OpenStreetMap contributors; https://www.openstreetmap.org/copyright",
+  "license": "Open Database License (ODbL) 1.0",
+  "source": "OpenStreetMap map API response; bbox 101.49,3.16,101.54,3.20",
+  "retrieved": "2026-10-17",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "node/2478643132",
+      "properties": { "osm_type": "node", "osm_id": 2478643132, "access": "permissive", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5096621, 3.1895496] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/2478643137",
+      "properties": { "osm_type": "node", "osm_id": 2478643137, "access": "permissive", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5093878, 3.1910701] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/4080932605",
+      "properties": { "osm_type": "node", "osm_id": 4080932605, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5327075, 3.1678] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/5701087205",
+      "properties": { "osm_type": "node", "osm_id": 5701087205, "access": "private", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5262943, 3.1595704] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7847167093",
+      "properties": { "osm_type": "node", "osm_id": 7847167093, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.4947962, 3.1892677] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7866852113",
+      "properties": { "osm_type": "node", "osm_id": 7866852113, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5382234, 3.1814062] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8009104632",
+      "properties": { "osm_type": "node", "osm_id": 8009104632, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5158927, 3.197138] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8310753662",
+      "properties": { "osm_type": "node", "osm_id": 8310753662, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5361743, 3.1812302] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/10209506486",
+      "properties": { "osm_type": "node", "osm_id": 10209506486, "access": "private", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5340003, 3.1691522] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/10605804024",
+      "properties": { "osm_type": "node", "osm_id": 10605804024, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5392061, 3.1635671] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/10870315253",
+      "properties": { "osm_type": "node", "osm_id": 10870315253, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5014637, 3.1672588] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/10927710655",
+      "properties": { "osm_type": "node", "osm_id": 10927710655, "access": "private", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5307903, 3.1722327] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/10928094036",
+      "properties": { "osm_type": "node", "osm_id": 10928094036, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5379934, 3.1893049] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11293013291",
+      "properties": { "osm_type": "node", "osm_id": 11293013291, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5305755, 3.1714428] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11293013292",
+      "properties": { "osm_type": "node", "osm_id": 11293013292, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5305584, 3.1699421] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11434266111",
+      "properties": { "osm_type": "node", "osm_id": 11434266111, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5323373, 3.1898608] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11434266112",
+      "properties": { "osm_type": "node", "osm_id": 11434266112, "access": "private", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5321961, 3.1891206] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11461763267",
+      "properties": { "osm_type": "node", "osm_id": 11461763267, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5372009, 3.1636746] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11510026588",
+      "properties": { "osm_type": "node", "osm_id": 11510026588, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5243907, 3.1662397] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11510026606",
+      "properties": { "osm_type": "node", "osm_id": 11510026606, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5246874, 3.1662384] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11538605254",
+      "properties": { "osm_type": "node", "osm_id": 11538605254, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.534626, 3.1823817] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11545681898",
+      "properties": { "osm_type": "node", "osm_id": 11545681898, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5086401, 3.1642363] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11606719022",
+      "properties": { "osm_type": "node", "osm_id": 11606719022, "access": "permissive", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5062615, 3.1627008] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11690277651",
+      "properties": { "osm_type": "node", "osm_id": 11690277651, "barrier": "gate", "motor_vehicle": "no" },
+      "geometry": { "type": "Point", "coordinates": [101.5310267, 3.1632031] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11927800857",
+      "properties": { "osm_type": "node", "osm_id": 11927800857, "access": "no", "barrier": "gate", "locked": "yes" },
+      "geometry": { "type": "Point", "coordinates": [101.5372004, 3.1812344] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11927879340",
+      "properties": { "osm_type": "node", "osm_id": 11927879340, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5359636, 3.1811004] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11930642168",
+      "properties": { "osm_type": "node", "osm_id": 11930642168, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5352014, 3.1852274] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11938992516",
+      "properties": { "osm_type": "node", "osm_id": 11938992516, "access": "permissive", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5352791, 3.1865889] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11950487915",
+      "properties": { "osm_type": "node", "osm_id": 11950487915, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5331737, 3.1937432] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/11986501618",
+      "properties": { "osm_type": "node", "osm_id": 11986501618, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.539184, 3.1840064] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12041546325",
+      "properties": { "osm_type": "node", "osm_id": 12041546325, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5210343, 3.1941851] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12041546330",
+      "properties": { "osm_type": "node", "osm_id": 12041546330, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5136015, 3.1907192] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12041546348",
+      "properties": { "osm_type": "node", "osm_id": 12041546348, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5137539, 3.1886507] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12049384193",
+      "properties": { "osm_type": "node", "osm_id": 12049384193, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5384194, 3.1813954] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12679376921",
+      "properties": { "osm_type": "node", "osm_id": 12679376921, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5218692, 3.1863036] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12747275476",
+      "properties": { "osm_type": "node", "osm_id": 12747275476, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.4951252, 3.1993966] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/12794526745",
+      "properties": { "osm_type": "node", "osm_id": 12794526745, "access": "no", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5382859, 3.183301] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/13167591228",
+      "properties": { "osm_type": "node", "osm_id": 13167591228, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5311079, 3.1707339] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/13641100378",
+      "properties": { "osm_type": "node", "osm_id": 13641100378, "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5073137, 3.1823659] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/14191843278",
+      "properties": { "osm_type": "node", "osm_id": 14191843278, "access": "private", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5261401, 3.1601912] }
+    },
+    {
+      "type": "Feature",
+      "id": "node/14191843279",
+      "properties": { "osm_type": "node", "osm_id": 14191843279, "access": "private", "barrier": "gate" },
+      "geometry": { "type": "Point", "coordinates": [101.5262716, 3.1603786] }
+    },
+    {
+      "type": "Feature",
+      "id": "way/874851649",
+      "properties": {
+        "osm_type": "way",
+        "osm_id": 874851649,
+        "barrier": "wall",
+        "man_made": "wastewater_plant",
+        "material": "brick"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.530773, 3.1657121],
+          [101.5313315, 3.1657161],
+          [101.5313329, 3.1666963],
+          [101.530783, 3.1666856],
+          [101.530773, 3.1657121]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/874851650",
+      "properties": {
+        "osm_type": "way",
+        "osm_id": 874851650,
+        "barrier": "wall",
+        "man_made": "wastewater_plant",
+        "material": "brick"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5393765, 3.1658201],
+          [101.5402307, 3.1658303],
+          [101.5402261, 3.1662225],
+          [101.5393718, 3.1662197],
+          [101.5393765, 3.1658201]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1537923046",
+      "properties": { "osm_type": "way", "osm_id": 1537923046, "barrier": "wall" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5242156, 3.1663488],
+          [101.5243766, 3.1663485],
+          [101.5243762, 3.1662099],
+          [101.5242153, 3.1662103],
+          [101.5242156, 3.1663488]
+        ]
+      }
+    }
+  ]
+}

@@ -4,6 +4,8 @@ Safe Edge helps SDP's park manager choose a repair that closes the observed rout
 
 **First ask:** one retained drain asset, one named SDP maintenance owner and a repair budget. The proposed site is Elmina Central Park; access, custody and funding are not yet confirmed. **Track:** People, safety and security. **Rank:** see the [shortlist](/docs/research/shortlist.md).
 
+**Current product:** on 17 October the team added drone patrols, an AI layer, an SDK and a Three.js simulation around Fix Lens. [`PRODUCT.md`](/PRODUCT.md) is now the product truth; this page keeps the problem evidence, the Fix Lens design and the field evidence plan.
+
 Contents:
 
 1.  [Problem](#problem)
@@ -170,6 +172,7 @@ Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 u
 | Judging panel, 17 October                   |    4.0 |        3.7 |         2.7 | 3.0 |        3.0 |      3.7 |     67.7 |
 | Judging panel, 17 October (Codex)           |    3.3 |        3.7 |         4.0 | 3.0 |        4.0 |      3.3 |     71.0 |
 | Judging panel, 17 October (Codex, Fix Lens) |    3.0 |        3.0 |         4.0 | 3.7 |        4.0 |      4.0 |     70.0 |
+| Blind drone expert, 17 October (Fable 5.1)  |      3 |          4 |           3 |   4 |          2 |        4 |       67 |
 
 - **Experts in round 4:** a drainage and water-safety engineer and a developer project director both said "wounded, back it with fixes"; no fatal attacks remained.
 - **Biggest weakness:** no proof yet that it finds hazards the current checklist misses, and no priced repair.
@@ -260,6 +263,7 @@ The rough workflow above was redrawn with Archify on 17 October for Fix Lens; th
 - **Revision, 17 October (Codex):** narrowed to one SDP-retained drain with priced repairs and owned renewal; removed mandatory scans, added a baseline/comparator and dated evidence gates, and kept score increases conditional on field proof.
 - **Redesign, 17 October (Codex, round 1):** chose Child-eye Repair Replay from four app concepts; made the remaining bypass the demo moment, tied the repair to usable SDP park access, and added timed decision tests with explicit failure and technology-fallback rules.
 - **Redesign, 17 October (Codex, round 2):** chose Child-eye Fix Lens to put repair comparison on the source photos, remove required 3D authoring, and test first repair decisions and total effort against current practice while tying funded closure to SDP's park-management and complaint records.
+- **Drone layer, 17 October (night):** the team added drone patrols, an AI layer, an SDK and a Three.js simulation as the enabler of the same protocol, backed by ten fact-checked [research packs](/docs/research/drone-integration.md). A blind drone-inspection expert (Claude Fable 5.1) scored it 67 and asked for a drone-optional phone patrol, expected-inventory checks at fixed viewpoints, flight windows with 50 m separation from people, the Subang approach in the airspace story, and cost per kilometre-week instead of a labour comparison. Those changes are in [`PRODUCT.md`](/PRODUCT.md); the expert estimated they lift the score to about 76.
 
 [utusan]: https://www.utusan.com.my/nasional/tragedi/2026/10/pemancing-ditemukan-lemas/
 [bernama-pg]: https://www.bernama.com/en/news.php?id=2592495
