@@ -221,13 +221,13 @@ Keep refusals and negative results in the evidence pack.
 
 ## Milestones
 
-| Milestone             | Due               | Done when                                                                                                                                                                                                       |
-| --------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M0 Lock               | Sat 17 Oct, 23:59 | `PRODUCT.md`, PRD and TRD merged; issues live with owners                                                                                                                                                       |
-| M1 Walking skeleton   | Mon 19 Oct, 23:59 | Monorepo runs; core state machines; API and SDK demo adapter; scene shows Elmina with segments; one seeded Inbox card; planner returns a route; MCP lists tools; `DESIGN.md` in place; permission requests sent |
-| M2 Feature freeze     | Wed 21 Oct, 12:00 | Every P0 requirement works; S0 has run on a phone at the site; S1 to S6 play end to end; the end-to-end test passes                                                                                             |
-| M3 Evidence and media | Thu 22 Oct, 23:59 | Evidence pack, deck of at most 10 slides and the 5-minute video, reviewed by someone outside the team                                                                                                           |
-| M4 Submit             | Fri 23 Oct, 12:00 | Every link tested from a clean browser; submitted; each member has accepted the Kolaxus team invite                                                                                                             |
+| Milestone             | Due               | Done when                                                                                                                                                                                                                                 |
+| --------------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M0 Lock               | Sat 17 Oct, 23:59 | `PRODUCT.md`, PRD and TRD merged; issues live with owners                                                                                                                                                                                 |
+| M1 Walking skeleton   | Mon 19 Oct, 23:59 | Monorepo runs; core state machines; API and SDK demo adapter; scene shows Elmina with segments; one seeded Inbox card; planner returns a route; MCP lists tools; Figma design approved and `DESIGN.md` in place; permission requests sent |
+| M2 Feature freeze     | Wed 21 Oct, 12:00 | Every P0 requirement works; S0 has run on a phone at the site; S1 to S6 play end to end; the end-to-end test passes                                                                                                                       |
+| M3 Evidence and media | Thu 22 Oct, 23:59 | Evidence pack, deck of at most 10 slides and the 5-minute video, reviewed by someone outside the team                                                                                                                                     |
+| M4 Submit             | Fri 23 Oct, 12:00 | Every link tested from a clean browser; submitted; each member has accepted the Kolaxus team invite                                                                                                                                       |
 
 ## Risks
 
@@ -245,8 +245,6 @@ Keep refusals and negative results in the evidence pack.
 
 ## Open questions
 
-- Which GitHub handle owns which role (sim, app, platform and AI, field, pitch)?
 - Which retained asset does SDP confirm for the pilot? Proposed: a lake edge in Elmina Central Park, or an asset in a phase not yet handed over.
 - Who pays for upkeep after handover: SDP township management, MBSA, or a strata management body?
-- Does `DESIGN.md` go through the Figma gate first?
 - Which host serves the live demo link? The TRD proposes one.
