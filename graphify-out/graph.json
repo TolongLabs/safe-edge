@@ -1,14 +1,14 @@
 {
   "directed": false,
   "multigraph": false,
-  "graph": {},
+  "graph": { "schema_version": 1, "graphify_version": "0.9.91" },
   "nodes": [
     {
       "id": "docs_archive_ideas_0000_ranking",
       "label": "0000-ranking.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0000-ranking.md",
@@ -20,7 +20,7 @@
       "label": "0001-jiran-siaga.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0001-jiran-siaga.md",
@@ -28,155 +28,11 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_archive_ideas_0001_jiran_siaga_fit_with_sime_darby_property",
-      "label": "Fit with Sime Darby Property",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "fit with sime darby property",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L106"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_how_the_idea_changed_across_rounds",
-      "label": "How the idea changed across rounds",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "how the idea changed across rounds",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L179"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_impact_and_how_we_measure_it",
-      "label": "Impact and how we measure it",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "impact and how we measure it",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L99"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_jiran_siaga",
-      "label": "Jiran Siaga",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "jiran siaga",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_pilot",
-      "label": "Pilot",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "pilot",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L114"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_problem",
-      "label": "Problem",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "problem",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L21"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_prototype_by_23_october",
-      "label": "Prototype by 23 October",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "prototype by 23 october",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L129"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_risks_and_open_questions",
-      "label": "Risks and open questions",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "risks and open questions",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L169"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_scorecard",
-      "label": "Scorecard",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "scorecard",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L147"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_solution_and_how_it_works",
-      "label": "Solution and how it works",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "solution and how it works",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L55"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_target_user",
-      "label": "Target user",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "target user",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L50"
-    },
-    {
-      "id": "docs_archive_ideas_0001_jiran_siaga_why_it_s_new",
-      "label": "Why it's new",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "why it's new",
-      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
-      "source_location": "L77"
-    },
-    {
       "id": "docs_archive_ideas_0002_kolam_sedia",
       "label": "0002-kolam-sedia.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0002-kolam-sedia.md",
@@ -184,11 +40,155 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_archive_ideas_0002_kolam_sedia_fit_with_sime_darby_property",
+      "label": "Fit with Sime Darby Property",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "fit with sime darby property",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L94"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_how_the_idea_changed_across_rounds",
+      "label": "How the idea changed across rounds",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "how the idea changed across rounds",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L168"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_impact_and_how_we_measure_it",
+      "label": "Impact and how we measure it",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "impact and how we measure it",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L86"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_kolam_sedia",
+      "label": "Kolam Sedia",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "kolam sedia",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_pilot",
+      "label": "Pilot",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "pilot",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L107"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_problem",
+      "label": "Problem",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "problem",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L21"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_prototype_by_23_october",
+      "label": "Prototype by 23 October",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "prototype by 23 october",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L123"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_risks_and_open_questions",
+      "label": "Risks and open questions",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "risks and open questions",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L161"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_scorecard",
+      "label": "Scorecard",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "scorecard",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L140"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_solution_and_how_it_works",
+      "label": "Solution and how it works",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "solution and how it works",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L51"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_target_user",
+      "label": "Target user",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "target user",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L46"
+    },
+    {
+      "id": "docs_archive_ideas_0002_kolam_sedia_why_it_s_new",
+      "label": "Why it's new",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "why it's new",
+      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_location": "L64"
+    },
+    {
       "id": "docs_archive_ideas_0003_teduh",
       "label": "0003-teduh.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0003-teduh.md",
@@ -196,11 +196,155 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_archive_ideas_0003_teduh_fit_with_sime_darby_property",
+      "label": "Fit with Sime Darby Property",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "fit with sime darby property",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L84"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_how_the_idea_changed_across_rounds",
+      "label": "How the idea changed across rounds",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "how the idea changed across rounds",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L155"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_impact_and_how_we_measure_it",
+      "label": "Impact and how we measure it",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "impact and how we measure it",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L77"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_pilot",
+      "label": "Pilot",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "pilot",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L92"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_problem",
+      "label": "Problem",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "problem",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L21"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_prototype_by_23_october",
+      "label": "Prototype by 23 October",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "prototype by 23 october",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L109"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_risks_and_open_questions",
+      "label": "Risks and open questions",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "risks and open questions",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L148"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_scorecard",
+      "label": "Scorecard",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "scorecard",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L125"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_solution_and_how_it_works",
+      "label": "Solution and how it works",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "solution and how it works",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L50"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_target_user",
+      "label": "Target user",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "target user",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L44"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_teduh",
+      "label": "Teduh",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "teduh",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_archive_ideas_0003_teduh_why_it_s_new",
+      "label": "Why it's new",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "Kolam Sedia",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "why it's new",
+      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_location": "L60"
+    },
+    {
       "id": "docs_archive_ideas_0004_handover_loop",
       "label": "0004-handover-loop.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0004-handover-loop.md",
@@ -212,7 +356,7 @@
       "label": "Fit with Sime Darby Property",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "fit with sime darby property",
@@ -224,7 +368,7 @@
       "label": "Handover Loop",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "handover loop",
@@ -236,7 +380,7 @@
       "label": "How the idea changed across rounds",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "how the idea changed across rounds",
@@ -248,7 +392,7 @@
       "label": "Impact and how we measure it",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "impact and how we measure it",
@@ -260,7 +404,7 @@
       "label": "Pilot",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "pilot",
@@ -272,7 +416,7 @@
       "label": "Problem",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "problem",
@@ -284,7 +428,7 @@
       "label": "Prototype by 23 October",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "prototype by 23 october",
@@ -296,7 +440,7 @@
       "label": "Risks and open questions",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "risks and open questions",
@@ -308,7 +452,7 @@
       "label": "Scorecard",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "scorecard",
@@ -320,7 +464,7 @@
       "label": "Solution and how it works",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "solution and how it works",
@@ -332,7 +476,7 @@
       "label": "Target user",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "target user",
@@ -344,7 +488,7 @@
       "label": "Why it's new",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "why it's new",
@@ -356,7 +500,7 @@
       "label": "0006-jiran-projek.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0006-jiran-projek.md",
@@ -364,155 +508,11 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_archive_ideas_0006_jiran_projek_fit_with_sime_darby_property",
-      "label": "Fit with Sime Darby Property",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "fit with sime darby property",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L89"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_how_the_idea_changed_across_rounds",
-      "label": "How the idea changed across rounds",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "how the idea changed across rounds",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L145"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_impact_and_how_we_measure_it",
-      "label": "Impact and how we measure it",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "impact and how we measure it",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L77"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_jiran_projek",
-      "label": "Jiran Projek",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "jiran projek",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_pilot",
-      "label": "Pilot",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "pilot",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L98"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_problem",
-      "label": "Problem",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "problem",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L21"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_prototype_by_23_october",
-      "label": "Prototype by 23 October",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "prototype by 23 october",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L113"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_risks_and_open_questions",
-      "label": "Risks and open questions",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "risks and open questions",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L139"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_scorecard",
-      "label": "Scorecard",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "scorecard",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L124"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_solution_and_how_it_works",
-      "label": "Solution and how it works",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "solution and how it works",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L46"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_target_user",
-      "label": "Target user",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "target user",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L41"
-    },
-    {
-      "id": "docs_archive_ideas_0006_jiran_projek_why_it_s_new",
-      "label": "Why it's new",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "Jiran Siaga",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "why it's new",
-      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
-      "source_location": "L56"
-    },
-    {
       "id": "docs_archive_ideas_0007_waktu_lancar",
       "label": "0007-waktu-lancar.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0007-waktu-lancar.md",
@@ -524,7 +524,7 @@
       "label": "0008-rumah-dijaga.md",
       "_origin": "ast",
       "community": 0,
-      "community_name": "Jiran Siaga",
+      "community_name": "Kolam Sedia",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "0008-rumah-dijaga.md",
@@ -8511,148 +8511,148 @@
       "source_location": "L36"
     },
     {
-      "id": "docs_archive_ideas_0003_teduh_fit_with_sime_darby_property",
+      "id": "docs_archive_ideas_0006_jiran_projek_fit_with_sime_darby_property",
       "label": "Fit with Sime Darby Property",
       "_origin": "ast",
       "community": 56,
-      "community_name": "Teduh",
+      "community_name": "Jiran Projek",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "fit with sime darby property",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L84"
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L89"
     },
     {
-      "id": "docs_archive_ideas_0003_teduh_how_the_idea_changed_across_rounds",
+      "id": "docs_archive_ideas_0006_jiran_projek_how_the_idea_changed_across_rounds",
       "label": "How the idea changed across rounds",
       "_origin": "ast",
       "community": 56,
-      "community_name": "Teduh",
+      "community_name": "Jiran Projek",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "how the idea changed across rounds",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L155"
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L145"
     },
     {
-      "id": "docs_archive_ideas_0003_teduh_impact_and_how_we_measure_it",
+      "id": "docs_archive_ideas_0006_jiran_projek_impact_and_how_we_measure_it",
       "label": "Impact and how we measure it",
       "_origin": "ast",
       "community": 56,
-      "community_name": "Teduh",
+      "community_name": "Jiran Projek",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "impact and how we measure it",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
       "source_location": "L77"
     },
     {
-      "id": "docs_archive_ideas_0003_teduh_pilot",
-      "label": "Pilot",
+      "id": "docs_archive_ideas_0006_jiran_projek_jiran_projek",
+      "label": "Jiran Projek",
       "_origin": "ast",
       "community": 56,
-      "community_name": "Teduh",
+      "community_name": "Jiran Projek",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "pilot",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L92"
-    },
-    {
-      "id": "docs_archive_ideas_0003_teduh_problem",
-      "label": "Problem",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "Teduh",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "problem",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L21"
-    },
-    {
-      "id": "docs_archive_ideas_0003_teduh_prototype_by_23_october",
-      "label": "Prototype by 23 October",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "Teduh",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "prototype by 23 october",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L109"
-    },
-    {
-      "id": "docs_archive_ideas_0003_teduh_risks_and_open_questions",
-      "label": "Risks and open questions",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "Teduh",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "risks and open questions",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L148"
-    },
-    {
-      "id": "docs_archive_ideas_0003_teduh_scorecard",
-      "label": "Scorecard",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "Teduh",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "scorecard",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L125"
-    },
-    {
-      "id": "docs_archive_ideas_0003_teduh_solution_and_how_it_works",
-      "label": "Solution and how it works",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "Teduh",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "solution and how it works",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L50"
-    },
-    {
-      "id": "docs_archive_ideas_0003_teduh_target_user",
-      "label": "Target user",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "Teduh",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "target user",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L44"
-    },
-    {
-      "id": "docs_archive_ideas_0003_teduh_teduh",
-      "label": "Teduh",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "Teduh",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "teduh",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
+      "norm_label": "jiran projek",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
       "source_location": "L1"
     },
     {
-      "id": "docs_archive_ideas_0003_teduh_why_it_s_new",
+      "id": "docs_archive_ideas_0006_jiran_projek_pilot",
+      "label": "Pilot",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "Jiran Projek",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "pilot",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L98"
+    },
+    {
+      "id": "docs_archive_ideas_0006_jiran_projek_problem",
+      "label": "Problem",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "Jiran Projek",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "problem",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L21"
+    },
+    {
+      "id": "docs_archive_ideas_0006_jiran_projek_prototype_by_23_october",
+      "label": "Prototype by 23 October",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "Jiran Projek",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "prototype by 23 october",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L113"
+    },
+    {
+      "id": "docs_archive_ideas_0006_jiran_projek_risks_and_open_questions",
+      "label": "Risks and open questions",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "Jiran Projek",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "risks and open questions",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L139"
+    },
+    {
+      "id": "docs_archive_ideas_0006_jiran_projek_scorecard",
+      "label": "Scorecard",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "Jiran Projek",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "scorecard",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L124"
+    },
+    {
+      "id": "docs_archive_ideas_0006_jiran_projek_solution_and_how_it_works",
+      "label": "Solution and how it works",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "Jiran Projek",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "solution and how it works",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L46"
+    },
+    {
+      "id": "docs_archive_ideas_0006_jiran_projek_target_user",
+      "label": "Target user",
+      "_origin": "ast",
+      "community": 56,
+      "community_name": "Jiran Projek",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "target user",
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L41"
+    },
+    {
+      "id": "docs_archive_ideas_0006_jiran_projek_why_it_s_new",
       "label": "Why it's new",
       "_origin": "ast",
       "community": 56,
-      "community_name": "Teduh",
+      "community_name": "Jiran Projek",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "why it's new",
-      "source_file": "docs/archive/ideas/0003-teduh.md",
-      "source_location": "L60"
+      "source_file": "docs/archive/ideas/0006-jiran-projek.md",
+      "source_location": "L56"
     },
     {
       "id": "docs_research_ideation_methods",
@@ -9120,7 +9120,7 @@
       "node_kind": "heading",
       "norm_label": "fit with sime darby property",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L100"
+      "source_location": "L103"
     },
     {
       "id": "docs_research_shortlist_lepas_hujan_how_the_idea_changed_across_rounds",
@@ -9132,7 +9132,7 @@
       "node_kind": "heading",
       "norm_label": "how the idea changed across rounds",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L172"
+      "source_location": "L179"
     },
     {
       "id": "docs_research_shortlist_lepas_hujan_impact_and_how_we_measure_it",
@@ -9144,7 +9144,7 @@
       "node_kind": "heading",
       "norm_label": "impact and how we measure it",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L89"
+      "source_location": "L92"
     },
     {
       "id": "docs_research_shortlist_lepas_hujan_lepas_hujan",
@@ -9168,7 +9168,7 @@
       "node_kind": "heading",
       "norm_label": "pilot",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L109"
+      "source_location": "L112"
     },
     {
       "id": "docs_research_shortlist_lepas_hujan_problem",
@@ -9192,7 +9192,7 @@
       "node_kind": "heading",
       "norm_label": "prototype by 23 october",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L122"
+      "source_location": "L125"
     },
     {
       "id": "docs_research_shortlist_lepas_hujan_risks_and_open_questions",
@@ -9204,7 +9204,7 @@
       "node_kind": "heading",
       "norm_label": "risks and open questions",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L162"
+      "source_location": "L169"
     },
     {
       "id": "docs_research_shortlist_lepas_hujan_scorecard",
@@ -9216,7 +9216,7 @@
       "node_kind": "heading",
       "norm_label": "scorecard",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L138"
+      "source_location": "L144"
     },
     {
       "id": "docs_research_shortlist_lepas_hujan_solution_and_how_it_works",
@@ -9252,7 +9252,7 @@
       "node_kind": "heading",
       "norm_label": "why it's new",
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L67"
+      "source_location": "L70"
     },
     {
       "id": "docs_sources_tot_kolaxus_net_privacy_policy",
@@ -10512,7 +10512,7 @@
       "node_kind": "heading",
       "norm_label": "fit with sime darby property",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L79"
+      "source_location": "L83"
     },
     {
       "id": "docs_research_shortlist_safe_edge_how_the_idea_changed_across_rounds",
@@ -10524,7 +10524,7 @@
       "node_kind": "heading",
       "norm_label": "how the idea changed across rounds",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L137"
+      "source_location": "L143"
     },
     {
       "id": "docs_research_shortlist_safe_edge_impact_and_how_we_measure_it",
@@ -10536,7 +10536,7 @@
       "node_kind": "heading",
       "norm_label": "impact and how we measure it",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L72"
+      "source_location": "L75"
     },
     {
       "id": "docs_research_shortlist_safe_edge_pilot",
@@ -10548,7 +10548,7 @@
       "node_kind": "heading",
       "norm_label": "pilot",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L89"
+      "source_location": "L93"
     },
     {
       "id": "docs_research_shortlist_safe_edge_problem",
@@ -10572,7 +10572,7 @@
       "node_kind": "heading",
       "norm_label": "prototype by 23 october",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L102"
+      "source_location": "L106"
     },
     {
       "id": "docs_research_shortlist_safe_edge_risks_and_open_questions",
@@ -10584,7 +10584,7 @@
       "node_kind": "heading",
       "norm_label": "risks and open questions",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L130"
+      "source_location": "L136"
     },
     {
       "id": "docs_research_shortlist_safe_edge_safe_edge",
@@ -10608,7 +10608,7 @@
       "node_kind": "heading",
       "norm_label": "scorecard",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L116"
+      "source_location": "L121"
     },
     {
       "id": "docs_research_shortlist_safe_edge_solution_and_how_it_works",
@@ -10644,151 +10644,151 @@
       "node_kind": "heading",
       "norm_label": "why it's new",
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L56"
+      "source_location": "L59"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_fit_with_sime_darby_property",
+      "id": "docs_archive_ideas_0001_jiran_siaga_fit_with_sime_darby_property",
       "label": "Fit with Sime Darby Property",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "fit with sime darby property",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L94"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L106"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_how_the_idea_changed_across_rounds",
+      "id": "docs_archive_ideas_0001_jiran_siaga_how_the_idea_changed_across_rounds",
       "label": "How the idea changed across rounds",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "how the idea changed across rounds",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L168"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L179"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_impact_and_how_we_measure_it",
+      "id": "docs_archive_ideas_0001_jiran_siaga_impact_and_how_we_measure_it",
       "label": "Impact and how we measure it",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "impact and how we measure it",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L86"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L99"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_kolam_sedia",
-      "label": "Kolam Sedia",
+      "id": "docs_archive_ideas_0001_jiran_siaga_jiran_siaga",
+      "label": "Jiran Siaga",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "kolam sedia",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "norm_label": "jiran siaga",
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
       "source_location": "L1"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_pilot",
+      "id": "docs_archive_ideas_0001_jiran_siaga_pilot",
       "label": "Pilot",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "pilot",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L107"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L114"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_problem",
+      "id": "docs_archive_ideas_0001_jiran_siaga_problem",
       "label": "Problem",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "problem",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
       "source_location": "L21"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_prototype_by_23_october",
+      "id": "docs_archive_ideas_0001_jiran_siaga_prototype_by_23_october",
       "label": "Prototype by 23 October",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "prototype by 23 october",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L123"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L129"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_risks_and_open_questions",
+      "id": "docs_archive_ideas_0001_jiran_siaga_risks_and_open_questions",
       "label": "Risks and open questions",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "risks and open questions",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L161"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L169"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_scorecard",
+      "id": "docs_archive_ideas_0001_jiran_siaga_scorecard",
       "label": "Scorecard",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "scorecard",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L140"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L147"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_solution_and_how_it_works",
+      "id": "docs_archive_ideas_0001_jiran_siaga_solution_and_how_it_works",
       "label": "Solution and how it works",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "solution and how it works",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L51"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L55"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_target_user",
+      "id": "docs_archive_ideas_0001_jiran_siaga_target_user",
       "label": "Target user",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "target user",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L46"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L50"
     },
     {
-      "id": "docs_archive_ideas_0002_kolam_sedia_why_it_s_new",
+      "id": "docs_archive_ideas_0001_jiran_siaga_why_it_s_new",
       "label": "Why it's new",
       "_origin": "ast",
       "community": 7,
-      "community_name": "Kolam Sedia",
+      "community_name": "Jiran Siaga",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "why it's new",
-      "source_file": "docs/archive/ideas/0002-kolam-sedia.md",
-      "source_location": "L64"
+      "source_file": "docs/archive/ideas/0001-jiran-siaga.md",
+      "source_location": "L77"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register",
@@ -10812,7 +10812,7 @@
       "node_kind": "heading",
       "norm_label": "fit with sime darby property",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L78"
+      "source_location": "L83"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register_how_the_idea_changed_across_rounds",
@@ -10824,7 +10824,7 @@
       "node_kind": "heading",
       "norm_label": "how the idea changed across rounds",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L136"
+      "source_location": "L145"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register_impact_and_how_we_measure_it",
@@ -10836,7 +10836,7 @@
       "node_kind": "heading",
       "norm_label": "impact and how we measure it",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L70"
+      "source_location": "L74"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register_pilot",
@@ -10848,7 +10848,7 @@
       "node_kind": "heading",
       "norm_label": "pilot",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L87"
+      "source_location": "L92"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register_problem",
@@ -10872,7 +10872,7 @@
       "node_kind": "heading",
       "norm_label": "prototype by 23 october",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L100"
+      "source_location": "L106"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register_risks_and_open_questions",
@@ -10884,7 +10884,7 @@
       "node_kind": "heading",
       "norm_label": "risks and open questions",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L129"
+      "source_location": "L138"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register_scorecard",
@@ -10896,7 +10896,7 @@
       "node_kind": "heading",
       "norm_label": "scorecard",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L115"
+      "source_location": "L123"
     },
     {
       "id": "docs_research_shortlist_site_breeding_register_site_breeding_register",
@@ -10944,7 +10944,7 @@
       "node_kind": "heading",
       "norm_label": "why it's new",
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L56"
+      "source_location": "L60"
     },
     {
       "id": "docs_archive_ideas_0007_waktu_lancar_fit_with_sime_darby_property",
@@ -11089,6 +11089,54 @@
       "norm_label": "why it's new",
       "source_file": "docs/archive/ideas/0007-waktu-lancar.md",
       "source_location": "L61"
+    },
+    {
+      "id": "docs_adr_0001_pick_safe_edge",
+      "label": "0001-pick-safe-edge.md",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "Pick Safe Edge for the submission",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "0001-pick-safe-edge.md",
+      "source_file": "docs/adr/0001-pick-safe-edge.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_adr_0001_pick_safe_edge_consequences",
+      "label": "Consequences",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "Pick Safe Edge for the submission",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "consequences",
+      "source_file": "docs/adr/0001-pick-safe-edge.md",
+      "source_location": "L22"
+    },
+    {
+      "id": "docs_adr_0001_pick_safe_edge_considered_options",
+      "label": "Considered options",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "Pick Safe Edge for the submission",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "considered options",
+      "source_file": "docs/adr/0001-pick-safe-edge.md",
+      "source_location": "L10"
+    },
+    {
+      "id": "docs_adr_0001_pick_safe_edge_pick_safe_edge_for_the_submission",
+      "label": "Pick Safe Edge for the submission",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "Pick Safe Edge for the submission",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "pick safe edge for the submission",
+      "source_file": "docs/adr/0001-pick-safe-edge.md",
+      "source_location": "L1"
     },
     {
       "id": "docs_sources_tot_kolaxus_net_terms_and_conditions_10_representations",
@@ -11654,6 +11702,39 @@
       "context": "import",
       "source_file": "package.json",
       "source_location": "L16",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_adr_0001_pick_safe_edge",
+      "target": "docs_adr_0001_pick_safe_edge_pick_safe_edge_for_the_submission",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/adr/0001-pick-safe-edge.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_adr_0001_pick_safe_edge_pick_safe_edge_for_the_submission",
+      "target": "docs_adr_0001_pick_safe_edge_considered_options",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/adr/0001-pick-safe-edge.md",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_adr_0001_pick_safe_edge_pick_safe_edge_for_the_submission",
+      "target": "docs_adr_0001_pick_safe_edge_consequences",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/adr/0001-pick-safe-edge.md",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -19199,7 +19280,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L100",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -19210,7 +19291,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L109",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -19221,7 +19302,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L122",
+      "source_location": "L125",
       "weight": 1.0
     },
     {
@@ -19232,7 +19313,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L138",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -19243,7 +19324,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L162",
+      "source_location": "L169",
       "weight": 1.0
     },
     {
@@ -19254,7 +19335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L172",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -19298,7 +19379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L67",
+      "source_location": "L70",
       "weight": 1.0
     },
     {
@@ -19309,7 +19390,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/lepas-hujan.md",
-      "source_location": "L89",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -19331,7 +19412,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L102",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -19342,7 +19423,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L116",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -19353,7 +19434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L130",
+      "source_location": "L136",
       "weight": 1.0
     },
     {
@@ -19364,7 +19445,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L137",
+      "source_location": "L143",
       "weight": 1.0
     },
     {
@@ -19408,7 +19489,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L56",
+      "source_location": "L59",
       "weight": 1.0
     },
     {
@@ -19419,7 +19500,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L72",
+      "source_location": "L75",
       "weight": 1.0
     },
     {
@@ -19430,7 +19511,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L79",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -19441,7 +19522,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/safe-edge.md",
-      "source_location": "L89",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -19540,7 +19621,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L100",
+      "source_location": "L106",
       "weight": 1.0
     },
     {
@@ -19551,7 +19632,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L115",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -19562,7 +19643,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L129",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -19573,7 +19654,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L136",
+      "source_location": "L145",
       "weight": 1.0
     },
     {
@@ -19617,7 +19698,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L56",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -19628,7 +19709,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L70",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
@@ -19639,7 +19720,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L78",
+      "source_location": "L83",
       "weight": 1.0
     },
     {
@@ -19650,7 +19731,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/research/shortlist/site-breeding-register.md",
-      "source_location": "L87",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -21558,5 +21639,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "9d829b02ac4cabd5abd52a672546da5f7fed29d4"
+  "built_at_commit": "5c7d14c01473383d561e3d58ac5d6236dbb53364"
 }
