@@ -1,6 +1,6 @@
 # What already exists
 
-Products and services already used in Malaysian townships, condominiums and cities for each focus area, as of 2026-10-10, with SELKitar and SDP App reviews added on 2026-10-16. The organisers reject "an existing app plus AI" and have named ideas that are already taken ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)), so check an idea against this page before scoring it. Evidence is from 2024 to 2026 unless marked; scale figures are company claims unless stated. Absence from this page doesn't prove absence from the market; see [Checking that an idea is new](/docs/research/ideation-methods.md#checking-that-an-idea-is-new).
+Products and services already used in Malaysian townships, condominiums and cities for each focus area, as of 2026-10-10, with SELKitar and SDP App reviews added on 2026-10-16. The organisers reject "an existing app plus AI" and have named ideas that are already taken ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)), so check an idea against this page before scoring it. Evidence is from 2024 to 2026 unless marked; scale figures are company claims unless stated. Absence from this page doesn't prove absence from the market; see [Checking that an idea is new](/docs/research/methods/ideation-methods.md#checking-that-an-idea-is-new).
 
 Contents:
 
@@ -122,7 +122,7 @@ A recycling guide is taken; rewards-for-recycling apps are crowded.
 ## Energy and cooling
 
 - **myTNB** shows a personal dashboard and usage graph ([App Store][mytnb]). TNB had installed more than 5 million smart meters by September 2025 ([Newswav][smartmeter-5m]), targeting about 10.4 million homes in Peninsular Malaysia by 2028 and beyond ([Bernama][smartmeter-target]).
-- **Building energy:** ADF OMNI (AI chiller optimisation), Susten (energy performance contracts) and Megajana (district cooling) serve commercial buildings ([Energy, HVAC and solar](/docs/research/energy-hvac-solar.md#what-building-owners-already-do)). Cobler installs sub-metering and live energy reporting in malls ([Cobler][cobler]).
+- **Building energy:** ADF OMNI (AI chiller optimisation), Susten (energy performance contracts) and Megajana (district cooling) serve commercial buildings ([Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md#what-building-owners-already-do)). Cobler installs sub-metering and live energy reporting in malls ([Cobler][cobler]).
 - **Smart plugs** with energy monitoring sell on Lazada for about RM20 ([Lazada guide, excerpt][plugs]).
 - No live TNB or Energy Commission demand-response programme for homes was found.
 
@@ -134,7 +134,7 @@ A recycling guide is taken; rewards-for-recycling apps are crowded.
 
 ## Solar
 
-- Monitoring apps: Pekat's Solaroo, Sunview and Solarvest's Powertrack. Quotes and calculators: GSPARX. Roof potential: Google's Solar API, which now covers Malaysian homes. Community solar: SDP and TNB's CREAM pilot. Details are in [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md#who-already-sells-what).
+- Monitoring apps: Pekat's Solaroo, Sunview and Solarvest's Powertrack. Quotes and calculators: GSPARX. Roof potential: Google's Solar API, which now covers Malaysian homes. Community solar: SDP and TNB's CREAM pilot. Details are in [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md#who-already-sells-what).
 - Zero-upfront home solar through leases and power purchase agreements is built into Solar ATAP ([SEDA][atap]).
 
 [atap]: https://www.seda.gov.my/reportal/atap/
@@ -182,6 +182,6 @@ Each point is our read of the evidence above.
 
 ## See also
 
-- [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md), for energy and solar products in depth
-- [Township problems](/docs/research/township-problems.md), for the problems these products target
-- [Ideation methods, checking that an idea is new](/docs/research/ideation-methods.md#checking-that-an-idea-is-new)
+- [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md), for energy and solar products in depth
+- [Township problems](/docs/research/landscape/township-problems.md), for the problems these products target
+- [Ideation methods, checking that an idea is new](/docs/research/methods/ideation-methods.md#checking-that-an-idea-is-new)

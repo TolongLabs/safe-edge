@@ -80,7 +80,7 @@ Contents:
 [naro]: https://www.naro.go.jp/project/results/5th_laboratory/nire/2023/23_032.html
 [delfland]: https://www.hhdelfland.nl/loket/wegwijzer/melden-anoniem/hoog-water/kans-hevige-regen-neemt-toe/
 [smart]: https://www.water.gov.my/index.php/pages/view/430
-[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
+[winners]: /docs/research/competition/past-winners.md#malaysian-hackathons-2024-to-2026
 [nst]: https://www.pressreader.com/malaysia/new-straits-times/20260724/281616722149538
 
 ## Impact and how we measure it

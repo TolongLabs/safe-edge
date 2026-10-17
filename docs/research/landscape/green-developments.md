@@ -1,6 +1,6 @@
 # Green developments
 
-What leading developers and building owners in Malaysia and Singapore do on green buildings and townships, what they measure and who pays, as of 2026-10-10. It shows which green features are now normal, which are still rare and where Sime Darby Property (SDP) stands. Sources are 2024 to 2026 owner reports, official registers and releases; property-level energy and solar commitments by peers are summarised in [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md#what-peer-developers-do) and aren't repeated.
+What leading developers and building owners in Malaysia and Singapore do on green buildings and townships, what they measure and who pays, as of 2026-10-10. It shows which green features are now normal, which are still rare and where Sime Darby Property (SDP) stands. Sources are 2024 to 2026 owner reports, official registers and releases; property-level energy and solar commitments by peers are summarised in [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md#what-peer-developers-do) and aren't repeated.
 
 Contents:
 
@@ -85,7 +85,7 @@ Each practice below was found at only one or two properties.
 
 - **Ratings:** the GreenRE database lists 19 SDP ratings issued from 2024 to 2026, across 13 projects. All but one are provisional; Maya Ara Residences is the only final rating (Gold, January 2026). City of Elmina Phases 1 to 3 hold provisional township Platinum (June 2025), as do BBRX Business Park Phases 1 to 5 (February 2024). Elmina Lakeside Mall is provisional Silver (October 2024) ([GreenRE database][greenre]).
 - **Smart Township Malaysia 2025:** KPKT rated 5 of 15 developer applications ([Bernama][kpkt]). They are Sunway City Iskandar Puteri (Platinum), Cyberjaya and Gamuda's twentyfive7 (Gold), and Gamuda Cove and Gamuda Gardens (Silver) ([Sunway Property][sunway-smart]; [StarProperty][cyberjaya]; [Gamuda Land][gamuda-acc]). None is an SDP township, and whether SDP applied isn't public. The rating scores seven pillars against MS ISO 37122:2019.
-- **Solar:** about 2% of SDP's electricity in 2025. Its CREAM pilot, where Elmina homeowners lease their roofs at no upfront cost, is the only residential roof-leasing scheme found among peers. Details are in [Sime Darby Property](/docs/research/sime-darby-property.md#energy-cooling-and-solar-measures).
+- **Solar:** about 2% of SDP's electricity in 2025. Its CREAM pilot, where Elmina homeowners lease their roofs at no upfront cost, is the only residential roof-leasing scheme found among peers. Details are in [Sime Darby Property](/docs/research/landscape/sime-darby-property.md#energy-cooling-and-solar-measures).
 
 | Developer   | Green position, 2024 to 2026                                     |
 | ----------- | ---------------------------------------------------------------- |
@@ -121,7 +121,7 @@ Each practice below was found at only one or two properties.
 - **Merdeka 118:** LEED Platinum in 2024 ([Bernama][merdeka]); 70% of first-year energy bought as green power and all hot water from rooftop solar thermal ([Terrapin][terrapin]).
 - **S P Setia headquarters:** GBI Platinum renewed in June 2026 with 94 of 100 points, including all 35 energy-efficiency points ([S P Setia][setia-hq]).
 - **MRCB Penang Sentral:** voltage optimisation is forecast to cut operational emissions by 8% (220 tCO2e) in 2026; rooftop solar is planned for 2029 to 2030 ([MRCB IAR 2025][mrcb]).
-- **Mall recycling:** from June 2026, malls need recycling facilities to apply for or renew a business licence ([Sime Darby Property](/docs/research/sime-darby-property.md#reporting-pressure-on-sdp)).
+- **Mall recycling:** from June 2026, malls need recycling facilities to apply for or renew a business licence ([Sime Darby Property](/docs/research/landscape/sime-darby-property.md#reporting-pressure-on-sdp)).
 
 [ioi-hlib]: https://www.ioiproperties.com.my/news/ioi-city-mall-sets-solar-sustainability-benchmark
 [edge-1u]: https://theedgemalaysia.com/node/819908
@@ -205,6 +205,6 @@ Each point is our read of the evidence above.
 
 ## See also
 
-- [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md), for cooling rules, tariffs and solar schemes
-- [Sime Darby Property](/docs/research/sime-darby-property.md), for SDP's own targets and numbers
-- [What already exists](/docs/research/existing-solutions.md), for products already sold in Malaysia
+- [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md), for cooling rules, tariffs and solar schemes
+- [Sime Darby Property](/docs/research/landscape/sime-darby-property.md), for SDP's own targets and numbers
+- [What already exists](/docs/research/landscape/existing-solutions.md), for products already sold in Malaysia

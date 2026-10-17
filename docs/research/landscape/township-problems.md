@@ -1,6 +1,6 @@
 # Township problems
 
-The strongest recent Malaysian statistics for each People and Planet focus area, as of 2026-10-10, with Elmina traffic, dengue and haze added on 2026-10-16. Use them to size a problem on the first slide and to set a baseline for the impact criterion. Sources are 2024 to 2026; figures that rest on a search excerpt rather than an opened page are marked "excerpt". Local data sources are in [Open data](/docs/research/open-data.md).
+The strongest recent Malaysian statistics for each People and Planet focus area, as of 2026-10-10, with Elmina traffic, dengue and haze added on 2026-10-16. Use them to size a problem on the first slide and to set a baseline for the impact criterion. Sources are 2024 to 2026; figures that rest on a search excerpt rather than an opened page are marked "excerpt". Local data sources are in [Open data](/docs/research/landscape/open-data.md).
 
 Contents:
 
@@ -84,7 +84,7 @@ Contents:
 
 - Internet use reached 98.0% of individuals in 2024; household access was 98.8% in urban areas and 90.3% in rural areas ([DOSM ICT survey 2024][ict]).
 - Subang Jaya City Council received about 29,000 resident complaints by November 2024, around 2,000 a month, mostly about street lights and landscaping ([Malay Mail, excerpt][mbsj]).
-- A single reporting channel is taken as an idea ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)), and the government's SISPAA already offers one ([What already exists](/docs/research/existing-solutions.md)).
+- A single reporting channel is taken as an idea ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)), and the government's SISPAA already offers one ([What already exists](/docs/research/landscape/existing-solutions.md)).
 
 [ict]: https://www.dosm.gov.my/portal-main/release-content/ict-use-and-access-by-individuals-and-households-survey-report-2024
 [mbsj]: https://malaymail.com/amp/news/malaysia/2024/12/14/subang-jaya-city-council-says-received-nearly-30000-complaints-from-residents-mostly-over-faulty-street-lights-and-landscaping/159808
@@ -129,7 +129,7 @@ Contents:
 
 ### Energy
 
-Energy has its own page: [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md). The headline numbers: 68.8% of households own an air-conditioner (2024), and SDP's own reported Scope 1 and 2 emissions rose 24% from 2023 to 2025, partly from a wider reporting boundary.
+Energy has its own page: [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md). The headline numbers: 68.8% of households own an air-conditioner (2024), and SDP's own reported Scope 1 and 2 emissions rose 24% from 2023 to 2025, partly from a wider reporting boundary.
 
 ### Green transport
 
@@ -145,7 +145,7 @@ Energy has its own page: [Energy, HVAC and solar](/docs/research/energy-hvac-sol
 
 - Selangor's wildlife department logged 18,444 complaints from 2023 to May 2025; nearly 80% were about monkeys ([Bernama, excerpt][wildlife]).
 - Dengue in Selangor fell 61% in 2025, to 23,565 cases from 60,364 ([Malay Mail, January 2026][dengue]). It rose again in 2026: by week 40 Selangor had 31,782 cases, up 72.6% from 18,419 a year earlier, and 31 deaths against 6. Petaling district had 12,313 cases against 6,872 (+79.2%), and Klang 3,735 against 3,471 (+7.6%) ([Selangor Health Department, week 40][dengue-2026]).
-- SDP's own nature targets and partners are in [Sime Darby Property](/docs/research/sime-darby-property.md#climate-risk-nature-and-community).
+- SDP's own nature targets and partners are in [Sime Darby Property](/docs/research/landscape/sime-darby-property.md#climate-risk-nature-and-community).
 
 [wildlife]: https://www.bernama.com/en/news.php?id=2456087
 [dengue]: https://www.malaymail.com/news/malaysia/2026/01/15/selangor-posts-sharp-61pc-fall-in-dengue-cases-deaths-nearly-halved-says-state-exco/205577
@@ -154,7 +154,7 @@ Energy has its own page: [Energy, HVAC and solar](/docs/research/energy-hvac-sol
 ### Climate resilience: floods, heat and haze
 
 - **Floods:** national flood losses were RM636.9 million in 2025, down from RM933.4 million in 2024; Selangor lost RM52.9 million ([RinggitPlus, citing DOSM][floods]). Flash floods on 11 April 2025 hit Petaling, Klang, Sepang, Hulu Langat and Gombak ([NST, excerpt][flash]).
-- **SDP's own exposure:** a Swiss Re assessment found flood exposure at Bandar Bukit Raja and Bandar Universiti Pagoh ([Sime Darby Property](/docs/research/sime-darby-property.md#climate-risk-nature-and-community)).
+- **SDP's own exposure:** a Swiss Re assessment found flood exposure at Bandar Bukit Raja and Bandar Universiti Pagoh ([Sime Darby Property](/docs/research/landscape/sime-darby-property.md#climate-risk-nature-and-community)).
 - **Heat:** MetMalaysia issues a Level 1 heat alert at 35 to 37°C for three or more days. Parts of Selangor were on Level 1 in April 2026 and again in August 2026 ([Malay Mail, excerpt][heat]). A 2024 small-scale test found a ventilated cool roof kept a model house up to 4.8°C cooler indoors ([UTHM][coolroof]).
 - **Haze:** Johan Setia in Selangor reached an air-pollutant index of 193 on 18 September 2026 ([Malay Mail, excerpt][haze]). In October, haze closed Selangor schools; they were due to reopen on 15 October ([The Star][haze-reopen]), then schools in eight districts, including Klang and both Petaling districts, closed again on 16 October ([The Star][haze-close]). In Singapore on 15 October, people queued for N95 masks, while air-conditioned haze shelters "appeared to be less popular" ([The Straits Times][sg-shelters]).
 
@@ -183,6 +183,6 @@ Each point is our read.
 
 ## See also
 
-- [Open data](/docs/research/open-data.md), for live data behind these numbers
-- [What already exists](/docs/research/existing-solutions.md), for products already tackling each area
+- [Open data](/docs/research/landscape/open-data.md), for live data behind these numbers
+- [What already exists](/docs/research/landscape/existing-solutions.md), for products already tackling each area
 - [BRIEF, the challenge](/docs/BRIEF.md#the-challenge), for the focus areas

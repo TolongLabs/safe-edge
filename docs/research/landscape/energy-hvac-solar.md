@@ -1,6 +1,6 @@
 # Energy, HVAC and solar
 
-What Malaysia's rules, prices and companies say about air-conditioning, solar and ESG reporting, as of 2026-10-10. It tests our hunch that HVAC and solar are what Malaysian corporates focus on for ESG. Sources are 2024 to 2026; the one older figure is labelled, because nothing newer exists. SDP's own energy numbers are in [Sime Darby Property](/docs/research/sime-darby-property.md#performance-against-the-targets).
+What Malaysia's rules, prices and companies say about air-conditioning, solar and ESG reporting, as of 2026-10-10. It tests our hunch that HVAC and solar are what Malaysian corporates focus on for ESG. Sources are 2024 to 2026; the one older figure is labelled, because nothing newer exists. SDP's own energy numbers are in [Sime Darby Property](/docs/research/landscape/sime-darby-property.md#performance-against-the-targets).
 
 Contents:
 
@@ -32,7 +32,7 @@ Mostly true for energy, not proven as "the top ESG priority".
 - **Cooling is the biggest load in commercial buildings.** The newest national figure found is 42% of commercial electricity (2016 data).
 - **But no survey ranks HVAC or solar first.** The pain points companies report are ESG data quality, skills, financing and measuring impact ([PwC, gaps in reporting][pwc-gaps]; [Deloitte, 2025][deloitte]).
 - **For SDP, energy is the whole story.** Purchased electricity is 95% of its Scope 1 and 2 emissions, and reported emissions rose 24% from 2023 to 2025, partly because the reporting boundary widened ([SDP Sustainability Report 2025][sdp-sr] p. 44).
-- **The pattern holds abroad.** HVAC and cooling products recur among CapitaLand's challenge winners ([Past winners](/docs/research/past-winners.md#developer-and-township-challenges-abroad)).
+- **The pattern holds abroad.** HVAC and cooling products recur among CapitaLand's challenge winners ([Past winners](/docs/research/competition/past-winners.md#developer-and-township-challenges-abroad)).
 
 [ey]: https://www.ey.com/en_my/newsroom/2026/01/ey-research-malaysian-businesses-expect-electricity-demand-to-surge-by-2028-as-electrification-accelerates
 [pwc-energy]: https://www.pwc.com/my/en/publications/2024/2024-energy-transition-playbook.html
@@ -153,7 +153,7 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 
 - **Size:** 5 to 6 kWp suits a terrace or smaller semi-detached house, at about RM18,000 to RM30,000 ([Solar100, 2026][solar100-size]). Vendor estimate.
 - **Cost:** about RM3,000 to RM4,000 per kWp ([Solar100 price guide, August 2026][solar100-cost]). Vendor estimate; no official 2025 or 2026 price survey exists.
-- **Yield at Elmina:** about 1,382 kWh per kWp a year by PVGIS ([Open data](/docs/research/open-data.md#energy-and-solar)), against SEDA's planning figure of 1,200 for the central region ([SEDA homeowner guide][seda-guide]).
+- **Yield at Elmina:** about 1,382 kWh per kWp a year by PVGIS ([Open data](/docs/research/landscape/open-data.md#energy-and-solar)), against SEDA's planning figure of 1,200 for the central region ([SEDA homeowner guide][seda-guide]).
 - **Payback:** 5 to 7 years for a 6 to 9 kWp system under the old NEM rules ([Suncatcher, 2025][suncatcher]). No Solar ATAP payback study was found.
 - **Financing:** Solar ATAP allows zero-upfront leases and power purchase agreements through registered investors ([SEDA][atap-seda]). Maybank finances up to RM100,000 over 10 years ([Maybank][maybank-solar]).
 
@@ -191,7 +191,7 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 
 - **Monitoring apps already exist:** Pekat's Solaroo app sends system alerts and performance updates ([Solaroo][solaroo]); Sunview lets owners monitor their system in real time from a phone ([Sunview][sunview]); Solarvest monitors systems through Powertrack ([Solarvest, search excerpt][solarvest]).
 - **Quotes and calculators:** GSPARX, TNB's solar arm, offers home packages and a quotation calculator ([GSPARX, search excerpt][gsparx]).
-- **Roof-level potential:** Google's Solar API now covers Malaysian homes ([Open data](/docs/research/open-data.md#energy-and-solar)), and a "solar opportunity mapper" is already taken.
+- **Roof-level potential:** Google's Solar API now covers Malaysian homes ([Open data](/docs/research/landscape/open-data.md#energy-and-solar)), and a "solar opportunity mapper" is already taken.
 - **Our read:** "a solar app that shows generation" is not new. New ground is in how solar power gets used, shared or timed across a township.
 
 [solaroo]: https://solaroo.com/solaroo-app/
@@ -240,14 +240,14 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 
 ## Numbers to reuse
 
-| Number                                | Value                                               | Source                                   |
-| ------------------------------------- | --------------------------------------------------- | ---------------------------------------- |
-| Peninsular grid emission factor, 2024 | 0.740 kg CO2e/kWh, provisional                      | [Energy Commission][gef]                 |
-| Home energy charge, up to 1,500 kWh   | 27.03 sen/kWh, plus 4.55 capacity and 12.85 network | [Tariff schedule][tariff]                |
-| Solar yield at Elmina                 | 1,382 kWh/kWp/year                                  | [Open data](/docs/research/open-data.md) |
-| Typical 1.5 HP air-conditioner        | 785 kWh/year                                        | [UNEP U4E][u4e]                          |
-| Office energy label, five stars       | 90 kWh/m²/year or less                              | [ST building guideline][eeca-building]   |
-| Saving per 1°C higher setpoint        | About 7%, an expert estimate                        | [Bernama][bernama-24c]                   |
+| Number                                | Value                                               | Source                                             |
+| ------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
+| Peninsular grid emission factor, 2024 | 0.740 kg CO2e/kWh, provisional                      | [Energy Commission][gef]                           |
+| Home energy charge, up to 1,500 kWh   | 27.03 sen/kWh, plus 4.55 capacity and 12.85 network | [Tariff schedule][tariff]                          |
+| Solar yield at Elmina                 | 1,382 kWh/kWp/year                                  | [Open data](/docs/research/landscape/open-data.md) |
+| Typical 1.5 HP air-conditioner        | 785 kWh/year                                        | [UNEP U4E][u4e]                                    |
+| Office energy label, five stars       | 90 kWh/m²/year or less                              | [ST building guideline][eeca-building]             |
+| Saving per 1°C higher setpoint        | About 7%, an expert estimate                        | [Bernama][bernama-24c]                             |
 
 [gef]: https://myenergystats.st.gov.my/documents/d/guest/grid-emission-factor-gef-in-malaysia-2022-2024-provisional-
 
@@ -262,7 +262,7 @@ The Peninsular schedule runs from 1 July 2025 to 31 December 2027 ([tariff sched
 
 ## See also
 
-- [Sime Darby Property](/docs/research/sime-darby-property.md), for SDP's own energy and solar numbers
-- [Open data](/docs/research/open-data.md), for the tariff, grid factor and solar data sources
-- [What already exists](/docs/research/existing-solutions.md), for energy products in Malaysia
-- [Green developments](/docs/research/green-developments.md), for what peers' green buildings measure and who pays
+- [Sime Darby Property](/docs/research/landscape/sime-darby-property.md), for SDP's own energy and solar numbers
+- [Open data](/docs/research/landscape/open-data.md), for the tariff, grid factor and solar data sources
+- [What already exists](/docs/research/landscape/existing-solutions.md), for energy products in Malaysia
+- [Green developments](/docs/research/landscape/green-developments.md), for what peers' green buildings measure and who pays
