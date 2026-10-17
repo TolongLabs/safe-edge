@@ -35,7 +35,7 @@ Contents:
 [jkns19]: https://jknselangor.moh.gov.my/images/2026/denggi/ME19_26.pdf
 [sg sites]: https://bmcinfectdis.biomedcentral.com/articles/10.1186/s12879-018-3311-6
 [johor]: https://asianews.network/whatll-become-of-our-village-residents-in-malaysias-johor-choke-on-dust-noise-as-data-centres-move-in-next-door/
-[sdp research]: /docs/research/sime-darby-property.md
+[sdp research]: /docs/research/landscape/sime-darby-property.md
 [emr]: https://globalgreen.my/gg-consultant/environmental-monitoring-reporting-emr/
 
 ## Target user

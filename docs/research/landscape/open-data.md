@@ -98,7 +98,7 @@ Each row's evidence is cited in its section under [Source notes](#source-notes).
 
 - **Solar at Elmina:** NASA POWER gives 4.80 kWh/m²/day average irradiance and 27.84°C mean temperature for 2001 to 2025 ([NASA POWER call][nasa]). PVGIS estimates 1,382 kWh a year from 1 kWp with 14% losses, using its ERA5 database ([PVGIS call][pvgis]).
 - **Google Solar API** added BASE-quality coverage for residential areas in Malaysia on 25 March 2026. It needs billing; the free tier is 10,000 Building Insights calls a month ([coverage][gsolar-cov], [billing][gsolar-bill]). A "solar opportunity mapper" is already taken ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)), and this API makes one easy to copy.
-- **Tariffs:** the Peninsular TNB schedule for 1 July 2025 to 31 December 2027 is a public PDF ([tariff schedule][tariff]). Rates are in [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md).
+- **Tariffs:** the Peninsular TNB schedule for 1 July 2025 to 31 December 2027 is a public PDF ([tariff schedule][tariff]). Rates are in [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md).
 - **Grid emission factor:** 0.740 kg CO2e per kWh for Peninsular Malaysia in 2024, provisional, published 23 February 2026 ([grid emission factor][gef]). Use it to turn saved kWh into avoided carbon.
 - **SEDA SEIP** has feed-in tariff statistics by state, district and technology, with CSV export and free reuse with credit ([SEIP][seip]).
 
@@ -159,6 +159,6 @@ Each row's evidence is cited in its section under [Source notes](#source-notes).
 
 ## See also
 
-- [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md), for what the energy numbers mean for an idea
-- [Township problems](/docs/research/township-problems.md), for the statistics behind each focus area
+- [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md), for what the energy numbers mean for an idea
+- [Township problems](/docs/research/landscape/township-problems.md), for the statistics behind each focus area
 - [Malaysia's Official Open API docs](https://developer.data.gov.my/)

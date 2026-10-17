@@ -110,7 +110,7 @@ Kolaxus runs this hackathon, so its past events predict the format best. It call
 - Of 22 named Malaysian winners from 2024 to 2026 that a worker checked, 4 clearly used hardware, 7 were software only, and 11 sources didn't say. A small, uneven sample.
 - CapitaLand's recent winners are mostly hardware, materials or retrofits with AI as a control layer, not pure apps ([previous editions][csxc]).
 - No study compares hardware and software win rates. One survey of 356 health-hackathon projects found 61% included hardware, without comparing outcomes ([BMJ Innovations, 2017][bmj]).
-- The organisers said a working hardware build isn't expected: "A lot of simulations can be done" (Siva, 56:54) and "fail fast, fail cheap" (Dr Lam, 58:04) ([briefing transcript](/docs/sources/opening-briefing/transcript.md)). See [IoT: risk, reward and how to de-risk](/docs/research/iot.md).
+- The organisers said a working hardware build isn't expected: "A lot of simulations can be done" (Siva, 56:54) and "fail fast, fail cheap" (Dr Lam, 58:04) ([briefing transcript](/docs/sources/opening-briefing/transcript.md)). See [IoT: risk, reward and how to de-risk](/docs/research/landscape/iot.md).
 
 [bmj]: https://irdash.must.ac.ug/server/api/core/bitstreams/6c6f361f-e057-4a04-a462-882e8921602f/content
 
@@ -149,6 +149,6 @@ Each pattern is our read of the winners above.
 
 ## See also
 
-- [Malaysian judges](/docs/research/malaysian-judges.md), for rubrics and pitching norms
-- [Sime Darby Property](/docs/research/sime-darby-property.md), for the host's own priorities
+- [Malaysian judges](/docs/research/competition/malaysian-judges.md), for rubrics and pitching norms
+- [Sime Darby Property](/docs/research/landscape/sime-darby-property.md), for the host's own priorities
 - [BRIEF, how it is judged](/docs/BRIEF.md#how-it-is-judged)

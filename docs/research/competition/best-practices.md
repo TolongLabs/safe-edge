@@ -41,7 +41,7 @@ Contents:
 
 - **The organisers want validation with people, not AI output:** end users, investors and the people affected (Dr Lam, 24:09 to 24:26), and real data (Dina, 55:40) ([BRIEF, how it is judged](/docs/BRIEF.md#how-it-is-judged)).
 - **Specific beats general.** "Specificity tells me whether you talked to anyone or guessed" ([judge's notes, 2026][devto]).
-- **Malaysian rubrics ask for it outright:** IEEE Innovation Nation Malaysia wants a market or impact survey, and UMK's ITeLIC'25 scores "Evidence" ([Malaysian judges](/docs/research/malaysian-judges.md#what-malaysian-rubrics-reward)).
+- **Malaysian rubrics ask for it outright:** IEEE Innovation Nation Malaysia wants a market or impact survey, and UMK's ITeLIC'25 scores "Evidence" ([Malaysian judges](/docs/research/competition/malaysian-judges.md#what-malaysian-rubrics-reward)).
 - **How many test users:** in a qualitative usability study, five users per round find "almost as many usability problems" as many more, and rounds should repeat; quantitative studies need at least 20 ([Nielsen Norman Group, 2012][nng]). That sizes prototype tests; it doesn't prove demand. A canonical method, kept despite its age.
 - **How to ask:** The Mom Test's rules are to talk about the person's life rather than your idea, ask about specific past events rather than opinions, and listen more than you talk ([book summary][momtest]).
 - **Our read:** three rounds of five residents, each round changing the idea, fits our deadline. Report past behaviour as counts and quotes; five per round finds usability problems but doesn't prove demand.
@@ -54,7 +54,7 @@ Contents:
 - **Answer the organisers' question:** what improved because of the idea, measured how, compared with what (Dr Lam, 08:26; [BRIEF, advice](/docs/BRIEF.md#advice-from-the-organisers)).
 - **Carbon:** multiply saved electricity by Peninsular Malaysia's 2024 grid emission factor, 0.740 kg CO2e per kWh. The factor is provisional, and the Energy Commission warns it "may not reflect the GHG intensity of electricity unclaimed via REC or other contractual instruments" ([grid emission factor][gef]). The trend was 0.769 in 2022 and 0.760 in 2023.
 - **Scope 2 rules may change:** the GHG Protocol's 2015 Scope 2 guidance is still in force; a public consultation on revising it closed on 31 January 2026 ([GHG Protocol][ghg-scope2]).
-- **Use SDP's own baseline where possible.** SDP reports Scope 1 and 2 emissions, energy, water and waste by year ([Sime Darby Property](/docs/research/sime-darby-property.md#performance-against-the-targets)), so an idea can state its effect as a share of SDP's own numbers.
+- **Use SDP's own baseline where possible.** SDP reports Scope 1 and 2 emissions, energy, water and waste by year ([Sime Darby Property](/docs/research/landscape/sime-darby-property.md#performance-against-the-targets)), so an idea can state its effect as a share of SDP's own numbers.
 
 [gef]: https://myenergystats.st.gov.my/documents/d/guest/grid-emission-factor-gef-in-malaysia-2022-2024-provisional-
 [ghg-scope2]: https://ghgprotocol.org/scope-2-guidance
@@ -75,25 +75,25 @@ Contents:
 
 ## Feasibility and approvals
 
-- **Who must agree:** the local council for physical works, the JMB or management corporation for strata common property, and SDP for its own assets. Details are in [Malaysian judges, who must agree](/docs/research/malaysian-judges.md#who-must-agree-to-a-township-pilot).
+- **Who must agree:** the local council for physical works, the JMB or management corporation for strata common property, and SDP for its own assets. Details are in [Malaysian judges, who must agree](/docs/research/competition/malaysian-judges.md#who-must-agree-to-a-township-pilot).
 - **Strata law may change:** on 10 August 2026 the housing minister said amendments to the Strata Management Act 2013 are being considered, to strengthen JMB and management corporation accountability ([The Star][sma-review]).
 - **Organisers' bar:** implementable within one or two years; estimate cost, effort and approvals, and check compliance and safety; a big pilot cost needs a big impact ([BRIEF, how it is judged](/docs/BRIEF.md#how-it-is-judged)).
-- **Developers want proof and low upkeep:** they wait for proven outcomes, judge technology on return and building fit, and worry about maintenance after handover ([Malaysian judges, what developers need](/docs/research/malaysian-judges.md#what-developers-need-before-a-pilot)).
+- **Developers want proof and low upkeep:** they wait for proven outcomes, judge technology on return and building fit, and worry about maintenance after handover ([Malaysian judges, what developers need](/docs/research/competition/malaysian-judges.md#what-developers-need-before-a-pilot)).
 
 [sma-review]: https://thestar.com.my/news/nation/2026/08/10/govt-mulls-amending-strata-management-act-to-strengthen-accountability-of-jmbs-mcs-says-nga
 
 ## Who pays
 
 - **Maintenance fees are fragile.** In March 2025 Bernama reported unpaid strata maintenance fees at "worrying levels" ([Bernama][arrears]). **Our read:** a service paid from maintenance fees competes with arrears.
-- **Pilots, then funding:** CapitaLand says "if innovators can prove that their solutions will work in our properties, the funding will follow" ([Past winners](/docs/research/past-winners.md#developer-and-township-challenges-abroad)).
-- **Third-party finance exists:** UEM Sunrise's The Beat 2.0 solar runs on a power purchase agreement with no developer capital ([Energy, HVAC and solar](/docs/research/energy-hvac-solar.md#what-peer-developers-do)); Solar ATAP allows zero-upfront leases ([Energy, HVAC and solar](/docs/research/energy-hvac-solar.md#home-solar-economics)); SDP raised green sukuk for its data centres ([Sime Darby Property](/docs/research/sime-darby-property.md#reporting-pressure-on-sdp)).
-- **SDP can pay for what it runs:** malls, leisure assets and the Innovation Park sit on SDP's own books ([Sime Darby Property](/docs/research/sime-darby-property.md#who-runs-a-township-after-handover)).
+- **Pilots, then funding:** CapitaLand says "if innovators can prove that their solutions will work in our properties, the funding will follow" ([Past winners](/docs/research/competition/past-winners.md#developer-and-township-challenges-abroad)).
+- **Third-party finance exists:** UEM Sunrise's The Beat 2.0 solar runs on a power purchase agreement with no developer capital ([Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md#what-peer-developers-do)); Solar ATAP allows zero-upfront leases ([Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md#home-solar-economics)); SDP raised green sukuk for its data centres ([Sime Darby Property](/docs/research/landscape/sime-darby-property.md#reporting-pressure-on-sdp)).
+- **SDP can pay for what it runs:** malls, leisure assets and the Innovation Park sit on SDP's own books ([Sime Darby Property](/docs/research/landscape/sime-darby-property.md#who-runs-a-township-after-handover)).
 
 [arrears]: https://www.bernama.com/en/news.php?id=2401051
 
 ## Preparing for questions
 
-- **Likely questions:** who pays, what you actually built, and what breaks first at scale ([judge's notes, 2026][devto]); cost, approvals, maintenance and data security for Malaysian developers ([Malaysian judges](/docs/research/malaysian-judges.md#what-developers-need-before-a-pilot)).
+- **Likely questions:** who pays, what you actually built, and what breaks first at scale ([judge's notes, 2026][devto]); cost, approvals, maintenance and data security for Malaysian developers ([Malaysian judges](/docs/research/competition/malaysian-judges.md#what-developers-need-before-a-pilot)).
 - **Privacy is often scored:** Philadelphia's public pilot programme scores "Attention to privacy and data security" ([City of Philadelphia][phila]).
 - **Admit known weaknesses.** One judge reports that teams naming their own weak spots scored higher ([judge's notes, 2026][devto]). Practitioner observation.
 - **Our read:** build an appendix with one slide per likely question, so the 5-minute Q&A on 14 November becomes pointing, not inventing.
@@ -111,5 +111,5 @@ Contents:
 ## See also
 
 - [BRIEF, what to submit](/docs/BRIEF.md#what-to-submit), for the deck's eight areas
-- [Malaysian judges](/docs/research/malaysian-judges.md), for local rubrics and norms
-- [Township problems](/docs/research/township-problems.md), for baseline numbers
+- [Malaysian judges](/docs/research/competition/malaysian-judges.md), for local rubrics and norms
+- [Township problems](/docs/research/landscape/township-problems.md), for baseline numbers

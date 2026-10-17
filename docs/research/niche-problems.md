@@ -44,7 +44,7 @@ Contents:
 
 ### Simulating the rivals
 
-More than 1,000 students will paste the same brief into an AI chatbot, and AI makes ideas more alike; see [Ideation methods, what AI does to ideas](/docs/research/ideation-methods.md#what-ai-does-to-ideas). So we did what they would do and counted the results.
+More than 1,000 students will paste the same brief into an AI chatbot, and AI makes ideas more alike; see [Ideation methods, what AI does to ideas](/docs/research/methods/ideation-methods.md#what-ai-does-to-ideas). So we did what they would do and counted the results.
 
 - **Models:** Codex (gpt-6-luna, max effort) and Gemini 3.8 Flash (high effort), each run as a fresh session with no web access.
 - **Prompt:** the challenge brief from the official page, followed by one of four requests: no track chosen, People track, Planet track, or "unique, niche, out-of-the-box" ideas.
@@ -114,7 +114,7 @@ Crowding for the unfinished township, lightning and local businesses is driven b
 - **Recent Selangor cases:** a 10-year-old in Bandar Puncak Alam and a 9-year-old in Bandar Mahkota Cheras died after falling into drains in 2026, and the state ordered a review of high-risk drains ([NST][nst-puncak]; [Sinar Harian][sinar]). Two brothers were swept from a Kajang drain in December 2025; one was found in a retention pond ([Bernama][bernama-kajang]). A 5-year-old drowned in a Petaling Jaya flood-retention pond in February 2024; early reports said 6 ([Malay Mail][mm-pj]).
 - **Rules:** the stormwater manual (MSMA) recommends gentle pond slopes and says slopes steeper than 1V:4H may need a fence or rail; it is a design guide, not a blanket fence rule ([MSMA][msma]).
 - **Gap:** computer-vision drowning detection exists for swimming pools, with its own ISO standard, but we found no deployment on township drains or ponds, and no Malaysian hackathon winner on this.
-- **SDP lever:** SDP desilts drains and maintains flood infrastructure in handed-over areas, and runs water assets such as Sakura Lake in Elmina West and the Bandar Bukit Raja Wetland Townpark ([pack](/docs/research/niche-problems/drowning.md#sdps-exposure-and-lever)).
+- **SDP lever:** SDP desilts drains and maintains flood infrastructure in handed-over areas, and runs water assets such as Sakura Lake in Elmina West and the Bandar Bukit Raja Wetland Townpark ([pack](/docs/research/niche-problems/drowning/drowning.md#sdps-exposure-and-lever)).
 - **Risks:** custody of each drain or pond splits between council, JPS, SDP and strata bodies; deaths are too rare to measure in a short pilot; and it sits beside the crowded flood cluster. Pitch child safety at water edges, never rain alerts.
 
 [star-drown]: https://www.thestar.com.my/news/nation/2026/10/16/371-youngsters-lost-to-drowning
@@ -161,24 +161,24 @@ The team shortlisted drowning and data-centre neighbours. Six more research-and-
 
 ### Drowning, in depth
 
-- **Incidents:** news reports give 21 incident clusters in Selangor and Kuala Lumpur township water from January 2023 to October 2026, 18 with a confirmed death. Children swept from drains into rivers recur, sometimes 6 to 10 km downstream, and two of them died retrieving a ball ([incidents](/docs/research/niche-problems/drowning-incidents.md#incident-table)).
+- **Incidents:** news reports give 21 incident clusters in Selangor and Kuala Lumpur township water from January 2023 to October 2026, 18 with a confirmed death. Children swept from drains into rivers recur, sometimes 6 to 10 km downstream, and two of them died retrieving a ball ([incidents](/docs/research/niche-problems/drowning/drowning-incidents.md#incident-table)).
 - **Bandar Botanik:** one death is verified, a 15-year-old who drowned while swimming alone in an artificial lake on 1 October 2026, in a Gamuda Land township. Reports of several teenagers were not found.
-- **Design rules:** the stormwater manual says drains deeper than 0.6 m beside footpaths or roads must be covered, fast flows need a 1.2 m handrail or full grating, and detention ponds should slope no steeper than 1:4, ideally 1:6 ([prevention](/docs/research/niche-problems/drowning-prevention.md#design-standards-malaysia-then-abroad)).
+- **Design rules:** the stormwater manual says drains deeper than 0.6 m beside footpaths or roads must be covered, fast flows need a 1.2 m handrail or full grating, and detention ponds should slope no steeper than 1:4, ideally 1:6 ([prevention](/docs/research/niche-problems/drowning/drowning-prevention.md#design-standards-malaysia-then-abroad)).
 - **What works:** barriers and immediate resuscitation are rated effective; supervision, swimming skills and rescue training are promising; signs alone have weak evidence.
 - **Precedent:** Singapore's Alkaff Lake uses a water-level sensor that switches on beacons and spoken warnings in four languages as the water rises after rain. Nothing similar was found in Malaysia.
 - **Costs:** chain-link fence about RM54 a metre, a ring buoy about RM290, a water-level sensor about RM2,327. Dublin loses about 15 ring buoys a week to theft, so theft-alarmed buoys exist.
-- **Custody:** the developer is responsible until formal handover; ponds go to JPS with as-built drawings, and JPS may refuse ponds converted into recreation. No court ruling on a child drowning in a township drain was found ([custody](/docs/research/niche-problems/drowning-custody.md#legal-duties-and-handover)).
+- **Custody:** the developer is responsible until formal handover; ponds go to JPS with as-built drawings, and JPS may refuse ponds converted into recreation. No court ruling on a child drowning in a township drain was found ([custody](/docs/research/niche-problems/drowning/drowning-custody.md#legal-duties-and-handover)).
 - **SDP water bodies:** Sakura Lake Park (21 acres) and Infinity Lake Park (8 acres) in Elmina, Serenity Park in Serenia City (8 acres), Ainsdale Lake Park (11 acres), and wetlands at Bandar Bukit Raja and Pagoh. The current operator of each isn't public.
 - **Our read:** treat a drain-to-pond catchment as one system: map every water edge and who owns it, add level-triggered local warnings, and place theft-alarmed rescue kit. Measure hazards closed, alert response time and near misses, because deaths are too rare to measure in a pilot.
 
 ### Data-centre neighbours, in depth
 
-- **Malaysian complaints are mostly about construction:** dust, red-soil runoff and coughs at Kundang, Rawang, where residents said more than 5,000 people were affected (July 2025); the Gelang Patah protest, whose organisers said they spoke for nearly 1,000 residents (February 2026); a Cyberjaya petition about 20-hour construction noise; and the Kota Damansara objections ([residents](/docs/research/niche-problems/data-centre-residents.md#malaysian-cases)).
+- **Malaysian complaints are mostly about construction:** dust, red-soil runoff and coughs at Kundang, Rawang, where residents said more than 5,000 people were affected (July 2025); the Gelang Patah protest, whose organisers said they spoke for nearly 1,000 residents (February 2026); a Cyberjaya petition about 20-hour construction noise; and the Kota Damansara objections ([residents](/docs/research/niche-problems/data-centres/data-centre-residents.md#malaysian-cases)).
 - **Elmina:** on public maps, the Google data centre sits about 1 km from Aman Putri homes and from SK Merbau Sempak school. One Elmina resident told Bernama in August 2025 he worried about water allocation; no petition or council complaint was found.
 - **Status:** SDP finished and handed over the first building, with rent from Q2 FY2026; Google said in August 2026 it was not operating yet and expected to within nine months. Both statements hold.
-- **Water:** Selangor allocates 53 million litres a day across the Elmina phases through a dedicated pipeline from the Bukit Tadun balancing pond, against 0.2 million litres actually used in March 2026. Google uses evaporative cooling; Selangor encourages but doesn't require reclaimed water. Johor already supplies 12 million litres a day of reclaimed water to data centres ([rules](/docs/research/niche-problems/data-centre-rules.md#google-and-elmina-specifics)).
+- **Water:** Selangor allocates 53 million litres a day across the Elmina phases through a dedicated pipeline from the Bukit Tadun balancing pond, against 0.2 million litres actually used in March 2026. Google uses evaporative cooling; Selangor encourages but doesn't require reclaimed water. Johor already supplies 12 million litres a day of reclaimed water to data centres ([rules](/docs/research/niche-problems/data-centres/data-centre-rules.md#google-and-elmina-specifics)).
 - **Rules:** PLANMalaysia's guideline asks for a 50 m buffer from homes in commercial zones, with a noise-based exception whose wording is unclear. The environment department's night limit for low-density homes is 50 dBA, and no Malaysian limit for low-frequency hum was found.
-- **Abroad:** a 2026 Phoenix study measured downwind air up to 2.2°C warmer, detectable 500 m away. In Frederick County, Maryland, a data-centre developer proposed a community-benefit package on 1 September 2026 that included a $5 million community-solar project, but the County Executive rejected the application on 14 September ([good neighbour](/docs/research/niche-problems/data-centre-good-neighbour.md#community-benefit-models); [Frederick County][frederick]).
+- **Abroad:** a 2026 Phoenix study measured downwind air up to 2.2°C warmer, detectable 500 m away. In Frederick County, Maryland, a data-centre developer proposed a community-benefit package on 1 September 2026 that included a $5 million community-solar project, but the County Executive rejected the application on 14 September ([good neighbour](/docs/research/niche-problems/data-centres/data-centre-good-neighbour.md#community-benefit-models); [Frederick County][frederick]).
 - **Gap:** no published host-community agreement combines independent monitoring, resident oversight, complaint deadlines, grants and bill relief tied to measured results. No working tropical waste-heat reuse was found; server heat is too cool for absorption chillers without heat pumps, so drop that direction.
 - **Our read:** the strongest mechanism is a measured baseline now, while Elmina's second data centre is under construction until 2027, plus a host-community agreement with measured triggers.
 
@@ -192,7 +192,7 @@ Google's Malaysian water-replenishment work includes a Taman Aman lake project w
 
 ### Solar pre-cooling, in depth
 
-The idea: use midday rooftop solar to cool a home before the 2 pm peak, instead of exporting the power. Three research-and-check runs looked at the money, the market and the people ([tariff and evidence](/docs/research/niche-problems/solar-precooling.md), [market](/docs/research/niche-problems/solar-precooling-market.md), [behaviour and competition](/docs/research/niche-problems/solar-precooling-behaviour.md)).
+The idea: use midday rooftop solar to cool a home before the 2 pm peak, instead of exporting the power. Three research-and-check runs looked at the money, the market and the people ([tariff and evidence](/docs/research/niche-problems/solar-precooling/solar-precooling.md), [market](/docs/research/niche-problems/solar-precooling/solar-precooling-market.md), [behaviour and competition](/docs/research/niche-problems/solar-precooling/solar-precooling-behaviour.md)).
 
 - **The rule is real:** Solar ATAP, from 1 January 2026, credits home exports at the energy charge only, and unused credit lapses each month.
 - **The saving is small:** a kWh used at home avoids 44.43 sen of listed charges, while exporting it earns 27.03 sen, a gap of 17.40 sen. Shifting 1 to 3 kWh a day is worth about RM5 to RM16 a month, before fuel adjustments, tax and rebates.
@@ -204,7 +204,7 @@ The idea: use midday rooftop solar to cool a home before the 2 pm peak, instead 
 
 ### A data centre buying rooftop solar
 
-We tested whether Google's Elmina data centre could buy residents' rooftop solar under CREAM, as a neighbour benefit ([pack](/docs/research/niche-problems/solar-cream-data-centre.md)). It can't, as framed:
+We tested whether Google's Elmina data centre could buy residents' rooftop solar under CREAM, as a neighbour benefit ([pack](/docs/research/niche-problems/data-centres/solar-cream-data-centre.md)). It can't, as framed:
 
 - CREAM buyers must hold a low- or medium-voltage account; a hyperscale data centre connects at 132 kV or more.
 - The 5 km limit is measured between the substations serving the roofs and the buyer.
@@ -252,7 +252,7 @@ The [idea ranking](/docs/archive/ideas/0000-ranking.md) scores eight ideas from 
 
 - **Lightning:** "the Klang Valley gets about the third most lightning strikes in the world" is not established. TNB says Malaysia is among the top three; a 2021 satellite study ranks Kuala Lumpur first among capitals ([pack](/docs/research/niche-problems/lightning.md#trend-and-triggers)).
 - **Drowning:** NST's "one child or teen drowns every three days" could not be opened, and its 619 figure counts incidents, not deaths. The checked figure, 371 deaths from January 2023 to August 2026, works out to about one every 3.6 days.
-- **Google's Elmina data centre:** resolved. SDP completed and handed over the building, with rent from Q2 FY2026, as [Sime Darby Property](/docs/research/sime-darby-property.md#portfolio-at-a-glance) says; Google was still fitting it out in August 2026 and expected to operate within nine months.
+- **Google's Elmina data centre:** resolved. SDP completed and handed over the building, with rent from Q2 FY2026, as [Sime Darby Property](/docs/research/landscape/sime-darby-property.md#portfolio-at-a-glance) says; Google was still fitting it out in August 2026 and expected to operate within nine months.
 
 ## Unverified and not found
 
@@ -263,10 +263,10 @@ The [idea ranking](/docs/archive/ideas/0000-ranking.md) scores eight ideas from 
 ## See also
 
 - [Rival ideas](/docs/research/niche-problems/rival-ideas.md), the 240 simulated ideas
-- Evidence packs: [drowning](/docs/research/niche-problems/drowning.md), [death](/docs/research/niche-problems/death.md), [data-centre neighbours](/docs/research/niche-problems/data-centre-neighbours.md), [unfinished township](/docs/research/niche-problems/unfinished-township.md), [lightning](/docs/research/niche-problems/lightning.md), [local businesses](/docs/research/niche-problems/local-businesses.md)
-- Deep dives: [drowning incidents](/docs/research/niche-problems/drowning-incidents.md), [drowning prevention](/docs/research/niche-problems/drowning-prevention.md), [drowning custody](/docs/research/niche-problems/drowning-custody.md), [data-centre residents](/docs/research/niche-problems/data-centre-residents.md), [data-centre rules](/docs/research/niche-problems/data-centre-rules.md), [data-centre good neighbour](/docs/research/niche-problems/data-centre-good-neighbour.md)
-- Solar: [pre-cooling tariff and evidence](/docs/research/niche-problems/solar-precooling.md), [pre-cooling market](/docs/research/niche-problems/solar-precooling-market.md), [pre-cooling behaviour and competition](/docs/research/niche-problems/solar-precooling-behaviour.md), [CREAM and data centres](/docs/research/niche-problems/solar-cream-data-centre.md)
+- Evidence packs: [drowning](/docs/research/niche-problems/drowning/drowning.md), [death](/docs/research/niche-problems/death.md), [data-centre neighbours](/docs/research/niche-problems/data-centres/data-centre-neighbours.md), [unfinished township](/docs/research/niche-problems/unfinished-township.md), [lightning](/docs/research/niche-problems/lightning.md), [local businesses](/docs/research/niche-problems/local-businesses.md)
+- Deep dives: [drowning incidents](/docs/research/niche-problems/drowning/drowning-incidents.md), [drowning prevention](/docs/research/niche-problems/drowning/drowning-prevention.md), [drowning custody](/docs/research/niche-problems/drowning/drowning-custody.md), [data-centre residents](/docs/research/niche-problems/data-centres/data-centre-residents.md), [data-centre rules](/docs/research/niche-problems/data-centres/data-centre-rules.md), [data-centre good neighbour](/docs/research/niche-problems/data-centres/data-centre-good-neighbour.md)
+- Solar: [pre-cooling tariff and evidence](/docs/research/niche-problems/solar-precooling/solar-precooling.md), [pre-cooling market](/docs/research/niche-problems/solar-precooling/solar-precooling-market.md), [pre-cooling behaviour and competition](/docs/research/niche-problems/solar-precooling/solar-precooling-behaviour.md), [CREAM and data centres](/docs/research/niche-problems/data-centres/solar-cream-data-centre.md)
 - [SDP townships](/docs/research/niche-problems/sdp-townships.md), a table of 27 current and 10 older townships, not yet fact-checked
 - [Idea ranking](/docs/archive/ideas/0000-ranking.md), the team's eight ranked ideas
-- [Township problems](/docs/research/township-problems.md), for the mainstream problem statistics
-- [Ideation methods](/docs/research/ideation-methods.md), for why AI narrows ideas
+- [Township problems](/docs/research/landscape/township-problems.md), for the mainstream problem statistics
+- [Ideation methods](/docs/research/methods/ideation-methods.md), for why AI narrows ideas

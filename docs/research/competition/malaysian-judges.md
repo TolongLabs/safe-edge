@@ -98,7 +98,7 @@ Name one or two on a slide, only where the idea truly serves them. Older documen
 - **The joint management body or management corporation** maintains strata common property under the Strata Management Act 2013, so devices on common areas go through it ([Act 757][sma]). The housing minister said in August 2026 that amendments are being considered ([The Star][sma-review]).
 - **Rukun Tetangga** is a voluntary community body under Act 751 that supports safety and neighbourliness ([government portal, search excerpt][rt]). It is a consultation partner, not a permit.
 - **Residents' associations** have no statutory sign-off role that we found.
-- **SDP's township team** controls its own assets; see [Sime Darby Property, who runs a township](/docs/research/sime-darby-property.md#who-runs-a-township-after-handover).
+- **SDP's township team** controls its own assets; see [Sime Darby Property, who runs a township](/docs/research/landscape/sime-darby-property.md#who-runs-a-township-after-handover).
 
 [act172]: https://stag.planmalaysia.gov.my/index.php/pages/view/1345
 [act172-text]: https://www.planmalaysia.gov.my/planmalaysia/resources/dokumen/Akta_172/Act_172_Bersih_As_at_1st_June_2021.pdf
@@ -131,6 +131,6 @@ Name one or two on a slide, only where the idea truly serves them. Older documen
 
 ## See also
 
-- [Past winners](/docs/research/past-winners.md), for what these judges picked
-- [Pitch, evidence and feasibility](/docs/research/best-practices.md), for how to show proof
+- [Past winners](/docs/research/competition/past-winners.md), for what these judges picked
+- [Pitch, evidence and feasibility](/docs/research/competition/best-practices.md), for how to show proof
 - [BRIEF, advice from the organisers](/docs/BRIEF.md#advice-from-the-organisers)

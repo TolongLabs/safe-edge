@@ -71,7 +71,7 @@ Source: [Sustainability Report 2025][sr2025], checked against the PDF text. The 
 - **Electricity is the problem.** SDP used 24.9 GWh in 2025. Its asset-management segment (malls and offices) emitted 10,218 tCO2e from electricity, leisure (golf, convention) 6,315 and property development 2,757 ([SR 2025][sr2025]).
 - **Scope 1 rose 21%,** partly from "significant refrigerant refills following major air-conditioning repairs" ([SR 2025][sr2025]).
 - **Solar is still small.** 603 kWp across nine sites generated 495 MWh and avoided 383 tCO2e in 2025, about 2% of electricity use. SDP also bought 2,312 MWh through TNB's Green Electricity Tariff ([SR 2025][sr2025]).
-- **Green ratings are mostly design-stage.** GreenRE lists 19 SDP ratings issued from 2024 to 2026, and only Maya Ara Residences (Gold, January 2026) is final. City of Elmina Phases 1 to 3 hold provisional township Platinum from June 2025 ([GreenRE database][greenre]). No SDP township is among the five Smart Township Malaysia ratings of 2025; see [Green developments](/docs/research/green-developments.md#where-sdp-stands).
+- **Green ratings are mostly design-stage.** GreenRE lists 19 SDP ratings issued from 2024 to 2026, and only Maya Ara Residences (Gold, January 2026) is final. City of Elmina Phases 1 to 3 hold provisional township Platinum from June 2025 ([GreenRE database][greenre]). No SDP township is among the five Smart Township Malaysia ratings of 2025; see [Green developments](/docs/research/landscape/green-developments.md#where-sdp-stands).
 - **Scope 3 covers only travel and commuting.** Construction materials and the energy used in homes SDP sold aren't counted yet; a broader inventory is planned for 2026 ([SR 2025][sr2025]).
 - **The report puts the 2025 rise down to a wider boundary:** "Scope 1 and 2 emissions increased by 13.6% compared to 2024 due to boundary expansion" ([SR 2025][sr2025] p. 44). It doesn't name the added assets. **Our read:** the malls that opened in this period (Elmina Lakeside Mall, launched January 2025; KLGCC Mall, opened October 2025) are likely among them.
 
@@ -129,7 +129,7 @@ Source: [Sustainability Report 2025][sr2025], checked against the PDF text. The 
 
 - **IFRS S1 and S2 now apply.** SDP's market value was RM11.5 billion at the end of 2024 ([IAR 2024][iar2024]), above the RM2 billion line for Group 1 of the National Sustainability Reporting Framework, which starts in FY2025 ([SC media release][nsrf]). Group 1's wider Scope 3 disclosures start in FY2027 ([NSRF response paper][nsrf-paper]).
 - **Assurance is coming.** Reasonable assurance of Scope 1 and 2 emissions starts for Group 1 for periods beginning 1 January 2028 ([SC, September 2026][assurance]).
-- **Energy law:** the Energy Efficiency and Conservation Act 2024 covers sites using at least 21,600 GJ a year and office buildings of 8,000 m² or more. Details are in [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md). **Our read:** SDP's malls and convention centre are likely candidates.
+- **Energy law:** the Energy Efficiency and Conservation Act 2024 covers sites using at least 21,600 GJ a year and office buildings of 8,000 m² or more. Details are in [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md). **Our read:** SDP's malls and convention centre are likely candidates.
 - **Mall recycling:** from June 2026, malls need recycling facilities to apply for or renew a council business licence, phased in ([Malay Mail][mall-recycling]). SDP runs three malls.
 - **Green finance:** SDP's New Economy Venture set up a RM2.6 billion sukuk programme in July 2026, with a Gold-rated green finance framework covering a hyperscale data centre and a warehouse in City of Elmina ([sukuk release][sukuk]).
 
@@ -148,7 +148,7 @@ Source: [Sustainability Report 2025][sr2025], checked against the PDF text. The 
 | Elmen Tan Yew Seng                  | Chief Digital and Technology Officer since 4 March 2024     | Pitched SDP's challenges to startups at a 2025 AI reverse pitch ([post][elmen-pitch])     |
 | Dr Yasmin Rasyid                    | General Manager, Sustainability ([SR 2025][sr2025])         | "Integrating and protecting nature is foundational" ([post][yasmin])                      |
 | Dr Lam Su Ki                        | Spoke at the briefing; likely Dr Su Ki Lam, SDP placemaking | Moved from innovation to placemaking; focus on people and public spaces ([post][sukilam]) |
-| Sivavenayakam T Velayutham ("Siva") | Kolaxus Managing Director (event profile)                   | See [Past winners](/docs/research/past-winners.md) for Kolaxus's events                   |
+| Sivavenayakam T Velayutham ("Siva") | Kolaxus Managing Director (event profile)                   | See [Past winners](/docs/research/competition/past-winners.md) for Kolaxus's events       |
 
 Elmen Tan's start date comes from his own announcement ([LinkedIn][elmen]). "Dina" from the briefing couldn't be identified.
 
@@ -175,12 +175,12 @@ Each point is our read of the evidence above.
 - The nine solar sites aren't all named; no SDP solar PPA or CRESS deal was found.
 - No GBI, LEED or Green Mark rating was found for SDP, only GreenRE ratings.
 - No public matrix assigns each township asset to SDP, the council, a residents' association or a JMB.
-- No earlier SDP university hackathon was found; the 2022 Concept Home 2030 contest was for architects. See [Past winners](/docs/research/past-winners.md).
+- No earlier SDP university hackathon was found; the 2022 Concept Home 2030 contest was for architects. See [Past winners](/docs/research/competition/past-winners.md).
 
 ## See also
 
 - [BRIEF](/docs/BRIEF.md), for the briefing's facts about SDP
-- [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md), for the rules and economics behind SDP's energy numbers
-- [What already exists](/docs/research/existing-solutions.md), for other developers' apps and services
-- [Green developments](/docs/research/green-developments.md), for how SDP's green ratings compare with peers'
+- [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md), for the rules and economics behind SDP's energy numbers
+- [What already exists](/docs/research/landscape/existing-solutions.md), for other developers' apps and services
+- [Green developments](/docs/research/landscape/green-developments.md), for how SDP's green ratings compare with peers'
 - [SDP sustainability page](https://www.simedarbyproperty.com/sustainability/)

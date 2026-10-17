@@ -118,7 +118,7 @@ None of these has a controlled study showing it beats the others, except the lim
 - Search the problem, the feature, the user and the setting separately, in English and Malay, across app stores, [Google Patents][patents], MyIPO, Product Hunt, Crunchbase and Google Scholar ([Apple on search relevance][appsearch], [MyIPO search manual][myipo]). An empty search result is not proof that nothing exists.
 - Hackathon winners report checking Google and Product Hunt for comparable apps, then adapting ([Gama et al.][gama]).
 - MLH tells organisers to bar reskins of existing AI tools ([MLH rules guide][mlh]). No study measures how judges penalise "an existing app plus AI"; our rule comes from the organisers ([BRIEF, the challenge](/docs/BRIEF.md#the-challenge)).
-- [What already exists](/docs/research/existing-solutions.md) lists the Malaysian products we found.
+- [What already exists](/docs/research/landscape/existing-solutions.md) lists the Malaysian products we found.
 
 [patents]: https://support.google.com/faqs/answer/6390996?hl=en
 [appsearch]: https://developer.apple.com/app-store/search/
@@ -196,5 +196,5 @@ None of these has a controlled study showing it beats the others, except the lim
 ## See also
 
 - [BRIEF](/docs/BRIEF.md), for the judging weights and the taken ideas
-- [Past winners](/docs/research/past-winners.md), for what scored well before
-- [What already exists](/docs/research/existing-solutions.md), for the novelty check
+- [Past winners](/docs/research/competition/past-winners.md), for what scored well before
+- [What already exists](/docs/research/landscape/existing-solutions.md), for the novelty check

@@ -99,7 +99,7 @@ Mean judge scores by criterion, out of 5, with the weights from the [brief], and
 - **The repeat-use test split the eight in half.** Judges expected repeat use for the four ideas tied to a person's own money, safety or a deadline, and for none of the four that rely on prizes, volunteers or people paying before anything goes wrong.
 - **Flood ideas have won before.** Recent Malaysian hackathons crowned USM's "Smart Manhole" and APU's MySelamat flood-rescue planner ([past winners][winners]). Kolam Sedia or Jiran Siaga must show how they differ.
 
-[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
+[winners]: /docs/research/competition/past-winners.md#malaysian-hackathons-2024-to-2026
 
 ## Scoring method
 
@@ -300,7 +300,7 @@ Two signals fed three routes, which gave 77 seeds:
 [x aidasue]: https://x.com/AidaSue/status/1464900884769345536
 [x haze]: https://x.com/Media_Selangor/status/2110291874800136431
 [agm]: https://www.simedarbyproperty.com/sites/default/files/2025-07/Pre-Meeting_Questions.pdf
-[methods]: /docs/research/ideation-methods.md#what-ai-does-to-ideas
+[methods]: /docs/research/methods/ideation-methods.md#what-ai-does-to-ideas
 
 ### Pass 2, round 2: two new gates
 
@@ -553,11 +553,11 @@ The ten rounds were desk research by AI. These steps put residents and the team'
 1.  **Build, from Mon 19 to Wed 21 Oct.** Run five interviews on the prototype, and shoot the video by 21 October. Registration closes at 11:59 PM on Wed 21 October ([brief]).
 1.  **Submit, on Thu 22 to Fri 23 Oct.** Get a review from someone outside the team, and submit early.
 
-[evidence]: /docs/research/best-practices.md#evidence-judges-trust
-[pdpa]: /docs/research/best-practices.md#personal-data-in-surveys-and-pilots
-[choosing]: /docs/research/ideation-methods.md#choosing-an-idea
-[payers]: /docs/research/green-developments.md#who-pays
-[iot]: /docs/research/iot.md#a-go-or-no-go-test
+[evidence]: /docs/research/competition/best-practices.md#evidence-judges-trust
+[pdpa]: /docs/research/competition/best-practices.md#personal-data-in-surveys-and-pilots
+[choosing]: /docs/research/methods/ideation-methods.md#choosing-an-idea
+[payers]: /docs/research/landscape/green-developments.md#who-pays
+[iot]: /docs/research/landscape/iot.md#a-go-or-no-go-test
 
 ### What changed from the suite proposal
 
@@ -590,4 +590,4 @@ The team's ideation suite proposal, from PR #16, is folded in here and deleted.
 
 - [BRIEF][brief]: rules, dates, deliverables and judging weights.
 - [CONTEXT]: past winners, SDP's strategy and gaps, Malaysian context and pitch practice.
-- [Research](/docs/research/): the team's vetted research, including [past winners][winners], [what already exists](/docs/research/existing-solutions.md) and [ideation methods][methods].
+- [Research](/docs/research/): the team's vetted research, including [past winners][winners], [what already exists](/docs/research/landscape/existing-solutions.md) and [ideation methods][methods].

@@ -19,8 +19,8 @@ Contents:
 
 The reward is real but unproven, and in this format the risk is smaller than usual.
 
-- **Hardware does win.** Recent Malaysian winners include a smart manhole for flood prevention (Varsity Hackathon 2025), a solar-powered IoT fishing-net recycler (UNDP 2025) and two IoT energy and carbon startups (MYCentre4IR 2024); CapitaLand's recent winners are mostly hardware or retrofits with AI as the control layer ([Past winners](/docs/research/past-winners.md)).
-- **No study shows hardware wins more often.** A survey of 356 health-hackathon projects found 61% included hardware but didn't compare outcomes ([BMJ Innovations, 2017][bmj]). Of 22 named Malaysian winners from 2024 to 2026, 4 clearly used hardware and 7 were software only ([Past winners](/docs/research/past-winners.md#hardware-versus-software)).
+- **Hardware does win.** Recent Malaysian winners include a smart manhole for flood prevention (Varsity Hackathon 2025), a solar-powered IoT fishing-net recycler (UNDP 2025) and two IoT energy and carbon startups (MYCentre4IR 2024); CapitaLand's recent winners are mostly hardware or retrofits with AI as the control layer ([Past winners](/docs/research/competition/past-winners.md)).
+- **No study shows hardware wins more often.** A survey of 356 health-hackathon projects found 61% included hardware but didn't compare outcomes ([BMJ Innovations, 2017][bmj]). Of 22 named Malaysian winners from 2024 to 2026, 4 clearly used hardware and 7 were software only ([Past winners](/docs/research/competition/past-winners.md#hardware-versus-software)).
 - **Live demos leave little room to recover.** New York City's hackathon guide gives each team 2 to 3 minutes for setup, 3 for the demo and 3 to 4 for questions ([NYC guide][nyc]). TAMUhack 2026 scores "Was the demo seamless?" ([Devpost][tamu]).
 - **The organisers lowered the bar for hardware.** "We are not expecting you all to build something out of your own money... and build hardware... A lot of simulations can be done" (Siva, 56:54); a cardboard model or software also counts (Dr Lam, 57:38) ([briefing transcript](/docs/sources/opening-briefing/transcript.md)).
 
@@ -158,6 +158,6 @@ These matter for the feasibility story, not for a prototype on a desk.
 
 ## See also
 
-- [Past winners](/docs/research/past-winners.md), for hardware winners
-- [Energy, HVAC and solar](/docs/research/energy-hvac-solar.md), where sensors would matter most
+- [Past winners](/docs/research/competition/past-winners.md), for hardware winners
+- [Energy, HVAC and solar](/docs/research/landscape/energy-hvac-solar.md), where sensors would matter most
 - [BRIEF, video and prototype](/docs/BRIEF.md#video-and-prototype)

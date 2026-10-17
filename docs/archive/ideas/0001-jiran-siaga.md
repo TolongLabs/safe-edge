@@ -45,7 +45,7 @@ Contents:
 [nhms alone]: https://www.bharian.com.my/berita/nasional/2026/04/1535870/188-peratus-warga-emas-di-malaysia-tinggal-sendirian-meningkat-3
 [nadma dgim]: https://www.nadma.gov.my/bm/media-2/program-dan-aktiviti/4444-sesi-perbincangan-perkongsian-maklumat-lokasi-orang-kurang-upaya-oku-warga-emas-dan-pesakit-terlantar-bagi-operasi-menyelamat-semasa-bencana
 [nadma rentan]: https://www.nadma.gov.my/bm/korporat/sektor-bahagian/bahagian-perancangan-dan-kesiapsiagaan-bencana-bppb/seksyen-logistik/90-korporat/5466-menjaga-golongan-rentan-ketika-banjir
-[sdp research]: /docs/research/sime-darby-property.md
+[sdp research]: /docs/research/landscape/sime-darby-property.md
 
 ## Target user
 
@@ -89,8 +89,8 @@ The residents' association holds the register; SDP convenes the scheme and suppl
 - **Our read:** what's new is a named neighbour pair, triggered by a live gauge and measured in minutes, convened by the developer while the township is young. It is new in Malaysia, which Dr Lam accepts ([brief]), but not globally.
 
 [jp list]: https://www.bousai.go.jp/taisaku/hisaisyagyousei/yoshiensha.html
-[winners]: /docs/research/past-winners.md#malaysian-hackathons-2024-to-2026
-[existing]: /docs/research/existing-solutions.md#floods-and-weather
+[winners]: /docs/research/competition/past-winners.md#malaysian-hackathons-2024-to-2026
+[existing]: /docs/research/landscape/existing-solutions.md#floods-and-weather
 [myn]: https://m.mil.wa.gov/asset/5ba4202849a61
 [cepa]: https://www.buletinmutiara.com/cepa-perkasa-kesiapsiagaan-komuniti-tingkat-kesedaran-hadapi-risiko-banjir/
 [jp survey]: https://www.bousai.go.jp/taisaku/hisaisyagyousei/pdf/r7chosa1.pdf

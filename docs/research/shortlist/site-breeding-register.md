@@ -1,8 +1,8 @@
 # Site breeding register
 
-"We help Sime Darby Property's contractors show, floor by floor, which areas of a building site were searched for Aedes breeding, what was found, and which fixes were checked." Heavy rain adds checks, a separate checker accepts or rejects each fix, and SDP can share a dated summary with neighbours. Working name; first called Rain Check.
+Site breeding register uses mosquito egg warnings beside homes to trigger site searches, fixes and independent rechecks. Working name; first called Rain Check.
 
-**Track:** People, health and wellbeing. **Rank:** see the [shortlist](/docs/research/shortlist.md).
+**Track:** People, health and wellbeing. **Rank:** see the [shortlist](/docs/research/shortlist.md). **First proof:** one consenting SDP site's current inspection against an independent area sweep by 23 October 2026. **Later test:** a permitted, specialist-run trap comparison over 12 weeks; no site, partner or permission is confirmed yet.
 
 Contents:
 
@@ -13,9 +13,13 @@ Contents:
 1.  [Impact and how we measure it](#impact-and-how-we-measure-it)
 1.  [Fit with Sime Darby Property](#fit-with-sime-darby-property)
 1.  [Pilot](#pilot)
+    1.  [Permission and operating owner](#permission-and-operating-owner)
+    1.  [Cost and decision to continue](#cost-and-decision-to-continue)
 1.  [Prototype by 23 October](#prototype-by-23-october)
+    1.  [Evidence to collect by 23 October](#evidence-to-collect-by-23-october)
 1.  [Scorecard](#scorecard)
 1.  [Risks and open questions](#risks-and-open-questions)
+1.  [Other directions considered](#other-directions-considered)
 1.  [How the idea changed across rounds](#how-the-idea-changed-across-rounds)
 
 ## Problem
@@ -23,124 +27,197 @@ Contents:
 - **Dengue is back.** Malaysia recorded 65,979 cases by epidemiological week 35 of 2026, 66% more than at the same point of 2025; deaths rose from 32 to 62 ([Bernama][bernama-dengue]).
 - **Building sites breed Aedes inside the structure.**
   - In 2024, Kuala Lumpur and Putrajaya health inspectors found Aedes at 126 of 242 construction sites checked (52%); at one KL site, 6 of 8 breeding spots were inside the building ([site dengue screen][screen]; [Kosmo][kosmo]).
-  - A survey of 19 KL sites found breeding from ground level up to the 14th floor ([site dengue screen][screen]).
+  - A survey of 19 KL sites found breeding from ground level up to the 14th floor; flooded floors held 43.9% of positive containers and drains 35.1% ([site dengue screen][screen]).
   - The MOH construction-site guide lists basements, lift wells, drums, formwork, water tanks, floors and slabs as places to inspect ([MOH guide][moh-guide]).
 - **Enforcement is real.** In 2026 DBKL found 4 breeding spots at a Bukit Damansara site after 4 local dengue cases and issued a 14-day closure order ([DBKL][dbkl]). The Destruction of Disease-Bearing Insects Act 1975 lets officers order fixes and close premises ([Act 154][ddbia]).
 - **Inspections are periodic.** MPAJ's 2026 calendar schedules construction-site operations about once a month ([MPAJ][mpaj]).
+- **Site mosquitoes reach the homes.** In Singapore from 2013 to 2016, dengue clusters tied to building sites had 3.3 to 17.4 times the odds of becoming major clusters, and most of their cases were residents living nearby. A larger share of building sites than homes had Aedes, with more larvae per breeding spot, and virus genotypes at three sites linked each site to the homes around it ([Liang et al., 2018][liang]).
 - **Neighbours care.** A former Head of Township at SDP we consulted says residents near large developments worry most about "construction dust, noise, traffic congestion, and potential impacts on their health", and that developers should "share monitoring results" ([consultation][consult]).
-
-[bernama-dengue]: https://bernama.com/en/news.php?id=2605035
-[screen]: /docs/research/niche-problems/screens/site-dengue.md
-[kosmo]: https://www.kosmo.com.my/2024/05/23/nyamuk-aedes-berlambak-di-tapak-projek/
-[moh-guide]: https://jknkelantan.moh.gov.my/htumpat/v1/images/ukkp/garis-panduan-pengawalan-nyamuk-aedes-di-tapak-pembinaan-.pdf
-[dbkl]: https://www.dbkl.gov.my/berita-acara/dbkl-ambil-tindakan-tegas-tangani-risiko-pembiakan-nyamuk-aedes-di-tapak-pembinaan
-[ddbia]: https://www.moh.gov.my/images/04-penerbitan/akta-kesihatan/destruction%20of%20disease-bearing%20insects%20act%201975.pdf
-[mpaj]: https://www.mpaj.gov.my/sites/default/files/2_takwim_mpaj_2026_-_02_feb.docx.pdf
-[consult]: /docs/research/consultations/township-practitioner.md
 
 ## Target user
 
-- **Primary:** the main contractor's site environmental officer on an SDP building site next to occupied homes.
-- **Secondary:** the contractor's site manager, who owns resources and unresolved work; a trained checker who did not do the fix; and SDP as sponsor and auditor. Neighbouring residents benefit and read the summary; they don't use the app.
+- **Daily user:** the main contractor's site environmental officer, during the weekly search, after recorded heavy rain and when a trap warning arrives. The return hook is the list of areas and fixes still due.
+- **Accountable owner:** the SDP project manager approves access, funds the pilot and reviews unresolved work; the contractor's site manager assigns people and funds corrective work under the agreed contract scope. A trained checker who did not do the fix verifies it on site.
+- **Trap operator:** one authorised specialist partner sets points and the margin, services traps, validates readings and destroys specimens. This deliberately replaces weekly trap handling by SDP staff while preserving independence from the contractor. SDP receives records and audits delivery.
+- **Neighbours:** benefit if breeding falls, may host traps with consent, and receive an SDP-approved summary. They do not handle traps or use the app. Host consent, the comparison site and the operator are pilot dependencies, not requirements for the first area-sweep demonstration.
 
 ## Solution and how it works
 
-1.  **Register areas, not just spots.** Each floor and ground zone is a named area. Sources found there, from the MOH guide's list of targets, get stable IDs and their own history.
-2.  **Plan dated rounds; let rain add more.** Routine rounds follow the site's control plan; the 2015 MOH guide sets weekly searches ([MOH guide 2015, §6.1][moh-2015]). When the officer records heavy rain, they add areas to an extra round. A second shower never resets an open finding's clock.
-3.  **Sweep each area.** The officer searches the whole area, not only known pins, and records the sweep as complete, partial or blocked. An unswept area stays visible even when every known pin is checked. A dry check closes without creating a task.
-4.  **Fix, then check separately.** The officer can fix a safe problem on the spot, or assign it to a named person. A checker who did not do the fix rechecks it on site; nobody approves their own fix. A repeat finding opens a new incident linked to the same source, and needs a cause.
-5.  **Escalate and report.** Blocked, overdue and unchecked work goes to the contractor manager first, then to SDP. A dated report shows every state, including unswept and unresolved areas. Official orders from health officers are tracked apart, and only they can close them.
+**The core, in one sentence:** Site breeding register uses mosquito egg warnings beside homes to trigger site searches, fixes and independent rechecks.
 
-![Site breeding register workflow in four lanes: the area register and recorded heavy rain set a dated round; the officer sweeps each area, a finding goes to a fix, and an independent person rechecks it, returning rejected fixes; checked fixes stay on future rounds; areas not searched are held as blocked or unswept and escalate to the contractor, then SDP; a dated report covers every state](/docs/images/shortlist/breeding-register-workflow.png)
+The fence-versus-homes comparison is a signal to investigate. It does not establish where mosquitoes bred or which site caused dengue. CDC warns that egg indices can even rise after source removal, when females have fewer other places to lay eggs ([CDC surveillance guidance, p. 10][cdc-surveillance]). This replaces the earlier claim that traps measure mosquitoes leaving the site or prove a sweep missed something.
 
-The rough workflow above was checked with Archify and vetted on 17 October; the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W) links an interactive version.
+1.  **Register and sweep whole areas.** Name every floor and ground zone; give each water source a stable ID. Keep areas, sources, dated rounds and observations separate. Follow the MOH guide's weekly search ([MOH guide 2015, §6.1][moh-2015]). Mark each area complete, partial or blocked, with photos; checking all known pins never clears an unswept area. A dry check creates no task.
+1.  **Bring checks forward after rain.** The officer records heavy rain and its source; every known water trap is due within 5 days, our maximum planning target, with any earlier deadline kept. New rain never resets an open finding. An egg can become an adult in 7 to 10 days ([CDC][cdc]); this is a reason to check promptly, not a guarantee of five safe days. Act on observed breeding immediately. MOH already asks sites to repeat larvicide after heavy rain ([MOH guide 2015, §6.2][moh-2015]).
+1.  **Add permitted egg monitoring.** Ovitraps are dark cups of water with egg paddles, used in Malaysian surveillance ([Serangga, 2021][knova]). The partner places fixed traps on the fence facing homes and among consenting homes farther away, using the same exposure period, shade and rain protection. Aedes aegypti flew a mean of 78 m in Cairns ([JCU][cairns]) and 288 m in Rio de Janeiro ([Freitas and Oliveira, 2009][rio]); the partner chooses and records distances, without calling the homes an unaffected control. WHO advises 10% extra traps for losses ([WHO handbook, p. 32][who-poe]); only 319 of 400 came back at a Johor construction workers' hostel ([Hamidun et al., 2021][hostel]), so budget for one in five lost. Schedule servicing before day 7, with a named backup to retrieve traps if a round is missed; no app alarm substitutes for retrieval. The operator photographs and counts eggs, then handles the water, paddles, cleaning and destruction under the agreed on-site method. No hatching in the prototype; photo counts carry no species claim. CDC's species-identification method requires trained laboratory work ([CDC surveillance guidance, p. 10][cdc-surveillance]). A Malaysian app already counts eggs from photos ([screen]); this pilot counts by eye.
+1.  **Use one warning rule.** Show egg-positive traps / valid recovered traps and mean eggs per valid trap, separately for fence and homes; the positive share is the main trap signal because a few traps can hold most eggs ([de Almeida et al., 2025][almeida]). Lost, dry, damaged or late traps are invalid, never negative. After four valid weekly readings at fixed points, the partner sets and records a margin before the intervention starts. A fence-minus-homes gap above that margin for two consecutive valid weeks opens a search of the nearest site areas, ground floor up, due within 48 hours. The earlier single-trap alternative is cut. Malaysian studies interpret an index above 10% as outbreak risk, yet residential areas in 13 major towns ranged from 12.5% to 87.5% ([Serangga, 2021][knova]); neither that threshold nor our comparison is a diagnosis. Routine searches continue while the warning is off or inconclusive.
+1.  **Fix, recheck and escalate.** Assign each finding to a named person; allow a safe immediate fix. A different checker accepts or rejects it on site. Recurrence opens a new incident on the same source and needs a cause. Use a short lasting-fix list, such as a lift-pit pump, engineer-approved slab drainage or drum lids; count sources that stay dry on later checks. Blocked, overdue and unchecked work goes to the contractor manager, then SDP. Track official orders separately; only the responsible authority can discharge them. The dated report includes unswept areas, unresolved work and trap readings, with valid-trap counts. Any SDP-approved monthly neighbour summary includes limits and missing readings, with no home addresses or safety grade.
 
-[moh-2015]: https://dosh.gov.my/wp-content/uploads/2024/10/Garis-Panduan-Pengawalan-Nyamuk-Aedes-Di-Tapak-Tapak-Pembinaan-2015.pdf
+![Site breeding register workflow in four lanes: the area register sets trap points, SDP's team reads egg traps on the fence and among the homes, and four weekly readings past the margin open a search; recorded heavy rain also brings a search due in 5 days; the officer searches the nearest areas within 48 hours, a finding goes to a fix, and an independent recheck by someone other than the fixer returns rejected fixes; checked fixes go into a dated report that SDP approves; areas not searched are held as blocked or unswept and escalate to the contractor, then SDP](/docs/images/shortlist/breeding-register-workflow.png)
+
+The rough workflow above was redrawn with Archify on 17 October; the [shortlist page](https://claude.ai/artifact/DxMjV6PXEj7zUdXCzMPQ8W) links an interactive version. It shows the full trap pilot; the site audit that comes first uses only the search, fix and recheck steps.
 
 ## Why it's new
 
-| Closest analogue                                                    | What it does                                                  | What it lacks                                          |
-| ------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------ |
-| RainCheck, US software ([RainCheck][raincheck])                     | Rain-triggered inspection deadlines for stormwater compliance | Stormwater, not Aedes; no floor-by-floor locations     |
-| iDengue and council dengue maps ([iDengue][idengue])                | Public case and hotspot maps                                  | Area level; nothing about where on a site water stands |
-| Construction apps such as Procore and BuildTrack ([screen][screen]) | General site inspections and tasks; SDP uses Procore          | No Aedes location register or verified close-out       |
-| MOH construction-site guide ([MOH guide][moh-guide])                | Lists what to inspect and who is responsible                  | Paper guidance; no record of what was checked or fixed |
+The proposed difference is a measured warning tied to a dated search and independent recheck. The test is whether it finds and resolves something the current MOH-guided round and Procore miss. If a Procore configuration delivers the same result at lower cost, use that configuration; the register need not become another app.
 
-- **Our read:** the new part is dated area sweeps that keep unsearched areas visible, joined to separately checked fixes, recurrence history and rain. Procore already has floor locations and rejection, so the pilot tests whether these controls add value on top of it.
+| Closest analogue                                                              | What it does                                                                                                                                                              | What this proposal tests beyond it                                                          |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Ports and airports ([WHO handbook][who-poe])                                  | Vector control within at least 400 m; traps, larval surveys and alarm levels                                                                                              | A construction boundary compared with nearby homes and linked to corrective searches        |
+| US refinery fenceline rule ([EPA slides][epa])                                | Passive benzene samplers read fortnightly; highest minus lowest reading is ΔC; the latest 26 ΔC values average above 9 µg/m³ triggers root-cause correction on a deadline | Borrow the warning-to-action duty, not a claim that mosquitoes behave like benzene          |
+| NEA's Gravitraps and Hong Kong's gravidtraps ([NEA][nea]; [FEHD][fehd])       | Area surveillance; NEA runs about 72,000 Gravitraps in public and landed housing, with a monthly Aedes aegypti map as a prevention lead indicator                         | Link a warning to one site's own search and fix history                                     |
+| Council operations and site checks ([MPAJ][mpaj]; [MOH guide 2015][moh-2015]) | Monthly council operations, weekly site searches and larvicide repeated after heavy rain                                                                                  | Test added detection and fewer breeding containers, beyond recording effort                 |
+| Procore and BuildTrack ([screen])                                             | Site inspections, floor locations, tasks and rejection; SDP uses Procore                                                                                                  | Test the specific egg-warning and area-coverage gap against the site's actual configuration |
+| iDengue ([iDengue][idengue])                                                  | Public case and hotspot maps                                                                                                                                              | Locate water and corrective work within the site                                            |
+| Our archived Jiran Projek ([Jiran Projek][jiran])                             | Weekly egg counts feeding a resident-facing site grade                                                                                                                    | Use an internal search trigger; no compulsory public grade                                  |
 
-[raincheck]: https://www.raincheckhq.com/resources/rain-event-inspections
-[idengue]: https://idengue.mysa.gov.my/ide_v3/introduction.html
+WHO calls ovitraps "particularly useful in monitoring Aedes activity in an area" ([WHO handbook, pp. 12 and 16][who-poe]). The Johor hostel study compared residential and non-residential zones in Gelang Patah from May to September 2019 ([Hamidun et al., 2021][hostel]). Ringing a facility with traps is therefore not new. The earlier team's searches on 17 October 2026 found no building-site scheme combining the boundary comparison and corrective duty; that search is not proof none exists. The refinery rule averages a year; our shorter rule remains an unvalidated operational choice.
 
 ## Impact and how we measure it
 
-- **Primary outcome:** checks done on time against checks due in each round, with unswept areas shown.
-- **Omissions:** sources found by a separate area audit that the round missed, against areas searched.
-- **Breeding:** positive water-holding containers against inspected water-holding containers, and repeat findings at the same source.
-- **Speed:** time from finding to verified fix.
-- **Cost:** staff minutes per inspection round, including verification.
-- **What we won't claim:** dengue cases prevented; nearby cases don't prove a site caused them.
+**Primary outcome: fewer water-holding containers with confirmed mosquito larvae or pupae in fixed audited areas.** Each week, report positive containers / all water-holding containers inspected, with both counts and the area coverage. This deliberately restores the first panel's outcome recommendation; the fence-minus-homes difference remains a secondary signal. CDC defines the container index on this basis ([CDC surveillance guidance, p. 12][cdc-surveillance]). Only the specialist's confirmed identification supports an Aedes-specific result; unresolved sightings stay labelled unconfirmed, never negative, and must be resolved before claiming a reduction.
+
+- **Comparison:** four baseline weeks, then eight intervention weeks at one SDP site and a matched comparison site. For each site, subtract the mean of weeks 1–4 from the mean of weeks 5–12, then compare those changes in percentage points. Use the same independent audit method, fixed areas and search time at both. Both retain normal control and act promptly on findings; never leave breeding untreated for the experiment. Log rain, work stage, access, fogging and other control work.
+- **Denominators:** register areas before the first round; count inaccessible areas and new or removed containers. Report dry or removed sources separately. If no water-holding containers remain, report that count and mark the percentage not applicable. A falling percentage after missed areas or many new negative containers is not enough to claim success.
+- **Supporting outcomes:** repeat positives at stable source IDs; sources kept dry on later rounds; omissions found by a separate audit per area audited; finding-to-verified-fix time; and total staff minutes, including trap work and rechecks. For each trap warning, record whether the extra search found a previously unlogged source and whether it was verified fixed.
+- **Reach:** obtain the occupied-home count within the partner's mapped study boundary from SDP by 23 October. Report homes covered by observation separately from homes hosting traps; no population estimate or residents protected claim until supported.
+- **Limits:** one four-day reading establishes neither a baseline nor a warning. Two sites over 12 weeks show feasibility and a direction, not causal proof or dengue cases prevented. No reliable gap, no new source after warnings, or no improvement over ordinary searches are possible results.
 
 ## Fit with Sime Darby Property
 
-- **Pillar:** Community Experience in SDP's Sustainability Strategy and Roadmap 2030 ([SDP][sdp]).
-- **SDP's own process:** SDP already pilots SafePass AI and Guardian AI for site safety and uses Procore ([SDP][sdp]); the register adds the missing health layer.
-- **Value:** SDP is the employer, so it can write the register and verification into contracts. A closure order stops work and can push back vacant possession; the register reduces that exposure, without claiming a saving before the pilot. The judging panel scored its strategic fit 5 out of 5 in round 4.
-- **Scale:** every active SDP phase next to occupied homes, across 27 townships.
-
-[sdp]: /docs/research/sime-darby-property.md
+- **Pillar and existing tools:** Community Experience in SDP's Sustainability Strategy and Roadmap 2030. SDP already pilots SafePass AI and Guardian AI for site safety and uses Procore ([SDP][sdp]). Offer the register as a small addition to that workflow; use stable IDs and a CSV before considering integration.
+- **Authority and benefit:** MOH asks developers to include Aedes control in the contract scope, since Act 154 liability can rest with the developer or contractor as owner or occupier where breeding occurs ([MOH guide 2015, §6.6][moh-2015]). SDP can propose monitoring and verification in contracts, but must secure the current contractor's agreement and fund the added work. A closure can stop work and delay vacant possession; reduced exposure is a hypothesis, not a priced saving or exemption from enforcement.
+- **Gap to prove:** the round-4 panel gave fit 5/5, but the latest panel found no SDP-admitted gap or reported number this moves. By 23 October, ask the project manager for one documented inspection or close-out gap and ask SDP's sustainability lead to identify the existing reporting measure it affects, its definition and owner. If neither exists, state that this is a new local health measure linked to a pillar; do not claim fit 5 or invent an SDP KPI.
+- **Scale:** the earlier ambition was active SDP phases beside occupied homes across 27 townships. Start with one willing phase. Further sites require funded operations, consent and confirmed legal scope; a research permission for one site is not a rollout licence. Residents' benefit must be tested through reduced breeding, not assumed from a dashboard.
 
 ## Pilot
 
-| Element       | Plan                                                                                                                              |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Where         | One active SDP phase beside occupied homes, with a comparison site                                                                |
-| Owner         | SDP's project team, with the main contractor's environmental officer                                                              |
-| Duration      | 8 to 12 weeks for the first stage, then a monsoon season                                                                          |
-| Cost          | App work and verification time; corrective work is already the contractor's duty                                                  |
-| Approvals     | SDP and the main contractor; no public body needed                                                                                |
-| Success       | More on-time checks, fewer omissions and repeat findings, and faster checked fixes than the comparison, with targets agreed first |
-| Decision gate | If met, add the register to SDP's contract requirements for sites next to homes                                                   |
-| Risks         | Paperwork without fixes: spot rechecks. Staff time: measure it and keep the form short                                            |
-| Baseline      | Start with the current process; match comparison areas by work stage; log weather and site changes                                |
+Use two stages so the 23 October evidence does not depend on finishing a surveillance study in six days. The deadlines and numerical targets below are proposed team tests, not field results or public-health thresholds.
+
+| Stage                              | Scope and ownership                                                                                                                                                                                                                                                                          | Pass, failure or limit                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Field demonstration, by 23 October | One consenting SDP phase; contractor officer runs the usual round, then an independent checker audits the same agreed areas. Preserve the original log and timestamps; witness a safe fix and separate recheck if a finding exists                                                           | A documented omission or unverified close-out establishes a gap. No gap means no evidence of added value. A campus construction site is only a labelled analogue; no access means workflow demonstration only                                                                                                                                               |
+| Surveillance, after approvals      | One intervention site and one comparison matched for work stage, building form and neighbouring housing. Four baseline weeks plus eight intervention weeks. Proposed starting layout: eight fence and eight home traps per site, with four spares per site; specialist must approve adequacy | Require at least six valid traps on each side for a weekly comparison, matched exposure periods and four valid baseline weeks before arming the rule. An invalid week resets the two-week warning sequence; replacements retain point IDs. Too few valid weeks means extend within an approved budget or report inconclusive                                |
+| Operational test                   | Contractor owns searches and fixes; independent checker owns verification; specialist owns trap rounds; SDP project manager owns money and escalation                                                                                                                                        | Proposed gates: at least 90% of planned area audits completed, at least 90% of warnings searched within 48 hours, no self-approved fixes and no trap left beyond its agreed retrieval limit. Count failures; an unsafe servicing lapse pauses trap deployment                                                                                               |
+| Outcome test at week 12            | Use the primary container outcome and the secondary trap signal, with the same audits at both sites                                                                                                                                                                                          | Proposed continuation target: the pilot's container positivity falls from baseline and improves by at least 10 percentage points more than the comparison, without worse coverage. Zero baseline positives or inadequate data cannot establish a reduction. No added warning yield means the trap mechanism remains unsupported, even if the register helps |
+| Next decision                      | SDP reviews outcomes, workload, costs and legal scope with the contractor and specialist                                                                                                                                                                                                     | Continue only if the agreed outcome and operating gates pass within the approved budget. Otherwise simplify, extend a justified study or stop. A monsoon-season extension comes before any wider contract requirement; no automatic rollout                                                                                                                 |
+
+A pre-ground-breaking baseline remains preferable for a future phase, but the first demonstration uses an active site. Record the actual work stage; never relabel an active-site baseline as pre-construction. Four weeks and the starting trap count do not establish statistical power; the specialist reviews adequacy before deployment.
+
+### Permission and operating owner
+
+Act 154 includes eggs in its definition of disease-bearing insects, requires written permission to collect, breed or keep them, and allows delegation of that power ([Act 154, ss. 2, 3 and 14][act154]). Section 14(2) includes scientific, educational and research purposes **and other causes acceptable to the Director General** ([MOH Act 154, s. 14][ddbia]); the earlier panel's research-only wording was too narrow. This is not permission already granted to this team.
+
+**Proposed outreach target:** the MOH Institute for Medical Research (IMR), Infectious Disease Research Centre, Entomology Unit; its official page describes vector work and invites medical-entomology collaboration ([IMR][imr]). No agreement or applicable permission has been verified. The team lead asks IMR and the selected site's district health office on 17 October, follows up on Monday 19 October, and records their answers by 23 October.
+
+Request a named operator and a written determination covering this exact activity: setting traps, reading and destroying eggs on site, any identification or transport, named personnel, sites, purpose and dates. If a partner cites existing permission, obtain the document and confirmation that this pilot falls within its scope. If the office says permission is unnecessary, obtain the competent authority's written basis; a request receipt, informal reply or university affiliation is not clearance. Ask separately how routine commercial use would be authorised. The partner operates the traps; SDP's receipt of records does not remove site-owner duties.
+
+Only deploy the demo traps by 19 October if that scope, host consent and a safe servicing and destruction method are confirmed. Otherwise show labelled sample data and defer live trapping; do not compress a baseline or create standing water for a demo. The site round can still proceed under the contractor's normal procedures, with no student collection or keeping of specimens. The register does not certify statutory compliance or discharge an official order.
+
+### Cost and decision to continue
+
+**Planning allowance, not a quotation:** RM12,336 for the two-site, 12-week surveillance stage, plus RM1,600 of prototype development time. The earlier under-RM100 estimate covered the small demo trap kit, not the labour or pilot. All rates and hours below are assumptions to replace with quotes and timed work by 23 October.
+
+| Cost                           | Assumed basis                                                            | Allowance |
+| ------------------------------ | ------------------------------------------------------------------------ | --------: |
+| Trap kits and consumables      | 40 units including eight spares, RM5 per unit allowance                  |     RM200 |
+| Specialist setup and rounds    | 16 setup hours plus 4 hours/site/week × 2 sites × 12 weeks, at RM60/hour |   RM6,720 |
+| Independent audit and rechecks | 2 hours/site/week × 2 sites × 12 weeks, at RM50/hour                     |   RM2,400 |
+| Travel                         | 24 site visits at RM40                                                   |     RM960 |
+| Contingency                    | 20% of RM10,280                                                          |   RM2,056 |
+
+The prototype allowance values 40 student hours at RM40/hour; it is separate from operating cost. The combined planning subtotal is RM13,936. Existing contractor rounds, corrective labour and materials, specialist identification charges beyond the assumed hours, and any permission fees need explicit quotes or recorded in-kind commitments; they are not zero-cost promises. Price one likely lasting fix and assign its budget before starting the pilot. SDP is the proposed buyer of monitoring; the contractor funds agreed corrective scope, with variations approved by SDP.
+
+The project manager must name a budget holder and accept the fully costed scope before launch. Record incremental cost per additional verified source fixed and any staff hours saved against the current process. Ask the contractor's quantity surveyor for rates and disruption costs, but book no avoided closure days or savings without evidence. Prefer a Procore configuration if it meets the same operating tests more cheaply. Any repeat service would be priced per site and duration after the pilot, with permission and weekly labour included.
 
 ## Prototype by 23 October
 
-- **What it is:** a mobile-first web app that works offline, built with React, Dexie and Supabase. The vet rated it buildable in 7 days with cuts.
-- **Software components:**
-  - Area and source register with dated rounds: areas, sources, rounds and observations kept as separate records, from a hand-made CSV and area sketch.
-  - Phone inspection form: water state, immature mosquitoes seen, containers inspected and action needed, saved offline in an upload queue.
-  - Fix, recheck and escalation flow: separate test accounts, server-enforced roles, an append-only history and an in-app overdue queue.
-  - Rain events: entered by hand with their source; a reading from a station off site is labelled as such.
-  - Exploded floor view: Three.js slabs built from the same area records, capped at half a day and kept only if a user test shows it helps.
-  - Report: one internal, printable snapshot with scope, dates and unresolved work.
-- **Cut from the build:** automatic JPS polling, SMS, WhatsApp and push alerts, a live public feed, a "dengue-safe" badge and a live Procore link. A CSV with stable IDs stands in for Procore.
-- **Real data:** one consenting site's areas and observations; MOH guide targets.
-- **Labelled simulation:** if site access fails, a campus building with documented records, said plainly in the demo. Never create standing water for the demo.
-- **Build plan:** day 1 agree the field method and collect a small consented dataset; days 2 to 3 the sweep, fix and recheck path; day 4 offline upload, then the floor view; day 5 test with the site user and time the work; days 6 to 7 deck and video.
-- **Day 5 pass checks:** an offline save survives a restart; a repeated upload creates one record; a foreman can't approve their own fix; a dry check creates no task; new rain can't reset an old finding; an unswept area never counts as covered.
-- **Evidence before submission:** one area omission found by an audit, or a fix closed without a recheck, and staff minutes for both methods on the same floor. If no omission appears, report that.
+**Build one journey:** register an area, record a sweep, assign a finding, obtain a separate recheck and print unresolved work. Use a mobile-first offline form with React, Dexie and Supabase, separate accounts, server-enforced roles and an append-only history. A CSV supplies areas, source IDs and partner trap readings. A small calculation shows both trap shares and the warning state; no trap map or separate trap-management module is needed for submission.
+
+The earlier vet allowed seven days with cuts, and the trap module added about a day. Replace that expanded build with a 40-hour cap: 6 hours on scope and data, 18 on the single workflow, 6 on offline saving and repeat-upload handling, 4 on CSV calculations and the printable report, and 6 on checks and the video. This is a planning estimate; if behind, use a spreadsheet for the trap calculation and show the real workflow first.
+
+1.  **17–19 October:** the team lead requests site access, contractor agreement and the written trap determination; the field lead agrees areas, audit method and safety arrangements. Set 12 to 16 demo traps with spares on 19 October only if all permissions and servicing commitments exist.
+1.  **20–21 October:** witness the officer's normal round, retain its record, then audit the agreed areas for omissions and unchecked close-outs. Time each role separately. Do not manufacture a missed source or delay a safe fix to film it. One real source goes through fix and separate recheck if possible; otherwise keep that part visibly simulated.
+1.  **22 October:** test the short workflow with the site officer and checker. Check that an offline save survives restart, duplicate uploads create one record, self-approval is rejected, dry checks create no task, new rain cannot reset old work, and unswept areas remain visible. Test invalid trap data and the four-week lockout, a two-week warning opening a 48-hour search, and the overdue retrieval alarm.
+1.  **23 October:** if permitted, the operator reads the four-day traps and records actual deployment/retrieval times, valid counts, photos and disposal. Zero eggs is a result. The deck labels every later week and warning as simulation; a four-week baseline cannot exist by submission. Finish the video and evidence pack.
+
+**Cut from the submission:** QR checkpoints, individual hatch clocks, 3D floors unless a user test justifies them later, automated egg counting, automatic JPS polling, SMS/WhatsApp/push alerts, a live public feed, a dengue-safe badge and live Procore integration. Rain is manual, with its source and any off-site JPS reading labelled. Use the existing floor list and printable report.
+
+**Pitch order:** first show the real current-round record beside the independently found gap, then the fix and separate recheck. Next show a real egg paddle beside a home paddle only if permitted, otherwise a labelled sample; explain the warning with a replay after four baseline weeks and two qualifying weeks. End with the pilot owner, cost and the result that would make SDP stop. A real paddle alone does not validate the new mechanism.
+
+### Evidence to collect by 23 October
+
+No row below is evidence in hand. The team lead owns the pack; the field lead collects records and consent, and the builder runs the user test. These tests include the [shortlist's existing omission-or-unchecked-fix requirement][needs].
+
+| Due                                                | Collect from whom                                                                                                                                                                                                            | Success or failure recorded in the submission                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 19 October for live traps; final status 23 October | District health office and proposed IMR partner: written legal determination, applicable permission if required, named operator, method, schedule and price                                                                  | Pass only with documented coverage and the operator's commitment. Pending, refused or out-of-scope means no live traps; retain correspondence and label trap data simulated. Routine rollout needs its own answer                                                                                                               |
+| 20 October                                         | SDP project manager and main contractor's manager: written agreement, named phase and officer, access date, checker, current checklist/Procore export and budget responsibility                                              | Pass with a named SDP site and booked round. No agreement means no claimed SDP validation; a consenting campus construction site remains a labelled analogue                                                                                                                                                                    |
+| 21–22 October                                      | Site officer and independent checker: original round, area list, container counts, photos, omission audit, fix and separate recheck, minutes per role                                                                        | At least one real missed location or unchecked close-out, traceable against the original log, supports added value. No gap or no witnessed recheck is reported as such. User-test target: officer saves a finding and checker records a recheck without coaching in five minutes each; record field inspection time separately  |
+| 22–23 October                                      | SDP project manager/sustainability lead, resident liaison and specialist: documented gap, existing reporting measure and owner if any, mapped occupied-home count, host consent and the 23 October trap reading if available | Pass only for what is supplied. No admitted gap or matching KPI leaves fit at a pillar-level link; no home count leaves reach unknown. One four-day reading tests logistics only; no hosts means no fence-versus-homes field comparison                                                                                         |
+| 23 October                                         | Specialist, checker and contractor quantity surveyor: quotes, measured round times, one lasting-fix cost and named funder; builder: test results and demo                                                                    | A priced scope with accepted owners supports feasibility and commercial claims. Missing prices remain assumptions. No field improvement is claimed; obtain the comparison-site manager's written commitment by 23 October or mark the comparative pilot unconfirmed; lock its measures, thresholds and stop rules before launch |
+
+If the deadline pack contains only desk research and simulation, say so at the start of the demo. The revised plan can be scored for clarity and deliverability; it cannot be scored as completed field validation.
 
 ## Scorecard
 
-Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 used Codex gpt-6-astra (xhigh).
+Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 used Codex gpt-6-astra (xhigh). The 17 October panel used Claude Opus 5.5, a different judge model from rounds 3 to 5, so its row is not strictly comparable with theirs.
 
-| Scorer                 | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
-| ---------------------- | -----: | ---------: | ----------: | --: | ---------: | -------: | -------: |
-| Judging panel, round 3 |      4 |          2 |           3 |   5 |          3 |        3 |       67 |
-| Judging panel, round 4 |      4 |          3 |           3 |   5 |          3 |        3 |       71 |
-| Judging panel, round 5 |      4 |          2 |           3 |   4 |          3 |        3 |       64 |
+<!-- prettier-ignore -->
+| Scorer                    | Impact | Innovation | Feasibility | Fit | Commercial | Evidence | Weighted |
+| ------------------------- | -----: | ---------: | ----------: | --: | ---------: | -------: | -------: |
+| Judging panel, round 3    |      4 |          2 |           3 |   5 |          3 |        3 |       67 |
+| Judging panel, round 4    |      4 |          3 |           3 |   5 |          3 |        3 |       71 |
+| Judging panel, round 5    |      4 |          2 |           3 |   4 |          3 |        3 |       64 |
+| Judging panel, 17 October |    4.0 |        4.0 |         2.0 | 3.0 |        3.7 |      3.0 |     66.3 |
+| Judging panel, 17 October (Codex) | 3.3 | 3.7 | 2.0 | 3.0 | 3.7 | 3.0 | 61.7 |
 
 - **Experts in round 4:** a vector-control health officer and a contractor's safety, health and environment manager both said "wounded, back it with fixes"; no fatal attacks.
 - **Biggest weakness:** no proof yet that it catches what the current checklist misses.
 - **The change that would raise it most:** one site visit that finds a missed location or an unverified close-out.
 - **Solution vet, 17 October:** a vector-control specialist said "needs changes", nothing fatal. The top fix is to replace spot-only status with dated area sweeps, linked to source and fix histories, and to prove one omission-to-recheck journey. All its workflow and build changes are folded in above.
+- **Brainstorm's guess, 17 October:** innovation 2 → 4; evidence 3 → 4 with real counts; impact stays at 4 but measures something residents feel; feasibility stays at 3 until a site agrees. This is the brainstorm's own guess against the [judging matrix](/docs/archive/ideas/0000-ranking.md#judging-matrix), not a panel score.
+- **Specialist vet, 17 October (second):** a simulated public-health entomologist and vector-control specialist on Claude Opus 5.5, with experience of ovitrap surveillance and Act 154 enforcement on Malaysian building sites, said "sound core, needs changes", nothing fatal. The top fix: four days of traps give one first reading, not a breach, so the trigger now waits for four weekly readings and a margin set from them; and Act 154 counts eggs as disease-bearing insects, so collecting them needs the Director General of Health's written permission, sought through the district health office. Main changes: the 400 m vector ring that ports and airports must keep is named as the closest practice, so the claim is "new for building sites"; QR checkpoints were cut and the hatch clock became one rain due date; the primary outcome is now the share of fence traps with eggs minus the share among the homes, against a baseline and a comparison site, with breeding containers second; SDP's team, not the contractor, services the traps; and the demo leads with a real egg paddle from the site fence. It expects innovation to rise to 3, or 4 if no building-site scheme turns up, and impact and evidence to gain most; feasibility holds at about 3 until the health office and a site agree.
+- **Judging panel, 17 October:** the sustainability head, township manager and innovation mentor re-scored the rewritten doc 67, 65 and 67, up from 60, 56 and 60 for the earlier area-sweep design. The sustainability head ranked it second of the three, the township manager third, and the mentor level with Safe Edge. All three raised impact to 4, for an outcome measured against a baseline and a comparison site, and innovation to 4, because the team found no scheme that compares a site's fence with the homes around it and ties the gap to the site's own sweeps. All three put feasibility at 2, because the traps now need Act 154 permission, residents who host them, a vector-control officer, a comparison site and weekly rounds by SDP staff. Weaknesses: the traps need the health office's written permission, which the Act gives for scientific, educational or research purposes, so the demo and any rollout across SDP hang on one letter, and the trap data on 23 October will likely be a simulation (sustainability head and township manager); and the fence-against-homes trigger, its one new part, can only appear as a labelled simulation before 23 October, while the doc's own Johor study found no significant difference between two zones after five months (mentor). Top changes: get the district health office's written answer, either permission to collect eggs or a ruling that reading and destroying them on site needs no permit (township manager and mentor), or name a partner that already holds permission, such as a university vector lab, to set, read and destroy the traps (sustainability head); each moves feasibility from 2 to 3.
+- **Revision, 17 October (Codex):** addressed the permit and staffing dependency with a named proposed IMR outreach target, written scope checks, a specialist operator and an honest no-trap fallback (**Feasibility**); separated the six-day field demonstration from the 12-week comparison and cut the extra module (**Feasibility; Team, evidence and pitch quality**); restored breeding-container positivity as the primary outcome, retained the trap gap as a warning, and specified denominators, reach, baseline, comparison and stop rules (**Impact**); required a real current-round omission and a Procore comparison (**Innovation; Evidence**); added named role owners, full labour allowances, quotes and a funded-fix gate (**Commercial; Feasibility**); made an SDP-admitted gap and reported measure explicit evidence requests (**Strategic fit**); and led the pitch with one plain sentence and a real omission-to-recheck journey (**Team, evidence and pitch quality**). All uncollected evidence has a source, deadline and pass/fail condition; no new score is claimed. This deliberately replaces SDP trap handling, the trap gap as primary outcome, single-trap warnings, origin claims, legal shorthand and an egg-paddle-first pitch; other earlier roast and vet controls remain.
+
+The **Judging panel, 17 October (Codex)** below ran on **Codex gpt-6-astra (xhigh)**, the same model family as rounds 3 to 5, and assessed the documents **after a second revision of Safe Edge and the Site breeding register**. Its three judges scored alone from copies with prior scores removed. The weighted mean uses unrounded criterion means; displayed means are rounded to one decimal.
+
+- **Judging panel, 17 October (Codex):** **Sustainability head:** the costly egg warning may add no useful detection; measure additional verified sources per warning and staff-hour against ordinary rounds before retaining traps for rollout. **Township general manager:** no lawful operating chain is committed; obtain a signed, priced agreement covering the specialist, both sites, retrieval backup and corrective-work funding. **Innovation mentor:** without a permission-covered operator, the demo may show only an ordinary register; secure the specialist and site owners’ commitment to a fully priced warning-to-search pilot, including the comparison site.
 
 ## Risks and open questions
 
-- **Contractors already inspect.** We must show the specific gap.
-- **Photos can be gamed.** Verification and spot rechecks cost staff time.
-- **Is 3D worth it?** Keep the exploded view only if it beats a floor list in a user test.
-- **Site access.** Without a consenting site, the demo uses an analogue and says so.
+- **Existing tools may suffice.** Contractor searches and Procore already cover much of the workflow. The omission audit must show a gap; a zero-gap result weakens differentiation. High egg counts alone do not prove that the contractor missed breeding.
+- **Permission and enforcement remain real.** Collecting or keeping eggs without written permission is prohibited ([Act 154, ss. 2 and 14][act154]); on-site destruction is not an assumed exemption. Section 22 can make owners, occupiers and company officers liable for another person's offence; its defences require more than due diligence alone ([Act 154, s. 22][act154]; [MOH text][ddbia]). This corrects the earlier shorthand: dated records may support a defence, not establish it. Keep data internal by default, with access limited to authorised roles; this does not bar lawful inspection.
+- **Noise can defeat the comparison.** With 6 to 8 traps per side, one trap moves positivity by 12.5 to 17 percentage points (our arithmetic). At the Johor hostel, 319 readings over five months gave 51.5% and 39.5% positivity in two zones, with no significant difference ([Hamidun et al., 2021][hostel]). Four baseline weeks do not solve low power. Keep counts, missingness and inconclusive results visible; test whether warnings add useful findings before expanding.
+- **Homes and traps can breed too.** Klang's council found 501 breeding sites inside homes from 1 January to 16 March 2025 ([empty homes screen][empty]). Home traps provide context, not source attribution. Act 154 prohibits creating conditions likely to breed disease-bearing insects ([Act 154, s. 13][act154]); traps need a physical retrieval backup, safe destruction and a servicing limit of no more than 7 days, shortened if the specialist requires it ([CDC surveillance guidance, p. 10][cdc-surveillance]). A missed round stops deployment until corrected.
+- **Access, workload and false records.** Photos can be gamed; independent site rechecks and spot audits cost time. No consenting SDP site by 20 October means an analogue or workflow-only demo. No safe access means blocked, never clear. Keep 3D out unless a floor-list comparison proves it helps; measure all added work before offering routine use.
+
+## Other directions considered
+
+The 17 October brainstorm weighed these directions. The second vet merged the hatch clock into a rain due date and cut QR checkpoints. This revision keeps those cuts, makes boundary trapping a permitted pilot test, and makes the area sweep the first field demonstration.
+
+| Direction                         | What it does                                                                                                                                    | Borrowed from                                                | Verdict                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Boundary egg traps                | Egg traps on the site boundary, compared each week with traps among nearby homes; a repeated warning opens a search, without attributing origin | The US refinery fenceline rule; Singapore's Gravitraps       | **Pilot test; permission first**                                    |
+| Hatch clock                       | Each known water trap gets a countdown from the rain that filled it                                                                             | Aedes biology: egg to adult in 7 to 10 days ([CDC][cdc])     | Merged: heavy rain sets a 5-day due date on known water traps       |
+| Proven sweeps                     | QR checkpoints in each area; a sweep is complete only when all are scanned                                                                      | Security guards' patrol checkpoints                          | Cut: a scan proves presence, not a search; use separate area audits |
+| Pre-construction baseline         | Run the traps before ground-breaking on a new phase                                                                                             | Environmental baseline monitoring                            | Keep where pre-construction access exists                           |
+| Neighbour sentinels               | Residents host background traps and get the monthly number                                                                                      | Gravitraps along housing corridors in Singapore ([NEA][nea]) | Keep, with consent                                                  |
+| Permanent-fix library             | Each source type that keeps coming back gets a lasting fix                                                                                      | Root-cause practice                                          | Keep                                                                |
+| Contract clause                   | The action level and corrective deadlines go into the main contract                                                                             | The EPA rule's corrective-action duty                        | Keep, after the pilot                                               |
+| AI on site photos                 | Flag standing water in weekly progress or 360° photos                                                                                           | Construction photo walks                                     | Park: needs SDP's photos; accuracy unknown                          |
+| Drone or thermal sweeps           | Find ponding on slabs and roofs                                                                                                                 | The health ministry's drone assessment ([screen])            | Park                                                                |
+| Exploded floor view               | Three.js slabs showing open findings                                                                                                            | The earlier plan                                             | Optional; out of the first build unless a user test asks            |
+| Larvicide or self-spreading traps | Treat pools nobody can reach                                                                                                                    | Vector-control products                                      | Out of scope; log them in the register                              |
+| Wingbeat detection                | Phones identify mosquitoes by sound                                                                                                             | Research projects                                            | Reject: building sites are too noisy                                |
+| Public "dengue-safe" badge        | Certify a site as safe                                                                                                                          | None                                                         | Reject: the roasts cut it                                           |
+
+**Earlier cheaper twists, retained as history:** the solution keeps the third; the second vet merged the first into the rain due date and cut the second. Neither cut feature returns in this revision:
+
+- Add the hatch clock. It gives "heavy rain adds checks" a reason that judges can follow.
+- Add QR checkpoints. They make "can't show a location clear without proof" literal.
+- Count the sources made permanently dry. It answers the "paperwork without fixes" risk.
 
 ## How the idea changed across rounds
 
@@ -149,3 +226,35 @@ Judged by simulated consultants and panels, not the real judges. Rounds 3 to 5 u
 - **Round 4:** rebuilt as a register that can't be faked clear, with verified close-out and an exploded floor view; panel 71 and strategic fit 5.
 - **Round 5:** renamed after finding the US product RainCheck; panel 64 on a rerun.
 - **Solution vet:** spots became dated area sweeps, the clerk of works became an independent checker, and rain polling became manual event entry.
+- **Brainstorm, 17 October:** borrowing from the US refinery fenceline rule and Singapore's Gravitraps, the team adopted egg traps on the site boundary, compared each week with traps among nearby homes. A higher boundary count opens a 48-hour sweep proven by checkpoints, with rain-started hatch clocks and lasting fixes.
+- **Specialist vet, 17 October (second):** an entomologist found four days of traps too short to show a breach and egg collection subject to permission under Act 154, so the trigger now waits for four weekly readings, the team asks the district health office first, QR checkpoints were cut, the hatch clock became a rain due date, and SDP's team services the traps.
+- **Revision, 17 October (Codex):** staged the real site audit before a permitted specialist-run trap pilot, restored the container outcome, corrected source-attribution claims, priced operations and added dated evidence gates; historical scores remain unchanged.
+
+[bernama-dengue]: https://bernama.com/en/news.php?id=2605035
+[screen]: /docs/research/niche-problems/screens/site-dengue.md
+[kosmo]: https://www.kosmo.com.my/2024/05/23/nyamuk-aedes-berlambak-di-tapak-projek/
+[moh-guide]: https://jknkelantan.moh.gov.my/htumpat/v1/images/ukkp/garis-panduan-pengawalan-nyamuk-aedes-di-tapak-pembinaan-.pdf
+[dbkl]: https://www.dbkl.gov.my/berita-acara/dbkl-ambil-tindakan-tegas-tangani-risiko-pembiakan-nyamuk-aedes-di-tapak-pembinaan
+[ddbia]: https://www.moh.gov.my/images/04-penerbitan/akta-kesihatan/destruction%20of%20disease-bearing%20insects%20act%201975.pdf
+[mpaj]: https://www.mpaj.gov.my/sites/default/files/2_takwim_mpaj_2026_-_02_feb.docx.pdf
+[liang]: https://pmc.ncbi.nlm.nih.gov/articles/PMC6083507/
+[consult]: /docs/research/consultations/township-practitioner.md
+[epa]: https://epa.gov/system/files/documents/2022-10/AAMG%20Monitoring%20Conference_Fenceline_Ned%20Shappley.pdf
+[nea]: https://www.nea.gov.sg/dengue-zika/Aedes
+[knova]: https://knova.um.edu.my/research_publications_2021_2025/10114/
+[who-poe]: https://www.who.int/publications/i/item/9789241549592
+[cairns]: https://researchonline.jcu.edu.au/6871/
+[rio]: https://www.arca.fiocruz.br/handle/icict/28106
+[hostel]: https://ejournal.ukm.my/serangga/article/view/42081
+[act154]: https://faolex.fao.org/docs/pdf/mal86137.pdf
+[almeida]: https://revistas.ufg.br/iptsp/article/view/82678
+[moh-2015]: https://dosh.gov.my/wp-content/uploads/2024/10/Garis-Panduan-Pengawalan-Nyamuk-Aedes-Di-Tapak-Tapak-Pembinaan-2015.pdf
+[cdc]: https://www.cdc.gov/mosquitoes/about/life-cycle-of-aedes-mosquitoes.html
+[fehd]: https://www.info.gov.hk/gia/general/202608/26/P2026082600566.htm
+[idengue]: https://idengue.mysa.gov.my/ide_v3/introduction.html
+[jiran]: /docs/archive/ideas/0006-jiran-projek.md
+[sdp]: /docs/research/landscape/sime-darby-property.md
+[needs]: /docs/research/shortlist.md#what-each-idea-still-needs
+[empty]: /docs/research/niche-problems/screens/empty-homes.md
+[cdc-surveillance]: https://www.cdc.gov/mosquitoes/pdfs/mosquito-control-508.pdf
+[imr]: https://imr.moh.gov.my/index.php/en/idrc?profile=default
