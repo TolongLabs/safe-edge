@@ -1,9 +1,10 @@
 # Shortlist
 
-The three ideas the team chooses between on 17 October 2026, how expert roasts reshaped them, and what each still needs. The ideas came from [Niche township problems](/docs/research/niche-problems.md) and the team's [idea ranking](/docs/archive/ideas/0000-ranking.md). Simulated consultants and judging panels attacked each pitch, then checked the attacks against our evidence, over five rounds on 16 and 17 October 2026. A brainstorm and specialist vets revised the solutions on 17 October, and a Claude judging panel scored the revised docs. A Codex panel then scored all three after a second revision of Safe Edge and the Site breeding register.
+The three ideas the team chooses between on 17 October 2026, how expert roasts reshaped them, and what each still needs. The ideas came from [Niche township problems](/docs/research/niche-problems.md) and the team's [idea ranking](/docs/archive/ideas/0000-ranking.md). Simulated consultants and judging panels attacked each pitch, then checked the attacks against our evidence, over five rounds on 16 and 17 October 2026. A brainstorm and specialist vets revised the solutions on 17 October, and a Claude judging panel scored the revised docs. A Codex panel then scored all three after a second revision of Safe Edge and the Site breeding register. The team locked **Safe Edge** that evening; the rest of this page is the record of the choice.
 
 Contents:
 
+1.  [Locked: Safe Edge](#locked-safe-edge)
 1.  [The three ideas](#the-three-ideas)
 1.  [What each idea still needs](#what-each-idea-still-needs)
 1.  [How the roasts worked](#how-the-roasts-worked)
@@ -13,13 +14,22 @@ Contents:
 1.  [Dropped ideas](#dropped-ideas)
 1.  [See also](#see-also)
 
+## Locked: Safe Edge
+
+On 17 October 2026 the team chose **Safe Edge** for the submission. kymil4 proposed framing it as an automated drone system with an SDK and an AI agent layer; the team adopted that as the enabler of the Fix Lens protocol, not as a replacement for it.
+
+- **What changed:** drone patrols, or a phone patrol by the walk crew, check each edge's expected fences, covers, buoys and signs. One scoped AI agent drafts work but cannot approve it. An SDK and an MCP server open Safe Edge to SDP systems. The prototype is a Three.js simulation of Elmina on real OpenStreetMap data. See [`PRODUCT.md`](/PRODUCT.md), the [PRD](/docs/PRD.md) and the [TRD](/docs/TRD.md).
+- **Research:** ten fact-checked packs on drone rules, privacy, hardware and cost, detection, mission planning, drone SDKs, AI perception, the agent layer, Three.js and geodata, and prior art. Checkers tested 489 claims and corrected 92 ([summary](/docs/research/drone-integration.md)).
+- **Blind expert:** a drone-inspection expert on Claude Fable 5.1 scored the drone version 67 ("wounded"). Its changes are folded in: a drone-optional phone patrol, expected-item checks at fixed viewpoints, flight windows with 50 m separation from people, Elmina's position on the Subang approach, and cost per kilometre-week instead of a labour comparison. The expert estimated these lift the score to about 76; no panel has re-scored it yet.
+- **Build:** issues #38 to #99 carry owners, priorities and the milestones from Mon 19 October (walking skeleton) to noon on Fri 23 October (submission).
+
 ## The three ideas
 
-| Idea                                                                         | Track                   | Latest panel /100 | Expert verdicts     | Fatal attacks | One line                                                                                                                                                                                    |
-| ---------------------------------------------------------------------------- | ----------------------- | ----------------: | ------------------- | ------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Lepas Hujan](/docs/research/shortlist/lepas-hujan.md)                       | People, housing quality |              80.7 | Wounded, with fixes |             0 | After heavy rain, new owners get one prompt naming the side of the house to check first; each leak repair is water-tested, then proven by a storm as heavy from the same side               |
-| [Safe Edge](/docs/research/shortlist/safe-edge.md)                           | People, safety          |              70.0 | Wounded, with fixes |             0 | Child-eye Fix Lens: tap a proposed repair on real photos of a drain edge and see which recorded child routes it leaves open, then a reviewer who didn't do the fix proves it on site        |
-| [Site breeding register](/docs/research/shortlist/site-breeding-register.md) | People, health          |              61.7 | Wounded, with fixes |             0 | Egg traps on a building site's fence are compared each week with traps among the homes next door; when the fence stays higher, the contractor must search the nearest areas within 48 hours |
+| Idea                                                                         | Track                   | Latest panel /100 | Expert verdicts     | Fatal attacks | One line                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------- | ----------------------- | ----------------: | ------------------- | ------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Lepas Hujan](/docs/research/shortlist/lepas-hujan.md)                       | People, housing quality |              80.7 | Wounded, with fixes |             0 | After heavy rain, new owners get one prompt naming the side of the house to check first; each leak repair is water-tested, then proven by a storm as heavy from the same side                            |
+| [Safe Edge](/docs/research/shortlist/safe-edge.md)                           | People, safety          |              70.0 | Wounded, with fixes |             0 | **Locked.** Drones or a phone patrol check each water edge's expected items; a person confirms each flag, Fix Lens shows which recorded child routes a repair leaves open, and a second person proves it |
+| [Site breeding register](/docs/research/shortlist/site-breeding-register.md) | People, health          |              61.7 | Wounded, with fixes |             0 | Egg traps on a building site's fence are compared each week with traps among the homes next door; when the fence stays higher, the contractor must search the nearest areas within 48 hours              |
 
 - **The latest panel, 17 October (Codex), keeps the order:** Lepas Hujan **80.7**, Safe Edge **71.0**, Site breeding register **61.7**. All three judges independently rank them in that order. Lepas Hujan remains the strongest choice on the documents; its repair-proof claim still needs technical validation.
 - **Lepas Hujan leads on SDP fit and available evidence:** it addresses reported defect and complaint concerns and has real local weather records and dated owner accounts. All three judges challenge whether daily rain totals, same-side wind and a dry photo can prove a repair; validate that acceptance rule with a specialist. The recurrence baseline and operating costs remain missing.
@@ -32,7 +42,7 @@ Contents:
 
 Every remaining point the panels withheld depends on field evidence, not more desk research.
 
-- **Safe Edge:** measure one real water edge and find a bypass around existing protection that makes the cheaper fix inadequate; compare against the current inspection checklist with a practitioner; get an itemised repair quote. Drop the universal regulatory-gap claim and the promise of funded post-handover repairs.
+- **Safe Edge (locked):** run one real phone patrol (S0) at a permitted SDP-retained edge and find a bypass around existing protection that makes the cheaper fix inadequate; compare against the current inspection checklist with a practitioner; get an itemised repair quote and fixed-scope drone-service quotes; put the approval questions to CAAM, JUPEM and MBSA in writing. Drop the universal regulatory-gap claim and the promise of funded post-handover repairs. The [PRD evidence plan](/docs/PRD.md#evidence-plan) lists every item.
 - **Site breeding register:** get the district health office's written answer on collecting eggs under Act 154, or a partner that already holds permission, before any trap goes out; visit one active site with its environmental officer; find a location the current checklist misses or a close-out made without a recheck; run the current checklist and the register on the same area and record missed points and staff minutes.
 - **Lepas Hujan:** interview owners with dated leak histories, including leak-free homes, and separate late discovery, late reporting and failed repairs; drop the claim that rainfall data becomes a design standard; compare a rain prompt with an ordinary reminder.
 - **3D, for all three:** the panels call photorealistic fly-throughs decoration. 3D earns its place only where it shows something a list or section hides: a measured cutaway at a water edge, or an exploded floor view of a building. Lepas Hujan does not need 3D.
@@ -55,6 +65,7 @@ Every remaining point the panels withheld depends on field evidence, not more de
 |         17 Oct panel | Claude Opus 5.5   | Safe Edge (67.7), site breeding register (66.3), Lepas Hujan (78.0)                    |
 | 17 Oct panel (Codex) | Codex gpt-6-astra | Safe Edge (71.0), site breeding register (61.7), Lepas Hujan (80.7)                    |
 |      17 Oct Fix Lens | Codex gpt-6-astra | Safe Edge with Fix Lens (70.0), scored alone                                           |
+|   17 Oct drone layer | Claude Fable 5.1  | Safe Edge with the drone layer (67), one blind drone-inspection expert                 |
 
 The earlier 17 October Claude panel scored the revised docs. Three judges on Claude Opus 5.5, playing SDP's head of sustainability, a township general manager and an innovation mentor, each scored alone against the [judging matrix](/docs/archive/ideas/0000-ranking.md#judging-matrix), from copies with every earlier score removed. Each judge then checked every score above round 5 for a reason in the doc, and lowered scores where the revision added complexity or risk; that check took 2.7 points off both Lepas Hujan and Safe Edge. The register's doc was rewritten and vetted after that, so the same judges re-scored it the same way, against the bar of their Safe Edge and Lepas Hujan scores. Their check against their earlier register scores took 1.3 points off, and the register rose from 58.7 to 66.3. The model differs from rounds 3 to 5, so compare the ideas within a row, not across models.
 
