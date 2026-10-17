@@ -218,7 +218,7 @@ Published evidence decides what the AI may claim ([detection research][detection
 - **Rules:** CAAM ATF and SUP approvals, the 150 m and 50 m surveillance-drone distances, the Subang control zone and approach, JUPEM imagery approval, and the PDPA (a data protection officer and an impact assessment are likely before live capture) ([privacy research][privacy]).
 - **Weather:** Subang averaged 211.8 rain days a year from 2020 to 2024 and logged 289 lightning days in 2024, so patrols fly the next dry window ([hardware and cost][hardware]).
 - **Data:** there is no public edge inventory. Google 3D Tiles may be shown but not analysed, cached or used offline ([Three.js and geodata][geodata]).
-- **Team and time:** five students, five build days (18 to 22 October 2026), submission at noon on 23 October.
+- **Team and time:** four students, five build days (18 to 22 October 2026), submission at noon on 23 October.
 
 [privacy]: /docs/research/drone-integration/privacy.md
 [geodata]: /docs/research/drone-integration/threejs-geodata.md
@@ -243,7 +243,6 @@ Published evidence decides what the AI may claim ([detection research][detection
 - The pilot asset. Proposed: a lake edge in Elmina Central Park, which SDP reportedly holds on a 21-year leaseback, or an asset in a phase not yet handed over. SDP must confirm custody.
 - Who pays for upkeep after handover: SDP township management, MBSA, or a strata management body for strata ponds. This is the question we need SDP to answer.
 - Named people for every role in [Users and jobs](#users-and-jobs).
-- Whether `DESIGN.md` goes through the Figma gate first or straight from Impeccable.
 - The hosting target for the live demo link (see the [TRD](/docs/TRD.md)).
 
 ## See also
