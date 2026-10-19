@@ -306,9 +306,19 @@ describe('drone-sim flies an approved plan and feeds core', () => {
     expect(landed.remainingWh).toBeGreaterThan(approved.reserveWh)
     expect(Date.parse(landed.at)).toBeLessThan(Date.parse(approved.waypoints.at(-1)!.eta))
 
-    // Nothing was fully seen, so every planned segment is unknown, never inspected, and gets a field check.
+    // Only the first station was seen: it stands for its share of the first stop's segment. The rest of every planned
+    // segment is unknown, never inspected, and gets a field check.
     expect(completed()).toMatchObject({ id: patrol.id, status: 'completed' })
-    expect(completed().coverage.every((c) => c.inspectedM === 0 && c.unknownM > 0)).toBe(true)
+    const [first, ...rest] = approved.tasks
+    const firstLengthM = h.segment(first!.segmentId).segment.lengthM
+    expect(completed().coverage[0]).toEqual({
+      segmentId: first!.segmentId,
+      inspectedM: firstLengthM / first!.stations.length,
+      unknownM: firstLengthM - firstLengthM / first!.stations.length
+    })
+    expect(completed().coverage.slice(1)).toEqual(
+      rest.map((t) => ({ segmentId: t.segmentId, inspectedM: 0, unknownM: h.segment(t.segmentId).segment.lengthM }))
+    )
     const checks = h.call('listTasks', 'usr_manager', { query: { status: 'open' } }).data
     expect(checks.map((t) => [t.kind, t.segmentId]).toSorted()).toEqual(
       approved.tasks.map((t) => ['field_check', t.segmentId]).toSorted()

@@ -44,8 +44,8 @@ interface Flight {
   patrol: Patrol
   plan: PatrolPlan
   lengthM: Map<string, number>
-  /** Frames taken on each segment. */
-  frames: Map<string, number>
+  /** The plan's station waypoints (by index) with a frame the privacy gate kept. */
+  seen: Set<number>
   /** Route stops whose stations the drone has reached. */
   committed: number
 }
@@ -53,8 +53,9 @@ interface Flight {
 /**
  * Feeds a drone provider's events to core, as a transport hosting the provider does. A frame at a station that carries
  * a viewpoint ID (the planner links each fixed viewpoint to a station) becomes an observation on the patrol; other
- * frames only count towards coverage. Landing completes the patrol: a segment counts as inspected only when every one
- * of its stations was captured, otherwise its whole length stays unknown and core opens a field check.
+ * frames only count towards coverage. Landing completes the patrol. Coverage counts stations, not frames: a station is
+ * seen once it has a frame the privacy gate kept, and each station seen stands for an equal share of its segment's
+ * length. The rest is unknown (TRD rule 4), and core opens a field check for it.
  */
 export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: DroneBridgeOptions): DroneBridge {
   const flights = new Map<string, Flight>()
@@ -72,7 +73,11 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
       flight.committed = Math.max(flight.committed, stop + 1)
     }
     if (event.type === 'observation') {
-      flight.frames.set(event.segmentId, (flight.frames.get(event.segmentId) ?? 0) + 1)
+      const station = plan.waypoints[event.waypointIndex]
+      if (station?.kind !== 'station' || station.segmentId !== event.segmentId) {
+        throw new Error(`${plan.id} has no station on ${event.segmentId} at waypoint ${event.waypointIndex}`)
+      }
+      if (event.privacyAction !== 'discarded') flight.seen.add(event.waypointIndex)
       if (event.viewpointId === null) return
       const { segmentId, viewpointId, captureSource, image, pose, quality, privacyAction, simulated } = event
       call('recordObservation', {
@@ -92,10 +97,14 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
     }
     if (event.type === 'landed') {
       flights.delete(event.runId)
-      const coverage = plan.tasks.map(({ segmentId, stations }) => {
+      const coverage = plan.tasks.map(({ segmentId }) => {
         const lengthM = flight.lengthM.get(segmentId)!
-        const whole = flight.frames.get(segmentId) === stations.length
-        return { segmentId, inspectedM: whole ? lengthM : 0, unknownM: whole ? 0 : lengthM }
+        const stations = plan.waypoints.flatMap((w, i) =>
+          w.kind === 'station' && w.segmentId === segmentId ? [i] : []
+        )
+        const seen = stations.filter((i) => flight.seen.has(i)).length
+        const inspectedM = seen === stations.length ? lengthM : (lengthM * seen) / stations.length
+        return { segmentId, inspectedM, unknownM: lengthM - inspectedM }
       })
       call('completePatrol', { params: { id: patrol.id }, body: { coverage } })
     }
@@ -120,7 +129,7 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
         plan.tasks.map((t) => [t.segmentId, call('getSegment', { params: { id: t.segmentId } }).segment.lengthM])
       )
       const run = await provider.schedulePatrol(plan)
-      flights.set(run.id, { patrol, plan, lengthM, frames: new Map(), committed: 0 })
+      flights.set(run.id, { patrol, plan, lengthM, seen: new Set(), committed: 0 })
       try {
         await provider.dispatchPatrol(run.id, {
           planId: plan.id,
