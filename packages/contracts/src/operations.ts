@@ -51,7 +51,9 @@ import {
   RetestOutcome,
   RouteClosure,
   RouteClosureRequest,
+  ScenarioClock,
   SegmentList,
+  SetScenarioClockRequest,
   SetWorkOrderExternalRefRequest,
   StartPatrolRequest,
   SubmitWorkOrderRequest,
@@ -841,6 +843,20 @@ export const operations = {
     body: RegisterWebhookRequest,
     response: Webhook,
     status: 201,
+    events: []
+  },
+  setScenarioClock: {
+    method: 'post',
+    path: '/scenario/clock',
+    summary:
+      'Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs ' +
+      'started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)',
+    handledBy: 'api',
+    roles: ['system'],
+    agentScope: null,
+    body: SetScenarioClockRequest,
+    response: ScenarioClock,
+    status: 200,
     events: []
   },
 

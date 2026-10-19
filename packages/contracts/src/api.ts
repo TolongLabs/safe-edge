@@ -474,6 +474,13 @@ export const RegisterWebhookRequest = named(
 )
 export type RegisterWebhookRequest = z.infer<typeof RegisterWebhookRequest>
 
+export const SetScenarioClockRequest = named('SetScenarioClockRequest', z.object({ now: Timestamp }))
+export type SetScenarioClockRequest = z.infer<typeof SetScenarioClockRequest>
+
+/** The API's scenario clock: the time it stamps on every record until the scenario player sets it again. */
+export const ScenarioClock = named('ScenarioClock', z.object({ id: z.literal('clock'), now: Timestamp }))
+export type ScenarioClock = z.infer<typeof ScenarioClock>
+
 export const DemoResetResult = z.object({ reset: z.literal(true) })
 export type DemoResetResult = z.infer<typeof DemoResetResult>
 

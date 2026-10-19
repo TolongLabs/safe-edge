@@ -1,10 +1,11 @@
-// Starts the API the way index.ts does, but on a free port with an injected clock, and calls it over real HTTP.
+// Starts the API the way index.ts does, but on a free port with a scenario clock, and calls it over real HTTP.
 import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
 import type { Actor, RaiseCandidateRequest, Role } from '@safe-edge/contracts'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from '../src/app.ts'
+import { scenarioClock } from '../src/clock.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
 
@@ -44,8 +45,7 @@ export function startApi({
   workOrders?: ApiOptions['workOrders']
   claude?: Anthropic
 } = {}) {
-  let now = seed.asOf
-  const clock = { now: () => now }
+  const clock = scenarioClock(seed.asOf)
   const ids = counterIds()
   const core = createCore({ seed, clock, ids, planner })
   const agent = claude && { claude, token: 'tok_agent' }
@@ -89,9 +89,7 @@ export function startApi({
     request,
     /** Every request the server answered, in order. */
     log,
-    setNow: (iso: string) => {
-      now = iso
-    }
+    setNow: clock.set
   }
 }
 

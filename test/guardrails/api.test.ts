@@ -217,7 +217,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     previewRouteClosure: { remedyIds: [played.remedy.id] },
     setWorkOrderExternalRef: { externalRef: 'procore-observation-1' },
     recordWorkOrderExternalError: { message: 'Procore answered 503' },
-    reportMissedPatrol: undefined // no body
+    reportMissedPatrol: undefined, // no body
+    setScenarioClock: { now: MISSED_PATROL_DUE } // the test API's clock is a scenario clock; time stays put
   }
   // S1's pass is already suspended, so the missed patrol goes to an expiring pass once its patrol interval has run out.
   const paths: Partial<Record<OperationId, string>> = { reportMissedPatrol: `/segments/${EXPIRING}/missed-patrol` }
@@ -303,7 +304,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, { message: 'Procore answered 503' })
   const plan = await as('dev_manager', 'post', '/patrol-plans', patrolRequest)
   await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
-  api.setNow(plan.window.start)
+  await as('dev_system', 'post', '/scenario/clock', { now: plan.window.start })
   const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
   await as('dev_drone_sim', 'post', `/patrols/${patrol.id}/complete`, {
     coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }]
