@@ -23,8 +23,8 @@ export function Legend() {
       aria-label="Legend"
       style={{
         position: 'absolute',
-        right: 12,
-        top: 12,
+        left: 12,
+        top: 44,
         width: 'min(260px, calc(100% - 24px))',
         padding: 16,
         borderRadius: 12,
