@@ -7,6 +7,7 @@ import {
   type CoreOperationId,
   type OperationId,
   type OperationInput,
+  type OperationOutput,
   type OperationSpec,
   type Operations,
   type RegisteredWebhook,
@@ -53,6 +54,8 @@ export interface ApiOptions {
 
 type Env = { Variables: { actor: Actor } }
 
+/** Who records a hand-off the API cannot run: the API itself, as in work-orders.ts. */
+const WORK_ORDERS: Actor = { type: 'system', id: 'api.work-orders', role: 'system', scopes: [] }
 /** Who delivers webhooks and records their failures: the API itself. */
 const WEBHOOKS: Actor = { type: 'system', id: 'api.webhooks', role: 'system', scopes: [] }
 type ApiOperationId = { [K in OperationId]: Operations[K]['handledBy'] extends 'api' ? K : never }[OperationId]
@@ -82,9 +85,22 @@ export function createApp({
     onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
   })
   const evidence = createEvidenceStore({ clock, ids })
-  if (workOrders) {
-    const provider = workOrders(async (ref) => evidence.bytes(ref))
-    forwardWorkOrders({ core, subscribe: hub.subscribe, provider })
+  const forwarder =
+    workOrders &&
+    forwardWorkOrders({ core, subscribe: hub.subscribe, provider: workOrders(async (ref) => evidence.bytes(ref)) })
+  /** Core operations the API acts on once they succeed, besides publishing their events. */
+  const afterDispatch: { [K in CoreOperationId]?: (data: OperationOutput<K>) => void } = {
+    // A person cleared a failed hand-off; the API resumes it from the step that failed.
+    retryWorkOrderHandOff: ({ workOrder, retried }) => {
+      if (forwarder) return forwarder.retry(workOrder.id, retried.step)
+      // This API runs without a work-order system, so the retry fails at once, on the record like any other failure.
+      const body = { step: retried.step, message: 'This API instance has no work-order system configured' }
+      const recorded = core.dispatch('recordWorkOrderExternalError', WORK_ORDERS, {
+        params: { id: workOrder.id },
+        body
+      })
+      if (!recorded.ok) throw new Error(recorded.message)
+    }
   }
   app.get('/health', (c) => c.json({ status: 'ok' }))
   // Where getEvidenceUrl points. The signed query is the credential, so it takes no bearer token.
@@ -266,6 +282,7 @@ export function createApp({
     const result = core.dispatch(operationId as CoreOperationId, actor, input as never)
     if (!result.ok) return c.json(result, failureStatus(result))
     hub.publish(result.events)
+    afterDispatch[operationId as CoreOperationId]?.(result.data as never)
     return c.json(result.data as object, result.status)
   }
 

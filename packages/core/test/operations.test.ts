@@ -86,8 +86,9 @@ describe('the operations table in core', () => {
     })
     h.call('recordWorkOrderExternalError', 'usr_system', {
       params: { id: played.workOrderId },
-      body: { message: 'Procore POST /rest/v1.1/projects/1234/uploads answered 503' }
+      body: { step: 'addEvidence', message: 'Procore POST /rest/v1.1/projects/1234/uploads answered 503' }
     })
+    h.call('retryWorkOrderHandOff', 'usr_manager', { params: { id: played.workOrderId } })
     const notice = h.call('draftNotice', 'usr_manager', {
       body: { kind: 'monthly_report', subjectId: null, title: 'October report', body: 'One finding closed' }
     }).data

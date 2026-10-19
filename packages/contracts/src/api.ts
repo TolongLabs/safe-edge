@@ -36,6 +36,7 @@ import {
   Uncertainty,
   User,
   WorkOrder,
+  WorkOrderExternalError,
   WorkOrderStatus
 } from './entities.ts'
 import { EventType, Webhook } from './events.ts'
@@ -222,9 +223,16 @@ export type SetWorkOrderExternalRefRequest = z.infer<typeof SetWorkOrderExternal
 
 export const RecordWorkOrderExternalErrorRequest = named(
   'RecordWorkOrderExternalErrorRequest',
-  z.object({ message: z.string().min(1).describe("The work-order system's error") })
+  z.object({
+    step: WorkOrderExternalError.shape.step,
+    message: z.string().min(1).describe("The work-order system's error")
+  })
 )
 export type RecordWorkOrderExternalErrorRequest = z.infer<typeof RecordWorkOrderExternalErrorRequest>
+
+/** A retried hand-off: the work order with its error cleared, and the failure the API now resumes from. */
+export const HandOffRetry = named('HandOffRetry', z.object({ workOrder: WorkOrder, retried: WorkOrderExternalError }))
+export type HandOffRetry = z.infer<typeof HandOffRetry>
 
 export const SubmitWorkOrderRequest = named(
   'SubmitWorkOrderRequest',

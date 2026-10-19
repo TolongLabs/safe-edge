@@ -211,7 +211,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
     setWorkOrderExternalRef: { externalRef: 'procore-observation-1' },
-    recordWorkOrderExternalError: { message: 'Procore answered 503' }
+    recordWorkOrderExternalError: { step: 'createFinding', message: 'Procore answered 503' }
   }
   const ids = {
     'patrol-plans': flying.id,
@@ -290,7 +290,11 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   })
   await as('dev_manager', 'post', `/notices/${notice.id}/send`)
   await as('dev_system', 'post', `/work-orders/${draft.id}/external-ref`, { externalRef: 'procore-observation-1' })
-  await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, { message: 'Procore answered 503' })
+  await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, {
+    step: 'createFinding',
+    message: 'Procore answered 503'
+  })
+  await as('dev_manager', 'post', `/work-orders/${draft.id}/external-retry`)
   const plan = await as('dev_manager', 'post', '/patrol-plans', patrolRequest)
   await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
   api.setNow(plan.window.start)

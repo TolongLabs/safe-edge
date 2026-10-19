@@ -1058,7 +1058,7 @@ paths:
   /work-orders/{id}/external-error:
     post:
       operationId: recordWorkOrderExternalError
-      summary: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+      summary: Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)
       description: "Roles: system. Agents are refused."
       tags:
         - work-orders
@@ -1078,7 +1078,7 @@ paths:
               $ref: "#/components/schemas/RecordWorkOrderExternalErrorRequest"
       responses:
         "200":
-          description: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+          description: Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)
           content:
             application/json:
               schema:
@@ -1093,6 +1093,38 @@ paths:
           $ref: "#/components/responses/NotFound"
       x-safe-edge-roles:
         - system
+      x-safe-edge-events: []
+  /work-orders/{id}/external-retry:
+    post:
+      operationId: retryWorkOrderHandOff
+      summary: Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)
+      description: "Roles: manager, engineer. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HandOffRetry"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - manager
+        - engineer
       x-safe-edge-events: []
   /work-orders/{id}/submit:
     post:
@@ -3468,6 +3500,27 @@ components:
         - completed
         - accepted
         - rejected
+    WorkOrderExternalError:
+      type: object
+      properties:
+        step:
+          type: string
+          enum:
+            - createFinding
+            - addEvidence
+            - updateStatus
+          description: "The call that failed: filing the finding, attaching its photos, or moving the record’s status"
+        message:
+          type: string
+          minLength: 1
+        at:
+          type: string
+          format: date-time
+      required:
+        - step
+        - message
+        - at
+      additionalProperties: false
     WorkOrder:
       type: object
       properties:
@@ -3519,20 +3572,9 @@ components:
             - "null"
         externalError:
           anyOf:
-            - type: object
-              properties:
-                message:
-                  type: string
-                  minLength: 1
-                at:
-                  type: string
-                  format: date-time
-              required:
-                - message
-                - at
-              additionalProperties: false
+            - $ref: "#/components/schemas/WorkOrderExternalError"
             - type: "null"
-          description: Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried
+          description: Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it
         createdAt:
           type: string
           format: date-time
@@ -4363,12 +4405,31 @@ components:
     RecordWorkOrderExternalErrorRequest:
       type: object
       properties:
+        step:
+          type: string
+          enum:
+            - createFinding
+            - addEvidence
+            - updateStatus
+          description: "The call that failed: filing the finding, attaching its photos, or moving the record’s status"
         message:
           type: string
           minLength: 1
           description: The work-order system's error
       required:
+        - step
         - message
+      additionalProperties: false
+    HandOffRetry:
+      type: object
+      properties:
+        workOrder:
+          $ref: "#/components/schemas/WorkOrder"
+        retried:
+          $ref: "#/components/schemas/WorkOrderExternalError"
+      required:
+        - workOrder
+        - retried
       additionalProperties: false
     SubmitWorkOrderRequest:
       type: object
