@@ -2,7 +2,13 @@ import { describe, expect, test } from 'bun:test'
 import type { EdgeEvent } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
 import { join } from 'node:path'
-import { SafeEdgeApiError, SafeEdgeDeniedError, createElminaPlanner, createSafeEdgeClient } from '../src/index.ts'
+import {
+  SafeEdgeApiError,
+  SafeEdgeDeniedError,
+  createElminaPlanner,
+  createSafeEdgeClient,
+  elminaSeed
+} from '../src/index.ts'
 import { S1, playS1toRepair, playS1toS3 } from './story.ts'
 
 /** A memory client on a scenario clock, as the scenario player (#64) creates it. */
@@ -247,7 +253,7 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
     ])
   })
 
-  test('the demo flies no drone, so an in-flight patrol fails its own re-plan only: the other open plan is re-planned', async () => {
+  test("the demo flies drone-sim: a flag confirmed in flight re-plans from the drone's stops, and the approved re-plan flies", async () => {
     const repoRoot = join(import.meta.dir, '../../..')
     const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
     let now = '2026-10-20T00:00:00.000Z'
@@ -257,40 +263,75 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
       planner,
       clock: { now: () => now }
     })
-    const request = (segmentIds: string[]) => ({
+    const step = async (iso: string) => {
+      now = iso
+      return demo.tick(iso)
+    }
+    const seen: string[] = []
+    demo.subscribe((event) => seen.push(event.type))
+    const pilot = demo.as('usr_pilot')
+    const proposed = await demo.createPatrolPlan({
       body: {
         dockId: 'dock_elmina_roof',
         droneProfileId: 'drn_assumed',
-        segmentIds,
+        segmentIds: ['seg_866518980_5', 'seg_866518980_6'],
         context: [],
         notBefore: now,
         altitudeCapM: 60
       }
     })
-    const flying = await demo.createPatrolPlan(request(['seg_866518980_5']))
-    await demo.as('usr_pilot').approvePatrolPlan({ params: { id: flying.id } })
+    const flying = await pilot.approvePatrolPlan({ params: { id: proposed.id } })
     now = flying.window.start
-    const patrol = await demo
-      .as('usr_pilot')
-      .startPatrol({ body: { planId: flying.id, provider: 'sim', droneId: 'sim-1' } })
-    const waiting = await demo.createPatrolPlan(request(['seg_866518980_6']))
+    const patrol = await pilot.startPatrol({ body: { planId: flying.id, provider: 'sim', droneId: 'sim-1' } })
+    // The drone reaches its first stop.
+    const firstStop = flying.waypoints.find((w) => w.kind === 'station')!
+    await step(firstStop.eta)
 
-    await playS1toRepair({ as: (id) => demo.as(id), setNow: (iso) => (now = iso) })
+    // The drone's report on S1 is confirmed: core re-plans the patrol in flight from the stop the drone reached.
+    const candidate = await demo.as('usr_drone_sim').raiseCandidate({
+      body: {
+        segmentId: S1.segmentId,
+        observationIds: [],
+        inventoryItemId: S1.inventoryItemId,
+        itemStatus: 'missing',
+        class: 'inventory_item',
+        score: 0.9,
+        uncertainty: 'low',
+        gridCell: 'B3',
+        rationale: 'Fence panel 4 is missing by the playground path',
+        model: null,
+        simulated: true
+      }
+    })
+    await demo.decideCandidate({ params: { id: candidate.id }, body: { decision: 'confirm', severity: 'high' } })
+    const replanned = (await demo.listPatrolPlans()).find((p) => p.replan?.supersedes?.planId === flying.id)!
+    expect(replanned.replan!.supersedes).toEqual({ planId: flying.id, committedTasks: 1 })
+    expect(replanned.tasks[0]).toEqual(flying.tasks[0])
+    expect(replanned.tasks.map((t) => t.segmentId)).toContain(S1.segmentId)
 
-    // Both triggers (the confirmed flag, then the repair) re-plan the waiting plan, and fail on the flying one.
-    const plans = await demo.listPatrolPlans()
-    expect(plans.map((p) => [p.id, p.replan?.trigger.kind ?? null, p.replan?.supersedes?.planId ?? null])).toEqual([
-      [flying.id, null, null],
-      [waiting.id, null, null],
-      ['plan_3', 'flag_confirmed', waiting.id],
-      ['plan_4', 'repair_completed', 'plan_3']
+    // The pilot approves it; the drone flies its stops and lands on its timeline.
+    await pilot.approvePatrolPlan({ params: { id: replanned.id } })
+    const landing = await step(new Date(Date.parse(replanned.waypoints.at(-1)!.eta) + 1000).toISOString())
+    expect(landing.map((e) => e.type)).toEqual(['edge.patrol.completed.v1'])
+    const done = await demo.getPatrol({ params: { id: patrol.id } })
+    expect(done).toMatchObject({ status: 'completed', planId: replanned.id })
+    expect(done.coverage).toEqual(
+      replanned.tasks.map((t) => ({
+        segmentId: t.segmentId,
+        inspectedM: elminaSeed.segments.find((s) => s.id === t.segmentId)!.lengthM,
+        unknownM: 0
+      }))
+    )
+    const observed = (await demo.listAudit({ query: { subject: S1.segmentId } }))
+      .filter((e) => e.action === 'recordObservation' && e.actor.id === 'usr_drone_sim')
+      .map((e) => e.after as { patrolId: string; viewpointId: string })
+    expect(observed.map((o) => [o.patrolId, o.viewpointId]).toSorted()).toEqual([
+      [patrol.id, 'vp_866518980_11_1'],
+      [patrol.id, 'vp_866518980_11_2']
     ])
-    const failures = await demo.listAudit({ query: { subject: 'automation' } })
-    const failed = `${flying.id} was not re-planned: The memory transport flies no drone, so nothing reports ${patrol.id}'s progress`
-    expect(failures.map((e) => e.after)).toEqual([
-      { id: 'automation', step: 'replan', error: failed },
-      { id: 'automation', step: 'replan', error: failed }
-    ])
+    // Nothing failed: the drone reported its progress, which the demo's re-plan read.
+    expect(await demo.listAudit({ query: { subject: 'automation' } })).toEqual([])
+    expect(seen).toContain('edge.patrol.completed.v1')
   })
 
   test('a recapture opens a task the Inbox reads from listTasks, and the open plan is re-planned to fly its segment', async () => {

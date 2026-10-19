@@ -10,9 +10,11 @@ import {
 import {
   actorFor,
   authorize,
+  AUTOMATION_ACTOR,
   counterIds,
   createCore,
   createEventQueue,
+  recordAutomationFailure,
   runSchedule,
   startReplanning,
   Seed,
@@ -20,6 +22,7 @@ import {
   type Core,
   type PatrolPlanner
 } from '@safe-edge/core'
+import { hostDroneSim, type DroneSimHost } from '@safe-edge/providers'
 import seedJson from '../../../data/elmina/fixtures/seed.json'
 import * as z from 'zod'
 import {
@@ -44,7 +47,7 @@ export interface MemoryOptions {
    * a trigger needs is recorded as a failed `runAutomation` on the audit chain.
    */
   planner?: PatrolPlanner
-  /** The scenario clock; the wall clock when absent. */
+  /** The scenario clock; the wall clock when absent. drone-sim flies on it. */
   clock?: Clock
 }
 
@@ -59,11 +62,12 @@ export interface MemoryClient extends SafeEdgeClient, Methods<MemoryOperationId>
    */
   subscribe(handler: (event: EdgeEvent) => void): () => void
   /**
-   * Runs the scheduled pass at `now`, the one the API runs on its timer or scenario clock (core's `runSchedule`):
-   * passes move valid → expiring 30 days before `validTo`, then → expired, and every valid or expiring pass whose
-   * segment went a whole patrol interval uninspected gets a missed patrol, which suspends it. The system acts, whichever
-   * user this client is, so it never makes a pass valid. Pass the demo clock's time: core stamps the missed patrols
-   * with it. Subscribers get the events, which are also returned.
+   * Moves the demo on to `now`, as the API does when its scenario clock is set: drone-sim delivers what its drones did
+   * by the demo clock (frames, landings), then the scheduled pass (core's `runSchedule`) runs: passes move valid →
+   * expiring 30 days before `validTo`, then → expired, and every valid or expiring pass whose segment went a whole
+   * patrol interval uninspected gets a missed patrol, which suspends it. The system acts, whichever user this client
+   * is, so it never makes a pass valid. Pass the demo clock's time: core stamps the missed patrols with it, and the
+   * drone flies on the clock. Subscribers get the events, which are also returned.
    */
   tick(now: string): Promise<EdgeEvent[]>
 }
@@ -71,26 +75,42 @@ export interface MemoryClient extends SafeEdgeClient, Methods<MemoryOperationId>
 const wallClock: Clock = { now: () => new Date().toISOString() }
 
 export function createMemoryClient({ userId, planner, clock = wallClock }: MemoryOptions): MemoryClient {
-  const fresh = (): Core => createCore({ seed: elminaSeed, clock, ids: counterIds(), planner })
-  const session = { core: fresh() }
   // Subscribers see events in the order they happened, each re-plan right after the event that caused it.
   const events = createEventQueue()
+  /** Events the drone's reports publish while `tick` runs, which it also returns. */
+  let ticked: EdgeEvent[] | null = null
+  const publish = (published: EdgeEvent[]) => {
+    ticked?.push(...published)
+    events.publish(published)
+  }
+  // Each demo has its own core and its own drone-sim (a patrol started with provider `sim` flies on it, as in the API),
+  // so a reset grounds every drone with the records it wrote to.
+  const fresh = (): { core: Core; drone: DroneSimHost } => {
+    const core = createCore({ seed: elminaSeed, clock, ids: counterIds(), planner })
+    const drone = hostDroneSim({
+      dispatch: core.dispatch,
+      clock,
+      actor: AUTOMATION_ACTOR,
+      publish,
+      onFailure: (error) => recordAutomationFailure(core, 'drone', error)
+    })
+    return { core, drone }
+  }
+  let session = fresh()
   // The demo's current core, whichever reset made it.
   const current: Pick<Core, 'dispatch' | 'recordStored'> = {
     dispatch: (operationId, actor, input) => session.core.dispatch(operationId, actor, input),
     recordStored: (...args) => session.core.recordStored(...args)
   }
-  // Core's re-plan subscriber reacts to every event, as in the API. The demo flies no drone, so an in-flight patrol has
-  // no progress to re-plan from, and that plan's re-plan fails (recorded) rather than re-flying its stops.
+  // Core's re-plan subscriber reacts to every event, as in the API, from the progress the drone reports.
   const replan = startReplanning({
     core: current,
     clock,
-    committedTasks: (patrol) => {
-      throw new Error(`The memory transport flies no drone, so nothing reports ${patrol.id}'s progress`)
-    },
-    publish: events.publish
+    committedTasks: (patrol, plan) => session.drone.committedTasks(patrol, plan),
+    publish
   })
   events.subscribe(replan.onEvent)
+  events.subscribe((event) => session.drone.onEvent(event))
 
   const clientFor = (actor: Actor): MemoryClient => {
     const call = async (operationId: CoreOperationId, input: RawInput) => {
@@ -98,6 +118,8 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
       const result = session.core.dispatch(operationId, actor, input as never) as DispatchResult<CoreOperationId>
       if (!result.ok) throw errorFor(failureStatus(result), result)
       events.publish(result.events)
+      // The drone in the air flies what the pilot approved or released (a re-plan, a hold it waits at).
+      if (operationId === 'approvePatrolPlan' || operationId === 'releasePlanHold') session.drone.planChanged()
       return result.data
     }
     return {
@@ -107,13 +129,20 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
       resetDemo: async () => {
         const refused = authorize('resetDemo', operations.resetDemo, actor)
         if (refused) throw new SafeEdgeDeniedError(refused.rule, refused.message)
-        session.core = fresh()
+        session = fresh()
         return { reset: true }
       },
       tick: async (now) => {
+        const flown: EdgeEvent[] = []
+        ticked = flown
+        try {
+          session.drone.tick()
+        } finally {
+          ticked = null
+        }
         const scheduled = runSchedule(session.core, now)
         events.publish(scheduled)
-        return scheduled
+        return [...flown, ...scheduled]
       },
       actor,
       as: (id) => clientFor(actorOf(id)),
