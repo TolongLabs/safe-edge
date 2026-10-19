@@ -13,6 +13,7 @@ import {
   WebGLRenderer
 } from 'three'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js'
 import { MapControls } from 'three/addons/controls/MapControls.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
@@ -21,6 +22,7 @@ import { toLocal } from './frame.ts'
 import { basePalette, buildBaseLayers, type ElminaLayers } from './layers.ts'
 import { buildEdgeAssets, type EdgeAssetView } from './assets.ts'
 import { buildFlight, type DronePlacement, type Flight, type FlightState, type FlightView } from './flight.ts'
+import { buildMarkers, type SceneMarkers } from './markers.ts'
 import { buildSegmentRibbons, segmentAt, segmentMidpoint, type PassState, type SegmentView } from './segments.ts'
 
 /** Orbit rotates around the target with the left button; map pans with it, like a web map. */
@@ -36,6 +38,8 @@ export interface ElminaScene {
   placeDrone(drone: DronePlacement): FlightState
   /** Redraws the segments in new pass states, keyed by segment ID; segments left out keep theirs. */
   setPassStates(states: Record<string, PassState>): void
+  /** Replaces the simulated markers: candidate pins, dropped-frame ticks and unknown stretches, each labelled. */
+  setMarkers(markers: SceneMarkers): void
   /** With `true`, the camera moves to the drone and then keeps it in view as it flies. */
   followDrone(follow: boolean): void
   dispose(): void
@@ -102,6 +106,23 @@ export function createElminaScene(
       r.material.resolution.set(container.clientWidth, container.clientHeight)
     })
     scene.add(...ribbons)
+  }
+
+  let markers: ReturnType<typeof buildMarkers> | null = null
+  const setMarkers = (next: SceneMarkers) => {
+    if (markers) {
+      scene.remove(...markers.objects)
+      markers.dispose()
+    }
+    markers = buildMarkers(next, { itemPositions: assets.itemPositions, segments })
+    for (const o of markers.objects) {
+      o.traverse((child) => {
+        if ('material' in child && child.material instanceof LineMaterial) {
+          child.material.resolution.set(container.clientWidth, container.clientHeight)
+        }
+      })
+    }
+    if (markers.objects.length > 0) scene.add(...markers.objects)
   }
 
   let flight: Flight | null = null
@@ -238,9 +259,15 @@ export function createElminaScene(
   if (getComputedStyle(container).position === 'static') container.style.position = 'relative'
   container.append(attribution)
 
+  // Labels on simulated things: HTML chips over the canvas, placed by the camera each frame.
+  const labels = new CSS2DRenderer()
+  Object.assign(labels.domElement.style, { position: 'absolute', inset: '0', pointerEvents: 'none' })
+  container.append(labels.domElement)
+
   const resize = () => {
     const { clientWidth: width, clientHeight: height } = container
     renderer.setSize(width, height)
+    labels.setSize(width, height)
     camera.aspect = width / height
     camera.updateProjectionMatrix()
     // Ribbon materials need the viewport size to place their vertices.
@@ -255,6 +282,7 @@ export function createElminaScene(
   renderer.setAnimationLoop(() => {
     active.update()
     renderer.render(scene, camera)
+    labels.render(scene, camera)
   })
 
   return {
@@ -264,8 +292,11 @@ export function createElminaScene(
     placeDrone,
     followDrone,
     setPassStates,
+    setMarkers,
     dispose() {
       showFlight(null)
+      setMarkers({ pins: [], dropped: [], unknowns: [] })
+      labels.domElement.remove()
       renderer.setAnimationLoop(null)
       renderer.domElement.removeEventListener('pointerdown', onPointerDown)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)

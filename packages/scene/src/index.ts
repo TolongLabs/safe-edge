@@ -11,5 +11,6 @@ export {
 } from './flight.ts'
 export { ELMINA_ORIGIN, toLocal } from './frame.ts'
 export { basePalette, buildBaseLayers, type ElminaLayers } from './layers.ts'
+export { buildMarkers, labelChip, type SceneMarkers } from './markers.ts'
 export { createElminaScene, type ControlMode, type ElminaScene, type SceneOptions } from './scene.ts'
 export { buildSegmentRibbons, passStateColours, type PassState, type SegmentView } from './segments.ts'

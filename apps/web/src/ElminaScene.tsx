@@ -6,7 +6,7 @@ import {
   type ElminaScene as Scene,
   type SegmentView
 } from '@safe-edge/scene'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import buildingsUrl from '../../../data/elmina/osm/buildings.geojson?url'
 import parksUrl from '../../../data/elmina/osm/parks.geojson?url'
 import pathsUrl from '../../../data/elmina/osm/paths.geojson?url'
@@ -117,6 +117,17 @@ export function ElminaScene() {
   }, [])
 
   const selectedSegment = segments.find((s) => s.id === selected)
+  // The card shows the pass the scenario has reached, not the seed's.
+  const onPasses = useCallback(
+    (passes: Array<{ segmentId: string; state: SegmentView['state']; validTo: string | null }>) =>
+      setSegments((views) =>
+        views.map((v) => {
+          const pass = passes.find((p) => p.segmentId === v.id)
+          return pass ? { ...v, state: pass.state, validTo: pass.validTo } : v
+        })
+      ),
+    []
+  )
 
   const toggle = () => {
     const next = mode === 'orbit' ? 'map' : 'orbit'
@@ -133,8 +144,31 @@ export function ElminaScene() {
           {mode === 'orbit' ? 'Orbit controls' : 'Map controls'}: switch to {mode === 'orbit' ? 'map' : 'orbit'}
         </button>
       )}
+      {status === 'ready' && (
+        <p
+          role="note"
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            margin: 0,
+            padding: '4px 10px',
+            borderRadius: 4,
+            border: '1.5px solid #1c2925',
+            background: '#fbfcfb',
+            color: '#1c2925',
+            font: '700 12px/16px "Atkinson Hyperlegible Next", system-ui, sans-serif',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Simulation · every flight, photo, flag and repair here
+        </p>
+      )}
       {status === 'ready' && <Legend />}
-      {status === 'ready' && ready && <ScenarioPanel scene={ready} />}
+      {status === 'ready' && ready && <ScenarioPanel scene={ready} onPasses={onPasses} />}
       {selectedSegment && (
         <SegmentCard
           segment={selectedSegment}

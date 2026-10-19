@@ -16,6 +16,8 @@ import {
   Vector3
 } from 'three'
 import { toLocal } from './frame.ts'
+import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js'
+import { labelChip } from './markers.ts'
 
 /** One planner waypoint, as `PatrolPlan.waypoints` gives it: WGS84 and metres above ground. */
 export interface FlightPoint {
@@ -123,6 +125,9 @@ export function buildFlight(view: FlightView): Flight {
   const pad = new Mesh(new CylinderGeometry(0.9, 0.9, 0.04, 24).translate(0, 0.92, 0), lambert(colours.pad))
   pad.position.copy(dockAt)
   site.add(building, housing, pad)
+  const dockLabel = labelChip('Dock, assumed site · simulated')
+  dockLabel.position.copy(dockAt).setY(dockAt.y + 3)
+  site.add(dockLabel)
 
   const route = new Line(
     new BufferGeometry().setFromPoints(curve.getPoints(Math.max(200, waypoints.length * 12))),
@@ -132,6 +137,9 @@ export function buildFlight(view: FlightView): Flight {
   route.name = 'patrol route (simulated)'
 
   const { drone, rotors, gimbal } = buildQuadcopter()
+  const droneLabel = labelChip('Drone · simulated')
+  droneLabel.position.set(0, 3, 0)
+  drone.add(droneLabel)
   const camera = new PerspectiveCamera(
     view.camera.vfovDeg,
     Math.tan(MathUtils.degToRad(view.camera.hfovDeg / 2)) / Math.tan(MathUtils.degToRad(view.camera.vfovDeg / 2)),
@@ -218,6 +226,7 @@ export function buildFlight(view: FlightView): Flight {
     dispose() {
       for (const o of [site, route, drone, frustum]) {
         o.traverse((child) => {
+          if (child instanceof CSS2DObject) child.element.remove()
           if ('geometry' in child && child.geometry instanceof BufferGeometry) child.geometry.dispose()
           if ('material' in child) {
             const materials = Array.isArray(child.material) ? child.material : [child.material]
