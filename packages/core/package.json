@@ -7,5 +7,15 @@
   },
   "scripts": {
     "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.4.0",
+    "@safe-edge/contracts": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@safe-edge/planner": "workspace:*",
+    "@types/geojson": "7946.0.16",
+    "prettier": "^3.9.9"
   }
 }
