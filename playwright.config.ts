@@ -10,12 +10,20 @@ export default defineConfig({
   testDir: 'e2e',
   testMatch: /.*\.e2e\.ts/,
   forbidOnly: !!process.env.CI,
+  // Frame times are only fair with the machine to themselves.
+  workers: 1,
   reporter: 'list',
   timeout: 120_000,
   use: {
     baseURL: 'http://127.0.0.1:4173/',
     headless: !wsl,
-    launchOptions: { args: wsl ? ['--use-gl=angle', '--use-angle=gl-egl', '--ignore-gpu-blocklist'] : [] }
+    launchOptions: {
+      // Recording mode's Record button captures the tab; this flag accepts the browser's share prompt.
+      args: [
+        '--auto-accept-this-tab-capture',
+        ...(wsl ? ['--use-gl=angle', '--use-angle=gl-egl', '--ignore-gpu-blocklist'] : [])
+      ]
+    }
   },
   // The production build, as the judges get it: the dev build runs React's slower development checks.
   webServer: {

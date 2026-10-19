@@ -31,6 +31,16 @@ import { lightingAt, type DayPhase } from './sky.ts'
 /** Orbit rotates around the target with the left button; map pans with it, like a web map. */
 export type ControlMode = 'orbit' | 'map'
 
+/** A camera placed by the program, not the user: what it looks at, from how far, from which side and how high. */
+export interface CameraShot {
+  target: 'drone' | { segmentId: string }
+  distanceM: number
+  /** Compass bearing from the target to the camera, degrees clockwise from north. */
+  bearingDeg: number
+  /** Height of the camera above the target's horizon, in degrees. */
+  pitchDeg: number
+}
+
 export interface ElminaScene {
   setControlMode(mode: ControlMode): void
   /** Outlines a segment (or none) and, with `focus`, moves the camera to it, `distanceM` away (420 m by default). */
@@ -45,6 +55,8 @@ export interface ElminaScene {
   setMarkers(markers: SceneMarkers): void
   /** With `true`, the camera moves to the drone and then keeps it in view as it flies. */
   followDrone(follow: boolean): void
+  /** Holds the camera on a shot, re-placed every frame, with the user's controls off; null hands the camera back. */
+  setCameraShot(shot: CameraShot | null): void
   /** Lights the scene for a moment at Elmina (sun height and bearing) and draws rain at `rainMmH`, both simulated. */
   setConditions(conditions: { at: string; rainMmH: number }): DayPhase
   dispose(): void
@@ -184,11 +196,13 @@ export function createElminaScene(
     c.maxDistance = 9_000
   }
   let active: OrbitControls = controls.orbit
+  // A program-placed camera, when there is one: it turns the user's controls off.
+  let shot: CameraShot | null = null
   const setControlMode = (mode: ControlMode) => {
     controls[mode].target.copy(active.target)
     active = controls[mode]
-    controls.orbit.enabled = mode === 'orbit'
-    controls.map.enabled = mode === 'map'
+    controls.orbit.enabled = mode === 'orbit' && !shot
+    controls.map.enabled = mode === 'map' && !shot
     active.update()
   }
   setControlMode('orbit')
@@ -224,6 +238,36 @@ export function createElminaScene(
       camera.position.set(x, 0, z).add(offset)
       active.update()
     }
+  }
+
+  const setCameraShot = (next: CameraShot | null) => {
+    shot = next
+    following = false
+    controls.orbit.enabled = !shot && active === controls.orbit
+    controls.map.enabled = !shot && active === controls.map
+  }
+  const shotTarget = new Vector3()
+  const placeShot = () => {
+    if (!shot) return
+    if (shot.target === 'drone') {
+      if (!flight) throw new Error('A drone shot needs a flight')
+      shotTarget.copy(flight.dronePosition)
+    } else {
+      const { segmentId } = shot.target
+      const segment = segments.find((s) => s.id === segmentId)
+      if (!segment) throw new Error(`No segment ${segmentId} in this scene`)
+      const [x, z] = segmentMidpoint(segment)
+      shotTarget.set(x, 0, z)
+    }
+    const up = (shot.pitchDeg * Math.PI) / 180
+    const bearing = (shot.bearingDeg * Math.PI) / 180
+    const flat = shot.distanceM * Math.cos(up)
+    camera.position.set(
+      shotTarget.x + flat * Math.sin(bearing),
+      shotTarget.y + shot.distanceM * Math.sin(up),
+      shotTarget.z - flat * Math.cos(bearing)
+    )
+    for (const c of Object.values(controls)) c.target.copy(shotTarget)
   }
 
   let following = false
@@ -295,7 +339,8 @@ export function createElminaScene(
 
   // Labels on simulated things: HTML chips over the canvas, placed by the camera each frame.
   const labels = new CSS2DRenderer()
-  Object.assign(labels.domElement.style, { position: 'absolute', inset: '0', pointerEvents: 'none' })
+  // CSS2DRenderer sorts labels by depth with z-index; z-index 0 keeps that sorting inside the layer, under the panels.
+  Object.assign(labels.domElement.style, { position: 'absolute', inset: '0', pointerEvents: 'none', zIndex: '0' })
   container.append(labels.domElement)
 
   const resize = () => {
@@ -334,6 +379,7 @@ export function createElminaScene(
     timer.update(time)
     const seconds = timer.getDelta()
     keepToBudget(seconds * 1000)
+    placeShot()
     active.update()
     rain.update(reducedMotion.matches ? 0 : seconds, active.target, camera.position.distanceTo(active.target))
     renderer.render(scene, camera)
@@ -346,6 +392,7 @@ export function createElminaScene(
     showFlight,
     placeDrone,
     followDrone,
+    setCameraShot,
     setPassStates,
     setMarkers,
     setConditions,
