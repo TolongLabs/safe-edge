@@ -28,6 +28,7 @@ import {
   Source,
   SegmentId,
   TaskId,
+  ThirdPartyReportId,
   Timestamp,
   TownshipId,
   UserId,
@@ -279,6 +280,21 @@ export type ReportedThirdParty = z.infer<typeof ReportedThirdParty>
 /** A third party with its provenance, as the seed records it and the planner port takes it. Not on the REST API. */
 export const ThirdParty = ReportedThirdParty.extend({ source: Source })
 export type ThirdParty = z.infer<typeof ThirdParty>
+
+/**
+ * A third party a create-plan request reported, as core stores it (audited with the request). Every plan core makes
+ * while it counts keeps clear of it, re-plans included: a report describes the flight it came with, so it counts until
+ * that plan's window closes. Not on the REST API: the audit chain carries each one.
+ */
+export const ThirdPartyReport = z.object({
+  id: ThirdPartyReportId,
+  planId: PatrolPlanId.describe('The plan whose request reported it'),
+  thirdParty: ThirdParty.describe('As reported, with the source core stamped from the caller'),
+  reportedAt: Timestamp,
+  validTo: Timestamp.describe("The reporting plan's window end: plans core makes from then on no longer see it"),
+  ...provenance
+})
+export type ThirdPartyReport = z.infer<typeof ThirdPartyReport>
 
 /** Each part is 0–1, or null when its input is stale or missing ("unknown", never zero). */
 export const PriorityScore = named(

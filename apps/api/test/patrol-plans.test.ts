@@ -1,10 +1,16 @@
 // PLAN-7 over HTTP, on the seeded API: plans keep 50 m from the third parties the request reports and from the seed's
 // S1 path crowd, and the separation holds they get wait for the pilot.
 import { describe, expect, test } from 'bun:test'
-import { Patrol, PatrolPlan, type CreatePatrolPlanRequest, type ReportedThirdParty } from '@safe-edge/contracts'
+import {
+  AuditEvent,
+  Patrol,
+  PatrolPlan,
+  type CreatePatrolPlanRequest,
+  type ReportedThirdParty
+} from '@safe-edge/contracts'
 import { loadElmina } from '@safe-edge/planner'
 import { join } from 'node:path'
-import { S1, seed, startApi } from './support.ts'
+import { raiseTier2, S1, seed, startApi } from './support.ts'
 
 const NOT_BEFORE = '2026-10-24T23:30:00.000Z'
 /** S1's path segment, beside the footway the crowd is on, and the bank across the lake from it. */
@@ -63,9 +69,11 @@ describe('separation holds on API-served plans', () => {
       }
     ])
 
-    // Without it, the same request plans no hold: the hold came from what the request reported.
+    // On an API nobody reported them to, the same request plans no hold: the holds came from the report.
     const unreported = PatrolPlan.parse(
-      await (await api.request('post', '/patrol-plans', { token: 'tok_manager', body: request([S1.segmentId]) })).json()
+      await (
+        await startApi().request('post', '/patrol-plans', { token: 'tok_manager', body: request([S1.segmentId]) })
+      ).json()
     )
     expect(unreported.holds).toEqual([])
   })
@@ -103,6 +111,80 @@ describe('separation holds on API-served plans', () => {
   })
 })
 
+describe('third parties a request reports', () => {
+  test("are stored and audited, so the system's re-plan keeps clear of them too, until the plan's window closes", async () => {
+    const api = startApi()
+    const WEST = 'seg_866518980_5'
+    const json = async (response: Promise<Response>) => {
+      const r = await response
+      if (!r.ok) throw new Error(`HTTP ${r.status}: ${await r.text()}`)
+      return r.json()
+    }
+    // Someone fishing on the west bank, at a vertex of its seed geometry, reported with the request: a labelled fixture.
+    const bank = seed.segments.find((s) => s.id === WEST)!.geometry.coordinates
+    const angler: ReportedThirdParty = {
+      id: 'obs_angler_west',
+      kind: 'person',
+      label: 'angler on the west bank',
+      geometry: { type: 'Point', coordinates: bank[Math.floor(bank.length / 3)]! },
+      observedAt: '2026-10-24T22:30:00.000Z',
+      headcount: null,
+      simulated: true
+    }
+    const westHold = (plan: PatrolPlan) => plan.holds.find((h) => h.segmentId === WEST)
+    const plan = PatrolPlan.parse(
+      await json(api.request('post', '/patrol-plans', { token: 'tok_manager', body: request([WEST], [angler]) }))
+    )
+    expect(westHold(plan)?.reason).toContain(
+      'within 50 m of "angler on the west bank" (person, seen 2026-10-24T22:30:00.000Z)'
+    )
+
+    // Core keeps the report, with who sent it and until when it counts, on the audit chain of the manager's request.
+    const stored = AuditEvent.array().parse(await json(api.request('get', '/audit?subject=tpr_1', { token: 'tok_gm' })))
+    expect(stored.map((e) => [e.action, e.actor.id, e.decision, e.after])).toEqual([
+      [
+        'createPatrolPlan',
+        'usr_manager',
+        'allowed',
+        {
+          id: 'tpr_1',
+          planId: plan.id,
+          thirdParty: { ...angler, source: 'user' },
+          reportedAt: seed.asOf,
+          validTo: plan.window.end,
+          simulated: true,
+          source: 'user'
+        }
+      ]
+    ])
+
+    // A confirmed flag on S1 re-plans the open plan as the system. Its request reports no one, yet it keeps clear of
+    // the angler all the same.
+    const candidate = await json(raiseTier2(api))
+    await json(
+      api.request('post', `/candidates/${candidate.id}/decision`, {
+        token: 'tok_manager',
+        body: { decision: 'confirm', severity: 'high' }
+      })
+    )
+    const plans = PatrolPlan.array().parse(await json(api.request('get', '/patrol-plans', { token: 'tok_manager' })))
+    const replanned = plans.find((p) => p.replan?.supersedes?.planId === plan.id)!
+    expect(replanned.replan!.trigger).toMatchObject({ kind: 'flag_confirmed', segmentId: S1.segmentId })
+    expect(westHold(replanned)?.reason).toContain('within 50 m of "angler on the west bank"')
+
+    // Once that window closes the report no longer counts. The seed's S1 path crowd always does.
+    api.setNow(plan.window.end)
+    const later = PatrolPlan.parse(
+      await json(api.request('post', '/patrol-plans', { token: 'tok_manager', body: request([WEST, PATH_SEGMENT]) }))
+    )
+    expect(later.tasks.map((t) => t.segmentId).toSorted()).toEqual([WEST, PATH_SEGMENT].toSorted())
+    expect(westHold(later)).toBeUndefined()
+    expect(later.holds.find((h) => h.segmentId === PATH_SEGMENT)?.reason).toContain(
+      'within 50 m of "S1: people on the lakeside footway"'
+    )
+  })
+})
+
 describe('assemblies in the open air of more than 1,000 persons', async () => {
   const elmina = await loadElmina((path) => Bun.file(join(import.meta.dir, '../../..', path)).json())
   // An event filling Elmina Urban Park (the mapped park polygon), reported with the request: a labelled fixture.
@@ -118,9 +200,9 @@ describe('assemblies in the open air of more than 1,000 persons', async () => {
   const WEST = 'seg_866518980_5'
 
   test("a request's headcount over 1,000 keeps the plan 150 m from them (CAR 2016 reg. 143(1)(c), (d))", async () => {
-    const api = startApi()
+    // Each on its own API: core keeps what a request reports for the plans that follow.
     const plan = async (headcount: number | null) => {
-      const created = await api.request('post', '/patrol-plans', {
+      const created = await startApi().request('post', '/patrol-plans', {
         token: 'tok_manager',
         body: request([WEST, FAR_BANK], [event(headcount)])
       })

@@ -18,7 +18,11 @@ const ROUNDING_M = 1e-6
 type PatrolOperation =
   'createPatrolPlan' | 'approvePatrolPlan' | 'releasePlanHold' | 'startPatrol' | 'completePatrol' | 'recordObservation'
 
-/** `thirdParties` are the ones the site records (the seed's); a create-plan request may report more. */
+/**
+ * `thirdParties` are the ones the site records (the seed's), which every plan keeps clear of. A create-plan request may
+ * report more: core stores them, and every plan it makes keeps clear of them too until the reporting plan's window
+ * closes (`ThirdPartyReport`).
+ */
 export const patrolHandlers = (
   planner: PatrolPlanner | undefined,
   thirdParties: ThirdParty[]
@@ -48,6 +52,11 @@ export const patrolHandlers = (
     if (planner === undefined) throw new Error('createPatrolPlan needs a planner: pass one to createCore({ planner })')
     const ids = new Set(body.segmentIds)
     const id = tx.id('plan')
+    const reported = (body.thirdParties ?? []).map((p) => ({ ...p, source: tx.source }))
+    const inForce = tx
+      .all('thirdPartyReports')
+      .filter((r) => Date.parse(tx.now) < Date.parse(r.validTo))
+      .map((r) => r.thirdParty)
     // The planner is outside core, so its output is checked against the contract and the approval gate first.
     const plan = PatrolPlan.parse(
       planner({
@@ -60,7 +69,7 @@ export const patrolHandlers = (
         segments,
         passes: segments.flatMap((s) => (s.passId === null ? [] : [tx.must('passes', s.passId)])),
         findings: tx.all('findings').filter((f) => ids.has(f.segmentId)),
-        thirdParties: [...thirdParties, ...(body.thirdParties ?? []).map((p) => ({ ...p, source: tx.source }))]
+        thirdParties: distinct([...thirdParties, ...inForce, ...reported])
       })
     )
     if (plan.id !== id || plan.status !== 'proposed' || plan.approvedBy !== null || plan.approvedAt !== null) {
@@ -70,6 +79,17 @@ export const patrolHandlers = (
       throw new Error(`The planner must record the requested re-plan on ${id}`)
     }
     tx.put('patrolPlans', plan)
+    for (const thirdParty of reported) {
+      tx.put('thirdPartyReports', {
+        id: tx.id('tpr'),
+        planId: plan.id,
+        thirdParty,
+        reportedAt: tx.now,
+        validTo: plan.window.end,
+        simulated: thirdParty.simulated,
+        source: tx.source
+      })
+    }
     tx.emit('edge.patrol.planned.v1', {
       planId: plan.id,
       segmentIds: plan.tasks.map((t) => t.segmentId),
@@ -260,3 +280,8 @@ function closeRecaptures(tx: Tx, segmentId: string, covers: (task: Task) => bool
 /** The re-plan that replaced `plan`, if any. A superseded plan is never approved or flown. */
 const supersededBy = (tx: Tx, plan: PatrolPlan) =>
   tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === plan.id)
+
+/** Each third party once, however many times it was reported. */
+function distinct(parties: ThirdParty[]): ThirdParty[] {
+  return [...new Map(parties.map((p) => [canonicalJson(p), p])).values()]
+}
