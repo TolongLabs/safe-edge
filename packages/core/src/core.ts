@@ -26,6 +26,9 @@ export interface Clock {
   now(): string
 }
 
+/** What the API stores outside core: its operations' records, and its own failed webhook deliveries. */
+export type StoredAction = OperationId | 'deliverWebhook'
+
 export interface IdGenerator {
   next(prefix: IdPrefix): string
 }
@@ -48,10 +51,11 @@ export interface Core {
    */
   checkAccess(operationId: OperationId, actor: Actor, input?: { params?: unknown; body?: unknown }): Denial | null
   /**
-   * Appends an allowed write that a transport stored itself (a `handledBy: 'api'` row: evidence, webhooks), with
-   * `before` null and `after` the record, so every write is on the audit chain. Call it once `checkAccess` allowed it.
+   * Appends an allowed write that the API stored itself, so every write is on the audit chain: a `handledBy: 'api'`
+   * row's record (evidence, webhooks; call it once `checkAccess` allowed it), or the API's own change to one, such as a
+   * failed webhook delivery (`deliverWebhook`). `before` is the record it replaced, null for a new one.
    */
-  recordStored(operationId: OperationId, actor: Actor, record: { id: string }): void
+  recordStored(action: StoredAction, actor: Actor, record: { id: string }, before?: { id: string } | null): void
   /**
    * Time-driven pass moves: valid → expiring 30 days before `validTo`, and → expired at `validTo`. Acts as the system,
    * which the one-way rule never lets make a pass valid. Returns the events to publish.
@@ -87,11 +91,15 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     return refused
   }
 
-  const recordStored = (operationId: OperationId, actor: Actor, record: { id: string }) => {
-    const { handledBy } = operations[operationId]
-    if (handledBy !== 'api')
-      throw new Error(`${operationId} is handled by ${handledBy}, whose writes core audits itself`)
-    openTx(Actor.parse(actor), clock.now()).commitStored(operationId, record)
+  const recordStored = (
+    action: StoredAction,
+    actor: Actor,
+    record: { id: string },
+    before: { id: string } | null = null
+  ) => {
+    const handledBy = action === 'deliverWebhook' ? 'api' : operations[action].handledBy
+    if (handledBy !== 'api') throw new Error(`${action} is handled by ${handledBy}, whose writes core audits itself`)
+    openTx(Actor.parse(actor), clock.now()).commitStored(action, record, before)
   }
 
   const dispatch = <K extends CoreOperationId>(

@@ -101,7 +101,7 @@ When a manager or engineer submits a work order (`edge.work_order.submitted.v1`)
 3.  The API stores the Observation ID as the work order's `externalRef` with `setWorkOrderExternalRef` (system only, set once, audited), before any photo goes.
 4.  `addEvidence` uploads each observation photo and attaches it to the Observation.
 
-A failure is logged and not retried. Every submitted work order gets its own Observation, including the one a reopened finding gets. Nothing calls `updateStatus` yet. It maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
+A failure is not retried: the API records it on the work order as `externalError` (`recordWorkOrderExternalError`, system only, set once, audited), readable with `GET /v1/work-orders/{id}`, and logs it. Every submitted work order gets its own Observation, including the one a reopened finding gets. Nothing calls `updateStatus` yet. It maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
 
 ### Procore does not notify assignees
 

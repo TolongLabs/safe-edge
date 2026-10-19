@@ -1055,6 +1055,45 @@ paths:
       x-safe-edge-roles:
         - system
       x-safe-edge-events: []
+  /work-orders/{id}/external-error:
+    post:
+      operationId: recordWorkOrderExternalError
+      summary: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+      description: "Roles: system. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordWorkOrderExternalErrorRequest"
+      responses:
+        "200":
+          description: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
+      x-safe-edge-events: []
   /work-orders/{id}/submit:
     post:
       operationId: submitWorkOrder
@@ -1657,6 +1696,26 @@ paths:
       x-safe-edge-agent-scope: edge.read
       x-safe-edge-events: []
   /webhooks:
+    get:
+      operationId: listWebhooks
+      summary: List webhook endpoints with their failed deliveries
+      description: "Roles: integrator. Agents are refused."
+      tags:
+        - webhooks
+      responses:
+        "200":
+          description: List webhook endpoints with their failed deliveries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookList"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - integrator
+      x-safe-edge-events: []
     post:
       operationId: registerWebhook
       summary: Register a webhook endpoint for CloudEvents
@@ -3458,6 +3517,22 @@ components:
           type:
             - string
             - "null"
+        externalError:
+          anyOf:
+            - type: object
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                at:
+                  type: string
+                  format: date-time
+              required:
+                - message
+                - at
+              additionalProperties: false
+            - type: "null"
+          description: Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried
         createdAt:
           type: string
           format: date-time
@@ -3478,6 +3553,7 @@ components:
         - completedAt
         - completionEvidence
         - externalRef
+        - externalError
         - createdAt
         - simulated
         - source
@@ -3793,6 +3869,24 @@ components:
         - edge.pass.issued.v1
         - edge.pass.expiring.v1
         - edge.pass.expired.v1
+    WebhookFailure:
+      type: object
+      properties:
+        eventId:
+          type: string
+          pattern: ^evt_
+        at:
+          type: string
+          format: date-time
+        error:
+          type: string
+          minLength: 1
+          description: "HTTP <status>: <body>, or the network error"
+      required:
+        - eventId
+        - at
+        - error
+      additionalProperties: false
     Webhook:
       type: object
       properties:
@@ -3811,12 +3905,18 @@ components:
         createdAt:
           type: string
           format: date-time
+        failures:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookFailure"
+          description: Failed deliveries, oldest first; each is also on the audit chain
       required:
         - id
         - url
         - eventTypes
         - createdBy
         - createdAt
+        - failures
       additionalProperties: false
     TriageResult:
       type: object
@@ -3885,6 +3985,10 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Asset"
+    WebhookList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Webhook"
     AuditEventList:
       type: array
       items:
@@ -4245,6 +4349,16 @@ components:
           minLength: 1
       required:
         - externalRef
+      additionalProperties: false
+    RecordWorkOrderExternalErrorRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          description: The work-order system's error
+      required:
+        - message
       additionalProperties: false
     SubmitWorkOrderRequest:
       type: object

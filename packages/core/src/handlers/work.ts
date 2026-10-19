@@ -8,6 +8,7 @@ type WorkOperation =
   | 'createWorkOrder'
   | 'updateWorkOrder'
   | 'setWorkOrderExternalRef'
+  | 'recordWorkOrderExternalError'
   | 'submitWorkOrder'
   | 'startWorkOrder'
   | 'completeWorkOrder'
@@ -80,6 +81,7 @@ export const work: Handlers<WorkOperation> = {
       completedAt: null,
       completionEvidence: [],
       externalRef: null,
+      externalError: null,
       createdAt: tx.now,
       simulated: finding.simulated,
       source: tx.source
@@ -127,6 +129,19 @@ export const work: Handlers<WorkOperation> = {
     const linked: WorkOrder = { ...workOrder, externalRef: body.externalRef }
     tx.put('workOrders', linked)
     return ok(linked)
+  },
+
+  // A failed hand-off stays visible on the work order and the audit chain. Nothing retries it, so it is written once.
+  recordWorkOrderExternalError: (tx, { params, body }) => {
+    const workOrder = tx.get('workOrders', params.id)
+    if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    if (workOrder.externalError !== null) {
+      const message = `${workOrder.id} already records a failed hand-off: ${workOrder.externalError.message}`
+      return tx.deny('invalid_transition', message, workOrder.id)
+    }
+    const failed: WorkOrder = { ...workOrder, externalError: { message: body.message, at: tx.now } }
+    tx.put('workOrders', failed)
+    return ok(failed)
   },
 
   submitWorkOrder: (tx, { params, body }) => {

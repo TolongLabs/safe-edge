@@ -43,6 +43,7 @@ import {
   RecordClearanceRequest,
   RecordObservationRequest,
   RecordRetestRequest,
+  RecordWorkOrderExternalErrorRequest,
   RegisterWebhookRequest,
   RetestOutcome,
   RouteClosure,
@@ -57,6 +58,7 @@ import {
   UpdateWorkOrderRequest,
   UploadEvidenceRequest,
   UserList,
+  WebhookList,
   WorkOrderList
 } from './api.ts'
 import {
@@ -509,6 +511,20 @@ export const operations = {
     status: 200,
     events: []
   },
+  recordWorkOrderExternalError: {
+    method: 'post',
+    path: '/work-orders/{id}/external-error',
+    summary:
+      'Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)',
+    handledBy: 'core',
+    roles: ['system'],
+    agentScope: null,
+    params: IdParam.workOrder,
+    body: RecordWorkOrderExternalErrorRequest,
+    response: WorkOrder,
+    status: 200,
+    events: []
+  },
   submitWorkOrder: {
     method: 'post',
     path: '/work-orders/{id}/submit',
@@ -737,6 +753,17 @@ export const operations = {
     response: EdgeEvent,
     status: 200,
     stream: true,
+    events: []
+  },
+  listWebhooks: {
+    method: 'get',
+    path: '/webhooks',
+    summary: 'List webhook endpoints with their failed deliveries',
+    handledBy: 'api',
+    roles: ['integrator'],
+    agentScope: null,
+    response: WebhookList,
+    status: 200,
     events: []
   },
   registerWebhook: {

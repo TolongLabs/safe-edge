@@ -9,7 +9,8 @@ const SYSTEM: Actor = { type: 'system', id: 'api.work-orders', role: 'system', s
  * and records the external record on the work order. Only a person submits (INBOX-4), so no draft, the agent's or
  * the one confirming drafts, leaves Safe Edge. Each submitted work order (a reopened finding's new one too) gets its
  * own external record. The link is stored as soon as the record exists, before the photos go, so Safe Edge never
- * loses track of a record it created. A failure is logged, like a webhook delivery; nothing retries it.
+ * loses track of a record it created. A failure is recorded on the work order (`externalError`, audited) and logged;
+ * nothing retries it.
  */
 export function forwardWorkOrders({
   core,
@@ -23,9 +24,12 @@ export function forwardWorkOrders({
   subscribe((event) => {
     if (event.type !== 'edge.work_order.submitted.v1') return
     const { workOrderId } = event.data
-    forward(workOrderId).catch((error: unknown) =>
+    forward(workOrderId).catch((error: unknown) => {
       console.error(`Work order ${workOrderId} did not reach the work-order system`, error)
-    )
+      // The failure goes on the work order and the audit chain; if even that is refused, it throws.
+      const message = error instanceof Error ? error.message : String(error)
+      read(core.dispatch('recordWorkOrderExternalError', SYSTEM, { params: { id: workOrderId }, body: { message } }))
+    })
   })
 
   async function forward(workOrderId: string) {

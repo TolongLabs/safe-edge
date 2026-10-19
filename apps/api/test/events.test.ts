@@ -1,6 +1,6 @@
 // Core's events reach subscribers over server-sent events and webhooks as CloudEvents.
 import { afterAll, expect, test } from 'bun:test'
-import { EdgeEvent, Webhook } from '@safe-edge/contracts'
+import { AuditEvent, EdgeEvent, Webhook } from '@safe-edge/contracts'
 import { S1, raiseTier2, seed, startApi } from './support.ts'
 
 /** Reads server-sent event frames (blank-line separated) as they arrive. */
@@ -98,7 +98,8 @@ test('POST /v1/webhooks registers an integrator endpoint, and each subscribed ev
     url,
     eventTypes: ['edge.pass.suspended.v1'],
     createdBy: 'usr_integrator',
-    createdAt: seed.asOf
+    createdAt: seed.asOf,
+    failures: []
   })
 
   const raised = await raiseTier2(api)
@@ -110,4 +111,64 @@ test('POST /v1/webhooks registers an integrator endpoint, and each subscribed ev
       event: expect.objectContaining({ type: 'edge.pass.suspended.v1', subject: `segments/${S1.segmentId}` })
     }
   ])
+})
+
+/** Polls `read` until it returns a value: a delivery fails on the API's own time, after the request that caused it. */
+async function eventually<T>(read: () => Promise<T | undefined>): Promise<T> {
+  for (;;) {
+    const value = await read()
+    if (value !== undefined) return value
+    await Bun.sleep(5)
+  }
+}
+
+test('a failed webhook delivery is recorded on the webhook and the audit chain, readable through the API', async () => {
+  const failing = Bun.serve({ port: 0, fetch: () => new Response('down for maintenance', { status: 500 }) })
+  afterAll(() => failing.stop(true))
+  const closed = Bun.serve({ port: 0, fetch: () => new Response(null, { status: 204 }) })
+  const unreachable = new URL('/hooks', closed.url).href
+  await closed.stop(true)
+
+  const api = startApi()
+  const register = async (url: string) =>
+    Webhook.parse(
+      await (
+        await api.request('post', '/webhooks', {
+          token: 'tok_integrator',
+          body: { url, eventTypes: ['edge.pass.suspended.v1'] }
+        })
+      ).json()
+    )
+  const erroring = await register(new URL('/hooks', failing.url).href)
+  const gone = await register(unreachable)
+  expect((await raiseTier2(api)).status).toBe(201)
+
+  const webhooks = await eventually(async () => {
+    const response = await api.request('get', '/webhooks', { token: 'tok_integrator' })
+    const list = Webhook.array().parse(await response.json())
+    return list.every((w) => w.failures.length > 0) ? list : undefined
+  })
+  const failure = { eventId: expect.stringMatching(/^evt_/), at: seed.asOf }
+  expect(webhooks).toEqual([
+    { ...erroring, failures: [{ ...failure, error: 'HTTP 500: down for maintenance' }] },
+    { ...gone, failures: [{ ...failure, error: expect.any(String) }] }
+  ])
+  expect(webhooks[0]!.failures[0]!.eventId).toBe(webhooks[1]!.failures[0]!.eventId)
+
+  const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_manager' })).json())
+  const recorded = audit.filter((e) => e.action === 'deliverWebhook')
+  expect(recorded.map((e) => [e.subjectId, e.actor, e.decision, e.before, e.after])).toEqual(
+    expect.arrayContaining(
+      webhooks.map((w) => [
+        w.id,
+        { type: 'system', id: 'api.webhooks', role: 'system' },
+        'allowed',
+        { ...w, failures: [] },
+        w
+      ])
+    )
+  )
+  expect(recorded).toHaveLength(2)
+  // Only integrators read the registrations.
+  expect((await api.request('get', '/webhooks', { token: 'tok_agent' })).status).toBe(403)
 })

@@ -225,8 +225,8 @@ export class Tx {
   }
 
   /** Appends a write the transport stored outside the core's collections (an evidence file, a webhook). */
-  commitStored(action: string, record: { id: string }): void {
-    this.state.audit.push(this.entry([], action, record.id, null, record, null, null))
+  commitStored(action: string, record: { id: string }, before: { id: string } | null): void {
+    this.state.audit.push(this.entry([], action, record.id, before, record, null, null))
   }
 
   /** Appends a refused attempt; nothing staged in this transaction is kept. */

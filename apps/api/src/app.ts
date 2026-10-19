@@ -48,6 +48,9 @@ export interface ApiOptions {
 }
 
 type Env = { Variables: { actor: Actor } }
+
+/** Who delivers webhooks and records their failures: the API itself. */
+const WEBHOOKS: Actor = { type: 'system', id: 'api.webhooks', role: 'system', scopes: [] }
 type ApiOperationId = { [K in OperationId]: Operations[K]['handledBy'] extends 'api' ? K : never }[OperationId]
 type ApiHandlers = {
   [K in ApiOperationId]: (c: Context<Env>, input: OperationInput<K>) => Response | Promise<Response>
@@ -59,7 +62,11 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
 export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, agent: agentOptions }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
-  const hub = createEventHub()
+  // A failed webhook delivery is the API's own write to the webhook, on the audit chain like any other.
+  const hub = createEventHub({
+    clock,
+    onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
+  })
   const evidence = createEvidenceStore({ clock, ids })
   if (workOrders) {
     const provider = workOrders(async (ref) => evidence.bytes(ref))
@@ -199,8 +206,15 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
           await stream.write(': heartbeat\n\n')
         }
       }),
+    listWebhooks: (c) => c.json(hub.list(), 200),
     registerWebhook: (c, { body }) => {
-      const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: c.get('actor').id, createdAt: clock.now() }
+      const webhook: Webhook = {
+        id: ids.next('whk'),
+        ...body,
+        createdBy: c.get('actor').id,
+        createdAt: clock.now(),
+        failures: []
+      }
       hub.register(webhook)
       core.recordStored('registerWebhook', c.get('actor'), webhook)
       return c.json(webhook, 201)

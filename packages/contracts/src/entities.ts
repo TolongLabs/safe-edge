@@ -568,6 +568,12 @@ export const WorkOrder = named(
     completedAt: Timestamp.nullable(),
     completionEvidence: z.array(EvidenceRef),
     externalRef: z.string().nullable().describe('Procore observation ID'),
+    externalError: z
+      .object({ message: z.string().min(1), at: Timestamp })
+      .nullable()
+      .describe(
+        'Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried'
+      ),
     createdAt: Timestamp,
     ...provenance
   })

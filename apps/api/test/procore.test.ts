@@ -16,6 +16,7 @@ import {
 } from '@safe-edge/contracts'
 import { ProcoreWorkOrderProvider } from '@safe-edge/providers'
 import { startProcoreDouble } from '../../../packages/providers/test/procore-double.ts'
+import type { ApiOptions } from '../src/app.ts'
 import { S1, seed, startApi, type Api } from './support.ts'
 
 // FF D8 FF E0 followed by "safe-edge", as in evidence.test.ts.
@@ -27,15 +28,39 @@ const credentials = { clientId: 'safe-edge-sandbox', clientSecret: 'sandbox-secr
 const procore = startProcoreDouble(credentials)
 afterAll(() => procore.stop())
 
-/** Polls until `read` returns a value; the hand-off runs after the submitting request has answered. */
-async function eventually<T>(read: () => T | undefined | Promise<T | undefined>): Promise<T> {
-  const deadline = Date.now() + 3_000
-  for (;;) {
-    const value = await read()
-    if (value !== undefined) return value
-    if (Date.now() > deadline) throw new Error('Timed out waiting for the Procore hand-off')
-    await Bun.sleep(10)
+/**
+ * The Procore adapter against the double, watched: `handedOff` settles when the API's hand-off of a work order has
+ * finished (photos attached, null) or failed (the error), so the tests wait on the hand-off itself, not on a timer.
+ */
+function procoreAdapter(clientSecret = credentials.clientSecret) {
+  const { promise: handedOff, resolve } = Promise.withResolvers<unknown>()
+  const workOrders: ApiOptions['workOrders'] = (readEvidence) => {
+    const adapter = new ProcoreWorkOrderProvider({
+      loginBaseUrl: procore.url,
+      apiBaseUrl: procore.url,
+      ...credentials,
+      clientSecret,
+      observationType: 'Safety Hazard',
+      readEvidence
+    })
+    const watch = <T>(step: Promise<T>, last: boolean) =>
+      step.then(
+        (value) => {
+          if (last) resolve(null)
+          return value
+        },
+        (error: unknown) => {
+          resolve(error)
+          throw error
+        }
+      )
+    return {
+      createFinding: (finding) => watch(adapter.createFinding(finding), false),
+      addEvidence: (ref, evidence) => watch(adapter.addEvidence(ref, evidence), true),
+      updateStatus: (ref, status) => adapter.updateStatus(ref, status)
+    }
   }
+  return { workOrders, handedOff }
 }
 
 async function post<T>(
@@ -57,19 +82,13 @@ async function tasksOf(api: Api, findingId: string) {
     .filter((task) => task.findingId === findingId)
 }
 
-test('submitting a work order files a Procore Observation with its photo and links it; drafts stay in Safe Edge', async () => {
-  const api = startApi({
-    workOrders: (readEvidence) =>
-      new ProcoreWorkOrderProvider({
-        loginBaseUrl: procore.url,
-        apiBaseUrl: procore.url,
-        ...credentials,
-        observationType: 'Safety Hazard',
-        readEvidence
-      })
-  })
-
-  // S1 by phone: the crew photographs the gap, the provider raises it, the manager confirms it.
+/**
+ * S1 by phone up to a person's submit: the crew photographs the gap, the provider raises it, the manager confirms it,
+ * the agent drafts a second work order, and the manager's draft goes through interim protection and an approved
+ * remedy to submission.
+ */
+async function submitS1(api: Api) {
+  const filedBefore = procore.observations.length
   const photo = await post(
     api,
     '/evidence',
@@ -168,7 +187,7 @@ test('submitting a work order files a Procore Observation with its photo and lin
   })
   expect(edited.status).toBe(200)
   // Every draft so far was published before these requests ran, and none reached Procore.
-  expect(procore.observations).toEqual([])
+  expect(procore.observations).toHaveLength(filedBefore)
 
   await post(
     api,
@@ -177,12 +196,19 @@ test('submitting a work order files a Procore Observation with its photo and lin
     { installerUserId: 'usr_installer', dueAt: '2026-10-24T09:00:00.000Z' },
     WorkOrder
   )
-  const filed = await eventually(() =>
-    procore.observations[0]?.attachments.length === 1 ? procore.observations[0] : undefined
-  )
+  return { photo, finding: finding!, workOrder: workOrder!, agentDraft }
+}
+
+test('submitting a work order files a Procore Observation with its photo and links it; drafts stay in Safe Edge', async () => {
+  const { workOrders, handedOff } = procoreAdapter()
+  const api = startApi({ workOrders })
+  const { photo, finding, workOrder, agentDraft } = await submitS1(api)
+
+  expect(await handedOff).toBeNull()
+  const filed = procore.observations[0]!
   expect(procore.observations).toHaveLength(1)
   expect(filed).toMatchObject({
-    name: `Safe Edge ${finding!.id}: inventory item on ${S1.segmentId}`,
+    name: `Safe Edge ${finding.id}: inventory item on ${S1.segmentId}`,
     priority: 'High',
     status: 'initiated',
     type: { id: SAFETY_HAZARD_TYPE_ID, name: 'Safety Hazard' },
@@ -194,7 +220,7 @@ test('submitting a work order files a Procore Observation with its photo and lin
 
   // The work order now names the Observation, recorded by the system and audited.
   const linked = WorkOrder.parse(
-    await (await api.request('get', `/work-orders/${workOrder!.id}`, { token: 'tok_manager' })).json()
+    await (await api.request('get', `/work-orders/${workOrder.id}`, { token: 'tok_manager' })).json()
   )
   expect(linked.externalRef).toBe(String(filed.id))
   const draft = await api.request('get', `/work-orders/${agentDraft.id}`, { token: 'tok_manager' })
@@ -202,17 +228,46 @@ test('submitting a work order files a Procore Observation with its photo and lin
   const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_manager' })).json())
   expect(audit.at(-1)).toMatchObject({
     action: 'setWorkOrderExternalRef',
-    subjectId: workOrder!.id,
+    subjectId: workOrder.id,
     decision: 'allowed',
     actor: { type: 'system', role: 'system' },
     after: { externalRef: String(filed.id) }
   })
 
   // The link is set once: a second one is refused, even for the system.
-  const again = await api.request('post', `/work-orders/${workOrder!.id}/external-ref`, {
+  const again = await api.request('post', `/work-orders/${workOrder.id}/external-ref`, {
     token: 'tok_system',
     body: { externalRef: '999' }
   })
   expect(again.status).toBe(403)
   expect(await again.json()).toMatchObject({ ok: false, rule: 'invalid_transition' })
+})
+
+test('a failed hand-off is recorded on the work order and the audit chain, readable through the API', async () => {
+  // A wrong client secret: Procore refuses the token, so nothing is filed.
+  const { workOrders, handedOff } = procoreAdapter('not-the-secret')
+  const api = startApi({ workOrders })
+  const filedBefore = procore.observations.length
+  const { workOrder } = await submitS1(api)
+
+  const error = await handedOff
+  expect(error).toBeInstanceOf(Error)
+  expect(procore.observations).toHaveLength(filedBefore)
+  const read = await api.request('get', `/work-orders/${workOrder.id}`, { token: 'tok_manager' })
+  const failed = WorkOrder.parse(await read.json())
+  expect(failed).toMatchObject({
+    status: 'submitted',
+    externalRef: null,
+    externalError: { message: (error as Error).message, at: seed.asOf }
+  })
+  expect(failed.externalError!.message).toContain('401')
+  const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_manager' })).json())
+  expect(audit.at(-1)).toMatchObject({
+    action: 'recordWorkOrderExternalError',
+    subjectId: workOrder.id,
+    decision: 'allowed',
+    actor: { type: 'system', id: 'api.work-orders', role: 'system' },
+    before: { externalError: null },
+    after: { externalError: failed.externalError }
+  })
 })

@@ -582,6 +582,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/work-orders/{id}/external-error": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+         * @description Roles: system. Agents are refused.
+         */
+        post: operations["recordWorkOrderExternalError"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/work-orders/{id}/submit": {
         parameters: {
             query?: never;
@@ -933,7 +953,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List webhook endpoints with their failed deliveries
+         * @description Roles: integrator. Agents are refused.
+         */
+        get: operations["listWebhooks"];
         put?: never;
         /**
          * Register a webhook endpoint for CloudEvents
@@ -1452,6 +1476,12 @@ export interface components {
             completionEvidence: components["schemas"]["EvidenceRef"][];
             /** @description Procore observation ID */
             externalRef: string | null;
+            /** @description Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried */
+            externalError: {
+                message: string;
+                /** Format: date-time */
+                at: string;
+            } | null;
             /** Format: date-time */
             createdAt: string;
             simulated: boolean;
@@ -1546,6 +1576,13 @@ export interface components {
         };
         /** @enum {string} */
         EventType: "edge.patrol.planned.v1" | "edge.patrol.started.v1" | "edge.patrol.completed.v1" | "edge.candidate.raised.v1" | "edge.candidate.decided.v1" | "edge.pass.suspended.v1" | "edge.work_order.drafted.v1" | "edge.work_order.submitted.v1" | "edge.repair.completed.v1" | "edge.retest.recorded.v1" | "edge.pass.issued.v1" | "edge.pass.expiring.v1" | "edge.pass.expired.v1";
+        WebhookFailure: {
+            eventId: string;
+            /** Format: date-time */
+            at: string;
+            /** @description HTTP <status>: <body>, or the network error */
+            error: string;
+        };
         Webhook: {
             id: string;
             /** Format: uri */
@@ -1554,6 +1591,8 @@ export interface components {
             createdBy: string;
             /** Format: date-time */
             createdAt: string;
+            /** @description Failed deliveries, oldest first; each is also on the audit chain */
+            failures: components["schemas"]["WebhookFailure"][];
         };
         TriageResult: {
             items: {
@@ -1573,6 +1612,7 @@ export interface components {
             notVisible: string[];
         };
         AssetList: components["schemas"]["Asset"][];
+        WebhookList: components["schemas"]["Webhook"][];
         AuditEventList: components["schemas"]["AuditEvent"][];
         SegmentList: components["schemas"]["Segment"][];
         UserList: components["schemas"]["User"][];
@@ -1677,6 +1717,10 @@ export interface components {
         };
         SetWorkOrderExternalRefRequest: {
             externalRef: string;
+        };
+        RecordWorkOrderExternalErrorRequest: {
+            /** @description The work-order system's error */
+            message: string;
         };
         SubmitWorkOrderRequest: {
             installerUserId: string;
@@ -2799,6 +2843,39 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    recordWorkOrderExternalError: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordWorkOrderExternalErrorRequest"];
+            };
+        };
+        responses: {
+            /** @description Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     submitWorkOrder: {
         parameters: {
             query?: never;
@@ -3306,6 +3383,28 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": string;
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    listWebhooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List webhook endpoints with their failed deliveries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookList"];
                 };
             };
             401: components["responses"]["Unauthenticated"];

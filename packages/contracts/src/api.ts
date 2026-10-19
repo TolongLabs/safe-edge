@@ -38,7 +38,7 @@ import {
   WorkOrder,
   WorkOrderStatus
 } from './entities.ts'
-import { EventType } from './events.ts'
+import { EventType, Webhook } from './events.ts'
 import {
   CandidateId,
   DockId,
@@ -72,6 +72,7 @@ import { TriageResult } from './triage.ts'
 const list = <T extends z.ZodType>(id: string, item: T) => named(id, z.array(item))
 
 export const AssetList = list('AssetList', Asset)
+export const WebhookList = list('WebhookList', Webhook)
 export const AuditEventList = list('AuditEventList', AuditEvent)
 export const SegmentList = list('SegmentList', Segment)
 export const UserList = list('UserList', User)
@@ -218,6 +219,12 @@ export const SetWorkOrderExternalRefRequest = named(
   z.object({ externalRef: z.string().min(1) })
 )
 export type SetWorkOrderExternalRefRequest = z.infer<typeof SetWorkOrderExternalRefRequest>
+
+export const RecordWorkOrderExternalErrorRequest = named(
+  'RecordWorkOrderExternalErrorRequest',
+  z.object({ message: z.string().min(1).describe("The work-order system's error") })
+)
+export type RecordWorkOrderExternalErrorRequest = z.infer<typeof RecordWorkOrderExternalErrorRequest>
 
 export const SubmitWorkOrderRequest = named(
   'SubmitWorkOrderRequest',
