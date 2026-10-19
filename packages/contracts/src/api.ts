@@ -1,10 +1,10 @@
 import * as z from 'zod'
 import {
+  AgentSummary,
   Asset,
   AuditEvent,
   Baseline,
   Candidate,
-  CandidateClass,
   CandidateStatus,
   ContextSnapshot,
   Dock,
@@ -25,6 +25,7 @@ import {
   PlanReplan,
   Remedy,
   RemedyType,
+  ReportedClass,
   Retest,
   RetestCheck,
   Route,
@@ -165,7 +166,7 @@ export const RaiseCandidateRequest = named(
     observationIds: z.array(ObservationId),
     inventoryItemId: InventoryItemId.nullable(),
     itemStatus: ItemStatus.nullable(),
-    class: CandidateClass,
+    class: ReportedClass,
     score: z.number().min(0).max(1),
     uncertainty: Uncertainty.nullable(),
     gridCell: z
@@ -178,6 +179,23 @@ export const RaiseCandidateRequest = named(
   })
 )
 export type RaiseCandidateRequest = z.infer<typeof RaiseCandidateRequest>
+
+/** A person's first-hand report of damage on a segment (PRD PROOF-4). Core files it as a Tier 2 candidate. */
+export const ReportDamageRequest = named(
+  'ReportDamageRequest',
+  z.object({
+    segmentId: SegmentId,
+    observationIds: z
+      .array(ObservationId)
+      .describe('Photos of the damage the reporter recorded on this segment (POST /observations); may be empty'),
+    inventoryItemId: InventoryItemId.nullable().describe('The damaged expected item, when it is one'),
+    itemStatus: ItemStatus.extract(['missing', 'changed']).nullable(),
+    class: ReportedClass,
+    rationale: z.string().min(1).describe('What the reporter saw'),
+    simulated: z.boolean()
+  })
+)
+export type ReportDamageRequest = z.infer<typeof ReportDamageRequest>
 
 export const DecideCandidateRequest = named(
   'DecideCandidateRequest',
@@ -392,15 +410,25 @@ export type AgentAnswer = z.infer<typeof AgentAnswer>
  * of tokens or turns, or skipped the draft it was asked for. `askAgent` sends it as a `stopped` event instead of
  * `answer`; the draft operations return it with status 502.
  */
-export const AgentStopped = z.object({
-  ok: z.literal(false),
-  error: z.literal('agent_stopped'),
-  message: z.string(),
-  stopReason: z.string().describe("Claude's stop_reason for the last turn"),
-  category: z.string().nullable().describe('The refusal category, when Claude refused'),
-  model: z.string()
-})
+export const AgentStopped = named(
+  'AgentStopped',
+  z.object({
+    ok: z.literal(false),
+    error: z.literal('agent_stopped'),
+    message: z.string(),
+    stopReason: z.string().describe("Claude's stop_reason for the last turn"),
+    category: z.string().nullable().describe('The refusal category, when Claude refused'),
+    model: z.string()
+  })
+)
 export type AgentStopped = z.infer<typeof AgentStopped>
+
+/** The agent's summary for a candidate's card; core stamps the label, the agent and the time. */
+export const RecordAgentSummaryRequest = named(
+  'RecordAgentSummaryRequest',
+  AgentSummary.pick({ text: true, citations: true, model: true })
+)
+export type RecordAgentSummaryRequest = z.infer<typeof RecordAgentSummaryRequest>
 
 /** The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order. */
 export const DraftInboxRequest = named('DraftInboxRequest', z.object({ candidateId: CandidateId }))
@@ -412,7 +440,9 @@ export const InboxDraft = named(
     candidateId: CandidateId,
     findingId: FindingId.nullable().describe('Null while the candidate is not confirmed; no work order then'),
     summary: z.string().describe("The agent's summary for the Inbox card"),
-    workOrder: WorkOrder.nullable().describe("The agent's draft; a person edits and submits it"),
+    workOrder: WorkOrder.nullable().describe(
+      "The finding's open draft: the one confirming made, which the agent's draft request returns unchanged, or the agent's own when the finding had none open. A person edits and submits it"
+    ),
     ...agentProvenance
   })
 )

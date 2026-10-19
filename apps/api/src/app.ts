@@ -14,6 +14,7 @@ import {
   type WorkOrderProvider
 } from '@safe-edge/contracts'
 import type Anthropic from '@anthropic-ai/sdk'
+import { APIUserAbortError } from '@anthropic-ai/sdk'
 import type { Core, IdGenerator } from '@safe-edge/core'
 import type { EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
@@ -158,16 +159,25 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
       return streamSSE(
         c,
         async (stream) => {
+          // A person who hangs up (closes the panel) cancels the run: the abort reaches the request open to Claude.
+          const hungUp = new AbortController()
+          stream.onAbort(() => hungUp.abort())
           // Claude can think and call tools for longer than Bun's idle timeout before it writes text, so the stream
           // opens with a comment and keeps a heartbeat, as /events does.
           await stream.write(': connected\n\n')
           const heartbeat = setInterval(() => void stream.write(': heartbeat\n\n'), heartbeatMs)
           try {
-            const result = await agent.ask(body.question, (text) =>
-              stream.writeSSE({ event: 'delta', data: JSON.stringify({ text } satisfies AgentDelta) })
+            const result = await agent.ask(
+              body.question,
+              (text) => stream.writeSSE({ event: 'delta', data: JSON.stringify({ text } satisfies AgentDelta) }),
+              hungUp.signal
             )
             if (result.ok) await stream.writeSSE({ event: 'answer', data: JSON.stringify(result.answer) })
             else await stream.writeSSE({ event: 'stopped', data: JSON.stringify(result) })
+          } catch (error) {
+            // Nobody is listening for the answer, so the cancelled run is not an error.
+            if (hungUp.signal.aborted && error instanceof APIUserAbortError) return
+            throw error
           } finally {
             clearInterval(heartbeat)
           }

@@ -5,7 +5,7 @@ import {
   EdgeEvent,
   operations,
   type Actor,
-  type CandidateClass,
+  type ReportedClass,
   type ItemStatus,
   type CoreOperationId,
   type DispatchResult,
@@ -113,7 +113,7 @@ export function raiseOnS1(
   candidate: {
     inventoryItemId: string | null
     itemStatus: ItemStatus | null
-    class: CandidateClass
+    class: ReportedClass
     rationale: string
   }
 ) {

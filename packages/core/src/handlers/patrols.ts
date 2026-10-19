@@ -175,6 +175,10 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     const coverage = [...covered, ...unreported]
     const completed: Patrol = { ...patrol, status: 'completed', completedAt: tx.now, coverage }
     tx.put('patrols', completed)
+    // Inspecting any of a segment restarts its patrol interval; a segment the patrol saw none of has missed it.
+    for (const c of coverage.filter((c) => c.inspectedM > 0)) {
+      tx.put('segments', { ...tx.must('segments', c.segmentId), lastPatrolledAt: tx.now })
+    }
     for (const c of coverage.filter((c) => c.unknownM > 0)) {
       const segment = tx.must('segments', c.segmentId)
       const task: Task = {
