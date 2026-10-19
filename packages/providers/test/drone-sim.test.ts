@@ -96,12 +96,16 @@ const HELD = 'seg_866518980_9'
  * the transits from and to the dock, #150) and dispatched at its window's start. `waitFrom` is when the drone, flying
  * the plan, has reached the waypoint before segment 9's first station and hovered there for its frame: where it waits.
  */
-async function heldFlight() {
-  const h = await start({ thirdParties: [peopleBySegment9] })
-  const approved = h.approve(h.plan([...SEGMENT_IDS, HELD]).id)
+async function heldFlight({
+  thirdParties = [peopleBySegment9],
+  segmentIds = [...SEGMENT_IDS, HELD],
+  held = HELD
+}: { thirdParties?: ThirdParty[]; segmentIds?: string[]; held?: string } = {}) {
+  const h = await start({ thirdParties })
+  const approved = h.approve(h.plan(segmentIds).id)
   expect(approved.holds.map((x) => [x.kind, x.segmentId, x.releasedBy])).toEqual([
     ['separation', null, null],
-    ['separation', HELD, null]
+    ['separation', held, null]
   ])
   const approval = { planId: approved.id, approvedBy: approved.approvedBy!, approvedAt: approved.approvedAt! }
   const release = (segmentId: string) =>
@@ -118,7 +122,7 @@ async function heldFlight() {
   const dockClear = release('dock')
   const run = await h.sim.schedulePatrol(dockClear)
   await h.sim.dispatchPatrol(run.id, approval)
-  const first = dockClear.waypoints.findIndex((w) => w.segmentId === HELD)
+  const first = dockClear.waypoints.findIndex((w) => w.segmentId === held)
   const before = dockClear.waypoints[first - 1]!
   const waitFrom = Date.parse(before.eta) + (before.kind === 'station' ? assumedEnergyModel.stationHoverS * 1000 : 0)
   const at = (ms: number) => {
@@ -128,8 +132,20 @@ async function heldFlight() {
   return { ...h, plan: dockClear, run, approval, release, before, waitFrom, at }
 }
 
-const heldEvents = (events: ProviderEvent[]) =>
-  events.filter((e) => (e.type === 'waypoint' || e.type === 'observation') && e.segmentId === HELD)
+const heldEvents = (events: ProviderEvent[], held = HELD) =>
+  events.filter((e) => (e.type === 'waypoint' || e.type === 'observation') && e.segmentId === held)
+
+/** People on the footbridge between the banks, 9 m from the transit from segment 8 to segment 5 (as in #150's test). */
+const peopleOnFootbridge: ThirdParty = {
+  id: 'obs_people_footbridge',
+  kind: 'person',
+  label: 'people on footbridge way/909868199',
+  geometry: { type: 'Point', coordinates: [101.5130697, 3.1791843] },
+  observedAt: '2026-10-21T21:50:00.000Z',
+  headcount: null,
+  simulated: true,
+  source: 'fixture'
+}
 
 describe('drone-sim waits at a separation hold', () => {
   test('it hovers before the held segment until the pilot releases it, and the hover costs battery and time', async () => {
@@ -199,6 +215,94 @@ describe('drone-sim waits at a separation hold', () => {
     expect(landed).toMatchObject({ outcome: 'hold_timeout', pose: { lon: dock.position.lon, lat: dock.position.lat } })
     expect(landed.remainingWh).toBeGreaterThanOrEqual(h.drone.reserveWh)
     expect(Date.parse(landed.at)).toBeLessThan(Date.parse(h.plan.window.end))
+  })
+
+  test('a stop held for the transit into it waits at the stop before, clear of the people beside the transit', async () => {
+    const h = await heldFlight({
+      thirdParties: [peopleOnFootbridge],
+      segmentIds: ['seg_866518980_8', 'seg_866518980_5'],
+      held: 'seg_866518980_5'
+    })
+    expect(h.plan.holds[1]!.reason).toStartWith(
+      'the transit from seg_866518980_8 to seg_866518980_5 passes within 50 m'
+    )
+    expect(h.before.segmentId).toBe('seg_866518980_8')
+    const releasedAt = h.waitFrom + 60_000
+    h.at(releasedAt)
+    expect(heldEvents(h.events, 'seg_866518980_5')).toEqual([])
+    expect((await h.sim.getStatus('sim-1')).pose).toMatchObject({ lon: h.before.lon, lat: h.before.lat })
+
+    h.release('seg_866518980_5')
+    await h.sim.updatePatrol(
+      h.run.id,
+      h.call('getPatrolPlan', 'usr_pilot', { params: { id: h.plan.id } }).data,
+      h.approval
+    )
+    h.at(Date.parse(h.plan.window.end))
+    expect(heldEvents(h.events, 'seg_866518980_5').every((e) => Date.parse(e.at) > releasedAt)).toBe(true)
+    // A minute's wait, a minute inside the plan's budget: it lands a minute before the plan's ETA.
+    const landed = h.events.at(-1)!
+    expect(landed).toMatchObject({ type: 'landed', outcome: 'completed' })
+    expect(Math.abs(Date.parse(landed.at) - Date.parse(h.plan.waypoints.at(-1)!.eta) + 60_000)).toBeLessThanOrEqual(1)
+  })
+
+  test('a re-plan in flight whose way home passes people waits before the transit home until the dock is clear', async () => {
+    const h = await start()
+    const approved = h.approve(h.plan(['seg_866518980_5', 'seg_866518980_6']).id)
+    expect(approved.holds).toEqual([])
+    const approval = (p: PatrolPlan) => ({ planId: p.id, approvedBy: p.approvedBy!, approvedAt: p.approvedAt! })
+    h.setNow(approved.window.start)
+    const run = await h.sim.schedulePatrol(approved)
+    await h.sim.dispatchPatrol(run.id, approval(approved))
+    const firstStation = approved.waypoints.find((w) => w.kind === 'station')!
+    h.setNow(firstStation.eta)
+    h.sim.tick()
+
+    // Segment 7 joins the route; its transit home passes the seed's path crowd, so the re-plan holds the dock.
+    const proposed = h.call('createPatrolPlan', 'usr_manager', {
+      body: {
+        dockId: approved.dockId,
+        droneProfileId: approved.droneProfileId,
+        segmentIds: ['seg_866518980_5', 'seg_866518980_6', 'seg_866518980_7'],
+        context: [],
+        notBefore: h.now(),
+        altitudeCapM: 60,
+        replan: {
+          trigger: {
+            kind: 'pass_expiring',
+            segmentId: 'seg_866518980_7',
+            passId: 'pass_866518980_7',
+            validTo: '2026-11-20T00:00:00.000Z'
+          },
+          supersedes: { planId: approved.id, committedTasks: 1 }
+        }
+      }
+    }).data
+    const replanned = h.call('approvePatrolPlan', 'usr_pilot', { params: { id: proposed.id } }).data
+    expect(replanned.holds.map((x) => [x.segmentId, x.releasedBy])).toEqual([[null, null]])
+    expect(replanned.holds[0]!.reason).toStartWith('the transit from seg_866518980_7 to Dock')
+    await h.sim.updatePatrol(run.id, replanned, approval(replanned))
+
+    // It flies the re-plan's stops, then hovers at the last station for the pilot to see the way home clear.
+    const lastStation = replanned.waypoints.findLast((w) => w.kind === 'station')!
+    const waitFrom = Date.parse(lastStation.eta) + assumedEnergyModel.stationHoverS * 1000
+    h.setNow(new Date(waitFrom + 90_000).toISOString())
+    h.sim.tick()
+    expect(h.events.some((e) => e.type === 'landed')).toBe(false)
+    expect((await h.sim.getStatus('sim-1')).pose).toMatchObject({ lon: lastStation.lon, lat: lastStation.lat })
+    const frames = h.events.flatMap((e) => (e.type === 'observation' ? [[e.waypointIndex, e.segmentId]] : []))
+    expect(frames).toEqual(replanned.waypoints.flatMap((w, i) => (w.kind === 'station' ? [[i, w.segmentId]] : [])))
+
+    const released = h.call('releasePlanHold', 'usr_pilot', { params: { id: replanned.id, segmentId: 'dock' } }).data
+    await h.sim.updatePatrol(run.id, released, approval(released))
+    h.setNow(approved.window.end)
+    h.sim.tick()
+    // The plan budgets no wait for the dock: it lands the 90 s it waited after the re-plan's ETA.
+    const landed = h.events.at(-1)!
+    expect(landed).toMatchObject({ type: 'landed', outcome: 'completed' })
+    expect(Math.abs(Date.parse(landed.at) - Date.parse(replanned.waypoints.at(-1)!.eta) - 90_000)).toBeLessThanOrEqual(
+      1
+    )
   })
 })
 
