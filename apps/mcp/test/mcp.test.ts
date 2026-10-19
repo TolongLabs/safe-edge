@@ -1,26 +1,10 @@
 // The MCP server over stdio, driven by the official MCP client, against the real API on a free port.
-import { afterAll, expect, test } from 'bun:test'
-import { Client } from '@modelcontextprotocol/client'
-import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
-import { join } from 'node:path'
+import { expect, test } from 'bun:test'
 import { S1, raiseTier2, startApi, type Api } from '../../api/test/support.ts'
-
-const clients: Client[] = []
-afterAll(() => Promise.all(clients.map((client) => client.close())))
+import { connectMcp } from './support.ts'
 
 /** Spawns the MCP server the way a local client does: `bun apps/mcp/src/index.ts`, with the API URL and agent token. */
-async function connect(api: Api, token: string, mode: 'legacy' | { pin: string } = { pin: '2026-07-28' }) {
-  const client = new Client({ name: 'safe-edge-it', version: '0.0.0' }, { versionNegotiation: { mode } })
-  clients.push(client)
-  const transport = new StdioClientTransport({
-    command: process.execPath,
-    args: [join(import.meta.dir, '../src/index.ts')],
-    env: { SAFE_EDGE_API_URL: new URL('/v1', api.url).href, SAFE_EDGE_AGENT_TOKEN: token },
-    stderr: 'pipe'
-  })
-  await client.connect(transport)
-  return client
-}
+const connect = (api: Api, token: string, mode?: 'legacy' | { pin: string }) => connectMcp(api.url, token, mode)
 
 test('the server speaks protocol revision 2026-07-28 and refuses a legacy handshake', async () => {
   const api = startApi()

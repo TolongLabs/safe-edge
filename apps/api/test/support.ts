@@ -1,6 +1,6 @@
 // Starts the API the way index.ts does, but on a free port with an injected clock, and calls it over real HTTP.
 import { afterAll } from 'bun:test'
-import type { Role } from '@safe-edge/contracts'
+import type { Actor, RaiseCandidateRequest, Role } from '@safe-edge/contracts'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp } from '../src/app.ts'
@@ -20,13 +20,46 @@ const tokens = await devTokens(
 tokens.set('tok_agent_unscoped', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: [] })
 export type Token = `tok_${Role}` | 'tok_agent_unscoped'
 
-export function startApi({ heartbeatMs = 5_000 }: { heartbeatMs?: number } = {}) {
+/** The committed dev tokens (`dev_manager`, `dev_agent`, …), loaded from their file as `bun run dev` loads them. */
+export const fixtureDevTokens = await devTokens(
+  { SAFE_EDGE_DEV_TOKENS_FILE: join(repoRoot, 'data/elmina/fixtures/dev-tokens.json') },
+  seed.users
+)
+
+/** One request as the server saw it: who sent it, and what came back (JSON bodies only; streams are not read). */
+export interface Exchange {
+  method: string
+  path: string
+  token: string | null
+  status: number
+  body: unknown
+}
+
+export function startApi({
+  heartbeatMs = 5_000,
+  tokens: tokenTable = tokens
+}: { heartbeatMs?: number; tokens?: ReadonlyMap<string, Actor> } = {}) {
   let now = seed.asOf
   const clock = { now: () => now }
   const ids = counterIds()
   const core = createCore({ seed, clock, ids, planner })
-  const app = createApp({ core, clock, ids, tokens, heartbeatMs })
-  const server = Bun.serve({ port: 0, fetch: app.fetch })
+  const app = createApp({ core, clock, ids, tokens: tokenTable, heartbeatMs })
+  const log: Exchange[] = []
+  const server = Bun.serve({
+    port: 0,
+    async fetch(request) {
+      const response = await app.fetch(request)
+      const json = response.headers.get('content-type')?.includes('application/json')
+      log.push({
+        method: request.method,
+        path: new URL(request.url).pathname,
+        token: /^Bearer (\S+)$/i.exec(request.headers.get('authorization') ?? '')?.[1] ?? null,
+        status: response.status,
+        body: json ? await response.clone().json() : undefined
+      })
+      return response
+    }
+  })
   afterAll(() => server.stop(true))
 
   const request = (
@@ -47,6 +80,8 @@ export function startApi({ heartbeatMs = 5_000 }: { heartbeatMs?: number } = {})
   return {
     url: server.url,
     request,
+    /** Every request the server answered, in order. */
+    log,
     setNow: (iso: string) => {
       now = iso
     }
@@ -56,20 +91,19 @@ export function startApi({ heartbeatMs = 5_000 }: { heartbeatMs?: number } = {})
 export type Api = ReturnType<typeof startApi>
 
 /** S1: the drone reports fence panel 4 missing, a Tier 2 candidate on a segment whose pass is valid. */
-export const raiseTier2 = (api: Api) =>
-  api.request('post', '/candidates', {
-    token: 'tok_provider',
-    body: {
-      segmentId: S1.segmentId,
-      observationIds: [],
-      inventoryItemId: S1.inventoryItemId,
-      itemStatus: 'missing',
-      class: 'inventory_item',
-      score: 0.9,
-      uncertainty: 'low',
-      gridCell: 'B3',
-      rationale: 'Fence panel 4 is missing by the playground path',
-      model: null,
-      simulated: true
-    }
-  })
+export const tier2Candidate = {
+  segmentId: S1.segmentId,
+  observationIds: [],
+  inventoryItemId: S1.inventoryItemId,
+  itemStatus: 'missing',
+  class: 'inventory_item',
+  score: 0.9,
+  uncertainty: 'low',
+  gridCell: 'B3',
+  rationale: 'Fence panel 4 is missing by the playground path',
+  model: null,
+  simulated: true
+} satisfies RaiseCandidateRequest
+
+export const raiseTier2 = (api: Api, token: Token | string = 'tok_provider') =>
+  api.request('post', '/candidates', { token, body: tier2Candidate })

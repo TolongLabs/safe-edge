@@ -1,6 +1,6 @@
 // S1 to S3 on one segment, played through a SafeEdgeClient as the demo users, the way the screens and the scenario
 // player (#64) drive it. Transport-agnostic: `as(userId)` gives the client for a seeded user.
-import type { RetestCheck } from '@safe-edge/contracts'
+import type { RecordRetestRequest, RetestCheck } from '@safe-edge/contracts'
 import { elminaSeed, type SafeEdgeClient } from '../src/index.ts'
 
 export const S1 = elminaSeed.story.s1
@@ -10,7 +10,8 @@ export interface Stage {
   setNow(iso: string): void
 }
 
-export async function playS1toS3({ as, setNow }: Stage) {
+/** S1 and S2, then the repair: the work order is completed and the re-test is pending, so the pass is suspended. */
+export async function playS1toRepair({ as, setNow }: Stage) {
   const viewpoint = elminaSeed.segments
     .find((s) => s.id === S1.segmentId)!
     .viewpoints.find((v) => v.id === S1.viewpointId)!
@@ -93,7 +94,7 @@ export async function playS1toS3({ as, setNow }: Stage) {
     body: { installerUserId: 'usr_installer', dueAt: '2026-10-24T09:00:00.000Z' }
   })
 
-  // S3: the installer repairs it, and a different person re-tests it on a phone and accepts.
+  // S3: the installer repairs it.
   setNow('2026-10-22T02:00:00.000Z')
   const installer = as('usr_installer')
   await installer.startWorkOrder({ params: { id: workOrderId } })
@@ -102,14 +103,26 @@ export async function playS1toS3({ as, setNow }: Stage) {
     params: { id: workOrderId },
     body: { evidence: [], note: 'Panel replaced, fence extended 1.5 m to the headwall' }
   })
-  setNow('2026-10-23T01:00:00.000Z')
   const checklist = [
     { kind: 'saved_view', subjectId: S1.viewpointId, result: 'pass', reason: 'Panel 4 in place', measuredMm: null },
     { kind: 'route_check', subjectId: throughGap.id, result: 'pass', reason: 'Gap closed', measuredMm: 40 },
     { kind: 'route_check', subjectId: aroundEnd.id, result: 'pass', reason: 'Fence meets headwall', measuredMm: 60 }
   ] satisfies RetestCheck[]
-  const retest = await as('usr_reviewer').recordRetest({
-    body: { workOrderId, checklist, evidence: [], result: 'accepted', reason: 'Both observed approaches closed' }
-  })
+  /** The accepting re-test a reviewer records next. */
+  const retest = {
+    workOrderId,
+    checklist,
+    evidence: [],
+    result: 'accepted',
+    reason: 'Both observed approaches closed'
+  } satisfies RecordRetestRequest
+  return { candidate, decision, remedy, workOrderId, retest }
+}
+
+export async function playS1toS3(stage: Stage) {
+  const { candidate, decision, workOrderId, retest: accepting } = await playS1toRepair(stage)
+  // A different person re-tests it on a phone and accepts.
+  stage.setNow('2026-10-23T01:00:00.000Z')
+  const retest = await stage.as('usr_reviewer').recordRetest({ body: accepting })
   return { candidate, decision, workOrderId, retest }
 }
