@@ -10,7 +10,6 @@ import {
   loadElmina,
   planPatrol,
   planStations,
-  releaseHold,
   splitEdges,
   type PatrolPlanInput,
   type ThirdParty
@@ -128,7 +127,7 @@ describe('flight windows', async () => {
       expect.objectContaining({ kind: 'lightning', segmentId: null, until: lightning.validTo }),
       expect.objectContaining({ kind: 'separation', segmentId: 'seg_866518980_9', until: null })
     ])
-    // Nothing releases a hold on its own.
+    // The planner never releases a hold; core's releasePlanHold records the pilot's confirm-clear.
     for (const hold of plan.holds) expect(hold).toMatchObject({ releasedBy: null, releasedAt: null })
     const [weatherHold, lightningHold, pathHold] = plan.holds
     expect(weatherHold!.reason).toBe(
@@ -146,21 +145,6 @@ describe('flight windows', async () => {
     expect(plan.tasks.map((t) => t.segmentId).toSorted()).toEqual(base.segments.map((s) => s.id).toSorted())
     expect(plan.rejected).toEqual([])
     expect(plan.tasks.find((t) => t.segmentId === 'seg_866518980_9')!.stations).toHaveLength(27)
-
-    // At the segment the observer sees the footway clear and the pilot records it: the hold is released, by whom and
-    // when, and nothing else in the plan changes.
-    const clearAt = plus(plan.window.start, 6)
-    const released = releaseHold(plan, { segmentId: 'seg_866518980_9', by: 'usr_pilot_1', at: clearAt })
-    expect(released).toEqual({
-      ...plan,
-      holds: [weatherHold, lightningHold, { ...pathHold, releasedBy: 'usr_pilot_1', releasedAt: clearAt }]
-    })
-    expect(() => releaseHold(released, { segmentId: 'seg_866518980_9', by: 'usr_pilot_1', at: clearAt })).toThrow(
-      `plan_test's separation hold on seg_866518980_9 was already released by usr_pilot_1 at ${clearAt}`
-    )
-    expect(() => releaseHold(plan, { segmentId: 'seg_866518980_5', by: 'usr_pilot_1', at: clearAt })).toThrow(
-      'plan_test has no separation hold on seg_866518980_5'
-    )
   })
 
   test('light rain above the dock limit holds the launch only until a reading at the limit, the same morning', () => {

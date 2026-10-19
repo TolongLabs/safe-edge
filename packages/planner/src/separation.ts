@@ -3,7 +3,7 @@ import { booleanPointInPolygon } from '@turf/boolean-point-in-polygon'
 import { destination } from '@turf/destination'
 import { distance } from '@turf/distance'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
-import { PatrolPlan, type PlanHold } from '@safe-edge/contracts'
+import type { PlanHold } from '@safe-edge/contracts'
 import type { Feature, LineString, Point, Polygon, Position } from 'geojson'
 import type { Station } from './stations.ts'
 
@@ -115,7 +115,7 @@ function standOffs(station: Station, { water, altitudeM, rangeM, maxZoom }: Sepa
   return moved
 }
 
-/** The hold for a segment whose stations wait: only the pilot or an observer can release it. */
+/** The hold for a segment whose stations wait. The planner never releases it: core's `releasePlanHold` records the pilot's confirm-clear. */
 export function separationHold(segmentId: string, waiting: Separation['waiting']): PlanHold {
   const closestM = Math.min(...waiting.map((w) => w.closestM))
   return {
@@ -126,30 +126,6 @@ export function separationHold(segmentId: string, waiting: Separation['waiting']
     releasedAt: null,
     reason: `stations ${waiting.map((w) => w.station.id).join(', ')} are within ${SEPARATION_M} m of ${named(waiting.flatMap((w) => w.parties))}, closest ${closestM.toFixed(0)} m; the segment waits for the pilot or observer to confirm the path is clear`
   }
-}
-
-export interface HoldRelease {
-  /** The segment whose separation hold is released. */
-  segmentId: string
-  /** The pilot recording that they, or their observer, saw the path clear. */
-  by: string
-  at: string
-}
-
-/**
- * Records the pilot's or observer's confirmation that a waiting segment's path is clear. The planner never releases a
- * separation hold itself; weather and lightning holds end at their `until` instead. Who may release is core's policy.
- */
-export function releaseHold(plan: PatrolPlan, { segmentId, by, at }: HoldRelease): PatrolPlan {
-  const index = plan.holds.findIndex((h) => h.kind === 'separation' && h.segmentId === segmentId)
-  if (index < 0) throw new Error(`${plan.id} has no separation hold on ${segmentId}`)
-  const hold = plan.holds[index]!
-  if (hold.releasedBy !== null) {
-    throw new Error(
-      `${plan.id}'s separation hold on ${segmentId} was already released by ${hold.releasedBy} at ${hold.releasedAt}`
-    )
-  }
-  return PatrolPlan.parse({ ...plan, holds: plan.holds.with(index, { ...hold, releasedBy: by, releasedAt: at }) })
 }
 
 /** The rejection for stations left out near structures. */

@@ -14,7 +14,7 @@ import {
   type RetestCheck
 } from '@safe-edge/contracts'
 import { join } from 'node:path'
-import { loadElmina, planPatrol, splitEdges } from '@safe-edge/planner'
+import { loadElmina, planPatrol, splitEdges, type ThirdParty } from '@safe-edge/planner'
 import { actorFor, counterIds, createCore, type PatrolPlanner, type Seed } from '../src/index.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -31,35 +31,39 @@ const plannerSegments = splitEdges({ ...elmina, maxBendDeg: 40, pointObstruction
 
 /**
  * The adapter a transport writes over #71's `planPatrol`: it holds what the store lacks (planner geometry, capture
- * settings, geofences, water-level bands) and maps core's records to the planner's inputs. Tests may import the
- * planner; core's source never does.
+ * settings, geofences, water-level bands, third parties) and maps core's records to the planner's inputs. Tests may
+ * import the planner; core's source never does.
  */
-export const elminaPlanner: PatrolPlanner = ({ id, now, request, dock, droneProfile, segments, passes, findings }) =>
-  planPatrol({
-    id,
-    now,
-    edges: elmina.edges,
-    segments: segments.map((s) => plannerSegments.find((p) => p.id === s.id)!),
-    dock,
-    drone: droneProfile,
-    rangeM: 15,
-    forwardOverlap: 0.6,
-    altitudeM: Math.min(9, request.altitudeCapM),
-    altitudeCapM: request.altitudeCapM,
-    // A site setting the request lacks: how long the agreed window stays open after first light.
-    notBefore: request.notBefore,
-    windowMinutes: 120,
-    geofences: [],
-    thirdParties: [],
-    passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: now })),
-    flags: segments.map((s) => ({
-      segmentId: s.id,
-      severity: findings.find((f) => f.segmentId === s.id && f.status !== 'closed')?.severity ?? null,
-      readAt: now
-    })),
-    context: request.context,
-    waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 }
-  })
+export const plannerWith =
+  ({ thirdParties }: { thirdParties: ThirdParty[] }): PatrolPlanner =>
+  ({ id, now, request, dock, droneProfile, segments, passes, findings }) =>
+    planPatrol({
+      id,
+      now,
+      edges: elmina.edges,
+      segments: segments.map((s) => plannerSegments.find((p) => p.id === s.id)!),
+      dock,
+      drone: droneProfile,
+      rangeM: 15,
+      forwardOverlap: 0.6,
+      altitudeM: Math.min(9, request.altitudeCapM),
+      altitudeCapM: request.altitudeCapM,
+      // A site setting the request lacks: how long the agreed window stays open after first light.
+      notBefore: request.notBefore,
+      windowMinutes: 120,
+      geofences: [],
+      thirdParties,
+      passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: now })),
+      flags: segments.map((s) => ({
+        segmentId: s.id,
+        severity: findings.find((f) => f.segmentId === s.id && f.status !== 'closed')?.severity ?? null,
+        readAt: now
+      })),
+      context: request.context,
+      waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 }
+    })
+
+export const elminaPlanner = plannerWith({ thirdParties: [] })
 
 export function startCore({ planner = elminaPlanner }: { planner?: PatrolPlanner } = {}) {
   let now = seed.asOf

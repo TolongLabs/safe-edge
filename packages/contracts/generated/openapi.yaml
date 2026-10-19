@@ -230,6 +230,43 @@ paths:
       x-safe-edge-roles:
         - pilot
       x-safe-edge-events: []
+  /patrol-plans/{id}/holds/{segmentId}/release:
+    post:
+      operationId: releasePlanHold
+      summary: Record that the pilot or observer saw a waiting segment's path clear
+      description: "Roles: pilot. Agents are refused."
+      tags:
+        - patrol-plans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^plan_
+        - name: segmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^seg_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Record that the pilot or observer saw a waiting segment's path clear
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatrolPlan"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - pilot
+      x-safe-edge-events: []
   /patrols:
     get:
       operationId: listPatrols
@@ -1713,6 +1750,7 @@ components:
         - invalid_transition
         - remedy_not_approved
         - plan_not_approved
+        - weather_hold
     Denial:
       type: object
       properties:
