@@ -1222,6 +1222,7 @@ paths:
           in: query
           required: false
           schema:
+            description: A record's events and those of records on a segment. Only the unfiltered list, oldest first, is a chain.
             type: string
       responses:
         "200":
@@ -3375,10 +3376,11 @@ components:
         prevHash:
           type: string
           pattern: ^[0-9a-f]{64}$
+          description: The previous event's hash; 64 zeros for the first event
         hash:
           type: string
           pattern: ^[0-9a-f]{64}$
-          description: SHA-256 of prevHash plus the canonical event JSON
+          description: "Hex SHA-256 of the UTF-8 text prevHash followed by the canonical JSON of this event without hash. Canonical JSON: object keys sorted, no whitespace, every value as JSON.stringify writes it."
       required:
         - id
         - at
