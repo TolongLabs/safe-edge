@@ -25,6 +25,7 @@ import type { DataGovMyClient, EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
+import { HTTPException } from 'hono/http-exception'
 import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
@@ -33,7 +34,7 @@ import { startAutomation, type Every } from './automation.ts'
 import type { ApiClock } from './clock.ts'
 import { createEventHub, newWebhookSecret, type WebhookOptions } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
-import { openJournal } from './journal.ts'
+import { JournalWriteError, openJournal } from './journal.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
 import { forwardWorkOrders } from './work-orders.ts'
 
@@ -164,6 +165,14 @@ export function createApp({
       if (!recorded.ok) throw new Error(recorded.message)
     }
   }
+  // A write the journal could not keep is not a 500 to serve on from: it goes to the server, whose entrypoint stops
+  // (index.ts). Anything else gets Hono's default answer.
+  app.onError((error, c) => {
+    if (error instanceof JournalWriteError) throw error
+    if (error instanceof HTTPException) return error.getResponse()
+    console.error(error)
+    return c.text('Internal Server Error', 500)
+  })
   app.get('/health', (c) => c.json({ status: 'ok' }))
   // Where getEvidenceUrl points. The signed query is the credential, so it takes no bearer token.
   app.get('/evidence/:id/content', (c) => {

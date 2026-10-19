@@ -21,6 +21,12 @@ export interface Journal {
   replay(): void
 }
 
+/**
+ * A call changed the API's state in memory and the journal could not keep it: serving on would lose it at the next
+ * start. The journal takes no more calls after one; the entrypoint stops the process (index.ts).
+ */
+export class JournalWriteError extends Error {}
+
 const digest = (result: unknown) => {
   if (result instanceof Promise) throw new Error('A journaled command must be synchronous')
   return new Bun.CryptoHasher('sha256').update(JSON.stringify(result ?? null)).digest('hex')
@@ -50,6 +56,8 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
   let live: { clock: string[]; drawn: number } | null = null
   /** The entry being replayed, with its clock readings still to play. */
   let replaying: { seq: number; clock: string[] } | null = null
+  /** The append that failed, after which memory holds a write the journal lacks. */
+  let broken: JournalWriteError | null = null
 
   const journal: Journal = {
     clock: {
@@ -76,6 +84,7 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
       if (commands.has(kind)) throw new Error(`The journal already has a ${kind} command`)
       commands.set(kind, fn as (...args: never[]) => unknown)
       return (...args: A): R => {
+        if (broken) throw broken
         if (live || replaying) return fn(...args)
         const recordedArgs = JSON.stringify(args)
         live = { clock: [], drawn: 0 }
@@ -91,9 +100,8 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
             try {
               append.run(kind, recordedArgs, JSON.stringify(readings), outcome)
             } catch (error) {
-              // Memory has the write and the journal does not: serving on would lose it at the next start.
-              console.error(`The API could not journal a ${kind} to ${db.filename}; stopping`, error)
-              process.exit(1)
+              broken = new JournalWriteError(`The API could not journal a ${kind} to ${db.filename}`, { cause: error })
+              throw broken
             }
           }
         }

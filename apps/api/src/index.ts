@@ -13,6 +13,7 @@ import {
   SAFETY_HAZARD_OBSERVATION_TYPE
 } from '@safe-edge/providers'
 import { webhookOptions } from './events.ts'
+import { JournalWriteError } from './journal.ts'
 import { devTokens } from './tokens.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -63,7 +64,7 @@ const weather =
 
 // Bun serves the default export on PORT (3000 by default). Its idle timeout is 10 s, so the event stream's heartbeat
 // comes every 5 s.
-export default createApp({
+const app = createApp({
   seed,
   planner,
   clock,
@@ -78,3 +79,14 @@ export default createApp({
   every: (ms, run) => void setInterval(() => void run(), ms),
   weather
 })
+
+export default {
+  fetch: app.fetch,
+  // A write the journal could not keep stops the API: serving on would lose it at the next start (journal.ts). Outside a
+  // request (a timer, a webhook retry) the same error is uncaught, which also stops Bun.
+  error(error: Error) {
+    console.error('Safe Edge API:', error)
+    if (error instanceof JournalWriteError) process.exit(1)
+    return new Response('Internal Server Error', { status: 500 })
+  }
+}

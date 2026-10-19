@@ -79,6 +79,12 @@ export async function startApiProcess(env: Record<string, string>) {
   return {
     url,
     request,
+    /** The exit code and stderr of a process that stops by itself. */
+    async exited() {
+      const [code, stderr] = await Promise.all([api.exited, new Response(api.stderr).text()])
+      running.delete(api)
+      return { code, stderr }
+    },
     /** Kills the process at once, with no chance to flush or clean up, as a crash or `kill -9` would. */
     async crash() {
       api.kill('SIGKILL')
