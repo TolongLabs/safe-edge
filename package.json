@@ -11,6 +11,7 @@
     "dev": "bun --filter '@safe-edge/*' dev",
     "export:mission": "bun packages/planner/scripts/export-mission.ts",
     "generate:contracts": "bun packages/contracts/scripts/generate.ts",
+    "generate:seed": "bun packages/core/scripts/generate-seed.ts",
     "graph": "graphify update .",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",

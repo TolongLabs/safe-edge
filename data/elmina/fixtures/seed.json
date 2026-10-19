@@ -1,0 +1,2080 @@
+{
+  "asOf": "2026-10-20T00:00:00.000Z",
+  "townshipId": "twp_elmina",
+  "story": {
+    "s1": {
+      "segmentId": "seg_866518980_11",
+      "viewpointId": "vp_866518980_11_2",
+      "inventoryItemId": "item_866518980_11_fence_panel_4"
+    }
+  },
+  "users": [
+    {
+      "id": "usr_manager",
+      "name": "Farah Hashim (manager)",
+      "role": "manager",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "usr_engineer",
+      "name": "Lim Wei Jie (engineer)",
+      "role": "engineer",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "usr_reviewer",
+      "name": "Priya Nair (reviewer)",
+      "role": "reviewer",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "usr_installer",
+      "name": "Hafiz Rahman (installer)",
+      "role": "installer",
+      "simulated": true,
+      "source": "fixture"
+    },
+    { "id": "usr_pilot", "name": "Daniel Tan (pilot)", "role": "pilot", "simulated": true, "source": "fixture" },
+    {
+      "id": "usr_gm",
+      "name": "Rosli Ahmad (township general manager)",
+      "role": "gm",
+      "simulated": true,
+      "source": "fixture"
+    },
+    { "id": "usr_crew", "name": "Siti Aminah (walk crew)", "role": "crew", "simulated": true, "source": "fixture" },
+    {
+      "id": "usr_integrator",
+      "name": "Maintenance system integration",
+      "role": "integrator",
+      "simulated": true,
+      "source": "fixture"
+    },
+    { "id": "usr_agent", "name": "Safe Edge agent", "role": "agent", "simulated": true, "source": "fixture" },
+    { "id": "usr_system", "name": "Safe Edge scheduler", "role": "system", "simulated": true, "source": "fixture" },
+    {
+      "id": "usr_drone_sim",
+      "name": "Simulated drone provider",
+      "role": "provider",
+      "simulated": true,
+      "source": "fixture"
+    }
+  ],
+  "assets": [
+    {
+      "id": "ast_866518980",
+      "townshipId": "twp_elmina",
+      "kind": "lake",
+      "name": "Elmina Central Park lake",
+      "osmId": "way/866518980",
+      "retainedBySdp": true,
+      "custodianUserId": "usr_manager",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [101.5049251, 3.1758951],
+            [101.5049871, 3.1758011],
+            [101.5050384, 3.1757234],
+            [101.5058565, 3.1759244],
+            [101.5066621, 3.1762009],
+            [101.5072369, 3.1766073],
+            [101.5080844, 3.1772315],
+            [101.5085333, 3.1776923],
+            [101.5088354, 3.17804],
+            [101.5092759, 3.1783835],
+            [101.5100815, 3.1786516],
+            [101.5106101, 3.1787354],
+            [101.5109248, 3.178706],
+            [101.5115122, 3.1784128],
+            [101.5117975, 3.1783123],
+            [101.5123345, 3.1782787],
+            [101.5128464, 3.1783667],
+            [101.5132785, 3.1785594],
+            [101.5136855, 3.1788568],
+            [101.5139037, 3.1791208],
+            [101.51434, 3.1795187],
+            [101.51494, 3.1798622],
+            [101.5153721, 3.1800633],
+            [101.515456, 3.1800885],
+            [101.5154812, 3.1801806],
+            [101.5153176, 3.1802895],
+            [101.51494, 3.1802225],
+            [101.5145498, 3.1800591],
+            [101.5141344, 3.1797743],
+            [101.5136729, 3.1793972],
+            [101.5134967, 3.179125],
+            [101.513161, 3.1789239],
+            [101.5128002, 3.1787396],
+            [101.5124058, 3.1786474],
+            [101.5118604, 3.1785636],
+            [101.5116632, 3.1785762],
+            [101.5110632, 3.1787731],
+            [101.510736, 3.1789155],
+            [101.5103626, 3.1789239],
+            [101.5097248, 3.1787982],
+            [101.5093053, 3.1786432],
+            [101.5086801, 3.1781908],
+            [101.5084662, 3.1780065],
+            [101.5079711, 3.1775079],
+            [101.5074886, 3.1770429],
+            [101.5069851, 3.1766743],
+            [101.5064439, 3.1764062],
+            [101.5058146, 3.1761549],
+            [101.5049251, 3.1758951]
+          ]
+        ]
+      },
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "ast_383055739",
+      "townshipId": "twp_elmina",
+      "kind": "retention_pond",
+      "name": "flood retention pond (way/383055739)",
+      "osmId": "way/383055739",
+      "retainedBySdp": true,
+      "custodianUserId": "usr_manager",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [101.5244448, 3.188258],
+            [101.5244643, 3.1882278],
+            [101.5244784, 3.1882119],
+            [101.5244925, 3.1882092],
+            [101.5245217, 3.188209],
+            [101.5245655, 3.1882284],
+            [101.5245861, 3.1882545],
+            [101.5245976, 3.18831],
+            [101.5245862, 3.1884076],
+            [101.5246607, 3.1884959],
+            [101.5247627, 3.1885971],
+            [101.5247868, 3.1887687],
+            [101.5247947, 3.1889367],
+            [101.5247472, 3.1891137],
+            [101.5247615, 3.1892319],
+            [101.5247826, 3.1893091],
+            [101.524816, 3.1894072],
+            [101.5248419, 3.1895035],
+            [101.524858, 3.1895273],
+            [101.52487, 3.1895928],
+            [101.5248664, 3.1896208],
+            [101.5248458, 3.1896588],
+            [101.5248076, 3.189688],
+            [101.524775, 3.1896986],
+            [101.5247504, 3.1896991],
+            [101.5247167, 3.1896942],
+            [101.5246673, 3.1896625],
+            [101.5245895, 3.1896228],
+            [101.5245373, 3.189605],
+            [101.5244404, 3.1895792],
+            [101.5243272, 3.1895562],
+            [101.5242506, 3.1895443],
+            [101.5241814, 3.1895346],
+            [101.5240784, 3.1895254],
+            [101.524008, 3.1895277],
+            [101.5239663, 3.1895471],
+            [101.5239377, 3.189567],
+            [101.5238567, 3.1896504],
+            [101.5238352, 3.1896625],
+            [101.5238066, 3.1896693],
+            [101.5237798, 3.1896656],
+            [101.5237642, 3.1896505],
+            [101.523755, 3.1896263],
+            [101.5237061, 3.1894616],
+            [101.5236714, 3.1894083],
+            [101.5236392, 3.1893756],
+            [101.5235927, 3.1893524],
+            [101.523556, 3.1893424],
+            [101.5232339, 3.1893344],
+            [101.5231941, 3.1893238],
+            [101.523162, 3.189302],
+            [101.5231389, 3.1892666],
+            [101.5231281, 3.189233],
+            [101.523126, 3.1891949],
+            [101.5231323, 3.1891514],
+            [101.5234506, 3.1890024],
+            [101.5236765, 3.1888858],
+            [101.5238384, 3.1887777],
+            [101.5240109, 3.1886461],
+            [101.524221, 3.1884718],
+            [101.5243913, 3.1883125],
+            [101.5244448, 3.188258]
+          ]
+        ]
+      },
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "ast_383055740",
+      "townshipId": "twp_elmina",
+      "kind": "retention_pond",
+      "name": "flood retention pond (way/383055740)",
+      "osmId": "way/383055740",
+      "retainedBySdp": true,
+      "custodianUserId": "usr_manager",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [101.5222282, 3.186765],
+            [101.5223389, 3.1869636],
+            [101.5225551, 3.1871894],
+            [101.5229629, 3.1874046],
+            [101.5230256, 3.1875075],
+            [101.5230704, 3.1876193],
+            [101.5231186, 3.1876872],
+            [101.523216, 3.1877495],
+            [101.5233482, 3.1877785],
+            [101.5235297, 3.187783],
+            [101.5237051, 3.1878234],
+            [101.5238613, 3.187924],
+            [101.5239756, 3.1880286],
+            [101.523698, 3.1882911],
+            [101.5233876, 3.1885432],
+            [101.5232541, 3.1886272],
+            [101.5231106, 3.1886847],
+            [101.5228653, 3.1887829],
+            [101.5227619, 3.1887347],
+            [101.5226629, 3.1884445],
+            [101.5225953, 3.1881404],
+            [101.5225184, 3.1879056],
+            [101.5224561, 3.1876711],
+            [101.5223924, 3.1875102],
+            [101.5221876, 3.1872105],
+            [101.5219416, 3.1869059],
+            [101.5219357, 3.1868495],
+            [101.5220983, 3.1867158],
+            [101.52217, 3.1867113],
+            [101.5222282, 3.186765]
+          ]
+        ]
+      },
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "ast_404002712",
+      "townshipId": "twp_elmina",
+      "kind": "retention_pond",
+      "name": "flood retention pond (way/404002712)",
+      "osmId": "way/404002712",
+      "retainedBySdp": true,
+      "custodianUserId": "usr_manager",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [101.5084332, 3.1941758],
+            [101.5086971, 3.1934446],
+            [101.5099063, 3.1934573],
+            [101.5099574, 3.1935211],
+            [101.5099447, 3.1939122],
+            [101.5098467, 3.1939632],
+            [101.5098127, 3.194129],
+            [101.5098808, 3.1942098],
+            [101.5084332, 3.1941758]
+          ]
+        ]
+      },
+      "simulated": true,
+      "source": "fixture"
+    }
+  ],
+  "segments": [
+    {
+      "id": "seg_866518980_0",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 1",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.50891700557385, 3.1781036356929064],
+          [101.50927366641506, 3.1783817582481273]
+        ]
+      },
+      "side": "right",
+      "lengthM": 50.24,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_0",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_1",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 2",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.50927366641506, 3.1783817582481273],
+          [101.5100815, 3.1786516],
+          [101.5106101, 3.1787354],
+          [101.5109248, 3.178706]
+        ]
+      },
+      "side": "right",
+      "lengthM": 189.09,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_1",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_2",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 3",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5109248, 3.178706],
+          [101.51103684760527, 3.178650071612199]
+        ]
+      },
+      "side": "right",
+      "lengthM": 13.91,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_2",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_3",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 4",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51103684760527, 3.178650071612199],
+          [101.51135846372348, 3.1784895373252495]
+        ]
+      },
+      "side": "right",
+      "lengthM": 39.92,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_3",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_4",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 5",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51135846372348, 3.1784895373252495],
+          [101.51141741498886, 3.1784601118579188]
+        ]
+      },
+      "side": "right",
+      "lengthM": 7.32,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_4",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_5",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 6",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51141741498886, 3.1784601118579188],
+          [101.5115122, 3.1784128],
+          [101.5117975, 3.1783123],
+          [101.5123345, 3.1782787],
+          [101.5128464, 3.1783667]
+        ]
+      },
+      "side": "right",
+      "lengthM": 162.76,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_5",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_6",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 7",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5128464, 3.1783667],
+          [101.5132785, 3.1785594],
+          [101.51336648386214, 3.1786236909387706]
+        ]
+      },
+      "side": "right",
+      "lengthM": 64.65,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_6",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_7",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 8",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51336648386214, 3.1786236909387706],
+          [101.5136855, 3.1788568],
+          [101.5139037, 3.1791208],
+          [101.51434, 3.1795187],
+          [101.51494, 3.1798622],
+          [101.5153721, 3.1800633],
+          [101.515456, 3.1800885],
+          [101.5154812, 3.1801806]
+        ]
+      },
+      "side": "right",
+      "lengthM": 297.62,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_7",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_8",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 9",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5154812, 3.1801806],
+          [101.5153176, 3.1802895]
+        ]
+      },
+      "side": "right",
+      "lengthM": 21.83,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_8",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_9",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 10",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5153176, 3.1802895],
+          [101.51494, 3.1802225],
+          [101.5145498, 3.1800591],
+          [101.5141344, 3.1797743],
+          [101.5136729, 3.1793972]
+        ]
+      },
+      "side": "right",
+      "lengthM": 211.71,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_9",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_10",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 11",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5136729, 3.1793972],
+          [101.5134967, 3.179125],
+          [101.51335514893987, 3.179040204327285]
+        ]
+      },
+      "side": "right",
+      "lengthM": 54.37,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_10",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_11",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 12",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51335514893987, 3.179040204327285],
+          [101.513161, 3.1789239],
+          [101.5128002, 3.1787396],
+          [101.5124058, 3.1786474],
+          [101.5118604, 3.1785636],
+          [101.5116632, 3.1785762]
+        ]
+      },
+      "side": "right",
+      "lengthM": 198.31,
+      "viewpoints": [
+        {
+          "id": "vp_866518980_11_1",
+          "pose": {
+            "lon": 101.51341060073783,
+            "lat": 3.178947621992866,
+            "altM": 9,
+            "headingDeg": -30.880438987853314,
+            "pitchDeg": -36.88106782942296
+          },
+          "expectedItemIds": [
+            "item_866518980_11_fence_panel_1",
+            "item_866518980_11_fence_panel_2",
+            "item_866518980_11_fence_panel_3",
+            "item_866518980_11_sign"
+          ]
+        },
+        {
+          "id": "vp_866518980_11_2",
+          "pose": {
+            "lon": 101.51165629751014,
+            "lat": 3.1784685025205093,
+            "altM": 9,
+            "headingDeg": 3.6615287401190524,
+            "pitchDeg": -36.870069442287324
+          },
+          "expectedItemIds": [
+            "item_866518980_11_fence_panel_4",
+            "item_866518980_11_fence_panel_5",
+            "item_866518980_11_fence_panel_6",
+            "item_866518980_11_ring_buoy"
+          ]
+        }
+      ],
+      "expectedInventory": [
+        {
+          "id": "item_866518980_11_fence_panel_1",
+          "type": "fence_panel",
+          "label": "Fence panel 1",
+          "safetyCritical": true
+        },
+        {
+          "id": "item_866518980_11_fence_panel_2",
+          "type": "fence_panel",
+          "label": "Fence panel 2",
+          "safetyCritical": true
+        },
+        {
+          "id": "item_866518980_11_fence_panel_3",
+          "type": "fence_panel",
+          "label": "Fence panel 3",
+          "safetyCritical": true
+        },
+        {
+          "id": "item_866518980_11_fence_panel_4",
+          "type": "fence_panel",
+          "label": "Fence panel 4",
+          "safetyCritical": true
+        },
+        {
+          "id": "item_866518980_11_fence_panel_5",
+          "type": "fence_panel",
+          "label": "Fence panel 5",
+          "safetyCritical": true
+        },
+        {
+          "id": "item_866518980_11_fence_panel_6",
+          "type": "fence_panel",
+          "label": "Fence panel 6",
+          "safetyCritical": true
+        },
+        {
+          "id": "item_866518980_11_ring_buoy",
+          "type": "ring_buoy",
+          "label": "Ring buoy by the playground path",
+          "safetyCritical": true
+        },
+        { "id": "item_866518980_11_sign", "type": "sign", "label": "Deep water warning sign", "safetyCritical": false }
+      ],
+      "baselineId": "bsl_866518980_11",
+      "passId": "pass_866518980_11",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_12",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 13",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5116632, 3.1785762],
+          [101.51162323149721, 3.17858931634601]
+        ]
+      },
+      "side": "right",
+      "lengthM": 4.67,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_12",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_13",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 14",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51162323149721, 3.17858931634601],
+          [101.51154967440637, 3.1786134553506256]
+        ]
+      },
+      "side": "right",
+      "lengthM": 8.6,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_13",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_14",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 15",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51154967440637, 3.1786134553506256],
+          [101.51117276238102, 3.1787371453127267]
+        ]
+      },
+      "side": "right",
+      "lengthM": 44.05,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_14",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_15",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 16",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.51117276238102, 3.1787371453127267],
+          [101.5110632, 3.1787731],
+          [101.510736, 3.1789155],
+          [101.5103626, 3.1789239],
+          [101.5097248, 3.1787982],
+          [101.5093053, 3.1786432]
+        ]
+      },
+      "side": "right",
+      "lengthM": 215.74,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_15",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_16",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 17",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5093053, 3.1786432],
+          [101.50915040512103, 3.1785311168306234]
+        ]
+      },
+      "side": "right",
+      "lengthM": 21.24,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_16",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_17",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 18",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.50915040512103, 3.1785311168306234],
+          [101.50882780451188, 3.1782976803030762]
+        ]
+      },
+      "side": "right",
+      "lengthM": 44.23,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_17",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_18",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 19",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.50882780451188, 3.1782976803030762],
+          [101.5086801, 3.1781908],
+          [101.5084662, 3.1780065],
+          [101.5079711, 3.1775079],
+          [101.5074886, 3.1770429],
+          [101.5069851, 3.1766743],
+          [101.5064439, 3.1764062],
+          [101.5058146, 3.1761549],
+          [101.5049251, 3.1758951]
+        ]
+      },
+      "side": "right",
+      "lengthM": 518.68,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_18",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_19",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 20",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5049251, 3.1758951],
+          [101.5049871, 3.1758011],
+          [101.5050384, 3.1757234]
+        ]
+      },
+      "side": "right",
+      "lengthM": 22.86,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_19",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_866518980_20",
+      "assetId": "ast_866518980",
+      "name": "Elmina Central Park lake, segment 21",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5050384, 3.1757234],
+          [101.5058565, 3.1759244],
+          [101.5066621, 3.1762009],
+          [101.5072369, 3.1766073],
+          [101.5080844, 3.1772315],
+          [101.5085333, 3.1776923],
+          [101.5088354, 3.17804],
+          [101.50891700557385, 3.1781036356929064]
+        ]
+      },
+      "side": "right",
+      "lengthM": 517.39,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_866518980_20",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_0",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 1",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5231323, 3.1891514],
+          [101.5234506, 3.1890024],
+          [101.5236765, 3.1888858],
+          [101.5238384, 3.1887777],
+          [101.5240109, 3.1886461],
+          [101.524221, 3.1884718],
+          [101.5243913, 3.1883125],
+          [101.5244448, 3.188258],
+          [101.5244643, 3.1882278],
+          [101.5244784, 3.1882119],
+          [101.5244925, 3.1882092],
+          [101.5245217, 3.188209]
+        ]
+      },
+      "side": "right",
+      "lengthM": 188.9,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_0",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_1",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 2",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5245217, 3.188209],
+          [101.5245655, 3.1882284],
+          [101.5245861, 3.1882545]
+        ]
+      },
+      "side": "right",
+      "lengthM": 9.01,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_1",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_2",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 3",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5245861, 3.1882545],
+          [101.5245976, 3.18831],
+          [101.5245862, 3.1884076],
+          [101.5246607, 3.1884959],
+          [101.5247627, 3.1885971],
+          [101.5247868, 3.1887687],
+          [101.5247947, 3.1889367],
+          [101.5247472, 3.1891137],
+          [101.5247615, 3.1892319],
+          [101.5247826, 3.1893091],
+          [101.524816, 3.1894072],
+          [101.5248419, 3.1895035],
+          [101.524858, 3.1895273],
+          [101.52487, 3.1895928],
+          [101.5248664, 3.1896208]
+        ]
+      },
+      "side": "right",
+      "lengthM": 162.86,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_2",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_3",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 4",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5248664, 3.1896208],
+          [101.5248458, 3.1896588],
+          [101.5248076, 3.189688]
+        ]
+      },
+      "side": "right",
+      "lengthM": 10.15,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_3",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_4",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 5",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5248076, 3.189688],
+          [101.524775, 3.1896986],
+          [101.5247504, 3.1896991],
+          [101.5247167, 3.1896942]
+        ]
+      },
+      "side": "right",
+      "lengthM": 10.32,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_4",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_5",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 6",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5247167, 3.1896942],
+          [101.5246673, 3.1896625],
+          [101.5245895, 3.1896228],
+          [101.5245373, 3.189605],
+          [101.5244404, 3.1895792],
+          [101.5243272, 3.1895562],
+          [101.5242506, 3.1895443],
+          [101.5241814, 3.1895346],
+          [101.5240784, 3.1895254],
+          [101.524008, 3.1895277]
+        ]
+      },
+      "side": "right",
+      "lengthM": 81.97,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_5",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_6",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 7",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.524008, 3.1895277],
+          [101.5239663, 3.1895471],
+          [101.5239377, 3.189567],
+          [101.5238567, 3.1896504],
+          [101.5238352, 3.1896625],
+          [101.5238066, 3.1896693],
+          [101.5237798, 3.1896656]
+        ]
+      },
+      "side": "right",
+      "lengthM": 30.9,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_6",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_7",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 8",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5237798, 3.1896656],
+          [101.5237642, 3.1896505],
+          [101.523755, 3.1896263],
+          [101.5237061, 3.1894616],
+          [101.5236714, 3.1894083],
+          [101.5236392, 3.1893756],
+          [101.5235927, 3.1893524],
+          [101.523556, 3.1893424]
+        ]
+      },
+      "side": "right",
+      "lengthM": 46.55,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_7",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_8",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 9",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.523556, 3.1893424],
+          [101.5232339, 3.1893344],
+          [101.5231941, 3.1893238],
+          [101.523162, 3.189302]
+        ]
+      },
+      "side": "right",
+      "lengthM": 44.65,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_8",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_9",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 10",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.523162, 3.189302],
+          [101.5231389, 3.1892666],
+          [101.5231281, 3.189233],
+          [101.523126, 3.1891949]
+        ]
+      },
+      "side": "right",
+      "lengthM": 12.86,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_9",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055739_10",
+      "assetId": "ast_383055739",
+      "name": "flood retention pond (way/383055739), segment 11",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.523126, 3.1891949],
+          [101.5231323, 3.1891514]
+        ]
+      },
+      "side": "right",
+      "lengthM": 4.89,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055739_10",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055740_0",
+      "assetId": "ast_383055740",
+      "name": "flood retention pond (way/383055740), segment 1",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5239756, 3.1880286],
+          [101.523698, 3.1882911],
+          [101.5233876, 3.1885432],
+          [101.5232541, 3.1886272],
+          [101.5231106, 3.1886847],
+          [101.5228653, 3.1887829]
+        ]
+      },
+      "side": "right",
+      "lengthM": 150.9,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055740_0",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055740_1",
+      "assetId": "ast_383055740",
+      "name": "flood retention pond (way/383055740), segment 2",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5228653, 3.1887829],
+          [101.5227619, 3.1887347]
+        ]
+      },
+      "side": "right",
+      "lengthM": 12.67,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055740_1",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055740_2",
+      "assetId": "ast_383055740",
+      "name": "flood retention pond (way/383055740), segment 3",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5227619, 3.1887347],
+          [101.5226629, 3.1884445],
+          [101.5225953, 3.1881404],
+          [101.5225184, 3.1879056],
+          [101.5224561, 3.1876711],
+          [101.5223924, 3.1875102],
+          [101.5221876, 3.1872105],
+          [101.5219416, 3.1869059],
+          [101.5219357, 3.1868495]
+        ]
+      },
+      "side": "right",
+      "lengthM": 232.57,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055740_2",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055740_3",
+      "assetId": "ast_383055740",
+      "name": "flood retention pond (way/383055740), segment 4",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5219357, 3.1868495],
+          [101.5220983, 3.1867158],
+          [101.52217, 3.1867113]
+        ]
+      },
+      "side": "right",
+      "lengthM": 31.36,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055740_3",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055740_4",
+      "assetId": "ast_383055740",
+      "name": "flood retention pond (way/383055740), segment 5",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.52217, 3.1867113],
+          [101.5222282, 3.186765],
+          [101.5223389, 3.1869636],
+          [101.5225551, 3.1871894],
+          [101.5229629, 3.1874046],
+          [101.5230256, 3.1875075],
+          [101.5230704, 3.1876193],
+          [101.5231186, 3.1876872],
+          [101.523216, 3.1877495],
+          [101.5233482, 3.1877785]
+        ]
+      },
+      "side": "right",
+      "lengthM": 183.92,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055740_4",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055740_5",
+      "assetId": "ast_383055740",
+      "name": "flood retention pond (way/383055740), segment 6",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5233482, 3.1877785],
+          [101.5235297, 3.187783],
+          [101.5237051, 3.1878234],
+          [101.5238613, 3.187924]
+        ]
+      },
+      "side": "right",
+      "lengthM": 60.78,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055740_5",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_383055740_6",
+      "assetId": "ast_383055740",
+      "name": "flood retention pond (way/383055740), segment 7",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5238613, 3.187924],
+          [101.5239756, 3.1880286]
+        ]
+      },
+      "side": "right",
+      "lengthM": 17.21,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_383055740_6",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_0",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 1",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5098808, 3.1942098],
+          [101.5084332, 3.1941758]
+        ]
+      },
+      "side": "right",
+      "lengthM": 160.76,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_0",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_1",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 2",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5084332, 3.1941758],
+          [101.5086971, 3.1934446]
+        ]
+      },
+      "side": "right",
+      "lengthM": 86.42,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_1",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_2",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 3",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5086971, 3.1934446],
+          [101.5099063, 3.1934573]
+        ]
+      },
+      "side": "right",
+      "lengthM": 134.26,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_2",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_3",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 4",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5099063, 3.1934573],
+          [101.5099574, 3.1935211]
+        ]
+      },
+      "side": "right",
+      "lengthM": 9.08,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_3",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_4",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 5",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5099574, 3.1935211],
+          [101.5099447, 3.1939122]
+        ]
+      },
+      "side": "right",
+      "lengthM": 43.51,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_4",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_5",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 6",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5099447, 3.1939122],
+          [101.5098467, 3.1939632]
+        ]
+      },
+      "side": "right",
+      "lengthM": 12.27,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_5",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_6",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 7",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5098467, 3.1939632],
+          [101.5098127, 3.194129]
+        ]
+      },
+      "side": "right",
+      "lengthM": 18.82,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_6",
+      "simulated": true,
+      "source": "fixture"
+    },
+    {
+      "id": "seg_404002712_7",
+      "assetId": "ast_404002712",
+      "name": "flood retention pond (way/404002712), segment 8",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [101.5098127, 3.194129],
+          [101.5098808, 3.1942098]
+        ]
+      },
+      "side": "right",
+      "lengthM": 11.74,
+      "viewpoints": [],
+      "expectedInventory": [],
+      "baselineId": null,
+      "passId": "pass_404002712_7",
+      "simulated": true,
+      "source": "fixture"
+    }
+  ],
+  "baselines": [
+    {
+      "id": "bsl_866518980_11",
+      "segmentId": "seg_866518980_11",
+      "capturedAt": "2026-04-15T01:30:00.000Z",
+      "images": [],
+      "inventorySnapshot": [
+        { "itemId": "item_866518980_11_fence_panel_1", "status": "present" },
+        { "itemId": "item_866518980_11_fence_panel_2", "status": "present" },
+        { "itemId": "item_866518980_11_fence_panel_3", "status": "present" },
+        { "itemId": "item_866518980_11_fence_panel_4", "status": "present" },
+        { "itemId": "item_866518980_11_fence_panel_5", "status": "present" },
+        { "itemId": "item_866518980_11_fence_panel_6", "status": "present" },
+        { "itemId": "item_866518980_11_ring_buoy", "status": "present" },
+        { "itemId": "item_866518980_11_sign", "status": "present" }
+      ],
+      "acceptedBy": "usr_reviewer",
+      "simulated": true,
+      "source": "fixture"
+    }
+  ],
+  "passes": [
+    {
+      "id": "pass_866518980_0",
+      "segmentId": "seg_866518980_0",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_1",
+      "segmentId": "seg_866518980_1",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_2",
+      "segmentId": "seg_866518980_2",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_3",
+      "segmentId": "seg_866518980_3",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_4",
+      "segmentId": "seg_866518980_4",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_5",
+      "segmentId": "seg_866518980_5",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "expiring",
+      "stateReason": "Within 30 days of validTo",
+      "validFrom": "2025-11-12T02:00:00.000Z",
+      "validTo": "2026-11-12T02:00:00.000Z",
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": "usr_reviewer"
+    },
+    {
+      "id": "pass_866518980_6",
+      "segmentId": "seg_866518980_6",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "expired",
+      "stateReason": "validTo reached",
+      "validFrom": "2025-09-30T02:00:00.000Z",
+      "validTo": "2026-09-30T02:00:00.000Z",
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": "usr_reviewer"
+    },
+    {
+      "id": "pass_866518980_7",
+      "segmentId": "seg_866518980_7",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_8",
+      "segmentId": "seg_866518980_8",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_9",
+      "segmentId": "seg_866518980_9",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_10",
+      "segmentId": "seg_866518980_10",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_11",
+      "segmentId": "seg_866518980_11",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "valid",
+      "stateReason": null,
+      "validFrom": "2026-04-15T02:00:00.000Z",
+      "validTo": "2027-04-15T02:00:00.000Z",
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": "usr_reviewer"
+    },
+    {
+      "id": "pass_866518980_12",
+      "segmentId": "seg_866518980_12",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "valid",
+      "stateReason": null,
+      "validFrom": "2025-12-01T02:00:00.000Z",
+      "validTo": "2026-12-01T02:00:00.000Z",
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": "usr_reviewer"
+    },
+    {
+      "id": "pass_866518980_13",
+      "segmentId": "seg_866518980_13",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_14",
+      "segmentId": "seg_866518980_14",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_15",
+      "segmentId": "seg_866518980_15",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_16",
+      "segmentId": "seg_866518980_16",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_17",
+      "segmentId": "seg_866518980_17",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_18",
+      "segmentId": "seg_866518980_18",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_19",
+      "segmentId": "seg_866518980_19",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_866518980_20",
+      "segmentId": "seg_866518980_20",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_0",
+      "segmentId": "seg_383055739_0",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_1",
+      "segmentId": "seg_383055739_1",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_2",
+      "segmentId": "seg_383055739_2",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_3",
+      "segmentId": "seg_383055739_3",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_4",
+      "segmentId": "seg_383055739_4",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_5",
+      "segmentId": "seg_383055739_5",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_6",
+      "segmentId": "seg_383055739_6",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_7",
+      "segmentId": "seg_383055739_7",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_8",
+      "segmentId": "seg_383055739_8",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_9",
+      "segmentId": "seg_383055739_9",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055739_10",
+      "segmentId": "seg_383055739_10",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055740_0",
+      "segmentId": "seg_383055740_0",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055740_1",
+      "segmentId": "seg_383055740_1",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055740_2",
+      "segmentId": "seg_383055740_2",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055740_3",
+      "segmentId": "seg_383055740_3",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055740_4",
+      "segmentId": "seg_383055740_4",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055740_5",
+      "segmentId": "seg_383055740_5",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_383055740_6",
+      "segmentId": "seg_383055740_6",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_0",
+      "segmentId": "seg_404002712_0",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_1",
+      "segmentId": "seg_404002712_1",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_2",
+      "segmentId": "seg_404002712_2",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_3",
+      "segmentId": "seg_404002712_3",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_4",
+      "segmentId": "seg_404002712_4",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_5",
+      "segmentId": "seg_404002712_5",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_6",
+      "segmentId": "seg_404002712_6",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    },
+    {
+      "id": "pass_404002712_7",
+      "segmentId": "seg_404002712_7",
+      "exceptions": [],
+      "simulated": true,
+      "source": "fixture",
+      "state": "none",
+      "stateReason": null,
+      "validFrom": null,
+      "validTo": null,
+      "scope": { "routeIds": [], "retestIds": [] },
+      "issuedBy": null
+    }
+  ],
+  "docks": [
+    {
+      "id": "dock_elmina_roof",
+      "name": "Dock on the park facility roof (assumed site)",
+      "position": { "lon": 101.513484, "lat": 3.178393, "altM": 6 },
+      "rainLimitMmPerH": 2,
+      "droneProfileIds": ["drn_assumed"],
+      "simulated": true,
+      "source": "fixture"
+    }
+  ],
+  "droneProfiles": [
+    {
+      "id": "drn_assumed",
+      "name": "Assumed dock aircraft (battery figures are assumptions until an aircraft is chosen)",
+      "usableBatteryWh": 90,
+      "reserveWh": 25,
+      "cruiseSpeedMps": 10,
+      "cruisePowerW": 300,
+      "hoverPowerW": 280,
+      "maxWindMps": 12,
+      "camera": { "hfovDeg": 70, "vfovDeg": 55, "imageWidthPx": 4000, "imageHeightPx": 3000, "maxZoom": 3 },
+      "missionFormats": ["wpml", "qgc_plan"],
+      "simulated": true,
+      "source": "fixture"
+    }
+  ]
+}
