@@ -484,7 +484,7 @@ export const operations = {
   updateWorkOrder: {
     method: 'patch',
     path: '/work-orders/{id}',
-    summary: 'Edit a draft work order (remedy, notes)',
+    summary: 'Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted',
     handledBy: 'core',
     roles: ['manager'],
     agentScope: 'workorder.draft',

@@ -87,6 +87,34 @@ describe('the agent reads, proposes and drafts, and nothing else', () => {
     expect(notice.data).toMatchObject({ status: 'draft', recipientUserId: 'usr_gm', draftedBy: { type: 'agent' } })
   })
 
+  test("it edits only the drafts it drafted, never a person's", () => {
+    const h = startCore()
+    const proposed = raiseOnS1(h, AGENT, {
+      inventoryItemId: null,
+      itemStatus: null,
+      class: 'worn_path',
+      rationale: 'A worn path leads from the playground to the bank'
+    })
+    const confirmed = h.call('decideCandidate', 'usr_manager', {
+      params: { id: proposed.data.id },
+      body: { decision: 'confirm', severity: 'low' }
+    })
+    const managers = confirmed.data.workOrder!
+    expect(managers.draftedBy).toEqual({ type: 'user', id: 'usr_manager' })
+    const edit = h.attempt('updateWorkOrder', AGENT, { params: { id: managers.id }, body: { notes: 'Agent rewrite' } })
+    expectDenied(h, edit, 'agents_draft_only', AGENT, 'updateWorkOrder')
+    expect(h.audit().at(-1)!.subjectId).toBe(managers.id)
+    expect(h.call('getWorkOrder', 'usr_manager', { params: { id: managers.id } }).data.notes).toBe(managers.notes)
+    // The manager edits any draft, the agent's included.
+    const agents = h.call('createWorkOrder', AGENT, {
+      body: { findingId: confirmed.data.finding!.id, remedyId: null, notes: 'Agent draft' }
+    }).data
+    expect(
+      h.call('updateWorkOrder', 'usr_manager', { params: { id: agents.id }, body: { notes: 'Manager edit' } }).data
+        .notes
+    ).toBe('Manager edit')
+  })
+
   test('a token without the operation scope is refused with scope_missing', () => {
     const h = startCore()
     const readOnly: Actor = { ...h.actor(AGENT), scopes: ['edge.read'] }

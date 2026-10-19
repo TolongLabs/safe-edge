@@ -1,5 +1,5 @@
 import type { Denial, EdgePass, Finding, Retest, Segment, WorkOrder } from '@safe-edge/contracts'
-import { movePass, oneWayRule, openSuspicions, routeStatus } from '../policy.ts'
+import { isAgent, movePass, oneWayRule, openSuspicions, routeStatus } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { blockedOpenings } from './fix-lens.ts'
 import { ok, type Handlers } from './handler.ts'
@@ -88,6 +88,12 @@ export const work: Handlers<WorkOperation> = {
   updateWorkOrder: (tx, { params, body }) => {
     const workOrder = tx.get('workOrders', params.id)
     if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    // People edit any draft; the agent only its own (INBOX-4).
+    const { draftedBy } = workOrder
+    if (isAgent(tx.actor) && (draftedBy.type !== 'agent' || draftedBy.id !== tx.actor.id)) {
+      const message = `${workOrder.id} was drafted by ${draftedBy.type} ${draftedBy.id}; the agent edits only its own drafts`
+      return tx.deny('agents_draft_only', message, workOrder.id)
+    }
     if (workOrder.status !== 'draft') {
       return tx.deny(
         'invalid_transition',

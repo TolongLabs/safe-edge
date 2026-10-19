@@ -979,7 +979,7 @@ paths:
       x-safe-edge-events: []
     patch:
       operationId: updateWorkOrder
-      summary: Edit a draft work order (remedy, notes)
+      summary: Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted
       description: "Roles: manager. Agents need scope `workorder.draft`."
       tags:
         - work-orders
@@ -999,7 +999,7 @@ paths:
               $ref: "#/components/schemas/UpdateWorkOrderRequest"
       responses:
         "200":
-          description: Edit a draft work order (remedy, notes)
+          description: Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted
           content:
             application/json:
               schema:

@@ -17,7 +17,7 @@ import type { Tx } from './store.ts'
 
 const deny = (rule: Denial['rule'], message: string): Denial => ({ ok: false, rule, message })
 
-const isAgent = (actor: Actor) => actor.type === 'agent' || actor.role === 'agent'
+export const isAgent = (actor: Actor) => actor.type === 'agent' || actor.role === 'agent'
 
 /**
  * The operations-table access rule: a person or service passes when its role is listed; an agent passes only when the

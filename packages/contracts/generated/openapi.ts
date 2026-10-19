@@ -556,7 +556,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Edit a draft work order (remedy, notes)
+         * Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted
          * @description Roles: manager. Agents need scope `workorder.draft`.
          */
         patch: operations["updateWorkOrder"];
@@ -2721,7 +2721,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Edit a draft work order (remedy, notes) */
+            /** @description Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted */
             200: {
                 headers: {
                     [name: string]: unknown;
