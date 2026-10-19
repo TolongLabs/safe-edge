@@ -34,6 +34,7 @@ import { startAutomation, type Every } from './automation.ts'
 import type { ApiClock } from './clock.ts'
 import { createEventHub, newWebhookSecret, type WebhookOptions } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
+import { openIdempotency } from './idempotency.ts'
 import { JournalWriteError, openJournal } from './journal.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
 import { forwardWorkOrders } from './work-orders.ts'
@@ -65,6 +66,8 @@ export interface ApiOptions {
   agent?: { claude: Anthropic; token: string }
   /** Where webhooks may point and how failed deliveries are retried. */
   webhooks: WebhookOptions
+  /** How long an answer stays kept for its Idempotency-Key, in milliseconds of wall-clock time (idempotency.ts). */
+  idempotencyRetentionMs: number
   /**
    * How the API repeats its automation on the wall clock (`setInterval`); required there. A scenario clock runs the
    * automation each time `setScenarioClock` moves it, so it ignores this.
@@ -74,17 +77,34 @@ export interface ApiOptions {
   weather?: DataGovMyClient
 }
 
-type Env = { Variables: { actor: Actor } }
+/** A write sent with an Idempotency-Key: who sent it to where with which key, and a digest of its body. */
+type Keyed = { scope: string; fingerprint: string }
+type Env = { Variables: { actor: Actor; idempotency: Keyed | undefined } }
 
 /** Who records a hand-off the API cannot run: the API itself, as in work-orders.ts. */
 const WORK_ORDERS: Actor = { type: 'system', id: 'api.work-orders', role: 'system', scopes: [] }
 type ApiOperationId = { [K in OperationId]: Operations[K]['handledBy'] extends 'api' ? K : never }[OperationId]
+/**
+ * A JSON answer, serialized once, so the answer kept for an Idempotency-Key is the one sent. A handler answers with one
+ * at once, or later when it awaits Claude (the agent's drafts); a stream answers with its Response.
+ */
+class Answer {
+  readonly body: string
+  constructor(
+    readonly status: ContentfulStatusCode,
+    value: unknown
+  ) {
+    this.body = JSON.stringify(value)
+  }
+}
 type ApiHandlers = {
-  [K in ApiOperationId]: (c: Context<Env>, input: OperationInput<K>) => Response | Promise<Response>
+  [K in ApiOperationId]: (c: Context<Env>, input: OperationInput<K>) => Answer | Promise<Answer> | Response
 }
 
-const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error'], message: string) =>
-  c.json({ ok: false, error, message } satisfies ApiError, status)
+const JSON_HEADERS = { 'content-type': 'application/json' }
+const send = (c: Context, answer: Answer) => c.body(answer.body, answer.status, JSON_HEADERS)
+const fail = (status: ContentfulStatusCode, error: ApiError['error'], message: string) =>
+  new Answer(status, { ok: false, error, message } satisfies ApiError)
 
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
 export function createApp({
@@ -97,6 +117,7 @@ export function createApp({
   workOrders,
   agent: agentOptions,
   webhooks,
+  idempotencyRetentionMs,
   every,
   weather
 }: ApiOptions) {
@@ -119,6 +140,8 @@ export function createApp({
     ids,
     options: webhooks,
     command: journal.command,
+    atomic: journal.atomic,
+    db,
     recordStored: core.recordStored
   })
   const evidence = createEvidenceStore({ clock, ids })
@@ -179,7 +202,7 @@ export function createApp({
   app.get('/evidence/:id/content', (c) => {
     const { expires, signature } = c.req.query()
     const file = expires && signature ? evidence.read(c.req.param('id'), expires, signature) : undefined
-    if (file === undefined) return fail(c, 401, 'unauthenticated', 'The evidence link is invalid or has expired')
+    if (file === undefined) return send(c, fail(401, 'unauthenticated', 'The evidence link is invalid or has expired'))
     return c.body(file.bytes, 200, { 'content-type': file.ref.mediaType })
   })
 
@@ -199,39 +222,33 @@ export function createApp({
 
   // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). The caller
   // is the whole actor, role and scopes included: a replay skips the access check, so another token of the same person
-  // must not share it. Server errors are not kept, so a retry runs again. Answers are kept in the store's
-  // `idempotency` table, so they outlive a restart; requests still running are tracked in memory.
-  db.run(
-    'create table if not exists idempotency (scope text primary key, fingerprint text not null, ' +
-      'status integer not null, headers text not null, body text not null)'
-  )
-  type Kept = { fingerprint: string; status: number; headers: string; body: string }
-  const keptAnswer = db.query<Kept, [string]>(
-    'select fingerprint, status, headers, body from idempotency where scope = ?'
-  )
-  const keepAnswer = db.query(
-    'insert into idempotency (scope, fingerprint, status, headers, body) values (?, ?, ?, ?, ?)'
-  )
+  // must not share it. Server errors are not kept, so a retry runs again. Answers are kept in the store
+  // (idempotency.ts) for `idempotencyRetentionMs`, so they outlive a restart; requests still running are tracked in
+  // memory. `serve` keeps them.
+  const answers = openIdempotency(db, idempotencyRetentionMs)
+  const keep = ({ scope, fingerprint }: Keyed, answer: Answer) => {
+    if (answer.status < 500) answers.keep(scope, fingerprint, { ...answer, headers: JSON_HEADERS })
+  }
   const running = new Map<string, string>()
   const idempotency = createMiddleware<Env>(async (c, next) => {
     const key = c.req.header('idempotency-key')
     if (key === undefined) return next()
     const scope = JSON.stringify([c.get('actor'), c.req.method, c.req.path, key])
     const fingerprint = new Bun.CryptoHasher('sha256').update(await c.req.text()).digest('hex')
-    const kept = keptAnswer.get(scope)
+    const kept = answers.find(scope)
     const seen = kept?.fingerprint ?? running.get(scope)
     if (seen !== undefined && seen !== fingerprint) {
-      return fail(c, 422, 'idempotency_conflict', 'This Idempotency-Key was already used with a different body')
+      return send(c, fail(422, 'idempotency_conflict', 'This Idempotency-Key was already used with a different body'))
     }
     if (kept) return new Response(kept.body, { status: kept.status, headers: JSON.parse(kept.headers) })
-    if (seen !== undefined)
-      return fail(c, 409, 'idempotency_conflict', 'A request with this Idempotency-Key is still running')
+    if (seen !== undefined) {
+      return send(c, fail(409, 'idempotency_conflict', 'A request with this Idempotency-Key is still running'))
+    }
 
     running.set(scope, fingerprint)
+    c.set('idempotency', { scope, fingerprint })
     await next()
-    const body = await c.res.clone().text()
     running.delete(scope)
-    if (c.res.status < 500) keepAnswer.run(scope, fingerprint, c.res.status, JSON.stringify([...c.res.headers]), body)
   })
 
   // The agent calls this same app in process with its own token, so every call passes auth, policy, validation,
@@ -247,17 +264,17 @@ export function createApp({
     })
     return createAgent({ claude, context: { client, now: clock.now } })
   }
-  const noAgent = (c: Context) => fail(c, 501, 'not_implemented', 'This API instance runs without the agent')
+  const noAgent = () => fail(501, 'not_implemented', 'This API instance runs without the agent')
 
   const apiHandlers: ApiHandlers = {
-    uploadEvidence: (c, { body }) => c.json(uploadEvidence(c.get('actor'), body), 201),
+    uploadEvidence: (c, { body }) => new Answer(201, uploadEvidence(c.get('actor'), body)),
     getEvidenceUrl: (c, { params }) => {
       const url = evidence.url(params.id, c.req.url)
-      return url ? c.json(url, 200) : fail(c, 404, 'not_found', `No evidence ${params.id}`)
+      return url ? new Answer(200, url) : fail(404, 'not_found', `No evidence ${params.id}`)
     },
-    triageImages: (c) => fail(c, 501, 'not_implemented', 'Claude vision triage arrives with #74'),
+    triageImages: () => fail(501, 'not_implemented', 'Claude vision triage arrives with #74'),
     askAgent: (c, { body }) => {
-      if (agent === undefined) return noAgent(c)
+      if (agent === undefined) return noAgent()
       return streamSSE(
         c,
         async (stream) => {
@@ -290,23 +307,25 @@ export function createApp({
         }
       )
     },
-    draftInbox: async (c, { body }) => {
-      if (agent === undefined) return noAgent(c)
+    // Synchronous up to the call to Claude, so a refused lookup (an audited write) is kept with its journal entry.
+    draftInbox: (c, { body }) => {
+      if (agent === undefined) return noAgent()
       // Looked up as the person asking, so an unknown candidate is their 404, and only stored IDs reach the prompt.
       const actor = c.get('actor')
       const found = core.dispatch('getCandidate', actor, { params: { id: body.candidateId } })
-      if (!found.ok) return c.json(found, failureStatus(found))
+      if (!found.ok) return new Answer(failureStatus(found), found)
       const { candidate } = found.data
       const findings = core.dispatch('listFindings', actor, { query: { segmentId: candidate.segmentId } })
       if (!findings.ok) throw new Error(`listFindings refused ${actor.id}: ${findings.message}`)
       const finding = findings.data.find((f) => f.candidateId === candidate.id) ?? null
-      const result = await agent.draftInbox(candidate, finding)
-      return result.ok ? c.json(result.draft, 200) : c.json(result, 502)
+      return agent
+        .draftInbox(candidate, finding)
+        .then((result) => (result.ok ? new Answer(200, result.draft) : new Answer(502, result)))
     },
-    draftMonthlyReport: async (c, { body }) => {
-      if (agent === undefined) return noAgent(c)
+    draftMonthlyReport: async (_c, { body }) => {
+      if (agent === undefined) return noAgent()
       const result = await agent.draftMonthlyReport(body.month)
-      return result.ok ? c.json(result.report, 200) : c.json(result, 502)
+      return result.ok ? new Answer(200, result.report) : new Answer(502, result)
     },
     streamEvents: (c) =>
       streamSSE(c, async (stream) => {
@@ -322,30 +341,30 @@ export function createApp({
           await stream.write(': heartbeat\n\n')
         }
       }),
-    listWebhooks: (c) => c.json(hub.list(), 200),
+    listWebhooks: () => new Answer(200, hub.list()),
     registerWebhook: (c, { body }) => {
       if (!hub.allows(body.url)) {
         const message = `url: ${new URL(body.url).origin} is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)`
-        return fail(c, 400, 'invalid_input', message)
+        return fail(400, 'invalid_input', message)
       }
       const secret = newWebhookSecret()
       const webhook = hub.register(c.get('actor'), body, secret)
-      return c.json({ ...webhook, secret } satisfies RegisteredWebhook, 201)
+      return new Answer(201, { ...webhook, secret } satisfies RegisteredWebhook)
     },
     setScenarioClock: (c, { body }) => {
       if (baseClock.set === undefined) {
-        return fail(c, 501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
+        return fail(501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
       }
       // Moving back would stamp later writes before earlier ones on the audit chain.
       const at = clock.now()
       if (Date.parse(body.now) < Date.parse(at)) {
         const message = `The scenario clock is at ${at}; it moves forward only, so it cannot go back to ${body.now}`
-        return c.json(core.refuse('setScenarioClock', c.get('actor'), 'clock_backwards', message), 403)
+        return new Answer(403, core.refuse('setScenarioClock', c.get('actor'), 'clock_backwards', message))
       }
       const moved = setScenarioClock(c.get('actor'), body.now)
       // After the journaled move, so each write the automation makes is its own entry and replays once.
       automation.clockSet()
-      return c.json(moved, 200)
+      return new Answer(200, moved)
     }
   }
 
@@ -354,29 +373,48 @@ export function createApp({
     const body = op.body ? readJson(await c.req.text()) : undefined
     const raw = { params: c.req.param(), query: c.req.query(), body }
 
-    // Policy before validation, so a refused caller learns nothing about the input and the refusal is audited.
-    const refused = core.checkAccess(operationId, actor, {
-      params: raw.params,
-      body: body === NOT_JSON ? undefined : body
-    })
-    if (refused) return c.json(refused, 403)
-    if (body === NOT_JSON) return fail(c, 400, 'invalid_input', 'The body is not JSON')
+    const handle = (): Answer | Promise<Answer> | Response => {
+      // Policy before validation, so a refused caller learns nothing about the input and the refusal is audited.
+      const refused = core.checkAccess(operationId, actor, {
+        params: raw.params,
+        body: body === NOT_JSON ? undefined : body
+      })
+      if (refused) return new Answer(403, refused)
+      if (body === NOT_JSON) return fail(400, 'invalid_input', 'The body is not JSON')
 
-    const input: Record<string, unknown> = {}
-    for (const part of ['params', 'query', 'body'] as const) {
-      const schema = op[part]
-      if (schema === undefined) continue
-      const parsed = schema.safeParse(raw[part])
-      if (!parsed.success) return fail(c, 400, 'invalid_input', `${part}: ${z.prettifyError(parsed.error)}`)
-      input[part] = parsed.data
+      const input: Record<string, unknown> = {}
+      for (const part of ['params', 'query', 'body'] as const) {
+        const schema = op[part]
+        if (schema === undefined) continue
+        const parsed = schema.safeParse(raw[part])
+        if (!parsed.success) return fail(400, 'invalid_input', `${part}: ${z.prettifyError(parsed.error)}`)
+        input[part] = parsed.data
+      }
+
+      if (op.handledBy === 'api') return apiHandlers[operationId as ApiOperationId](c, input as never)
+      const result = core.dispatch(operationId as CoreOperationId, actor, input as never)
+      if (!result.ok) return new Answer(failureStatus(result), result)
+      hub.publish(result.events)
+      afterDispatch[operationId as CoreOperationId]?.(result.data as never)
+      return new Answer(result.status, result.data)
     }
 
-    if (op.handledBy === 'api') return apiHandlers[operationId as ApiOperationId](c, input as never)
-    const result = core.dispatch(operationId as CoreOperationId, actor, input as never)
-    if (!result.ok) return c.json(result, failureStatus(result))
-    hub.publish(result.events)
-    afterDispatch[operationId as CoreOperationId]?.(result.data as never)
-    return c.json(result.data as object, result.status)
+    // A write sent with a key keeps its answer in the same SQLite transaction as the journal entries it made, so a kill
+    // keeps both or neither, and a retry with the key never runs it twice (#149). Everything from the access check to
+    // the answer runs synchronously, so no other request's entries join the transaction.
+    const keyed = c.get('idempotency')
+    const handled =
+      keyed === undefined
+        ? handle()
+        : journal.atomic(handle, (answer) => {
+            if (answer instanceof Answer) keep(keyed, answer)
+          })
+    if (handled instanceof Response) return handled
+    if (handled instanceof Answer) return send(c, handled)
+    // The agent's drafts await Claude, and they write only through the agent's own requests, each with its own key.
+    const answer = await handled
+    if (keyed !== undefined) keep(keyed, answer)
+    return send(c, answer)
   }
 
   for (const [operationId, op] of Object.entries(operations) as [OperationId, OperationSpec][]) {
@@ -396,6 +434,7 @@ export function createApp({
         'SAFE_EDGE_CLOCK=wall, or move it away to start again from the seed'
     )
   }
+  hub.resume()
   return app
 }
 

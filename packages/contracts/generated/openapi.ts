@@ -1786,7 +1786,7 @@ export interface components {
             at: string;
             /** @description 1 for the first attempt at this event, 2 for the first retry, ... */
             attempt: number;
-            /** @description HTTP <status>: <body, cut at 500 characters>, or the network error */
+            /** @description HTTP <status>: <body, cut at 500 characters>, the network error, or "Not delivered: <origin> is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)" */
             error: string;
             /** @description True when the API gave up on this event for this endpoint: no retry follows */
             final: boolean;

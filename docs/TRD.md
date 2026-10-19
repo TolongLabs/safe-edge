@@ -117,7 +117,7 @@ e2e/                    Playwright tests
 | Contracts           | OpenAPI 3.1, AsyncAPI 3.0, CloudEvents 1.0 envelopes                  | `openapi-typescript@7.13.0` for types ([SDK research][sdk])    |
 | MCP                 | Official TypeScript server SDK, spec revision 2026-07-28              | `@modelcontextprotocol/server@2.3.1` ([agent research][agent]) |
 | AI                  | Anthropic TypeScript SDK, `claude-opus-5-5`                           | `@anthropic-ai/sdk`, latest stable                             |
-| API state           | `bun:sqlite` command journal and idempotency table (`apps/api`)       | Built into Bun                                                 |
+| API state           | `bun:sqlite` journal, idempotency and webhook retries (`apps/api`)    | Built into Bun                                                 |
 | Webhooks            | Standard Webhooks 1.0.0 signatures; reference library in tests        | `standardwebhooks@1.1.1`                                       |
 | Tests               | Playwright end-to-end; `bun test` integration tests over HTTP and MCP | Latest stable                                                  |
 | Mission check (CI)  | uv runs the MAVSDK QGroundControl importer on the exported `.plan`    | `mavsdk==4.0.6`, uv via `astral-sh/setup-uv` v10.3.0           |
@@ -193,7 +193,7 @@ Base path `/v1`, JSON, described in `packages/contracts/openapi.yaml`. Bearer to
 | `GET /events`                       | any                    | Server-sent events                               |
 | `POST /webhooks`                    | integrator             | Register a webhook endpoint                      |
 
-Every write accepts an `Idempotency-Key` header. Forbidden transitions return `403` with the policy rule that blocked them.
+Every write accepts an `Idempotency-Key` header; a retry with the key within 24 hours replays the first answer (see [Security and privacy](#security-and-privacy)). Forbidden transitions return `403` with the policy rule that blocked them.
 
 ## Events
 
@@ -395,6 +395,8 @@ P2 only: 3DTilesRendererJS 0.5.3 with `GoogleCloudAuthPlugin`, a key restricted 
 - Demo tokens work only in demo mode. The API rejects them.
 - Every state change is in the hash-chained audit log, including refused attempts.
 - The API keeps its state in `$SAFE_EDGE_DATA_DIR/api.sqlite`, unencrypted: the command journal holds every webhook's signing secret and uploaded evidence, and the idempotency table keeps each answer replayed by key, a webhook registration's secret included. The API sets the directory to 0700 on every start, one that already existed included, so only its OS user can read them.
+- Idempotency keys expire: an answer is kept for 24 hours of wall-clock time after it was given (`SAFE_EDGE_IDEMPOTENCY_RETENTION_SECONDS`, default `86400`), then pruned, and a request with that key runs as a new one. A write's answer commits in the same SQLite transaction as the journal entries it made, so a crash cannot keep the write without the answer that stops a retry repeating it.
+- Webhooks reach only the origins in `SAFE_EDGE_WEBHOOK_ORIGINS` (loopback too in development and test). The API checks the list at registration and again before every delivery attempt, retries included: a webhook whose origin has left the list gets nothing more, and each refused delivery is recorded as its final failure. A failed delivery's retry waits in the store with its due time, so it outlives a restart; a first attempt in flight at a crash is lost.
 - A journal moved to another operating system may refuse to start: replay re-runs the planner, whose trigonometry comes from the platform's maths library and differs in the last bit between macOS and Linux, and a replayed result that differs from the recorded one stops the start.
 - Dependencies: no AGPL or GPL models; record every model and asset licence in `docs/licences.md`.
 
