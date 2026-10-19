@@ -235,7 +235,8 @@ export const operations = {
   approvePatrolPlan: {
     method: 'post',
     path: '/patrol-plans/{id}/approve',
-    summary: 'Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)',
+    summary:
+      'Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded). Approving a re-plan of a plan in flight moves its patrol onto the re-plan, which the drone then flies',
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,
@@ -283,7 +284,7 @@ export const operations = {
     method: 'post',
     path: '/patrols',
     summary:
-      "Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)",
+      "Start a patrol from an approved plan that no re-plan superseded and no patrol is flying (invalid_transition), inside the plan's window (outside_window) and after its launch holds (weather_hold)",
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,

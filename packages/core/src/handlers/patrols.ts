@@ -108,6 +108,10 @@ export const patrolHandlers = (
       return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; approve that instead`, plan.id)
     const approved = { ...plan, status: 'approved' as const, approvedBy: tx.actor.id, approvedAt: tx.now }
     tx.put('patrolPlans', approved)
+    // A re-plan of a plan in flight is the rest of that flight: from now on its patrol flies the re-plan, and the drone
+    // provider switches the drone to it.
+    const flying = flyingAncestor(tx, plan)
+    if (flying) tx.put('patrols', { ...flying, planId: plan.id })
     return ok(approved)
   },
 
@@ -140,6 +144,8 @@ export const patrolHandlers = (
     }
     const next = supersededBy(tx, plan)
     if (next) return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; fly that instead`, plan.id)
+    const flying = tx.all('patrols').find((p) => p.planId === plan.id && p.status === 'in_flight')
+    if (flying) return tx.deny('invalid_transition', `${plan.id} is already flying as ${flying.id}`, plan.id)
     // Weather and lightning holds stop the launch until they end; separation holds on segments wait there in flight.
     const launchHolds = plan.holds.filter(
       (h) => h.segmentId === null && h.until !== null && Date.parse(tx.now) < Date.parse(h.until)
@@ -280,6 +286,20 @@ function closeRecaptures(tx: Tx, segmentId: string, covers: (task: Task) => bool
 /** The re-plan that replaced `plan`, if any. A superseded plan is never approved or flown. */
 const supersededBy = (tx: Tx, plan: PatrolPlan) =>
   tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === plan.id)
+
+/** The patrol in flight on a plan `plan` re-plans, directly or through earlier re-plans of it. */
+function flyingAncestor(tx: Tx, plan: PatrolPlan): Patrol | undefined {
+  const flying = tx.all('patrols').filter((p) => p.status === 'in_flight')
+  for (
+    let id = plan.replan?.supersedes?.planId;
+    id !== undefined;
+    id = tx.get('patrolPlans', id)?.replan?.supersedes?.planId
+  ) {
+    const patrol = flying.find((p) => p.planId === id)
+    if (patrol) return patrol
+  }
+  return undefined
+}
 
 /** Each third party once, however many times it was reported. */
 function distinct(parties: ThirdParty[]): ThirdParty[] {

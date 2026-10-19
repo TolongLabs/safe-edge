@@ -80,8 +80,9 @@ export type PatrolRun = z.infer<typeof PatrolRun>
 const eventBase = { runId: RunId, deviceId: DeviceId, at: Timestamp, simulated: z.boolean() }
 
 /**
- * The provider event stream, in time order. Waypoint indexes are the plan's `waypoints` indexes: `takeoff` leaves
- * waypoint 0, `waypoint` reaches 1 to n − 2, and `landed` reaches n − 1 (or the dock, after a cancel).
+ * The provider event stream, in time order. Waypoint indexes are the `waypoints` indexes of the plan the drone flies
+ * (after `updatePatrol` switches it to a re-plan, the re-plan's): `takeoff` leaves waypoint 0, `waypoint` reaches 1 to
+ * n − 2, and `landed` reaches n − 1 (or the dock, after a cancel or a hold's wait ran out).
  */
 export const ProviderEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('takeoff'), ...eventBase, planId: PatrolPlanId, pose: Pose }),
@@ -116,10 +117,14 @@ export const ProviderEvent = z.discriminatedUnion('type', [
     remainingWh: z.number().nonnegative(),
     percent: z.number().min(0).max(100)
   }),
+  /**
+   * `completed`: the drone flew its plan to the end. `cancelled`: `cancelPatrol` sent it straight home. `hold_timeout`:
+   * it waited at a separation hold until the rest of the plan no longer fitted its battery or window, then came home.
+   */
   z.object({
     type: z.literal('landed'),
     ...eventBase,
-    outcome: z.enum(['completed', 'cancelled']),
+    outcome: z.enum(['completed', 'cancelled', 'hold_timeout']),
     pose: Pose,
     remainingWh: z.number().nonnegative()
   })
@@ -135,6 +140,12 @@ export interface DroneProvider {
   schedulePatrol(plan: PatrolPlan): Promise<PatrolRun>
   /** Flies a scheduled run. Rejects unless `approval` matches the pilot approval recorded on the run's plan. */
   dispatchPatrol(runId: string, approval: HumanApproval): Promise<void>
+  /**
+   * Hands an in-flight run a newer version of its plan, approved as `approval` says: the same plan with separation
+   * holds released (the drone stops waiting at them), or an approved re-plan that supersedes it, whose stops after the
+   * committed ones replace the rest of the route. Rejects a re-plan the drone can no longer fly from where it is.
+   */
+  updatePatrol(runId: string, plan: PatrolPlan, approval: HumanApproval): Promise<void>
   /** Drops a scheduled run, or sends an in-flight one straight back to its dock. */
   cancelPatrol(runId: string): Promise<void>
   /** Subscribes to the event stream. Returns the unsubscribe function. */

@@ -32,6 +32,7 @@ function scriptedProvider() {
       return run
     },
     dispatchPatrol: async () => {},
+    updatePatrol: async () => {},
     cancelPatrol: async () => {},
     onEvent: (handler) => {
       handlers.add(handler)
