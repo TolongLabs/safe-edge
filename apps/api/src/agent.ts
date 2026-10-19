@@ -3,7 +3,14 @@ import { betaZodTool } from '@anthropic-ai/sdk/helpers/beta/zod'
 import { ToolError } from '@anthropic-ai/sdk/lib/tools/ToolError'
 import { transformJSONSchema } from '@anthropic-ai/sdk/lib/transform-json-schema'
 import type { BetaMessage } from '@anthropic-ai/sdk/resources/beta/messages'
-import { agentInstructions, agentTools, type AgentToolContext } from '@safe-edge/agent-tools'
+import {
+  agentInstructions,
+  agentTools,
+  apiRefusal,
+  monthlyReportPrompt,
+  toolDescription,
+  type AgentToolContext
+} from '@safe-edge/agent-tools'
 import {
   ID_PREFIXES,
   WorkOrder,
@@ -16,7 +23,6 @@ import {
   type MonthlyReportDraft,
   Notice
 } from '@safe-edge/contracts'
-import { SafeEdgeApiError, SafeEdgeDeniedError } from '@safe-edge/sdk'
 
 // The one Claude agent of the TRD "Agent layer and MCP server": the tool runner over the same tools the MCP server
 // serves (packages/agent-tools), calling the API through a client that holds the agent's own token. The API, not
@@ -153,13 +159,7 @@ export function createAgent({ claude, context }: AgentOptions) {
 
     /** The board's monthly governance report, saved as a notice draft; `month` is a checked YYYY-MM. */
     async draftMonthlyReport(month: string): Promise<{ ok: true; report: MonthlyReportDraft } | AgentStopped> {
-      const prompt = [
-        `Draft the Safe Edge monthly governance report for ${month}.`,
-        '1. Call list_open_findings, and list_expiring_passes with days 30.',
-        '2. Save the report once with draft_escalation: kind monthly_report, subjectId null, a title naming the month, and a body that summarises the open findings by status, owner and age and the passes that expire within 30 days, naming every record ID and labelling simulated records.',
-        '3. Then reply with one sentence naming the notice ID.'
-      ].join('\n')
-      const result = await run(prompt, 'high')
+      const result = await run(monthlyReportPrompt(month), 'high')
       if (!result.ok) return result
       const reports = result.calls
         .filter((call) => call.name === 'draft_escalation')
@@ -196,7 +196,7 @@ function claudeTools(context: AgentToolContext, calls: ToolCall[]) {
   return agentTools.map((tool) => {
     const runnable = betaZodTool({
       name: tool.name,
-      description: `${tool.description} Needs the ${tool.scope} scope.`,
+      description: toolDescription(tool),
       inputSchema: tool.input,
       run: async (input) => {
         try {
@@ -204,12 +204,8 @@ function claudeTools(context: AgentToolContext, calls: ToolCall[]) {
           calls.push({ name: tool.name, output })
           return JSON.stringify(output)
         } catch (error) {
-          if (error instanceof SafeEdgeDeniedError) {
-            throw new ToolError(`Refused by the Safe Edge API (403, rule ${error.rule}): ${error.message}`)
-          }
-          if (error instanceof SafeEdgeApiError) {
-            throw new ToolError(`Safe Edge API error (${error.status} ${error.error}): ${error.message}`)
-          }
+          const refusal = apiRefusal(error)
+          if (refusal !== null) throw new ToolError(refusal)
           console.error(`safe-edge agent: ${tool.name} failed`, error)
           throw error
         }

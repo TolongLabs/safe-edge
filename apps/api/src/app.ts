@@ -1,4 +1,5 @@
 import {
+  failureStatus,
   operations,
   type Actor,
   type AgentDelta,
@@ -179,7 +180,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
       // Looked up as the person asking, so an unknown candidate is their 404, and only stored IDs reach the prompt.
       const actor = c.get('actor')
       const found = core.dispatch('getCandidate', actor, { params: { id: body.candidateId } })
-      if (!found.ok) return 'rule' in found ? c.json(found, 403) : c.json(found, 404)
+      if (!found.ok) return c.json(found, failureStatus(found))
       const { candidate } = found.data
       const findings = core.dispatch('listFindings', actor, { query: { segmentId: candidate.segmentId } })
       if (!findings.ok) throw new Error(`listFindings refused ${actor.id}: ${findings.message}`)
@@ -245,7 +246,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
 
     if (op.handledBy === 'api') return apiHandlers[operationId as ApiOperationId](c, input as never)
     const result = core.dispatch(operationId as CoreOperationId, actor, input as never)
-    if (!result.ok) return 'rule' in result ? c.json(result, 403) : c.json(result, 404)
+    if (!result.ok) return c.json(result, failureStatus(result))
     hub.publish(result.events)
     return c.json(result.data as object, result.status)
   }

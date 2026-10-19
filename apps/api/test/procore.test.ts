@@ -14,7 +14,7 @@ import {
   Task,
   WorkOrder
 } from '@safe-edge/contracts'
-import { ProcoreWorkOrderProvider } from '@safe-edge/providers'
+import { ProcoreWorkOrderProvider, SAFETY_HAZARD_OBSERVATION_TYPE } from '@safe-edge/providers'
 import { startProcoreDouble } from '../../../packages/providers/test/procore-double.ts'
 import type { ApiOptions } from '../src/app.ts'
 import { S1, seed, startApi, type Api } from './support.ts'
@@ -40,7 +40,7 @@ function procoreAdapter(clientSecret = credentials.clientSecret) {
       apiBaseUrl: procore.url,
       ...credentials,
       clientSecret,
-      observationType: 'Safety Hazard',
+      observationType: SAFETY_HAZARD_OBSERVATION_TYPE,
       readEvidence
     })
     const watch = <T>(step: Promise<T>, last: boolean) =>

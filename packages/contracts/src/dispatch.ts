@@ -31,6 +31,9 @@ export type NotFound = ApiError & { error: 'not_found' }
 /** A denial is a value, not a throw: HTTP 403 naming `rule`. It is also appended to the audit chain. */
 export type DispatchResult<K extends CoreOperationId> = DispatchSuccess<K> | Denial | NotFound
 
+/** The HTTP status of a dispatch that did not succeed: 403 for a denial (it names the rule), 404 for not found. */
+export const failureStatus = (failure: Denial | NotFound): 403 | 404 => ('rule' in failure ? 403 : 404)
+
 /**
  * The single entry point core implements (PLAN "One dispatch, two transports"): check the actor's role or agent
  * scope against the operations table, run the command, emit events and append audit. Synchronous.

@@ -6,3 +6,4 @@ export { assumedEnergyModel, planPatrol, type Geofence, type PatrolPlanInput } f
 export { replan, weatherTriggers, type PatrolProgress } from './replan.ts'
 export { firstLightAfter } from './window.ts'
 export { SEPARATION_M, type ThirdParty } from './separation.ts'
+export { createElminaPlanner } from './elmina-planner.ts'

@@ -24,6 +24,9 @@ export const PROCORE_DEVELOPER_SANDBOX = {
   apiBaseUrl: 'https://sandbox.procore.com'
 } as const
 
+/** The Observation Type Safe Edge files findings under: one of Procore's default types (documentation/tutorial-observations). */
+export const SAFETY_HAZARD_OBSERVATION_TYPE = 'Safety Hazard'
+
 /** The bytes of a Safe Edge evidence image. */
 export type EvidenceReader = (ref: EvidenceRef) => Promise<Uint8Array<ArrayBuffer>>
 

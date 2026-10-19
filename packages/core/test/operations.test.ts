@@ -49,7 +49,7 @@ describe('the operations table in core', () => {
     expect(verifyAuditChain(h.audit()).ok).toBe(true)
   })
 
-  test('every core operation runs a real command for a caller the table allows', () => {
+  test('every core operation runs a real command for a caller the table allows', async () => {
     // Someone on S1's water edge (a vertex of its seed geometry), so its patrol plan has a separation hold to release.
     const onTheEdge: ThirdParty = {
       id: 'obs_person_s1',
@@ -60,7 +60,7 @@ describe('the operations table in core', () => {
       simulated: true,
       source: 'fixture'
     }
-    const h = startCore({ planner: plannerWith({ thirdParties: [onTheEdge] }) })
+    const h = startCore({ planner: await plannerWith({ thirdParties: [onTheEdge] }) })
     const played = playS1toRepair(h)
     h.call('recordRetest', 'usr_reviewer', { body: played.retest })
     // Then a false alarm: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.

@@ -8,13 +8,14 @@ import {
   type EdgeEvent,
   type OperationId,
   type OperationInput,
-  type OperationSpec
+  type OperationSpec,
+  type PatrolPlanner
 } from '@safe-edge/contracts'
 import { fixLens } from './handlers/fix-lens.ts'
 import type { Handlers } from './handlers/handler.ts'
 import { inbox } from './handlers/inbox.ts'
 import { notices } from './handlers/notices.ts'
-import { patrolHandlers, type PatrolPlanner } from './handlers/patrols.ts'
+import { patrolHandlers } from './handlers/patrols.ts'
 import { reads } from './handlers/reads.ts'
 import { work } from './handlers/work.ts'
 import { authorize, expiringFrom, movePass } from './policy.ts'

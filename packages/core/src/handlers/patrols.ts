@@ -1,11 +1,7 @@
 import {
   PatrolPlan,
-  type CreatePatrolPlanRequest,
-  type Dock,
-  type DroneProfile,
-  type EdgePass,
-  type Finding,
   type Patrol,
+  type PatrolPlanner,
   type Segment,
   type SegmentCoverage,
   type Task
@@ -13,25 +9,6 @@ import {
 import { canonicalJson } from '../audit.ts'
 import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
-
-/**
- * The planning port. Core never imports `@safe-edge/planner`; whoever creates the core passes an adapter over its
- * `planPatrol` (#71), which holds what the store does not: planner geometry, capture settings, geofences and
- * water-level bands. Synchronous, like the rest of core. Core supplies the plan ID and the time, and stores the plan
- * only if it comes back proposed and unapproved. A re-plan request (`request.replan`) also gets the plan it supersedes
- * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`.
- */
-export type PatrolPlanner = (input: {
-  id: string
-  now: string
-  request: CreatePatrolPlanRequest
-  previous: PatrolPlan | null
-  dock: Dock
-  droneProfile: DroneProfile
-  segments: Segment[]
-  passes: EdgePass[]
-  findings: Finding[]
-}) => PatrolPlan
 
 /** Coverage lengths are float sums in metres: a micrometre either way is rounding, not coverage. */
 const ROUNDING_M = 1e-6

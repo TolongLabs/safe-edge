@@ -1,4 +1,4 @@
-import { ApiError, Denial, operations, type CoreOperationId, type OperationSpec } from '@safe-edge/contracts'
+import { operations, type CoreOperationId, type OperationSpec } from '@safe-edge/contracts'
 import {
   bindMethods,
   idsHandledBy,
@@ -8,7 +8,7 @@ import {
   type RawInput,
   type SafeEdgeClient
 } from './client.ts'
-import { SafeEdgeApiError, SafeEdgeDeniedError } from './errors.ts'
+import { errorFor } from './errors.ts'
 
 export interface HttpOptions {
   transport: 'http'
@@ -51,11 +51,5 @@ async function failure(response: Response, request: string): Promise<Error> {
   if (!response.headers.get('content-type')?.includes('application/json')) {
     return new Error(`${request} returned ${response.status}: ${text}`)
   }
-  const body: unknown = JSON.parse(text)
-  if (response.status === 403) {
-    const denial = Denial.parse(body)
-    return new SafeEdgeDeniedError(denial.rule, denial.message)
-  }
-  const error = ApiError.parse(body)
-  return new SafeEdgeApiError(response.status, error.error, error.message)
+  return errorFor(response.status, JSON.parse(text))
 }

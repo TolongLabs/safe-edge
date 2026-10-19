@@ -2,7 +2,7 @@
 // of an accepted finding with its photo is proven end to end in apps/api/test/procore.test.ts.
 import { afterAll, expect, test } from 'bun:test'
 import { Finding } from '@safe-edge/contracts'
-import { ProcoreWorkOrderProvider, type ProcoreConfig } from '../src/index.ts'
+import { ProcoreWorkOrderProvider, SAFETY_HAZARD_OBSERVATION_TYPE, type ProcoreConfig } from '../src/index.ts'
 import { startProcoreDouble } from './procore-double.ts'
 
 const credentials = { clientId: 'safe-edge-sandbox', clientSecret: 'sandbox-secret', companyId: 4271, projectId: 1234 }
@@ -14,7 +14,7 @@ const adapter = (config: Partial<ProcoreConfig> = {}) =>
     loginBaseUrl: procore.url,
     apiBaseUrl: procore.url,
     ...credentials,
-    observationType: 'Safety Hazard',
+    observationType: SAFETY_HAZARD_OBSERVATION_TYPE,
     readEvidence: () => Promise.reject(new Error('These tests attach no evidence')),
     ...config
   })

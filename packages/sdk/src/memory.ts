@@ -1,4 +1,5 @@
 import {
+  failureStatus,
   operations,
   type Actor,
   type CoreOperationId,
@@ -26,7 +27,7 @@ import {
   type RawInput,
   type SafeEdgeClient
 } from './client.ts'
-import { SafeEdgeApiError, SafeEdgeDeniedError } from './errors.ts'
+import { SafeEdgeApiError, SafeEdgeDeniedError, errorFor } from './errors.ts'
 
 /** The labelled Elmina fixtures (`data/elmina/fixtures/seed.json`): every record is `simulated: true, source: 'fixture'`. */
 export const elminaSeed: Seed = Seed.parse(seedJson)
@@ -71,11 +72,7 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
     const call = async (operationId: CoreOperationId, input: RawInput) => {
       validate(operationId, input)
       const result = session.core.dispatch(operationId, actor, input as never) as DispatchResult<CoreOperationId>
-      if (!result.ok) {
-        throw 'rule' in result
-          ? new SafeEdgeDeniedError(result.rule, result.message)
-          : new SafeEdgeApiError(404, result.error, result.message)
-      }
+      if (!result.ok) throw errorFor(failureStatus(result), result)
       publish(result.events)
       return result.data
     }

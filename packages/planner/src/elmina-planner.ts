@@ -1,10 +1,14 @@
-import type { PatrolPlanner } from '@safe-edge/core'
-import { loadElmina, planPatrol, replan, splitEdges, type PatrolPlanInput, type ThirdParty } from '@safe-edge/planner'
+import type { PatrolPlanner } from '@safe-edge/contracts'
+import { loadElmina } from './elmina.ts'
+import { planPatrol, type PatrolPlanInput } from './patrol.ts'
+import { replan } from './replan.ts'
+import { splitEdges } from './segments.ts'
+import type { ThirdParty } from './separation.ts'
 
 /**
- * The planner port over #71's `planPatrol` for the Elmina seed, the same adapter core's tests use. It holds what the
- * store lacks: planner geometry, capture settings, geofences (none yet), water-level bands and a 120-minute window
- * after first light. `readJson` loads a path from `elminaLayerPaths` (relative to the repo root): the browser fetches
+ * Core's planner port (`PatrolPlanner`) over `planPatrol` for the Elmina seed: the one adapter the API, the SDK and
+ * the tests use. It holds what the store lacks: planner geometry, capture settings, geofences (none yet), water-level
+ * bands and a 120-minute window after first light. `readJson` loads a path from `elminaLayerPaths` (relative to the repo root): the browser fetches
  * it, Bun reads the file. `thirdParties` are the people, vessels, vehicles and structures not under the pilot's control
  * that plans keep 50 m from (S1's people on the path); there is no default, so none are left out by accident.
  */
