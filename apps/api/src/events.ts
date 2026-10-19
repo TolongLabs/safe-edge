@@ -1,5 +1,5 @@
 import type { Actor, EdgeEvent, RegisterWebhookRequest, Webhook, WebhookFailure } from '@safe-edge/contracts'
-import type { Clock, Core, IdGenerator } from '@safe-edge/core'
+import { createEventQueue, type Clock, type Core, type IdGenerator } from '@safe-edge/core'
 import { createHmac, randomBytes } from 'node:crypto'
 import type { Journal } from './journal.ts'
 
@@ -117,12 +117,9 @@ export function createEventHub({
   command: Journal['command']
   recordStored: Core['recordStored']
 }) {
-  const subscribers = new Set<(event: EdgeEvent) => void>()
   const webhooks = new Map<string, { webhook: Webhook; secret: string }>()
-  // Events a listener publishes in reaction (a re-plan) wait until the event it reacts to has reached every listener,
-  // so every subscriber sees events in the order they happened.
-  const queue: EdgeEvent[] = []
-  let delivering = false
+  // Every subscriber, and every webhook, sees events in the order they happened, a re-plan right after its cause.
+  const events = createEventQueue()
 
   const register = command('registerWebhook', (actor: Actor, body: RegisterWebhookRequest, secret: string): Webhook => {
     const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: actor.id, createdAt: clock.now(), failures: [] }
@@ -156,6 +153,12 @@ export function createEventHub({
     }
   }
 
+  events.subscribe((event) => {
+    for (const { webhook } of webhooks.values()) {
+      if (webhook.eventTypes.includes(event.type)) void deliver(webhook.id, event)
+    }
+  })
+
   return {
     /**
      * Whether webhooks may point at `url`: its origin is on the allowlist, or it is loopback where that is allowed. The
@@ -165,29 +168,12 @@ export function createEventHub({
       const { origin, hostname } = new URL(url)
       return options.origins.includes(origin) || (options.allowLoopback && isLoopback(hostname))
     },
-    subscribe(listener: (event: EdgeEvent) => void): () => void {
-      subscribers.add(listener)
-      return () => subscribers.delete(listener)
-    },
+    subscribe: events.subscribe,
     /** Stores a webhook for `body`, signed with `secret`, as `actor` registered it. */
     register,
     list(): Webhook[] {
       return [...webhooks.values()].map((entry) => entry.webhook)
     },
-    publish(events: EdgeEvent[]): void {
-      queue.push(...events)
-      if (delivering) return
-      delivering = true
-      try {
-        for (let event = queue.shift(); event !== undefined; event = queue.shift()) {
-          for (const listener of subscribers) listener(event)
-          for (const { webhook } of webhooks.values()) {
-            if (webhook.eventTypes.includes(event.type)) void deliver(webhook.id, event)
-          }
-        }
-      } finally {
-        delivering = false
-      }
-    }
+    publish: events.publish
   }
 }

@@ -1,7 +1,7 @@
-import { dispatchOrThrow, type Actor, type EdgeEvent } from '@safe-edge/contracts'
-import type { Core } from './core.ts'
+import { dispatchOrThrow, type Actor, type EdgeEvent, type ReplanTrigger } from '@safe-edge/contracts'
+import type { Clock, Core } from './core.ts'
 import { missedPatrolDue } from './policy.ts'
-import type { ReplanSubscriberOptions } from './replan.ts'
+import { createReplanSubscriber, type ReplanSubscriberOptions } from './replan.ts'
 
 /** The system running the checks a transport schedules, and recording the automation's failures. */
 export const AUTOMATION_ACTOR: Actor = { type: 'system', id: 'core.automation', role: 'system', scopes: [] }
@@ -60,4 +60,50 @@ export function recordAutomationFailure(core: Pick<Core, 'recordStored'>, step: 
   console.error(`Safe Edge automation: ${step} failed`, error)
   const failure = { id: 'automation', step, error: error instanceof Error ? error.message : String(error) }
   core.recordStored('runAutomation', AUTOMATION_ACTOR, failure)
+}
+
+export interface Replanning {
+  /** Re-plans on an event core emitted, publishing the re-plans. Subscribe it to every published event. */
+  onEvent(event: EdgeEvent): void
+  /** Re-plans on any trigger, such as the planner's `weatherTriggers` from new weather snapshots. */
+  onTrigger(trigger: ReplanTrigger): void
+}
+
+/**
+ * Core's re-plan subscriber as both transports run it: the re-test a repair queues with no plan open comes from
+ * `queuedRetest`, the re-plans go to `publish`, and every failure, of one plan or of the whole trigger, is recorded
+ * (`recordAutomationFailure`) instead of thrown.
+ */
+export function startReplanning({
+  core,
+  clock,
+  committedTasks,
+  publish
+}: {
+  core: Pick<Core, 'dispatch' | 'recordStored'>
+  clock: Clock
+  committedTasks: ReplanSubscriberOptions['committedTasks']
+  publish(events: EdgeEvent[]): void
+}): Replanning {
+  const subscriber = createReplanSubscriber({
+    dispatch: core.dispatch,
+    clock,
+    committedTasks,
+    retest: queuedRetest(core),
+    onFailure: (error) => recordAutomationFailure(core, 'replan', error)
+  })
+  const replan = (run: () => EdgeEvent[]) => {
+    let events: EdgeEvent[]
+    try {
+      events = run()
+    } catch (error) {
+      recordAutomationFailure(core, 'replan', error)
+      return
+    }
+    publish(events)
+  }
+  return {
+    onEvent: (event) => replan(() => subscriber.onEvent(event)),
+    onTrigger: (trigger) => replan(() => subscriber.onTrigger(trigger))
+  }
 }

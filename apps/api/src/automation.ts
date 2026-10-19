@@ -1,10 +1,9 @@
 import { dispatchOrThrow, type Actor, type EdgeEvent } from '@safe-edge/contracts'
 import {
   AUTOMATION_ACTOR,
-  createReplanSubscriber,
-  queuedRetest,
   recordAutomationFailure,
   runSchedule,
+  startReplanning,
   type AutomationStep,
   type Clock,
   type Core
@@ -99,15 +98,9 @@ export function startAutomation({
   }
   const flySim = () => attempt('drone', () => sim.tick())
 
-  const replan = createReplanSubscriber({
-    dispatch: core.dispatch,
-    clock,
-    committedTasks: drone.committedTasks,
-    retest: queuedRetest(core),
-    onFailure: (error) => recordAutomationFailure(core, 'replan', error)
-  })
+  const replan = startReplanning({ core, clock, committedTasks: drone.committedTasks, publish })
   subscribe((event) => {
-    attempt('replan', () => publish(replan.onEvent(event)))
+    replan.onEvent(event)
     if (event.type === 'edge.patrol.started.v1') {
       fly(event.data.patrolId).catch((error: unknown) => recordAutomationFailure(core, 'drone', error))
     }
@@ -118,7 +111,7 @@ export function startAutomation({
     const warnings = await client.warnings()
     const publisher = 'data.gov.my (MET Malaysia)'
     const snapshots = warningSnapshots({ publisher, warnings, simulated: false, source: 'provider' }, ELMINA_AREA)
-    for (const trigger of weatherTriggers(snapshots, clock.now())) publish(replan.onTrigger(trigger))
+    for (const trigger of weatherTriggers(snapshots, clock.now())) replan.onTrigger(trigger)
   }
 
   if (!scenario) {
