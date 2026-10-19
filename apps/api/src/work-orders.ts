@@ -1,12 +1,13 @@
-import type {
-  Actor,
-  CoreOperationId,
-  DispatchResult,
-  EdgeEvent,
-  ExternalWorkStatus,
-  WorkOrderExternalError,
-  WorkOrderProvider,
-  WorkOrderStatus
+import {
+  dispatchOrThrow,
+  type Actor,
+  type CoreOperationId,
+  type EdgeEvent,
+  type ExternalWorkStatus,
+  type OperationInput,
+  type WorkOrderExternalError,
+  type WorkOrderProvider,
+  type WorkOrderStatus
 } from '@safe-edge/contracts'
 import type { Core } from '@safe-edge/core'
 import { WorkOrderProviderError } from '@safe-edge/providers'
@@ -48,6 +49,8 @@ export function forwardWorkOrders({
   subscribe: (listener: (event: EdgeEvent) => void) => void
   provider: WorkOrderProvider
 }) {
+  const call = <K extends CoreOperationId>(op: K, input: OperationInput<K>) =>
+    dispatchOrThrow(core.dispatch, op, SYSTEM, input).data
   const queues = new Map<string, Promise<void>>()
   const enqueue = (workOrderId: string, job: () => Promise<void>) => {
     const queued = (queues.get(workOrderId) ?? Promise.resolve()).then(job)
@@ -76,10 +79,8 @@ export function forwardWorkOrders({
   async function handOff(workOrderId: string, from: Step, status?: ExternalWorkStatus): Promise<void> {
     // The failure goes on the work order and the audit chain; if even that is refused, it throws.
     const recordFailure = (step: Step, message: string) =>
-      read(
-        core.dispatch('recordWorkOrderExternalError', SYSTEM, { params: { id: workOrderId }, body: { step, message } })
-      )
-    const workOrder = read(core.dispatch('getWorkOrder', SYSTEM, { params: { id: workOrderId } }))
+      call('recordWorkOrderExternalError', { params: { id: workOrderId }, body: { step, message } })
+    const workOrder = call('getWorkOrder', { params: { id: workOrderId } })
     if (status !== undefined) {
       // An earlier failure waits for a person; their retry brings the status up to date.
       if (workOrder.externalError !== null) return
@@ -93,17 +94,15 @@ export function forwardWorkOrders({
     try {
       let ref = workOrder.externalRef
       if (step === 'createFinding') {
-        const finding = read(core.dispatch('getFinding', SYSTEM, { params: { id: workOrder.findingId } }))
+        const finding = call('getFinding', { params: { id: workOrder.findingId } })
         ref = (await provider.createFinding(finding)).id
-        read(
-          core.dispatch('setWorkOrderExternalRef', SYSTEM, { params: { id: workOrderId }, body: { externalRef: ref } })
-        )
+        call('setWorkOrderExternalRef', { params: { id: workOrderId }, body: { externalRef: ref } })
         step = 'addEvidence'
       }
       if (ref === null) throw new Error(`${workOrderId} has no external record to resume ${step} on`)
       if (step === 'addEvidence') {
-        const finding = read(core.dispatch('getFinding', SYSTEM, { params: { id: workOrder.findingId } }))
-        const { observations } = read(core.dispatch('getCandidate', SYSTEM, { params: { id: finding.candidateId } }))
+        const finding = call('getFinding', { params: { id: workOrder.findingId } })
+        const { observations } = call('getCandidate', { params: { id: finding.candidateId } })
         await provider.addEvidence(
           { id: ref },
           observations.flatMap((observation) => (observation.image === null ? [] : [observation.image]))
@@ -125,9 +124,4 @@ export function forwardWorkOrders({
       return enqueue(workOrderId, () => handOff(workOrderId, step))
     }
   }
-}
-
-function read<K extends CoreOperationId>(result: DispatchResult<K>) {
-  if (!result.ok) throw new Error(result.message)
-  return result.data
 }

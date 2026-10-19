@@ -1,15 +1,15 @@
-import type {
-  Actor,
-  ContextSnapshot,
-  CoreOperationId,
-  CreatePatrolPlanRequest,
-  Dispatch,
-  DispatchSuccess,
-  EdgeEvent,
-  OperationInput,
-  Patrol,
-  PatrolPlan,
-  ReplanTrigger
+import {
+  dispatchOrThrow,
+  type Actor,
+  type ContextSnapshot,
+  type CoreOperationId,
+  type CreatePatrolPlanRequest,
+  type Dispatch,
+  type EdgeEvent,
+  type OperationInput,
+  type Patrol,
+  type PatrolPlan,
+  type ReplanTrigger
 } from '@safe-edge/contracts'
 import { canonicalJson } from './audit.ts'
 import type { Clock } from './core.ts'
@@ -58,11 +58,8 @@ export function createReplanSubscriber({
   retest,
   onFailure
 }: ReplanSubscriberOptions): ReplanSubscriber {
-  const call = <K extends CoreOperationId>(op: K, input: OperationInput<K>): DispatchSuccess<K> => {
-    const result = dispatch(op, REPLAN_ACTOR, input)
-    if (!result.ok) throw new Error(`${op} as ${REPLAN_ACTOR.id} failed: ${result.message}`)
-    return result
-  }
+  const call = <K extends CoreOperationId>(op: K, input: OperationInput<K>) =>
+    dispatchOrThrow(dispatch, op, REPLAN_ACTOR, input)
   const plan = (body: CreatePatrolPlanRequest) => call('createPatrolPlan', { body }).events
 
   const onTrigger = (trigger: ReplanTrigger): EdgeEvent[] => {

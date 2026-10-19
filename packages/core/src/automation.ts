@@ -1,4 +1,4 @@
-import type { Actor, EdgeEvent } from '@safe-edge/contracts'
+import { dispatchOrThrow, type Actor, type EdgeEvent } from '@safe-edge/contracts'
 import type { Core } from './core.ts'
 import { missedPatrolDue } from './policy.ts'
 import type { ReplanSubscriberOptions } from './replan.ts'
@@ -25,14 +25,11 @@ export function runSchedule(core: Pick<Core, 'dispatch' | 'tick' | 'recordStored
       recordAutomationFailure(core, 'schedule', error)
     }
   }
-  const read = <T>(result: { ok: true; data: T } | { ok: false; message: string }) => {
-    if (!result.ok) throw new Error(result.message)
-    return result.data
-  }
   attempt(() => {
-    const passes = new Map(read(core.dispatch('listPasses', AUTOMATION_ACTOR, { query: {} })).map((p) => [p.id, p]))
-    for (const segment of read(core.dispatch('listSegments', AUTOMATION_ACTOR, {}))) {
-      const pass = segment.passId === null ? undefined : passes.get(segment.passId)
+    const passes = dispatchOrThrow(core.dispatch, 'listPasses', AUTOMATION_ACTOR, { query: {} }).data
+    const byId = new Map(passes.map((p) => [p.id, p]))
+    for (const segment of dispatchOrThrow(core.dispatch, 'listSegments', AUTOMATION_ACTOR, {}).data) {
+      const pass = segment.passId === null ? undefined : byId.get(segment.passId)
       if (pass?.state !== 'valid' && pass?.state !== 'expiring') continue
       if (Date.parse(now) < missedPatrolDue(segment, pass).dueMs) continue
       attempt(() => {
@@ -50,9 +47,7 @@ export function runSchedule(core: Pick<Core, 'dispatch' | 'tick' | 'recordStored
  * drone it takes, under an assumed 60 m altitude cap (no cap has been agreed with air traffic control; the tests' figure).
  */
 export function queuedRetest(core: Pick<Core, 'dispatch'>): ReplanSubscriberOptions['retest'] {
-  const docks = core.dispatch('listDocks', AUTOMATION_ACTOR, {})
-  if (!docks.ok) throw new Error(docks.message)
-  const [dock] = docks.data
+  const [dock] = dispatchOrThrow(core.dispatch, 'listDocks', AUTOMATION_ACTOR, {}).data
   if (dock === undefined || dock.droneProfileIds[0] === undefined) throw new Error('The seed has no dock with a drone')
   return { dockId: dock.id, droneProfileId: dock.droneProfileIds[0], altitudeCapM: 60 }
 }

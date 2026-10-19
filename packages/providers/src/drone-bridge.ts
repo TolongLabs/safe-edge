@@ -1,14 +1,15 @@
-import type {
-  Actor,
-  CoreOperationId,
-  Dispatch,
-  DroneProvider,
-  EdgeEvent,
-  OperationInput,
-  Patrol,
-  PatrolPlan,
-  PatrolRun,
-  ProviderEvent
+import {
+  dispatchOrThrow,
+  type Actor,
+  type CoreOperationId,
+  type Dispatch,
+  type DroneProvider,
+  type EdgeEvent,
+  type OperationInput,
+  type Patrol,
+  type PatrolPlan,
+  type PatrolRun,
+  type ProviderEvent
 } from '@safe-edge/contracts'
 
 export interface DroneBridgeOptions {
@@ -60,10 +61,9 @@ interface Flight {
 export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: DroneBridgeOptions): DroneBridge {
   const flights = new Map<string, Flight>()
   const call = <K extends CoreOperationId>(op: K, input: OperationInput<K>) => {
-    const result = dispatch(op, actor, input)
-    if (!result.ok) throw new Error(`${op} as ${actor.id} failed: ${result.message}`)
-    publish(result.events)
-    return result.data
+    const { data, events } = dispatchOrThrow(dispatch, op, actor, input)
+    publish(events)
+    return data
   }
 
   const handle = (flight: Flight, event: ProviderEvent) => {

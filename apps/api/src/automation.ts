@@ -1,4 +1,4 @@
-import type { Actor, EdgeEvent } from '@safe-edge/contracts'
+import { dispatchOrThrow, type Actor, type EdgeEvent } from '@safe-edge/contracts'
 import {
   AUTOMATION_ACTOR,
   createReplanSubscriber,
@@ -67,12 +67,8 @@ export function startAutomation({
   }
   const schedule = () => attempt('schedule', () => publish(runSchedule(core, clock.now())))
 
-  const read = <T>(result: { ok: true; data: T } | { ok: false; message: string }) => {
-    if (!result.ok) throw new Error(result.message)
-    return result.data
-  }
-  const profiles = read(core.dispatch('listDroneProfiles', AUTOMATION_ACTOR, {}))
-  const devices = read(core.dispatch('listDocks', AUTOMATION_ACTOR, {})).flatMap((dock) =>
+  const profiles = dispatchOrThrow(core.dispatch, 'listDroneProfiles', AUTOMATION_ACTOR, {}).data
+  const devices = dispatchOrThrow(core.dispatch, 'listDocks', AUTOMATION_ACTOR, {}).data.flatMap((dock) =>
     dock.droneProfileIds.map((id) => {
       const drone = profiles.find((p) => p.id === id)
       if (drone === undefined) throw new Error(`${dock.id} takes ${id}, which is not a drone profile`)
@@ -96,7 +92,7 @@ export function startAutomation({
     onFailure: (error) => recordAutomationFailure(core, 'drone', error)
   })
   const fly = async (patrolId: string) => {
-    const patrol = read(core.dispatch('getPatrol', AUTOMATION_ACTOR, { params: { id: patrolId } }))
+    const patrol = dispatchOrThrow(core.dispatch, 'getPatrol', AUTOMATION_ACTOR, { params: { id: patrolId } }).data
     if (patrol.provider !== 'sim')
       throw new Error(`This API flies only drone-sim; ${patrol.id} names ${patrol.provider}`)
     await drone.fly(patrol)
