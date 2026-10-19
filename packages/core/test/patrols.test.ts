@@ -131,4 +131,61 @@ describe('WATCH-3: unknown coverage stays unknown', () => {
       rule: 'invalid_transition'
     })
   })
+
+  test('length reported as neither inspected nor unknown is unknown: a field check, never inspected', () => {
+    const h = startFlying()
+    const [partial, clear, third] = SEGMENTS as [string, string, string]
+    const length = (id: string) => h.segment(id).segment.lengthM
+    const completed = h.call('completePatrol', 'usr_drone_sim', {
+      params: { id: 'ptl_1' },
+      body: {
+        coverage: [
+          // The drone says it saw 40 m and claims nothing about the rest.
+          { segmentId: partial, inspectedM: 40, unknownM: 0 },
+          { segmentId: clear, inspectedM: length(clear), unknownM: 0 },
+          { segmentId: third, inspectedM: length(third), unknownM: 0 }
+        ]
+      }
+    })
+    // S1's segment is 198.31 m long.
+    expect(completed.data.coverage[0]).toEqual({ segmentId: partial, inspectedM: 40, unknownM: 158.31 })
+    const tasks = h.call('listTasks', 'usr_manager', { query: { status: 'open' } }).data
+    expect(tasks.map((t) => [t.kind, t.segmentId])).toEqual([['field_check', partial]])
+    expect(tasks[0]!.reason).toContain('158.31 m of')
+  })
+
+  test('a segment reported twice, or for more than its length, is refused and changes nothing', () => {
+    const h = startFlying()
+    const [first, second] = SEGMENTS as [string, string, string]
+    const length = h.segment(first).segment.lengthM
+    const complete = (coverage: { segmentId: string; inspectedM: number; unknownM: number }[]) =>
+      h.attempt('completePatrol', 'usr_drone_sim', { params: { id: 'ptl_1' }, body: { coverage } })
+
+    const twice = complete([
+      { segmentId: first, inspectedM: length, unknownM: 0 },
+      { segmentId: first, inspectedM: 0, unknownM: length }
+    ])
+    expect(twice).toMatchObject({ ok: false, rule: 'invalid_coverage' })
+    expect(twice.ok === false && twice.message).toContain(`${first} is reported twice`)
+    expect(lastAudit(h)).toMatchObject({ action: 'completePatrol', subjectId: 'ptl_1', rule: 'invalid_coverage' })
+
+    const over = complete([
+      { segmentId: first, inspectedM: length, unknownM: 1 },
+      { segmentId: second, inspectedM: 1, unknownM: 0 }
+    ])
+    expect(over).toMatchObject({ ok: false, rule: 'invalid_coverage' })
+    expect(over.ok === false && over.message).toContain(`${length + 1} m of ${first}`)
+
+    expect(h.call('listPatrols', 'usr_manager', {}).data[0]!.status).toBe('in_flight')
+    expect(h.call('listTasks', 'usr_manager', { query: { status: 'open' } }).data).toEqual([])
+  })
 })
+
+function startFlying() {
+  const h = startCore()
+  h.call('createPatrolPlan', 'usr_manager', { body: request })
+  h.call('approvePatrolPlan', 'usr_pilot', { params: { id: 'plan_1' } })
+  h.call('startPatrol', 'usr_pilot', { body: { planId: 'plan_1', provider: 'sim', droneId: 'sim-1' } })
+  h.setNow('2026-10-22T00:20:00.000Z')
+  return h
+}

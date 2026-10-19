@@ -32,6 +32,9 @@ export type PatrolPlanner = (input: {
   findings: Finding[]
 }) => PatrolPlan
 
+/** Coverage lengths are float sums in metres: a micrometre either way is rounding, not coverage. */
+const ROUNDING_M = 1e-6
+
 type PatrolOperation =
   'createPatrolPlan' | 'approvePatrolPlan' | 'releasePlanHold' | 'startPatrol' | 'completePatrol' | 'recordObservation'
 
@@ -156,16 +159,31 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (!patrol) return tx.notFound(`No patrol ${params.id}`)
     if (patrol.status !== 'in_flight')
       return tx.deny('invalid_transition', `${patrol.id} is already completed`, patrol.id)
-    for (const { segmentId } of body.coverage) {
-      if (!tx.get('segments', segmentId)) return tx.notFound(`No segment ${segmentId}`)
+    // Unknown is not inspected (TRD rule 4): every metre of a reported segment is inspected or unknown, so a report
+    // naming a segment twice or claiming more than its length is refused, and any length it leaves out is unknown.
+    const reported = new Set<string>()
+    const covered: SegmentCoverage[] = []
+    for (const c of body.coverage) {
+      const segment = tx.get('segments', c.segmentId)
+      if (!segment) return tx.notFound(`No segment ${c.segmentId}`)
+      if (reported.has(segment.id)) {
+        return tx.deny('invalid_coverage', `${segment.id} is reported twice on ${patrol.id}`, patrol.id)
+      }
+      reported.add(segment.id)
+      const claimed = c.inspectedM + c.unknownM
+      if (claimed > segment.lengthM + ROUNDING_M) {
+        const message = `${patrol.id} reports ${claimed} m of ${segment.id}, which is ${segment.lengthM} m long`
+        return tx.deny('invalid_coverage', message, patrol.id)
+      }
+      const left = segment.lengthM - claimed
+      covered.push(left > ROUNDING_M ? { ...c, unknownM: segment.lengthM - c.inspectedM } : c)
     }
     // A planned segment the drone did not report on is unknown along its whole length, never inspected.
-    const reported = new Set(body.coverage.map((c) => c.segmentId))
     const unreported: SegmentCoverage[] = tx
       .must('patrolPlans', patrol.planId)
       .tasks.filter((t) => !reported.has(t.segmentId))
       .map((t) => ({ segmentId: t.segmentId, inspectedM: 0, unknownM: tx.must('segments', t.segmentId).lengthM }))
-    const coverage = [...body.coverage, ...unreported]
+    const coverage = [...covered, ...unreported]
     const completed: Patrol = { ...patrol, status: 'completed', completedAt: tx.now, coverage }
     tx.put('patrols', completed)
     for (const c of coverage.filter((c) => c.unknownM > 0)) {

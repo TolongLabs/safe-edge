@@ -127,7 +127,16 @@ export const StartPatrolRequest = named(
 )
 export type StartPatrolRequest = z.infer<typeof StartPatrolRequest>
 
-export const CompletePatrolRequest = named('CompletePatrolRequest', z.object({ coverage: z.array(SegmentCoverage) }))
+export const CompletePatrolRequest = named(
+  'CompletePatrolRequest',
+  z.object({
+    coverage: z
+      .array(SegmentCoverage)
+      .describe(
+        "At most one entry per segment, with inspectedM + unknownM no more than the segment's length (else 403 invalid_coverage). Length an entry leaves out, and every planned segment it omits, is unknown"
+      )
+  })
+)
 export type CompletePatrolRequest = z.infer<typeof CompletePatrolRequest>
 
 export const RecordObservationRequest = named(

@@ -1903,6 +1903,7 @@ components:
         - remedy_not_approved
         - plan_not_approved
         - weather_hold
+        - invalid_coverage
     Denial:
       type: object
       properties:
@@ -3985,6 +3986,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SegmentCoverage"
+          description: At most one entry per segment, with inspectedM + unknownM no more than the segment's length (else 403 invalid_coverage). Length an entry leaves out, and every planned segment it omits, is unknown
       required:
         - coverage
       additionalProperties: false

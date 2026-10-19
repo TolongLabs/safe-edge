@@ -987,7 +987,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "weather_hold";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "weather_hold" | "invalid_coverage";
         Denial: {
             /** @constant */
             ok: false;
@@ -1593,6 +1593,7 @@ export interface components {
             droneId: string;
         };
         CompletePatrolRequest: {
+            /** @description At most one entry per segment, with inspectedM + unknownM no more than the segment's length (else 403 invalid_coverage). Length an entry leaves out, and every planned segment it omits, is unknown */
             coverage: components["schemas"]["SegmentCoverage"][];
         };
         RecordObservationRequest: {
