@@ -15,8 +15,13 @@ const rejectBuiltins: BunPlugin = {
 }
 
 await Bun.build({
-  entrypoints: ['packages/core/src/index.ts', 'packages/planner/src/index.ts', 'packages/sdk/src/index.ts'],
+  entrypoints: [
+    'packages/contracts/src/index.ts',
+    'packages/core/src/index.ts',
+    'packages/planner/src/index.ts',
+    'packages/sdk/src/index.ts'
+  ],
   target: 'browser',
   plugins: [rejectBuiltins]
 })
-console.log('core, planner and sdk bundle for the browser')
+console.log('contracts, core, planner and sdk bundle for the browser')

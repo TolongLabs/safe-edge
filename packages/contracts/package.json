@@ -7,5 +7,14 @@
   },
   "scripts": {
     "typecheck": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@asyncapi/parser": "3.6.6",
+    "@redocly/openapi-core": "^1.34.21",
+    "openapi-typescript": "7.13.0",
+    "yaml": "^2.9.1"
   }
 }
