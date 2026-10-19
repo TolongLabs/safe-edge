@@ -70,10 +70,10 @@ The prototype runs no local model weights. Its only model is a hosted service.
 | Source                                         | Licence or terms                                  | Use                                                         | Credit                                                                                                                                                                                  |
 | ---------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [OpenStreetMap][osm] via Overpass              | [ODbL 1.0][odbl]                                  | Base scene and edge geometry in `data/elmina/`              | "© OpenStreetMap contributors", linked to https://www.openstreetmap.org/copyright                                                                                                       |
-| [data.gov.my weather API][data-gov-my]         | [CC BY 4.0][cc-by] ([FAQ][data-gov-my-faq])       | Forecasts and warnings for re-planning                      | "Weather: data.gov.my, CC BY 4.0", linked to the API page and the licence                                                                                                               |
+| [data.gov.my weather API][data-gov-my]         | [CC BY 4.0][cc-by] ([FAQ][data-gov-my-faq])       | Forecasts and warnings for re-planning                      | "Weather: MET Malaysia via data.gov.my, CC BY 4.0", linked to the API page and the licence                                                                                              |
 | [JPS Public Infobanjir][infobanjir]            | No API or reuse licence found; terms not obtained | Rainfall at Sungai Buloh (station 27880) as dated snapshots | "Rainfall: JPS Public Infobanjir, station 27880, snapshot YYYY-MM-DD"                                                                                                                   |
 | [Copernicus DEM GLO-30][copernicus-dem]        | Free licence for registered users                 | Broad terrain only, if it replaces the flat plane           | "produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved" |
-| [Google Photorealistic 3D Tiles][google-tiles] | [Map Tiles API policies][google-policies]         | Optional fly-in for the video (P2)                          | The Google logo, plus every displayed tile's `asset.copyright` text, joined in one line along the bottom of the view                                                                    |
+| [Google Photorealistic 3D Tiles][google-tiles] | [Map Tiles API policies][google-policies]         | Optional fly-in for the video (P2)                          | The Google Maps logo (or the text "Google Maps" where space is limited), plus every displayed tile's `asset.copyright` text, joined in one line along the bottom of the view            |
 | Team photos                                    | Taken by the team with permission                 | Real-photo triage and Fix Lens                              | None needed                                                                                                                                                                             |
 
 [osm]: https://www.openstreetmap.org/copyright
@@ -88,11 +88,11 @@ The prototype runs no local model weights. Its only model is a hosted service.
 
 ### Data conditions
 
-- **OpenStreetMap.** Keep the ODbL notice with the GeoJSON in `data/elmina/`. A changed or merged database that we share publicly stays under ODbL. In a video, put the copyright URL in the end credits or the description ([OSMF attribution guidelines][osmf-attribution]).
+- **OpenStreetMap.** Keep the ODbL notice with the GeoJSON in `data/elmina/`. A changed or merged database that we share publicly stays under ODbL. Our video shows the OSM scene as a major part, so keep the credit in a corner of the map. Also put the copyright URL in the end credits or the description ([OSMF attribution guidelines][osmf-attribution]).
 - **data.gov.my.** CC BY 4.0 asks for the source, a licence link and a note of any changes. The weather endpoints allow 4 requests a minute and need no token.
 - **JPS Public Infobanjir.** Reuse terms were not found. Show only dated snapshots, never a live feed.
 - **Copernicus DEM.** Use the credit above because the terrain is adapted. The unmodified form drops "produced using Copernicus WorldDEM-30".
-- **Google tiles.** Never prefetch, store or cache a tile, and never use one offline. Never use a tile for image analysis, object detection or geodata extraction. A video clip is at most 30 seconds, is marked "for promotional purposes only" and contains no Street View imagery.
+- **Google tiles.** Use the official Google Maps logo without changes. Never prefetch, store or cache a tile, and never use one offline. Never use a tile for image analysis, object detection or geodata extraction. A video clip is at most 30 seconds, is marked "for promotional purposes only" and contains no Street View imagery.
 - **Team photos.** No people in frame. Strip location data before the public build.
 
 [osmf-attribution]: https://osmfoundation.org/wiki/Licence/Attribution_Guidelines
@@ -107,12 +107,12 @@ Before a glTF model or texture lands, verify its licence on its live page. Then 
 
 These are out of the prototype because of their licence or terms ([TRD key decision 6](/docs/TRD.md#key-decisions)).
 
-| Item                                 | Licence or terms                            | Why it is out                                                        |
-| ------------------------------------ | ------------------------------------------- | -------------------------------------------------------------------- |
-| [Ultralytics YOLO][ultralytics]      | AGPL-3.0                                    | Copyleft model and code                                              |
-| [YOLO-World][yolo-world]             | GPL-3.0                                     | Copyleft model and code                                              |
-| [BIT change detection][bit]          | "Non-commercial and research purposes only" | Not licensed for a commercial pilot                                  |
-| [DJI Cloud API 2 service][dji-terms] | DJI Cloud API 2 terms                       | DJI has not confirmed commercial use; the adapter stays a typed stub |
+| Item                                 | Licence or terms                                                                       | Why it is out                                                        |
+| ------------------------------------ | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [Ultralytics YOLO][ultralytics]      | AGPL-3.0                                                                               | Copyleft model and code                                              |
+| [YOLO-World][yolo-world]             | GPL-3.0                                                                                | Copyleft model and code                                              |
+| [BIT change detection][bit]          | "Non-commercial and research purposes only"                                            | Not licensed for a commercial pilot                                  |
+| [DJI Cloud API 2 service][dji-terms] | DJI Cloud API 2 terms: users may not "exploit the Services for any commercial purpose" | DJI has not confirmed commercial use; the adapter stays a typed stub |
 
 [ultralytics]: https://github.com/ultralytics/ultralytics/blob/main/LICENSE
 [yolo-world]: https://github.com/AILab-CVC/YOLO-World/blob/master/LICENSE
