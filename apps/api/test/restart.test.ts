@@ -29,6 +29,7 @@ import { createApp } from '../src/app.ts'
 import { scenarioClock } from '../src/clock.ts'
 import { JournalWriteError } from '../src/journal.ts'
 import { devTokens } from '../src/tokens.ts'
+import { eventually } from '../../../test/spawn.ts'
 import { startApiProcess } from './process.ts'
 import { S1, seed, tier2Candidate } from './support.ts'
 
@@ -66,15 +67,12 @@ test('S1 suspends the pass, the API is killed, and the restarted API carries S1 
     }
   })
   afterAll(() => receiver.stop(true))
-  const delivered = async (secret: string, type: EdgeEvent['type']) => {
-    for (;;) {
-      const found = deliveries
+  const delivered = (secret: string, type: EdgeEvent['type']) =>
+    eventually(`A signed ${type} delivery`, () =>
+      deliveries
         .map(({ headers, body }) => EdgeEvent.parse(new StandardWebhook(secret).verify(body, headers)))
         .find((event) => event.type === type)
-      if (found) return found
-      await Bun.sleep(10)
-    }
-  }
+    )
   const env = { NODE_ENV: 'test', SAFE_EDGE_DATA_DIR: dataDir }
 
   // Before the crash: an integrator's webhook, the crew's photo, and the drone's Tier 2 report, which suspends S1.

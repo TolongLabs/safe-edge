@@ -21,6 +21,7 @@ import {
 import { ProcoreWorkOrderProvider, SAFETY_HAZARD_OBSERVATION_TYPE } from '@safe-edge/providers'
 import { startProcoreDouble } from '../../../packages/providers/test/procore-double.ts'
 import { playS1toRepair, startCore } from '../../../packages/core/test/support.ts'
+import { eventually } from '../../../test/spawn.ts'
 import type { ApiOptions } from '../src/app.ts'
 import { forwardWorkOrders } from '../src/work-orders.ts'
 import { S1, seed, startApi, type Api, type Token } from './support.ts'
@@ -196,21 +197,12 @@ async function submitS1(api: Api) {
   return { photo, finding: finding!, workOrder: workOrder!, remedy }
 }
 
-/** Calls `read` until it returns a value: the hand-off runs on the API's own time, after the request behind it. */
-async function until<T>(read: () => Promise<T | undefined> | T | undefined): Promise<T> {
-  for (;;) {
-    const value = await read()
-    if (value !== undefined) return value
-    await Bun.sleep(5)
-  }
-}
-
 const readWorkOrder = async (api: Api, id: string) =>
   WorkOrder.parse(await (await api.request('get', `/work-orders/${id}`, { token: 'tok_manager' })).json())
 
 /** The Observation the work order links, once the hand-off has linked one. */
 const observationOf = async (api: Api, workOrderId: string) => {
-  const { externalRef } = await until(async () => {
+  const { externalRef } = await eventually(`${workOrderId} linking its Observation`, async () => {
     const current = await readWorkOrder(api, workOrderId)
     return current.externalRef === null ? undefined : current
   })
@@ -252,7 +244,7 @@ test('submitting a work order files a Procore Observation with its photo and lin
     name: `Safe Edge ${finding.id}: inventory item on ${S1.segmentId}`,
     priority: 'High',
     status: 'initiated',
-    type: { id: SAFETY_HAZARD_TYPE_ID, name: 'Safety Hazard' },
+    type: { id: SAFETY_HAZARD_TYPE_ID, name: SAFETY_HAZARD_OBSERVATION_TYPE },
     date_notified: null,
     attachments: [{ name: `${photo.id}.jpg` }]
   })
@@ -315,13 +307,15 @@ test('the Observation follows the repair: ready for review when it is completed,
   const api = startApi({ workOrders: procoreAdapter().workOrders })
   const { finding, workOrder, remedy } = await submitS1(api)
   const first = await observationOf(api, workOrder.id)
-  await until(() => (first.attachments.length === 1 ? true : undefined))
+  await eventually('The photo on the first Observation', () => (first.attachments.length === 1 ? true : undefined))
   expect(first.status).toBe('initiated')
 
   await repair(api, workOrder.id)
-  await until(() => (first.status === 'ready_for_review' ? true : undefined))
+  await eventually('The first Observation ready for review', () =>
+    first.status === 'ready_for_review' ? true : undefined
+  )
   await retest(api, workOrder.id, 'rejected')
-  await until(() => (first.status === 'not_accepted' ? true : undefined))
+  await eventually('The first Observation not accepted', () => (first.status === 'not_accepted' ? true : undefined))
 
   // The reopened finding takes a new work order, which becomes its own Observation and is closed by a passed re-test.
   const reworkDraft = await post(
@@ -336,10 +330,12 @@ test('the Observation follows the repair: ready for review when it is completed,
   const second = await observationOf(api, reworkDraft.id)
   expect(second.id).not.toBe(first.id)
   await repair(api, reworkDraft.id)
-  await until(() => (second.status === 'ready_for_review' ? true : undefined))
+  await eventually('The second Observation ready for review', () =>
+    second.status === 'ready_for_review' ? true : undefined
+  )
   const { pass } = await retest(api, reworkDraft.id, 'accepted')
   expect(pass?.state).toBe('valid')
-  await until(() => (second.status === 'closed' ? true : undefined))
+  await eventually('The second Observation closed', () => (second.status === 'closed' ? true : undefined))
   expect(first.status).toBe('not_accepted')
   for (const id of [workOrder.id, reworkDraft.id]) expect((await readWorkOrder(api, id)).externalError).toBeNull()
 })
@@ -350,7 +346,10 @@ test('a failed hand-off is retried by a manager from the step that failed, audit
   procore.failNext('/rest/v1.0/observations/types')
   const filedBefore = procore.observations.length
   const { photo, workOrder } = await submitS1(api)
-  const failed = await until(async () => (await readWorkOrder(api, workOrder.id)).externalError ?? undefined)
+  const failed = await eventually(
+    'The hand-off failure on the work order',
+    async () => (await readWorkOrder(api, workOrder.id)).externalError ?? undefined
+  )
   expect(failed).toEqual({
     step: 'createFinding',
     message: expect.stringContaining('answered 503'),
@@ -378,7 +377,7 @@ test('a failed hand-off is retried by a manager from the step that failed, audit
     retried: failed
   })
   const filed = await observationOf(api, workOrder.id)
-  await until(() => (filed.attachments.length === 1 ? true : undefined))
+  await eventually('The photo on the Observation', () => (filed.attachments.length === 1 ? true : undefined))
   expect(procore.file(filed.attachments[0]!.id)).toEqual(PHOTO)
   expect(filed.attachments[0]!.name).toBe(`${photo.id}.jpg`)
   expect(procore.observations).toHaveLength(filedBefore + 1)
@@ -408,23 +407,29 @@ test('a retry after the photos or the status failed resumes there: the same Obse
   procore.failNext(`/rest/v1.1/projects/${credentials.projectId}/uploads`)
   const filedBefore = procore.observations.length
   const { workOrder } = await submitS1(api)
-  const failed = await until(async () => (await readWorkOrder(api, workOrder.id)).externalError ?? undefined)
+  const failed = await eventually(
+    'The hand-off failure on the work order',
+    async () => (await readWorkOrder(api, workOrder.id)).externalError ?? undefined
+  )
   expect(failed.step).toBe('addEvidence')
   const filed = await observationOf(api, workOrder.id)
   expect(filed.attachments).toEqual([])
 
   expect((await retry(api, workOrder.id, 'tok_engineer')).status).toBe(200)
-  await until(() => (filed.attachments.length === 1 ? true : undefined))
+  await eventually('The photo on the Observation', () => (filed.attachments.length === 1 ? true : undefined))
   expect(procore.observations).toHaveLength(filedBefore + 1)
 
   // Procore is down when the repair is completed, so the status change fails and waits for a person.
   procore.failNext(`/rest/v1.0/observations/items/${filed.id}`)
   await repair(api, workOrder.id)
-  const statusFailed = await until(async () => (await readWorkOrder(api, workOrder.id)).externalError ?? undefined)
+  const statusFailed = await eventually(
+    'The hand-off failure on the work order',
+    async () => (await readWorkOrder(api, workOrder.id)).externalError ?? undefined
+  )
   expect(statusFailed.step).toBe('updateStatus')
   expect(filed.status).toBe('initiated')
   expect((await retry(api, workOrder.id, 'tok_manager')).status).toBe(200)
-  await until(() => (filed.status === 'ready_for_review' ? true : undefined))
+  await eventually('The Observation ready for review', () => (filed.status === 'ready_for_review' ? true : undefined))
   expect(filed.attachments).toHaveLength(1)
   expect(procore.observations).toHaveLength(filedBefore + 1)
 })

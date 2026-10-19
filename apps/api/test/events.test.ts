@@ -2,6 +2,7 @@
 import { afterAll, expect, test } from 'bun:test'
 import { AuditEvent, EdgeEvent, RegisteredWebhook, Webhook } from '@safe-edge/contracts'
 import { Webhook as StandardWebhook } from 'standardwebhooks'
+import { eventually } from '../../../test/spawn.ts'
 import { S1, raiseTier2, seed, sseFrames, startApi, type Api } from './support.ts'
 
 test('GET /v1/events streams the CloudEvents of a Tier 2 candidate between heartbeats', async () => {
@@ -102,15 +103,6 @@ test('POST /v1/webhooks returns a signing secret once, and each subscribed event
   )
 })
 
-/** Polls `read` until it returns a value: a delivery fails on the API's own time, after the request that caused it. */
-async function eventually<T>(read: () => Promise<T | undefined>): Promise<T> {
-  for (;;) {
-    const value = await read()
-    if (value !== undefined) return value
-    await Bun.sleep(5)
-  }
-}
-
 /** Registers a webhook for `eventTypes` at `url` as the integrator, returning it with its secret. */
 async function register(api: Api, url: string, eventTypes: EdgeEvent['type'][] = ['edge.pass.suspended.v1']) {
   const response = await api.request('post', '/webhooks', { token: 'tok_integrator', body: { url, eventTypes } })
@@ -120,7 +112,7 @@ async function register(api: Api, url: string, eventTypes: EdgeEvent['type'][] =
 
 /** The webhooks once `done` holds for every one of them, as the integrator lists them. */
 const webhooksWhen = (api: Api, done: (webhook: Webhook) => boolean) =>
-  eventually(async () => {
+  eventually('Every webhook reaching the state the test waits for', async () => {
     const response = await api.request('get', '/webhooks', { token: 'tok_integrator' })
     const list = Webhook.array().parse(await response.json())
     return list.every(done) ? list : undefined
@@ -129,20 +121,30 @@ const webhooksWhen = (api: Api, done: (webhook: Webhook) => boolean) =>
 const gaveUp = (webhook: Webhook) => webhook.failures.at(-1)?.final === true
 
 test('a delivery that meets a 503 is retried with the same webhook-id until it lands, and each failed attempt is recorded', async () => {
-  const attempts: { headers: Record<string, string>; body: string }[] = []
+  const attempts: { type: string; headers: Record<string, string>; body: string }[] = []
+  // The suspension lands at the third attempt; the decision (the yardstick below) never does.
   const receiver = Bun.serve({
     port: 0,
     async fetch(request) {
-      attempts.push({ headers: Object.fromEntries(request.headers), body: await request.text() })
-      return attempts.length < 3 ? new Response('busy', { status: 503 }) : new Response(null, { status: 204 })
+      const body = await request.text()
+      const { type } = EdgeEvent.parse(JSON.parse(body))
+      attempts.push({ type, headers: Object.fromEntries(request.headers), body })
+      const tries = attempts.filter((a) => a.type === type).length
+      if (type === 'edge.pass.suspended.v1' && tries === 3) return new Response(null, { status: 204 })
+      return new Response('busy', { status: 503 })
     }
   })
   afterAll(() => receiver.stop(true))
 
   const api = startApi({ webhooks: { retryDelaysMs: [5, 10, 20] } })
-  const { secret, ...webhook } = await register(api, receiver.url.href)
-  expect((await raiseTier2(api)).status).toBe(201)
-  await eventually(async () => (attempts.length === 3 ? true : undefined))
+  const { secret, ...webhook } = await register(api, receiver.url.href, [
+    'edge.pass.suspended.v1',
+    'edge.candidate.decided.v1'
+  ])
+  const raised = await raiseTier2(api)
+  expect(raised.status).toBe(201)
+  const candidate = (await raised.json()) as { id: string }
+  await eventually('Three delivery attempts', () => (attempts.length === 3 ? true : undefined))
 
   // Every attempt is signed afresh for the same message, so a receiver deduplicates on webhook-id.
   const ids = attempts.map(({ headers, body }) => EdgeEvent.parse(new StandardWebhook(secret).verify(body, headers)).id)
@@ -163,9 +165,17 @@ test('a delivery that meets a 503 is retried with the same webhook-id until it l
     { ...webhook, failures: [{ ...failure, attempt: 1 }] },
     listed
   ])
-  // The third attempt landed, so nothing more is sent or recorded.
-  await Bun.sleep(50)
-  expect(attempts).toHaveLength(3)
+  // The third attempt landed, so nothing more is sent. The yardstick is a later event the receiver always refuses: its
+  // last retry, 5 + 10 + 20 ms after it, comes after any retry the landed delivery (20 ms after landing) could make.
+  await api.request('post', `/candidates/${candidate.id}/decision`, {
+    token: 'tok_manager',
+    body: { decision: 'reject', reason: 'A shadow' }
+  })
+  await webhooksWhen(api, gaveUp)
+  expect(attempts.map((a) => a.type)).toEqual([
+    ...Array<string>(3).fill('edge.pass.suspended.v1'),
+    ...Array<string>(4).fill('edge.candidate.decided.v1')
+  ])
 })
 
 test('a delivery is retried on 5xx and network errors up to the bound, a 4xx is not, and every failed attempt is recorded and audited', async () => {
