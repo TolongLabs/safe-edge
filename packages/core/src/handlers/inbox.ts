@@ -269,6 +269,11 @@ export const inbox: Handlers<
   recordAgentSummary: (tx, { params, body }) => {
     const candidate = tx.get('candidates', params.id)
     if (!candidate) return tx.notFound(`No candidate ${params.id}`)
+    // The decision was made on the card as it was; a later summary would rewrite what the manager read.
+    if (candidate.status !== 'candidate') {
+      const message = `${candidate.id} is already ${candidate.status}; its summary stays the one the decision was made on`
+      return tx.deny('invalid_transition', message, candidate.id)
+    }
     const summarised: Candidate = {
       ...candidate,
       agentSummary: {

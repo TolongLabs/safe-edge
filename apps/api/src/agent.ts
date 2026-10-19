@@ -165,11 +165,14 @@ export function createAgent({ claude, context }: AgentOptions) {
         workOrder: drafts[0] ?? null,
         ...provenance(result.text, result)
       }
-      // Stored with the agent's token, so the card reads it as the agent's, with the model the API reported.
-      await context.client.recordAgentSummary({
-        params: { id: candidate.id },
-        body: { text: draft.summary, citations: draft.citations, model: draft.model }
-      })
+      // Stored with the agent's token, so the card reads it as the agent's, with the model the API reported. A decided
+      // candidate keeps the summary its decision was made on (core refuses a new one).
+      if (candidate.status === 'candidate') {
+        await context.client.recordAgentSummary({
+          params: { id: candidate.id },
+          body: { text: draft.summary, citations: draft.citations, model: draft.model }
+        })
+      }
       return { ok: true, draft }
     },
 

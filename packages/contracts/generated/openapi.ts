@@ -384,7 +384,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+         * Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion
          * @description People are refused. Agents need scope `finding.propose`.
          */
         post: operations["recordAgentSummary"];
@@ -976,7 +976,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
+         * The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
          * @description Roles: manager. Agents are refused.
          */
         post: operations["draftInbox"];
@@ -2749,7 +2749,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion */
+            /** @description Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3684,7 +3684,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft */
+            /** @description The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft */
             200: {
                 headers: {
                     [name: string]: unknown;

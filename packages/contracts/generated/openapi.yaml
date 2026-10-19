@@ -637,7 +637,7 @@ paths:
   /candidates/{id}/agent-summary:
     post:
       operationId: recordAgentSummary
-      summary: Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+      summary: "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion"
       description: People are refused. Agents need scope `finding.propose`.
       tags:
         - candidates
@@ -657,7 +657,7 @@ paths:
               $ref: "#/components/schemas/RecordAgentSummaryRequest"
       responses:
         "200":
-          description: Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+          description: "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion"
           content:
             application/json:
               schema:
@@ -1762,7 +1762,7 @@ paths:
   /agent/inbox-drafts:
     post:
       operationId: draftInbox
-      summary: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
+      summary: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
       description: "Roles: manager. Agents are refused."
       tags:
         - agent
@@ -1776,7 +1776,7 @@ paths:
               $ref: "#/components/schemas/DraftInboxRequest"
       responses:
         "200":
-          description: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
+          description: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
           content:
             application/json:
               schema:

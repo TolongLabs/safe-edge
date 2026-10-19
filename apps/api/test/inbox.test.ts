@@ -43,6 +43,40 @@ test("the agent's Inbox summary is stored on the candidate as an AI suggestion, 
   })
 })
 
+test("once the manager decides, the agent's summary stays the one the decision was made on: a new one is refused, audited", async () => {
+  const api = startApi()
+  const manager = httpPlayer(api).clientFor('usr_manager')
+  const candidate = (await (await raiseTier2(api)).json()) as { id: string }
+  const path = `/candidates/${candidate.id}/agent-summary`
+  const summary = (text: string) => ({ text, citations: [S1.segmentId, candidate.id], model: 'claude-opus-5-5' })
+  expect((await api.request('post', path, { token: 'tok_agent', body: summary('Panel 4 is missing') })).status).toBe(
+    200
+  )
+  await api.request('post', `/candidates/${candidate.id}/decision`, {
+    token: 'tok_manager',
+    body: { decision: 'confirm', severity: 'high' }
+  })
+
+  const late = await api.request('post', path, { token: 'tok_agent', body: summary('Panel 4 was never there') })
+  expect({ status: late.status, body: await late.json() }).toEqual({
+    status: 403,
+    body: {
+      ok: false,
+      rule: 'invalid_transition',
+      message: `${candidate.id} is already confirmed; its summary stays the one the decision was made on`
+    }
+  })
+  const { candidate: card } = await manager.getCandidate({ params: { id: candidate.id } })
+  expect(card.agentSummary?.text).toBe('Panel 4 is missing')
+  expect((await manager.listAudit({})).at(-1)).toMatchObject({
+    action: 'recordAgentSummary',
+    subjectId: candidate.id,
+    actor: { type: 'agent', id: 'usr_agent' },
+    decision: 'denied',
+    rule: 'invalid_transition'
+  })
+})
+
 test('asked for a second draft, POST /work-orders gives back the draft confirming made: one open work order per finding', async () => {
   const api = startApi()
   const manager = httpPlayer(api).clientFor('usr_manager')
