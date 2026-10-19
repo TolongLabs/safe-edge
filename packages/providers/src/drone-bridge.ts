@@ -35,10 +35,17 @@ export interface DroneBridge {
    */
   fly(patrol: Patrol): Promise<PatrolRun>
   /**
-   * How many of an in-flight patrol's route stops the drone has reached, for re-planning (core's replan subscriber).
-   * Throws for a patrol this bridge does not fly.
+   * How many of `plan`'s route stops are committed for an in-flight patrol, for re-planning (core's replan subscriber):
+   * the stops the drone has reached when it flies `plan`, or the stops a re-plan of it keeps when the pilot has yet to
+   * approve that re-plan (the drone flies back to them if it has gone on). Throws for a patrol this bridge does not fly.
    */
-  committedTasks(patrol: Patrol): number
+  committedTasks(patrol: Patrol, plan: PatrolPlan): number
+  /**
+   * Hands each flight core's current plan for its patrol, after the pilot approved a re-plan of it or released one of
+   * its holds. A flight the provider cannot switch (a re-plan it could not fly from where it is) is reported to
+   * `onFailure` and recalled to its dock, since core already records the patrol on the re-plan.
+   */
+  sync(): Promise<void>
 }
 
 interface Flight {
@@ -49,6 +56,8 @@ interface Flight {
   seen: Set<number>
   /** Route stops whose stations the drone has reached. */
   committed: number
+  /** Sent home after the provider refused the plan core moved the patrol to. */
+  recalled: boolean
 }
 
 /**
@@ -111,8 +120,16 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
         return { segmentId, inspectedM, unknownM: lengthM - inspectedM }
       })
       call('completePatrol', { params: { id: patrol.id }, body: { coverage } })
+      if (event.outcome === 'hold_timeout') {
+        throw new Error(
+          `${patrol.id}'s drone came back to the dock at ${event.at} without finishing ${plan.id}: a separation hold was not released while the rest of the route still fitted its battery and window`
+        )
+      }
     }
   }
+
+  const lengthsOf = (plan: PatrolPlan) =>
+    new Map(plan.tasks.map((t) => [t.segmentId, call('getSegment', { params: { id: t.segmentId } }).segment.lengthM]))
 
   provider.onEvent((event) => {
     const flight = flights.get(event.runId)
@@ -128,11 +145,9 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
     async fly(patrol) {
       const plan = call('getPatrolPlan', { params: { id: patrol.planId } })
       if (plan.approvedBy === null || plan.approvedAt === null) throw new Error(`${plan.id} has no pilot approval`)
-      const lengthM = new Map(
-        plan.tasks.map((t) => [t.segmentId, call('getSegment', { params: { id: t.segmentId } }).segment.lengthM])
-      )
+      const lengthM = lengthsOf(plan)
       const run = await provider.schedulePatrol(plan)
-      flights.set(run.id, { patrol, plan, lengthM, seen: new Set(), committed: 0 })
+      flights.set(run.id, { patrol, plan, lengthM, seen: new Set(), committed: 0, recalled: false })
       try {
         await provider.dispatchPatrol(run.id, {
           planId: plan.id,
@@ -148,10 +163,48 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
       return run
     },
 
-    committedTasks(patrol) {
+    committedTasks(patrol, plan) {
       const flight = [...flights.values()].find((f) => f.patrol.id === patrol.id)
       if (flight === undefined) throw new Error(`No drone this bridge flies reports ${patrol.id}'s progress`)
-      return flight.committed
+      if (plan.id === flight.plan.id) return flight.committed
+      const kept = plan.replan?.supersedes?.committedTasks
+      if (kept === undefined)
+        throw new Error(`${plan.id} is not a re-plan of ${flight.plan.id}, which ${patrol.id} flies`)
+      return kept
+    },
+
+    async sync() {
+      for (const [runId, flight] of flights) {
+        if (flight.recalled) continue
+        const patrol = call('getPatrol', { params: { id: flight.patrol.id } })
+        const plan = call('getPatrolPlan', { params: { id: patrol.planId } })
+        if (JSON.stringify(plan) === JSON.stringify(flight.plan)) continue
+        if (plan.approvedBy === null || plan.approvedAt === null) throw new Error(`${plan.id} has no pilot approval`)
+        try {
+          await provider.updatePatrol(runId, plan, {
+            planId: plan.id,
+            approvedBy: plan.approvedBy,
+            approvedAt: plan.approvedAt
+          })
+        } catch (error) {
+          onFailure(error)
+          // Core flies the patrol on the re-plan now, which this drone will not fly: it comes home.
+          if (!flights.has(runId)) continue
+          flight.recalled = true
+          await provider.cancelPatrol(runId)
+          continue
+        }
+        const kept = plan.replan?.supersedes?.committedTasks
+        if (plan.id !== flight.plan.id && kept !== undefined) {
+          // Frames count where the re-plan has the same station at the same index: its committed stops.
+          const same = (i: number) => JSON.stringify(plan.waypoints[i]) === JSON.stringify(flight.plan.waypoints[i])
+          flight.seen = new Set([...flight.seen].filter(same))
+          flight.committed = kept
+          flight.lengthM = lengthsOf(plan)
+        }
+        flight.plan = plan
+        flight.patrol = patrol
+      }
     }
   }
 }

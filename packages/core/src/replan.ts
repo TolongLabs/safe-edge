@@ -66,9 +66,20 @@ export function createReplanSubscriber({
     const plans = call('listPatrolPlans', {}).data
     const patrols = call('listPatrols', {}).data
     const superseded = new Set(plans.flatMap((p) => (p.replan?.supersedes ? [p.replan.supersedes.planId] : [])))
+    const byId = new Map(plans.map((p) => [p.id, p]))
+    // A re-plan the pilot has yet to approve continues the flight of the plan it supersedes, if that is in the air.
+    const patrolOf = (p: PatrolPlan): Patrol | null => {
+      const own = patrols.findLast((x) => x.planId === p.id)
+      if (own) return own
+      for (let id = p.replan?.supersedes?.planId; id !== undefined; id = byId.get(id)?.replan?.supersedes?.planId) {
+        const flying = patrols.find((x) => x.planId === id && x.status === 'in_flight')
+        if (flying) return flying
+      }
+      return null
+    }
     const open = plans
       .filter((p) => !superseded.has(p.id))
-      .map((p) => ({ plan: p, patrol: patrols.findLast((x) => x.planId === p.id) ?? null }))
+      .map((p) => ({ plan: p, patrol: patrolOf(p) }))
       .filter(({ patrol }) => patrol?.status !== 'completed')
     const segmentId = 'segmentId' in trigger ? trigger.segmentId : null
     const snapshot =

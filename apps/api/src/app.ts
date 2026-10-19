@@ -172,10 +172,14 @@ export function createApp({
     every,
     weather,
     subscribe: hub.subscribe,
-    publish: hub.publish
+    publish: hub.publish,
+    atomic: journal.atomic
   })
   /** Core operations the API acts on once they succeed, besides publishing their events. */
   const afterDispatch: { [K in CoreOperationId]?: (data: OperationOutput<K>) => void } = {
+    // The drone in the air flies what the pilot approved or released (a re-plan, a hold it waits at).
+    approvePatrolPlan: () => automation.planChanged(),
+    releasePlanHold: () => automation.planChanged(),
     // A person cleared a failed hand-off; the API resumes it from the step that failed.
     retryWorkOrderHandOff: ({ workOrder, retried }) => {
       // A bug in the hand-off rejects, unhandled, and stops the API; Procore's own failures go on the record.
@@ -435,6 +439,7 @@ export function createApp({
     )
   }
   hub.resume()
+  automation.interrupted()
   return app
 }
 

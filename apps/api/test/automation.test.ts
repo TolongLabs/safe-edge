@@ -160,6 +160,44 @@ async function approvedPlan(api: Api, segmentIds: string[]) {
   )
 }
 
+const approve = (api: Api, planId: string) =>
+  json(api.request('post', `/patrol-plans/${planId}/approve`, { token: 'tok_pilot' })).then((p) => PatrolPlan.parse(p))
+
+const patrolOf = async (api: Api, id: string) =>
+  Patrol.parse(await json(api.request('get', `/patrols/${id}`, { token: 'tok_manager' })))
+
+/** When the drone reaches the first station of the plan's stop `stop`. */
+const firstStationEta = (plan: PatrolPlan, stop: number) =>
+  plan.waypoints.find((w) => w.kind === 'station' && w.segmentId === plan.tasks[stop]!.segmentId)!.eta
+
+/** Every segment of the plan seen along its whole length. */
+const fullCoverage = (plan: PatrolPlan) =>
+  plan.tasks.map((t) => ({
+    segmentId: t.segmentId,
+    inspectedM: seed.segments.find((s) => s.id === t.segmentId)!.lengthM,
+    unknownM: 0
+  }))
+
+/** The fixed viewpoints the drone's observations on the patrol name. */
+const viewpointsObserved = (audit: AuditEvent[], patrolId: string) =>
+  audit
+    .filter((e) => e.action === 'recordObservation' && (e.after as { patrolId: string }).patrolId === patrolId)
+    .map((e) => (e.after as { viewpointId: string }).viewpointId)
+    .toSorted()
+
+/** The drone reports S1's missing panel, the manager confirms it, and core re-plans `plan` around the flight's progress. */
+async function confirmFlagReplan(api: Api, plan: PatrolPlan) {
+  const candidate = await json(raiseTier2(api))
+  await json(
+    api.request('post', `/candidates/${candidate.id}/decision`, {
+      token: 'tok_manager',
+      body: { decision: 'confirm', severity: 'high' }
+    })
+  )
+  const replanned = (await plansOf(api)).find((p) => p.replan?.supersedes?.planId === plan.id)!
+  return { replanned, flown: replanned.replan!.supersedes!.committedTasks }
+}
+
 const startPatrol = async (api: Api, planId: string, provider: Patrol['provider'] = 'sim') =>
   Patrol.parse(
     await json(api.request('post', '/patrols', { token: 'tok_pilot', body: { planId, provider, droneId: 'sim-1' } }))
@@ -197,12 +235,60 @@ describe.each(['wall clock', 'scenario clock'] as const)('on the %s', (mode) => 
     expect(audit.find((e) => e.action === 'completePatrol')).toMatchObject({ actor: { id: 'usr_drone_sim' } })
     expect(audit.filter((e) => e.action === 'runAutomation')).toEqual([])
   })
+
+  test("once the pilot approves a re-plan of the patrol in flight, the drone flies the re-plan's stops", async () => {
+    const { api, moveTo } = startOn(mode)
+    const plan = await approvedPlan(api, [EXPIRING, 'seg_866518980_6'])
+    await moveTo(plan.window.start)
+    const patrol = await startPatrol(api, plan.id)
+    // The drone reaches the first stop; then the manager confirms S1's flag, which re-plans the rest of the route.
+    await moveTo(plan.tasks[0]!.stations.length > 0 ? firstStationEta(plan, 0) : plan.window.start)
+    const { replanned, flown } = await confirmFlagReplan(api, plan)
+    expect(replanned.replan!.supersedes).toEqual({ planId: plan.id, committedTasks: 1 })
+    expect(replanned.tasks[0]).toEqual(plan.tasks[0])
+    expect(replanned.tasks.map((t) => t.segmentId)).toContain(S1.segmentId)
+    await approve(api, replanned.id)
+
+    // Core moved the patrol onto the re-plan, and the drone lands on the re-plan's timeline.
+    expect((await patrolOf(api, patrol.id)).planId).toBe(replanned.id)
+    await moveTo(new Date(Date.parse(replanned.waypoints.at(-1)!.eta) + 1000).toISOString())
+    const done = await patrolOf(api, patrol.id)
+    expect(done).toMatchObject({ status: 'completed', planId: replanned.id })
+    expect(done.coverage).toEqual(fullCoverage(replanned))
+    const audit = await auditOf(api)
+    // S1 was never on the first plan: its fixed viewpoints' frames come from the re-plan's stops.
+    expect(viewpointsObserved(audit, patrol.id)).toEqual(['vp_866518980_11_1', 'vp_866518980_11_2'])
+    expect(audit.filter((e) => e.action === 'runAutomation')).toEqual([])
+    expect(flown).toBe(1)
+  })
 })
 
-test('a failed automation step is recorded on the audit chain, readable over the API, and the API carries on', async () => {
+test('a re-plan the pilot approves after the drone has gone on: it flies back along its route, then the re-plan', async () => {
+  const { api, moveTo } = startOn('wall clock')
+  const plan = await approvedPlan(api, [EXPIRING, 'seg_866518980_6'])
+  await moveTo(plan.window.start)
+  const patrol = await startPatrol(api, plan.id)
+  await moveTo(firstStationEta(plan, 0))
+  const { replanned } = await confirmFlagReplan(api, plan)
+  expect(replanned.replan!.supersedes).toEqual({ planId: plan.id, committedTasks: 1 })
+  // The pilot takes long enough that the drone reaches the first plan's second stop, which the re-plan does not keep.
+  await moveTo(new Date(Date.parse(firstStationEta(plan, 1)) + 1000).toISOString())
+  await approve(api, replanned.id)
+
+  await moveTo(plan.window.end)
+  const done = await patrolOf(api, patrol.id)
+  expect(done).toMatchObject({ status: 'completed', planId: replanned.id })
+  // Back at the first stop's last station, it flew the re-plan's stops, so every segment of the re-plan was seen.
+  expect(done.coverage).toEqual(fullCoverage(replanned))
+  expect(Date.parse(done.completedAt!)).toBeGreaterThan(Date.parse(replanned.waypoints.at(-1)!.eta))
+  expect(viewpointsObserved(await auditOf(api), patrol.id)).toEqual(['vp_866518980_11_1', 'vp_866518980_11_2'])
+  expect((await auditOf(api)).filter((e) => e.action === 'runAutomation')).toEqual([])
+})
+
+test('a held segment waits in flight: the drone hovers until the pilot records its path clear over the API', async () => {
   const { api, moveTo } = startOn('wall clock')
   // The seed's path crowd holds segment 9 until the pilot records its path clear, and the dock too: it is beside the
-  // transit from the dock to segment 9 (#150). The pilot records the dock clear, not the segment.
+  // transit from the dock to segment 9 (#150), and the dock's hold keeps the drone on the ground until released.
   const plan = await approvedPlan(api, [EXPIRING, 'seg_866518980_9'])
   expect(plan.holds).toMatchObject([
     { kind: 'separation', segmentId: null, releasedBy: null },
@@ -210,41 +296,24 @@ test('a failed automation step is recorded on the audit chain, readable over the
   ])
   await json(api.request('post', `/patrol-plans/${plan.id}/holds/dock/release`, { token: 'tok_pilot' }))
   await moveTo(plan.window.start)
-  // Core lets the patrol start (the drone would wait at the held segment), but drone-sim does not model the wait.
   const patrol = await startPatrol(api, plan.id)
-  // A confirmed flag re-plans the plan in flight, but no drone reports how far it got.
-  const candidate = await json(raiseTier2(api))
-  const decided = await api.request('post', `/candidates/${candidate.id}/decision`, {
-    token: 'tok_manager',
-    body: { decision: 'confirm', severity: 'high' }
-  })
-  expect(decided.status).toBe(200)
 
-  const failures = AuditEvent.array().parse(
-    await json(api.request('get', '/audit?subject=automation', { token: 'tok_manager' }))
-  )
-  expect(failures.map((e) => [e.action, e.actor.id, e.decision, e.after])).toEqual([
-    [
-      'runAutomation',
-      'core.automation',
-      'allowed',
-      {
-        id: 'automation',
-        step: 'drone',
-        error: `${plan.id} holds seg_866518980_9: the pilot must confirm the path is clear, then schedule the released plan`
-      }
-    ],
-    [
-      'runAutomation',
-      'core.automation',
-      'allowed',
-      {
-        id: 'automation',
-        step: 'replan',
-        error: `${plan.id} was not re-planned: No drone this bridge flies reports ${patrol.id}'s progress`
-      }
-    ]
-  ])
+  // Four minutes after it reached the waypoint before segment 9 (two more than the plan budgets), it still waits there.
+  const first = plan.waypoints.findIndex((w) => w.segmentId === 'seg_866518980_9')
+  const before = plan.waypoints[first - 1]!
+  const waitFrom = Date.parse(before.eta) + (before.kind === 'station' ? 3000 : 0)
+  await moveTo(new Date(waitFrom + 240_000).toISOString())
+  expect(await patrolOf(api, patrol.id)).toMatchObject({ status: 'in_flight' })
+  await json(api.request('post', `/patrol-plans/${plan.id}/holds/seg_866518980_9/release`, { token: 'tok_pilot' }))
+  // It lands late by the wait beyond the plan's 2-minute budget, with every segment seen.
+  const landing = Date.parse(plan.waypoints.at(-1)!.eta) + 120_000
+  await moveTo(new Date(landing - 1000).toISOString())
+  expect(await patrolOf(api, patrol.id)).toMatchObject({ status: 'in_flight' })
+  await moveTo(new Date(landing + 1000).toISOString())
+  const done = await patrolOf(api, patrol.id)
+  expect(done).toMatchObject({ status: 'completed', planId: plan.id })
+  expect(done.coverage).toEqual(fullCoverage(plan))
+  expect((await auditOf(api)).filter((e) => e.action === 'runAutomation')).toEqual([])
 })
 
 test('a patrol whose progress no drone reports fails only its own re-plan: the other open plan is re-planned', async () => {
@@ -279,7 +348,7 @@ test('a patrol whose progress no drone reports fails only its own re-plan: the o
     await json(api.request('get', '/audit?subject=automation', { token: 'tok_manager' }))
   )
   expect(failures.map((e) => e.after)).toEqual([
-    { id: 'automation', step: 'drone', error: `This API flies only drone-sim; ${patrol.id} names mavlink` },
+    { id: 'automation', step: 'drone', error: `Only drone-sim flies here; ${patrol.id} names mavlink` },
     {
       id: 'automation',
       step: 'replan',

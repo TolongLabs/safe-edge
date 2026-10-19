@@ -67,6 +67,18 @@ export class MavlinkDroneProvider implements DroneProvider {
   }
 
   /**
+   * Check `approval` as `dispatchPatrol` does. A released hold: `COMMAND_LONG` with `MAV_CMD_DO_PAUSE_CONTINUE` (193),
+   * param 1 `MAV_BOOL_TRUE`, after the mission paused (param 1 false) at the waiting point. A re-plan: upload its
+   * waypoints with the mission protocol, then `MAV_CMD_DO_SET_MISSION_CURRENT` (224) at the first one after the committed
+   * stops ([common messages], read 19 Oct 2026).
+   *
+   * [common messages]: https://mavlink.io/en/messages/common.html
+   */
+  updatePatrol(_runId: string, _plan: PatrolPlan, _approval: HumanApproval): Promise<void> {
+    throw new ProviderNotImplementedError('mavlink', 'updatePatrol')
+  }
+
+  /**
    * A mission not yet started: `MISSION_CLEAR_ALL` (#45) ([mission protocol]). In flight: `COMMAND_LONG` with
    * `MAV_CMD_NAV_RETURN_TO_LAUNCH` (20) ([common messages]).
    *

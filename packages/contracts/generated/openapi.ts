@@ -196,7 +196,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
+         * Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded). Approving a re-plan of a plan in flight moves its patrol onto the re-plan, which the drone then flies
          * @description Roles: pilot. Agents are refused.
          */
         post: operations["approvePatrolPlan"];
@@ -240,7 +240,7 @@ export interface paths {
         get: operations["listPatrols"];
         put?: never;
         /**
-         * Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
+         * Start a patrol from an approved plan that no re-plan superseded and no patrol is flying (invalid_transition), inside the plan's window (outside_window) and after its launch holds (weather_hold)
          * @description Roles: pilot. Agents are refused. Emits edge.patrol.started.v1.
          */
         post: operations["startPatrol"];
@@ -2468,7 +2468,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded) */
+            /** @description Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded). Approving a re-plan of a plan in flight moves its patrol onto the re-plan, which the drone then flies */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2549,7 +2549,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold) */
+            /** @description Start a patrol from an approved plan that no re-plan superseded and no patrol is flying (invalid_transition), inside the plan's window (outside_window) and after its launch holds (weather_hold) */
             201: {
                 headers: {
                     [name: string]: unknown;

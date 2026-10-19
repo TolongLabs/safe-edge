@@ -10,7 +10,7 @@ import {
   type Observation,
   type PatrolPlan
 } from '@safe-edge/contracts'
-import type { ThirdParty } from '@safe-edge/planner'
+import { assumedEnergyModel, type ThirdParty } from '@safe-edge/planner'
 import { plannerWith, seed, startCore } from '../../core/test/support.ts'
 import { ApprovalRequiredError, OutsideWindowError, bridgeDrone, createDroneSim } from '../src/index.ts'
 
@@ -76,41 +76,129 @@ describe('drone-sim refuses to fly without a human approval', () => {
     expect(await h.sim.getStatus('sim-1')).toMatchObject({ state: 'docked', runId: null, batteryPercent: 100 })
     expect(h.events).toEqual([])
   })
+})
 
-  test('a separation hold flies only after the pilot records the path clear', async () => {
-    // People at the water's edge by segment 9 (as in core's flight-holds test): no stand-off clears them by 50 m.
-    const people: ThirdParty = {
-      id: 'obs_people_edge',
-      kind: 'person',
-      label: 'people at the water edge',
-      geometry: { type: 'Point', coordinates: [101.514434, 3.179979] },
-      observedAt: '2026-10-21T21:50:00.000Z',
-      headcount: null,
-      simulated: true,
-      source: 'fixture'
-    }
-    const h = await start({ thirdParties: [people] })
-    const approved = h.approve(h.plan([...SEGMENT_IDS, 'seg_866518980_9']).id)
-    // The seed's path crowd is beside the transit between the dock and segment 9, so the dock waits too (#150).
-    expect(approved.holds.map((x) => [x.kind, x.segmentId, x.releasedBy])).toEqual([
-      ['separation', null, null],
-      ['separation', 'seg_866518980_9', null]
-    ])
-    const approval = { planId: approved.id, approvedBy: approved.approvedBy!, approvedAt: approved.approvedAt! }
-    const release = (segmentId: string) =>
-      h.call('releasePlanHold', 'usr_pilot', { params: { id: approved.id, segmentId } }).data
-    const held = await h.sim.schedulePatrol(approved)
-    await expect(h.sim.dispatchPatrol(held.id, approval)).rejects.toThrow('holds the dock, seg_866518980_9')
-    await h.sim.cancelPatrol(held.id)
+/** People at the water's edge by segment 9 (as in core's flight-holds test): no stand-off clears them by 50 m. */
+const peopleBySegment9: ThirdParty = {
+  id: 'obs_people_edge',
+  kind: 'person',
+  label: 'people at the water edge',
+  geometry: { type: 'Point', coordinates: [101.514434, 3.179979] },
+  observedAt: '2026-10-21T21:50:00.000Z',
+  headcount: null,
+  simulated: true,
+  source: 'fixture'
+}
+const HELD = 'seg_866518980_9'
 
-    const segmentClear = await h.sim.schedulePatrol(release('seg_866518980_9'))
-    await expect(h.sim.dispatchPatrol(segmentClear.id, approval)).rejects.toThrow('holds the dock:')
-    await h.sim.cancelPatrol(segmentClear.id)
+/**
+ * A plan whose segment 9 waits for the people by it, approved, its dock hold released (the seed's path crowd is beside
+ * the transits from and to the dock, #150) and dispatched at its window's start. `waitFrom` is when the drone, flying
+ * the plan, has reached the waypoint before segment 9's first station and hovered there for its frame: where it waits.
+ */
+async function heldFlight() {
+  const h = await start({ thirdParties: [peopleBySegment9] })
+  const approved = h.approve(h.plan([...SEGMENT_IDS, HELD]).id)
+  expect(approved.holds.map((x) => [x.kind, x.segmentId, x.releasedBy])).toEqual([
+    ['separation', null, null],
+    ['separation', HELD, null]
+  ])
+  const approval = { planId: approved.id, approvedBy: approved.approvedBy!, approvedAt: approved.approvedAt! }
+  const release = (segmentId: string) =>
+    h.call('releasePlanHold', 'usr_pilot', { params: { id: approved.id, segmentId } }).data
+  h.setNow(approved.window.start)
 
-    const run = await h.sim.schedulePatrol(release('dock'))
-    await h.sim.dispatchPatrol(run.id, approval)
+  // Take-off waits on the dock until the pilot records the dock and its transits clear.
+  const onDock = await h.sim.schedulePatrol(approved)
+  await expect(h.sim.dispatchPatrol(onDock.id, approval)).rejects.toThrow(
+    `${approved.id} holds the dock: the pilot must confirm it clear before take-off`
+  )
+  await h.sim.cancelPatrol(onDock.id)
+
+  const dockClear = release('dock')
+  const run = await h.sim.schedulePatrol(dockClear)
+  await h.sim.dispatchPatrol(run.id, approval)
+  const first = dockClear.waypoints.findIndex((w) => w.segmentId === HELD)
+  const before = dockClear.waypoints[first - 1]!
+  const waitFrom = Date.parse(before.eta) + (before.kind === 'station' ? assumedEnergyModel.stationHoverS * 1000 : 0)
+  const at = (ms: number) => {
+    h.setNow(new Date(ms).toISOString())
     h.sim.tick()
-    expect(h.events.map((e) => e.type)).toEqual(['takeoff'])
+  }
+  return { ...h, plan: dockClear, run, approval, release, before, waitFrom, at }
+}
+
+const heldEvents = (events: ProviderEvent[]) =>
+  events.filter((e) => (e.type === 'waypoint' || e.type === 'observation') && e.segmentId === HELD)
+
+describe('drone-sim waits at a separation hold', () => {
+  test('it hovers before the held segment until the pilot releases it, and the hover costs battery and time', async () => {
+    const h = await heldFlight()
+    const budgetMs = 120_000
+    // Five minutes at the waiting point, three more than the plan budgets for the pilot to see the path clear.
+    const releasedAt = h.waitFrom + 5 * 60_000
+    h.at(releasedAt - 1000)
+    expect(heldEvents(h.events)).toEqual([])
+    const waiting = await h.sim.getStatus('sim-1')
+    expect(waiting).toMatchObject({ state: 'in_flight', runId: h.run.id })
+    expect(waiting.pose).toMatchObject({ lon: h.before.lon, lat: h.before.lat, altM: h.before.altM })
+    h.at(releasedAt)
+    expect((await h.sim.getStatus('sim-1')).batteryWh).toBeLessThan(waiting.batteryWh)
+
+    h.release(HELD)
+    await h.sim.updatePatrol(
+      h.run.id,
+      h.call('getPatrolPlan', 'usr_pilot', { params: { id: h.plan.id } }).data,
+      h.approval
+    )
+    h.at(Date.parse(h.plan.window.end))
+    const held = heldEvents(h.events)
+    expect(held.length).toBeGreaterThan(0)
+    expect(held.every((e) => Date.parse(e.at) > releasedAt)).toBe(true)
+    // It flew the rest of the plan as planned, but late by the wait beyond the budget, and on that much less battery.
+    const extraS = (releasedAt - h.waitFrom - budgetMs) / 1000
+    const landed = h.events.at(-1)!
+    if (landed.type !== 'landed') throw new Error('the drone did not land')
+    expect(landed.outcome).toBe('completed')
+    // To the millisecond the ETAs are rounded to.
+    expect(
+      Math.abs(Date.parse(landed.at) - Date.parse(h.plan.waypoints.at(-1)!.eta) - extraS * 1000)
+    ).toBeLessThanOrEqual(1)
+    expect(landed.remainingWh).toBeCloseTo(h.plan.reserveWh - (h.drone.hoverPowerW * extraS) / 3600, 6)
+    expect(h.events.filter((e) => e.type === 'observation')).toHaveLength(
+      h.plan.waypoints.filter((w) => w.kind === 'station').length
+    )
+  })
+
+  test('nobody releases it: the drone waits while the rest of the plan still fits its reserve and window, then comes home', async () => {
+    const h = await heldFlight()
+    // The longest wait the plan allows: its budget, plus what is left of the reserve above the drone's own, or of the
+    // window after the planned landing, whichever runs out first.
+    const energyS = ((h.plan.reserveWh - h.drone.reserveWh) * 3600) / h.drone.hoverPowerW
+    const windowS = (Date.parse(h.plan.window.end) - Date.parse(h.plan.waypoints.at(-1)!.eta)) / 1000
+    const leaves = h.waitFrom + 120_000 + Math.min(energyS, windowS) * 1000
+    h.at(leaves - 1000)
+    const waiting = (await h.sim.getStatus('sim-1')).pose
+    expect(waiting).toMatchObject({ lon: h.before.lon, lat: h.before.lat, altM: h.before.altM })
+    // From the climb over the dock, home is straight down.
+    h.at(leaves + 500)
+    expect((await h.sim.getStatus('sim-1')).pose.altM).toBeLessThan(waiting.altM)
+
+    // A release after it left changes nothing: it is on its way home.
+    h.release(HELD)
+    await h.sim.updatePatrol(
+      h.run.id,
+      h.call('getPatrolPlan', 'usr_pilot', { params: { id: h.plan.id } }).data,
+      h.approval
+    )
+    h.at(Date.parse(h.plan.window.end))
+    expect(heldEvents(h.events)).toEqual([])
+    const landed = h.events.at(-1)!
+    if (landed.type !== 'landed') throw new Error('the drone did not land')
+    const dock = h.call('listDocks', 'usr_pilot', {}).data[0]!
+    expect(landed).toMatchObject({ outcome: 'hold_timeout', pose: { lon: dock.position.lon, lat: dock.position.lat } })
+    expect(landed.remainingWh).toBeGreaterThanOrEqual(h.drone.reserveWh)
+    expect(Date.parse(landed.at)).toBeLessThan(Date.parse(h.plan.window.end))
   })
 })
 
@@ -211,7 +299,7 @@ async function flyApprovedPlan(h: Harness, { cancelAfterFrames }: { cancelAfterF
     const frames = h.events.filter((e) => e.type === 'observation').length
     if (cancelled === null && cancelAfterFrames !== undefined && frames >= cancelAfterFrames) {
       const status = await h.sim.getStatus(run.deviceId)
-      cancelled = { at: h.now(), status, committed: bridge.committedTasks(patrol) }
+      cancelled = { at: h.now(), status, committed: bridge.committedTasks(patrol, approved) }
       await h.sim.cancelPatrol(run.id)
     }
   }
