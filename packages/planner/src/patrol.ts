@@ -71,6 +71,11 @@ export interface PatrolPlanInput extends ScoreInputs {
   geofences: Geofence[]
   /** People, vessels, vehicles and structures not under the pilot's control, from observations or the map. */
   thirdParties: ThirdParty[]
+  /**
+   * How long the drone may hover before a held segment for the pilot or observer to confirm its path is clear. It counts
+   * against the battery and the window like flying does.
+   */
+  separationWaitS: number
 }
 
 interface Candidate {
@@ -81,7 +86,7 @@ interface Candidate {
   waiting: Separation['waiting']
   priority: PriorityScore
   rank: number
-  /** Flying from the first station to the last and hovering at each. */
+  /** Flying from the first station to the last, hovering at each, and waiting for a clear path when it is held. */
   energyWh: number
   durationS: number
 }
@@ -223,14 +228,15 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     const priority = scorePriority(segmentId, input)
     const flownWh = stations.slice(1).reduce((wh, s, i) => wh + flyWh(position(stations[i]!), position(s)), 0)
     const flownS = stations.slice(1).reduce((t, s, i) => t + flyS(position(stations[i]!), position(s)), 0)
+    const waitS = waiting.length > 0 ? input.separationWaitS : 0
     pending.push({
       task,
       stations,
       waiting,
       priority,
       rank: rankingPriority(priority),
-      energyWh: flownWh + stations.length * hoverWh,
-      durationS: flownS + stations.length * assumedEnergyModel.stationHoverS
+      energyWh: flownWh + stations.length * hoverWh + (drone.hoverPowerW * waitS) / 3600,
+      durationS: flownS + stations.length * assumedEnergyModel.stationHoverS + waitS
     })
   }
 
@@ -297,8 +303,17 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     )
   }
 
-  for (const { candidate } of route) {
-    if (candidate.waiting.length > 0) holds.push(separationHold(candidate.task.segmentId, candidate.waiting))
+  // A held stop waits at the last waypoint before its first station that is too close, where the drone is clear of them.
+  const waitsBefore = new Map<string, string>()
+  for (const stop of route) {
+    const { candidate } = stop
+    if (candidate.waiting.length === 0) continue
+    const waitingIds = new Set(candidate.waiting.map((w) => w.station.id))
+    const first = ordered(stop, candidate.stations).find((s) => waitingIds.has(s.id))!
+    waitsBefore.set(first.id, candidate.task.segmentId)
+    holds.push(
+      separationHold(candidate.task.segmentId, candidate.waiting, { waitS: input.separationWaitS, before: first })
+    )
   }
 
   const flown = route.flatMap((stop) =>
@@ -342,6 +357,10 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
       arrive('transit', dockAt, atDock(altitudeM, out))
     }
     for (const { station, segmentId } of flown) {
+      if (waitsBefore.has(station.id)) {
+        clockS += input.separationWaitS
+        energyWh += (drone.hoverPowerW * input.separationWaitS) / 3600
+      }
       fly(position(station))
       arrive('station', at, { ...station.pose, viewpointId: null, segmentId })
       clockS += assumedEnergyModel.stationHoverS
@@ -389,7 +408,7 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     approvedAt: null,
     simulated:
       committed?.simulated === true ||
-      [dock, drone, ...input.segments, ...input.context, ...geofences].some((r) => r.simulated),
+      [dock, drone, ...input.segments, ...input.context, ...geofences, ...input.thirdParties].some((r) => r.simulated),
     source: 'system'
   })
 }

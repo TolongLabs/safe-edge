@@ -108,8 +108,15 @@ function standOffs(station: Station, { water, altitudeM, rangeM, maxZoom }: Sepa
   return moved
 }
 
-/** The hold for a segment whose stations wait. The planner never releases it: core's `releasePlanHold` records the pilot's confirm-clear. */
-export function separationHold(segmentId: string, waiting: Separation['waiting']): PlanHold {
+/**
+ * The hold for a segment whose stations wait, hovering for up to `waitS` before station `before`. The planner never
+ * releases it: core's `releasePlanHold` records the pilot's confirm-clear.
+ */
+export function separationHold(
+  segmentId: string,
+  waiting: Separation['waiting'],
+  { waitS, before }: { waitS: number; before: Station }
+): PlanHold {
   const closestM = Math.min(...waiting.map((w) => w.closestM))
   return {
     kind: 'separation',
@@ -117,7 +124,7 @@ export function separationHold(segmentId: string, waiting: Separation['waiting']
     until: null,
     releasedBy: null,
     releasedAt: null,
-    reason: `stations ${waiting.map((w) => w.station.id).join(', ')} are within ${SEPARATION_M} m of ${named(waiting.flatMap((w) => w.parties))}, closest ${closestM.toFixed(0)} m; the segment waits for the pilot or observer to confirm the path is clear`
+    reason: `stations ${waiting.map((w) => w.station.id).join(', ')} are within ${SEPARATION_M} m of ${named(waiting.flatMap((w) => w.parties))}, closest ${closestM.toFixed(0)} m; the segment waits for the pilot or observer to confirm the path is clear; the plan budgets ${(waitS / 60).toFixed(1)} min of hover before ${before.id} for it, and a longer wait uses the reserve`
   }
 }
 

@@ -2765,7 +2765,7 @@ components:
         energyWh:
           type: number
           minimum: 0
-          description: Flying the task and hovering at its stations, without transit
+          description: Flying the task, hovering at its stations and any wait for a separation hold, without transit
       required:
         - segmentId
         - flightLine

@@ -35,7 +35,8 @@ describe('patrol plans over real Elmina segments', async () => {
     passes: selected.map((s) => ({ segmentId: s.id, state: 'valid', validTo: at(24 * 200), readAt: NOW })),
     flags: selected.map((s) => ({ segmentId: s.id, severity: null, readAt: NOW })),
     geofences: [],
-    thirdParties: []
+    thirdParties: [],
+    separationWaitS: 120
   })
 
   test('scores each segment as 0.25 expiry + 0.35 reviewed flag + 0.25 rain + 0.15 water level, with the parts', () => {

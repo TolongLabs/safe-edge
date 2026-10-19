@@ -55,7 +55,8 @@ export async function demoPlan(readJson: (path: string) => Promise<unknown>) {
     passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: NOW })),
     flags: segments.map((s) => ({ segmentId: s.id, severity: null, readAt: NOW })),
     geofences: [],
-    thirdParties: []
+    thirdParties: [],
+    separationWaitS: 120
   })
   return { plan, dock, drone, groundAmslM }
 }

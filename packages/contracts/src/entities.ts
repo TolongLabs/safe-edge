@@ -291,7 +291,10 @@ export const PatrolTask = named(
     flightLine: LineString,
     stations: z.array(CameraStation),
     priority: PriorityScore,
-    energyWh: z.number().nonnegative().describe('Flying the task and hovering at its stations, without transit')
+    energyWh: z
+      .number()
+      .nonnegative()
+      .describe('Flying the task, hovering at its stations and any wait for a separation hold, without transit')
   })
 )
 export type PatrolTask = z.infer<typeof PatrolTask>

@@ -1253,7 +1253,7 @@ export interface components {
             flightLine: components["schemas"]["LineString"];
             stations: components["schemas"]["CameraStation"][];
             priority: components["schemas"]["PriorityScore"];
-            /** @description Flying the task and hovering at its stations, without transit */
+            /** @description Flying the task, hovering at its stations and any wait for a separation hold, without transit */
             energyWh: number;
         };
         Waypoint: {

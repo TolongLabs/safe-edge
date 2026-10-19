@@ -8,7 +8,7 @@ import type { ThirdParty } from './separation.ts'
 /**
  * Core's planner port (`PatrolPlanner`) over `planPatrol` for the Elmina seed: the one adapter the API, the SDK and
  * the tests use. It holds what the store lacks: planner geometry, capture settings, geofences (none yet), water-level
- * bands and a 120-minute window after first light. `readJson` loads a path from `elminaLayerPaths` (relative to the repo root): the browser fetches
+ * bands, a 120-minute window after first light and a 2-minute wait budget for each held segment. `readJson` loads a path from `elminaLayerPaths` (relative to the repo root): the browser fetches
  * it, Bun reads the file. `thirdParties` are mapped people, vessels, vehicles and structures not under the pilot's
  * control that every plan keeps 50 m from; there is no default, so none are left out by accident. Core adds the ones
  * the seed records and the create-plan request reports (the port's `thirdParties`).
@@ -42,6 +42,8 @@ export async function createElminaPlanner(
       windowMinutes: 120,
       geofences: [],
       thirdParties: [...thirdParties, ...observed.thirdParties],
+      // A stated assumption, like the window: two minutes for people to clear a held segment's path.
+      separationWaitS: 120,
       passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: now })),
       flags: segments.map((s) => ({
         segmentId: s.id,
