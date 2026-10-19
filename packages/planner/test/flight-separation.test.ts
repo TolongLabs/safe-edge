@@ -158,4 +158,78 @@ describe('separation over the whole flight', async () => {
       }))
     )
   })
+
+  test('no leg flies within 50 m of a structure: transits past one are not taken, and a flight line past one is out', async () => {
+    const paths = (await readJson(elminaLayerPaths.paths)) as FeatureCollection<LineString, { osm_id: number }>
+    const footbridge = (osmId: number): ThirdParty => ({
+      id: `way/${osmId}`,
+      kind: 'structure',
+      label: `footbridge way/${osmId}`,
+      geometry: paths.features.find((f) => f.properties.osm_id === osmId)!.geometry,
+      observedAt: null,
+      simulated: false,
+      source: 'osm'
+    })
+    const legsOf = (plan: ReturnType<typeof planPatrol>) =>
+      plan.waypoints.slice(1).flatMap((b, i) => {
+        const a = plan.waypoints[i]!
+        return a.lon === b.lon && a.lat === b.lat
+          ? []
+          : [
+              lineString([
+                [a.lon, a.lat],
+                [b.lon, b.lat]
+              ])
+            ]
+      })
+    const legM = (leg: ReturnType<typeof lineString>, bridge: LineString) =>
+      Math.min(
+        ...bridge.coordinates.map((c) => nearestPointOnLine(leg, c, m).properties.pointDistance),
+        ...leg.geometry.coordinates.map((c) => nearestPointOnLine(bridge, c, m).properties.pointDistance)
+      )
+
+    // Footbridge way/909868199 curves between the east and west banks, 96 m from the dock and more than 50 m from
+    // every station: only the transits between the two banks pass it.
+    const between = footbridge(909868199)
+    const bridge = between.geometry as LineString
+    const clear = planPatrol(input([EAST, WEST]))
+    expect(Math.min(...legsOf(clear).map((leg) => legM(leg, bridge)))).toBeLessThan(50)
+    const plan = planPatrol(input([EAST, WEST], [between]))
+    for (const leg of legsOf(plan)) expect(legM(leg, bridge)).toBeGreaterThanOrEqual(50)
+    expect(plan.tasks).toHaveLength(1)
+    expect(plan.holds).toEqual([])
+    const [left] = [EAST, WEST].filter((id) => id !== plan.tasks[0]!.segmentId)
+    expect(plan.rejected).toEqual([
+      {
+        segmentId: left,
+        code: 'separation_hold',
+        reason: expect.stringMatching(
+          /^every straight transit to it passes within 50 m of "footbridge way\/909868199" \(structure\), closest \d+ m, which waiting would not clear$/
+        )
+      }
+    ])
+
+    // A contractor's crane on the bank halfway along the lake's 519 m west arm, segment 18: a labelled fixture. Its
+    // stations within 50 m are left out, and the flight line between the stations either side would pass it 9 m off,
+    // so the segment is out. (Mapped footbridges never do this: segments split where paths cross the bank.)
+    const crane: ThirdParty = {
+      id: 'obs_crane_west_arm',
+      kind: 'structure',
+      label: 'crane on the west arm bank',
+      geometry: { type: 'Point', coordinates: [101.5070877, 3.1767494] },
+      observedAt: SEEN,
+      simulated: true,
+      source: 'fixture'
+    }
+    const crossed = planPatrol(input(['seg_866518980_18'], [crane]))
+    expect(crossed.tasks).toEqual([])
+    expect(crossed.rejected).toEqual([
+      expect.objectContaining({ segmentId: 'seg_866518980_18', code: 'separation_hold' }),
+      {
+        segmentId: 'seg_866518980_18',
+        code: 'separation_hold',
+        reason: `its flight line passes within 50 m of "crane on the west arm bank" (structure, seen ${SEEN}), closest 9 m, which waiting would not clear`
+      }
+    ])
+  })
 })

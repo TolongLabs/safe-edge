@@ -134,12 +134,15 @@ interface Stop {
   reversed: boolean
 }
 
+/** What keeps a leg out of the route: a zone it may not enter or come near, or a structure within 50 m. */
+type Blocker = { zone: Geofence } | { party: Nearby }
+
 interface Insertion extends Stop {
   /** Route position: 0 is straight after take-off. */
   index: number
   addedWh: number
   addedS: number
-  blockedBy: Geofence[]
+  blockedBy: Blocker[]
 }
 
 /**
@@ -210,15 +213,20 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   const designated = geofences.filter((g) => g.kind === 'designated_area')
   // Without an authorisation, a designated area keeps the aircraft 150 m away, as a no-fly zone would.
   const keptFrom = [...noFly, ...(input.authorisation ? [] : designated)]
-  const legBlockers = memo((a: Position, b: Position) => {
-    const path = samePosition(a, b) ? point(a) : lineString([a, b])
-    return keptFrom.filter((zone) => within(path, zone, zone.kind === 'designated_area' ? DESIGNATED_AREA_M : 0))
-  })
-  // People, vessels and vehicles move away, so a leg near them waits for the pilot or observer to see it clear.
+  // People, vessels and vehicles move away, so a leg near them waits for the pilot or observer to see it clear. A
+  // structure stays put: no leg flies within 50 m of one, and one within 50 m of the dock keeps every patrol on the ground.
   const movable = input.thirdParties.filter((p) => p.kind !== 'structure')
-  // A structure stays put: one within 50 m of the dock keeps every patrol on the ground.
   const structures = input.thirdParties.filter((p) => p.kind === 'structure')
   const byDock = committed ? [] : nearby([dockAt], structures, SEPARATION_M)
+  const legBlockers = memo((a: Position, b: Position): Blocker[] => {
+    const path = samePosition(a, b) ? point(a) : lineString([a, b])
+    return [
+      ...keptFrom
+        .filter((zone) => within(path, zone, zone.kind === 'designated_area' ? DESIGNATED_AREA_M : 0))
+        .map((zone) => ({ zone })),
+      ...nearby(samePosition(a, b) ? [a] : [a, b], structures, SEPARATION_M).map((party) => ({ party }))
+    ]
+  })
   const legNear = memo((a: Position, b: Position) => nearby(samePosition(a, b) ? [a] : [a, b], movable, SEPARATION_M))
 
   const committedIds = new Set(committed?.tasks.map((t) => t.segmentId))
@@ -602,15 +610,21 @@ function frame(station: Station, footprint: SegmentTask['footprint']) {
 
 /**
  * Why a flight line or transit is out: a no-fly zone it enters or crosses, else the designated areas it comes within
- * 150 m of without an authorisation.
+ * 150 m of without an authorisation, else the structures it passes within 50 m of.
  */
 function keptOut(
-  zones: Geofence[],
+  blockers: Blocker[],
   what: string,
   verb: 'enters' | 'crosses'
-): { code: 'geofence' | 'authorisation'; reason: string } {
+): { code: 'geofence' | 'authorisation' | 'separation_hold'; reason: string } {
+  const zones = blockers.flatMap((b) => ('zone' in b ? [b.zone] : []))
+  const structures = blockers.flatMap((b) => ('party' in b ? [b.party] : []))
   const noFly = zones.filter((z) => z.kind === 'no_fly')
   if (noFly.length > 0) return { code: 'geofence', reason: `${what} ${verb} no-fly zone ${labels(noFly)}` }
+  if (zones.length === 0) {
+    const reason = `${what} passes within ${SEPARATION_M} m of ${closest(structures)}, which waiting would not clear`
+    return { code: 'separation_hold', reason }
+  }
   return {
     code: 'authorisation',
     reason: `${what} comes within ${DESIGNATED_AREA_M} m of designated area ${labels(zones)} without the Director General's authorisation (CAR 2016 reg. 143(1)(a), (b))`
