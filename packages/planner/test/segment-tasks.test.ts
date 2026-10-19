@@ -6,7 +6,8 @@ import { lineString, polygon } from '@turf/helpers'
 import { length } from '@turf/length'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
 import { join } from 'node:path'
-import { loadElmina, planStations, splitEdges, type CameraProfile } from '../src/index.ts'
+import type { CameraProfile } from '@safe-edge/contracts'
+import { loadElmina, planStations, splitEdges } from '../src/index.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
 const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
@@ -73,14 +74,9 @@ describe('camera stations for the selected lake and retention-pond segments', as
   const elmina = await loadElmina(readJson)
   const selected = splitEdges({ ...elmina, maxBendDeg: MAX_BEND_DEG, pointObstructionToleranceM: 3 })
   // An assumed camera for the test, not a chosen aircraft.
-  const camera: CameraProfile = {
-    name: 'assumed test camera',
-    hfovDeg: 70,
-    vfovDeg: 55,
-    rangeM: 15,
-    forwardOverlap: 0.6
-  }
-  const plan = planStations({ edges: elmina.edges, segments: selected, camera, altitudeM: 9 })
+  const camera: CameraProfile = { hfovDeg: 70, vfovDeg: 55, imageWidthPx: 4000, imageHeightPx: 3000, maxZoom: 1 }
+  const capture = { camera, rangeM: 15, forwardOverlap: 0.6 }
+  const plan = planStations({ edges: elmina.edges, segments: selected, ...capture, altitudeM: 9 })
   const STAND_OFF_M = 12 // sqrt(15² − 9²)
   const SPACING_M = 8.4 // 2 × 15 × tan(35°) = 21.01 m footprint along the edge, × (1 − 0.6)
 
@@ -129,16 +125,12 @@ describe('camera stations for the selected lake and retention-pond segments', as
 
   test('rejects, with a reason, segments where the stand-off does not fit over the water', () => {
     // A 20 m range at 12 m altitude stands 16 m off; the lake is narrower than that between two footbridges.
-    const wide = planStations({
-      edges: elmina.edges,
-      segments: selected,
-      camera: { ...camera, rangeM: 20 },
-      altitudeM: 12
-    })
+    const wide = planStations({ edges: elmina.edges, segments: selected, ...capture, rangeM: 20, altitudeM: 12 })
     expect(wide.rejected.length).toBeGreaterThan(0)
-    for (const { segmentId, reason } of wide.rejected) {
+    for (const { segmentId, code, reason } of wide.rejected) {
       const segment = selected.find((s) => s.id === segmentId)!
-      expect(reason).toBe('flight_line_crosses_edge')
+      expect(code).toBe('flight_line')
+      expect(reason).toContain('crosses the edge')
       expect(segment.osmId).toBe(LAKE)
       const ends = [...segment.split.start, ...segment.split.end]
       expect(ends.some((c) => c.reason === 'obstruction' && LAKE_BRIDGES.includes(c.obstructionId))).toBe(true)

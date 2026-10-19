@@ -7,33 +7,18 @@ import { length } from '@turf/length'
 import { lineIntersect } from '@turf/line-intersect'
 import { lineOffset } from '@turf/line-offset'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
+import type { CameraProfile, CameraStation, PatrolPlan } from '@safe-edge/contracts'
 import type { LineString, Position } from 'geojson'
 import type { Edge, Segment } from './segments.ts'
 
 const meters = { units: 'meters' } as const
 const DEG = Math.PI / 180
 
-/** The inspection camera. The aircraft yaws to face the edge, so the image's horizontal axis runs along it. */
-export interface CameraProfile {
-  name: string
-  hfovDeg: number
-  vfovDeg: number
-  /** Slant distance from the camera to its aim point on the edge, set by the detail the camera must resolve. */
-  rangeM: number
-  /** Share of each frame that the next frame along the edge repeats, from 0 up to but excluding 1. */
-  forwardOverlap: number
-}
-
-export interface StationPose {
-  lon: number
-  lat: number
-  /** Height above the water edge. */
-  altM: number
-  /** Degrees clockwise from north, -180 to 180, from the station to its aim point. */
-  headingDeg: number
-  /** Degrees, negative below the horizon. */
-  gimbalPitchDeg: number
-}
+/**
+ * The contracts' camera station without a viewpoint. `altM` is the height above the water edge (flat terrain), and
+ * `headingDeg` runs -180 to 180 from the station to its aim point.
+ */
+export type StationPose = Omit<CameraStation, 'viewpointId'>
 
 export interface Station {
   /** `stn_<osmId>_<segment index>_<index>` */
@@ -59,37 +44,47 @@ export interface SegmentTask {
   stations: Station[]
 }
 
-export interface TaskRejection {
-  segmentId: string
-  reason: 'flight_line_self_intersects' | 'flight_line_crosses_edge'
-}
+/** A segment, or some of its stations, left out of a plan: the contracts' `PatrolPlan.rejected` item. */
+export type Rejection = PatrolPlan['rejected'][number]
 
 export interface StationPlanInput {
   /** The edges the segments came from, to check flight lines against. */
   edges: Edge[]
   /** The selected segments. */
   segments: Segment[]
+  /** The drone's camera. The aircraft yaws to face the edge, so the image's horizontal axis runs along it. */
   camera: CameraProfile
+  /** Slant distance from the camera to its aim point on the edge, set by the detail the camera must resolve. */
+  rangeM: number
+  /** Share of each frame that the next frame along the edge repeats, from 0 up to but excluding 1. */
+  forwardOverlap: number
   /** Flight height above the water edge. */
   altitudeM: number
 }
 
 export interface StationPlan {
   tasks: SegmentTask[]
-  rejected: TaskRejection[]
+  rejected: Rejection[]
 }
 
 /**
  * Plans an offset flight line and camera stations for each selected segment. Stand-off and pitch follow from the
  * camera's range and the flight height; station spacing is the footprint along the edge times (1 − forward overlap).
  */
-export function planStations({ edges, segments, camera, altitudeM }: StationPlanInput): StationPlan {
-  const { hfovDeg, vfovDeg, rangeM, forwardOverlap } = camera
+export function planStations({
+  edges,
+  segments,
+  camera,
+  rangeM,
+  forwardOverlap,
+  altitudeM
+}: StationPlanInput): StationPlan {
+  const { hfovDeg, vfovDeg } = camera
   if (!(hfovDeg > 0 && hfovDeg < 180 && vfovDeg > 0 && vfovDeg < 180)) {
-    throw new RangeError(`camera ${camera.name}: fields of view must be between 0 and 180 degrees`)
+    throw new RangeError('camera fields of view must be between 0 and 180 degrees')
   }
   if (!(forwardOverlap >= 0 && forwardOverlap < 1)) {
-    throw new RangeError(`camera ${camera.name}: forward overlap must be at least 0 and below 1`)
+    throw new RangeError(`forward overlap ${forwardOverlap} must be at least 0 and below 1`)
   }
   if (!(altitudeM >= 0 && altitudeM < rangeM)) {
     throw new RangeError(`altitude ${altitudeM} m must be at least 0 and below the camera range ${rangeM} m`)
@@ -108,9 +103,17 @@ export function planStations({ edges, segments, camera, altitudeM }: StationPlan
     if (!edge) throw new Error(`segment ${segment.id} has no edge ${segment.assetId}`)
     const flightLine = offsetFlightLine(segment, edge, standOffM)
     if (kinks(flightLine).features.length > 0) {
-      plan.rejected.push({ segmentId: segment.id, reason: 'flight_line_self_intersects' })
+      plan.rejected.push({
+        segmentId: segment.id,
+        code: 'flight_line',
+        reason: `the flight line ${standOffM.toFixed(1)} m off the edge folds over itself`
+      })
     } else if (lineIntersect(flightLine, edge.geometry).features.length > 0) {
-      plan.rejected.push({ segmentId: segment.id, reason: 'flight_line_crosses_edge' })
+      plan.rejected.push({
+        segmentId: segment.id,
+        code: 'flight_line',
+        reason: `the flight line ${standOffM.toFixed(1)} m off the edge crosses the edge: the water is too narrow`
+      })
     } else {
       plan.tasks.push({
         id: segment.id.replace(/^seg_/, 'task_'),

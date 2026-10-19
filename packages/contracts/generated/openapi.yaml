@@ -2410,6 +2410,7 @@ components:
         energyWh:
           type: number
           minimum: 0
+          description: Flying the task and hovering at its stations, without transit
       required:
         - segmentId
         - flightLine
@@ -2501,6 +2502,7 @@ components:
       enum:
         - battery
         - geofence
+        - flight_line
         - weather_hold
         - separation_hold
         - stale_input
@@ -2575,6 +2577,7 @@ components:
         reserveWh:
           type: number
           minimum: 0
+          description: Energy left on landing; at least the drone profile's reserve
         rejected:
           type: array
           items:

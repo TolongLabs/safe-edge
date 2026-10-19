@@ -268,7 +268,7 @@ export const PatrolTask = named(
     flightLine: LineString,
     stations: z.array(CameraStation),
     priority: PriorityScore,
-    energyWh: z.number().nonnegative()
+    energyWh: z.number().nonnegative().describe('Flying the task and hovering at its stations, without transit')
   })
 )
 export type PatrolTask = z.infer<typeof PatrolTask>
@@ -296,9 +296,10 @@ export const PlanHold = named(
 )
 export type PlanHold = z.infer<typeof PlanHold>
 
+/** Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off. */
 export const RejectionCode = named(
   'RejectionCode',
-  z.enum(['battery', 'geofence', 'weather_hold', 'separation_hold', 'stale_input', 'outside_window'])
+  z.enum(['battery', 'geofence', 'flight_line', 'weather_hold', 'separation_hold', 'stale_input', 'outside_window'])
 )
 export type RejectionCode = z.infer<typeof RejectionCode>
 
@@ -323,7 +324,7 @@ export const PatrolPlan = named(
     waypoints: z.array(Waypoint),
     route: LineString,
     energyWh: z.number().nonnegative(),
-    reserveWh: z.number().nonnegative(),
+    reserveWh: z.number().nonnegative().describe("Energy left on landing; at least the drone profile's reserve"),
     rejected: z.array(z.object({ segmentId: SegmentId, code: RejectionCode, reason: z.string() })),
     approvedBy: UserId.nullable(),
     approvedAt: Timestamp.nullable(),
