@@ -3,7 +3,7 @@ import { afterAll } from 'bun:test'
 import type { Role } from '@safe-edge/contracts'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
-import { createApp } from '../src/app.ts'
+import { createApp, type ApiOptions } from '../src/app.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
 
@@ -20,12 +20,15 @@ const tokens = await devTokens(
 tokens.set('tok_agent_unscoped', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: [] })
 export type Token = `tok_${Role}` | 'tok_agent_unscoped'
 
-export function startApi({ heartbeatMs = 5_000 }: { heartbeatMs?: number } = {}) {
+export function startApi({
+  heartbeatMs = 5_000,
+  workOrders
+}: { heartbeatMs?: number; workOrders?: ApiOptions['workOrders'] } = {}) {
   let now = seed.asOf
   const clock = { now: () => now }
   const ids = counterIds()
   const core = createCore({ seed, clock, ids, planner })
-  const app = createApp({ core, clock, ids, tokens, heartbeatMs })
+  const app = createApp({ core, clock, ids, tokens, heartbeatMs, workOrders })
   const server = Bun.serve({ port: 0, fetch: app.fetch })
   afterAll(() => server.stop(true))
 

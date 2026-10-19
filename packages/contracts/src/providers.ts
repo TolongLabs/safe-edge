@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { DroneProviderKind, ImageQuality, Waypoint, type PatrolPlan } from './entities.ts'
+import { DroneProviderKind, ImageQuality, Waypoint, type Finding, type PatrolPlan } from './entities.ts'
 import {
   DockId,
   DroneProfileId,
@@ -13,10 +13,10 @@ import {
   provenance
 } from './primitives.ts'
 
-// The DroneProvider port (TRD "SDK and provider adapters"). It is vendor-neutral: the adapters in
-// `@safe-edge/providers` map it to the simulator, DJI Cloud API topics or MAVLink messages, and nothing here names a
-// vendor payload. These types never cross the REST API, so they are not registered with `named()` and stay out of the
-// generated OpenAPI and AsyncAPI documents.
+// The DroneProvider and WorkOrderProvider ports (TRD "SDK and provider adapters"). They are vendor-neutral: the
+// adapters in `@safe-edge/providers` map them to the simulator, DJI Cloud API topics, MAVLink messages or a work-order
+// system's REST API, and nothing here names a vendor payload. These types never cross the REST API, so they are not
+// registered with `named()` and stay out of the generated OpenAPI and AsyncAPI documents.
 
 const DeviceId = z.string().min(1)
 const RunId = z.string().min(1)
@@ -123,4 +123,25 @@ export interface DroneProvider {
   cancelPatrol(runId: string): Promise<void>
   /** Subscribes to the event stream. Returns the unsubscribe function. */
   onEvent(handler: (event: ProviderEvent) => void): () => void
+}
+
+/** A record a work-order system created for a finding. `id` is what core stores as the work order's `externalRef`. */
+export const ExternalRecordRef = z.object({
+  id: z.string().min(1),
+  /** Where the work-order system's API serves the record. */
+  url: z.string()
+})
+export type ExternalRecordRef = z.infer<typeof ExternalRecordRef>
+
+/** The work states an external record can be moved to. Each adapter maps them to its system's statuses. */
+export const ExternalWorkStatus = z.enum(['open', 'ready_for_review', 'rejected', 'closed'])
+export type ExternalWorkStatus = z.infer<typeof ExternalWorkStatus>
+
+/** How accepted findings reach a work-order or defect system, without core knowing which one. */
+export interface WorkOrderProvider {
+  /** Files the finding in the external system. */
+  createFinding(input: Finding): Promise<ExternalRecordRef>
+  /** Attaches evidence images to the external record. */
+  addEvidence(ref: ExternalRecordRef, evidence: EvidenceRef[]): Promise<void>
+  updateStatus(ref: ExternalRecordRef, status: ExternalWorkStatus): Promise<void>
 }

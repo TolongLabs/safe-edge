@@ -16,6 +16,7 @@
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
     "prepare": "husky",
+    "procore:smoke": "bun packages/providers/scripts/procore-smoke.ts",
     "test": "bun test --pass-with-no-tests",
     "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck"
   },

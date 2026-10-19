@@ -43,6 +43,7 @@ import {
   RouteClosure,
   RouteClosureRequest,
   SegmentList,
+  SetWorkOrderExternalRefRequest,
   StartPatrolRequest,
   SubmitWorkOrderRequest,
   TaskList,
@@ -283,7 +284,8 @@ export const operations = {
     path: '/candidates/{id}',
     summary: 'A candidate with its observations and baseline',
     handledBy: 'core',
-    roles: ['manager', 'engineer', 'reviewer'],
+    // The system reads it to send an accepted finding's photos to the work-order system.
+    roles: ['manager', 'engineer', 'reviewer', 'system'],
     agentScope: 'inspection.read',
     params: IdParam.candidate,
     response: CandidateEvidence,
@@ -473,6 +475,19 @@ export const operations = {
     agentScope: 'workorder.draft',
     params: IdParam.workOrder,
     body: UpdateWorkOrderRequest,
+    response: WorkOrder,
+    status: 200,
+    events: []
+  },
+  setWorkOrderExternalRef: {
+    method: 'post',
+    path: '/work-orders/{id}/external-ref',
+    summary: "Record the external work-order system's record for a work order, once (system only)",
+    handledBy: 'core',
+    roles: ['system'],
+    agentScope: null,
+    params: IdParam.workOrder,
+    body: SetWorkOrderExternalRefRequest,
     response: WorkOrder,
     status: 200,
     events: []
