@@ -14,7 +14,7 @@ Contents:
 The client launches the server itself, so there is no `dev` script. It needs two environment variables, and fails at startup without them:
 
 - `SAFE_EDGE_API_URL`: the API's `/v1` base, for example `http://localhost:3000/v1` from `bun run dev`.
-- `SAFE_EDGE_AGENT_TOKEN`: the agent's bearer token. Locally, that is `dev_agent` from `data/elmina/fixtures/dev-tokens.json`. At startup the server asks the API who the token acts as (`GET /v1/me`) and exits unless it is an agent, so a person's token can't pass the model's drafts off as that person's.
+- `SAFE_EDGE_AGENT_TOKEN`: the agent's bearer token, handed over through the environment only. Locally, `bun run dev:token usr_agent` prints it. On its first start, `bun run dev` generates a random token for every seeded user into `$XDG_STATE_HOME/safe-edge/dev-tokens.json` (`~/.local/state` by default), outside the repo and readable by your OS user only, and reuses them after that. At startup the server asks the API who the token acts as (`GET /v1/me`) and exits unless it is an agent, so a person's token can't pass the model's drafts off as that person's.
 
 Protocol messages use stdout, so the server logs only to stderr. A client still on the 2025 handshake gets the unsupported-protocol-version error.
 
@@ -23,17 +23,20 @@ Protocol messages use stdout, so the server logs only to stderr. A client still 
 Start the API (`bun run dev`). Then, from the repo root, either pass the config file for one session:
 
 ```sh
-SAFE_EDGE_AGENT_TOKEN=dev_agent claude --mcp-config apps/mcp/mcp.json --allowedTools "mcp__safe-edge__*"
+SAFE_EDGE_AGENT_TOKEN=$(bun run --silent dev:token usr_agent) claude --mcp-config apps/mcp/mcp.json \
+  --allowedTools "mcp__safe-edge__*"
 ```
 
 or add the server to your local Claude Code config:
 
 ```sh
-claude mcp add safe-edge -e SAFE_EDGE_API_URL=http://localhost:3000/v1 -e SAFE_EDGE_AGENT_TOKEN=dev_agent \
-  -- bun "$PWD/apps/mcp/src/index.ts"
+claude mcp add safe-edge -e SAFE_EDGE_API_URL=http://localhost:3000/v1 \
+  -e SAFE_EDGE_AGENT_TOKEN="$(bun run --silent dev:token usr_agent)" -- bun "$PWD/apps/mcp/src/index.ts"
 ```
 
-`apps/mcp/mcp.json` reads `SAFE_EDGE_API_URL` (default `http://localhost:3000/v1`) and `SAFE_EDGE_AGENT_TOKEN` from your environment. The token has no default, so the server never acts with a token you did not choose: without it, Claude Code refuses the config. To stop a session reaching the API another way (for example by reading another dev token from the fixture file), turn off the built-in tools with `--tools ""`, as the [S5 evidence run](/docs/evidence/s5-mcp-claude-code.md) did.
+`apps/mcp/mcp.json` reads `SAFE_EDGE_API_URL` (default `http://localhost:3000/v1`) and `SAFE_EDGE_AGENT_TOKEN` from your environment. The token has no default, so the server never acts with a token you did not choose: without it, Claude Code refuses the config.
+
+No person's token is in the repo, so a session whose file tools stay in the repo can't act as a person; the [S5 evidence run](/docs/evidence/s5-mcp-claude-code.md) had them on. Outside the working directory, Claude Code's file tools follow your permission mode (Manual asks, `dontAsk` refuses, `bypassPermissions` reads), and `permissions.blockReadsOutsideWorkingDirectories` makes them refuse in every mode. A shell command can read whatever your OS user can, the token file included.
 
 ## What it serves
 

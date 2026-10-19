@@ -22,12 +22,6 @@ tokens.set('tok_agent_unscoped', { type: 'agent', id: 'usr_agent', role: 'agent'
 tokens.set('tok_agent_read_only', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: ['edge.read'] })
 export type Token = `tok_${Role}` | 'tok_agent_unscoped' | 'tok_agent_read_only'
 
-/** The committed dev tokens (`dev_manager`, `dev_agent`, …), loaded from their file as `bun run dev` loads them. */
-export const fixtureDevTokens = await devTokens(
-  { SAFE_EDGE_DEV_TOKENS_FILE: join(repoRoot, 'data/elmina/fixtures/dev-tokens.json') },
-  seed.users
-)
-
 /** One request as the server saw it: who sent it, and what came back (JSON bodies only; streams are not read). */
 export interface Exchange {
   method: string

@@ -7,6 +7,7 @@
 import { createSafeEdgeClient, elminaSeed } from '@safe-edge/sdk'
 import { join } from 'node:path'
 import * as z from 'zod'
+import { ensureDevTokens } from '../../../apps/api/src/dev-tokens.ts'
 import { PROCORE_DEVELOPER_SANDBOX, readProcoreEnv } from '../src/index.ts'
 
 if (process.env.CI) throw new Error('procore:e2e calls the real Procore sandbox, so it never runs in CI')
@@ -63,12 +64,13 @@ try {
     return response?.ok ? response : undefined
   })
 
-  // S1 by phone, as the people do it, each with their dev token.
-  const as = (token: string) => createSafeEdgeClient({ transport: 'http', baseUrl, token })
-  const crew = as('dev_crew')
-  const provider = as('dev_drone_sim')
-  const manager = as('dev_manager')
-  const engineer = as('dev_engineer')
+  // S1 by phone, as the people do it, each with this machine's dev token, the ones `bun run dev` serves.
+  const tokens = await ensureDevTokens(process.env)
+  const as = (userId: string) => createSafeEdgeClient({ transport: 'http', baseUrl, token: tokens.tokenOf(userId) })
+  const crew = as('usr_crew')
+  const provider = as('usr_drone_sim')
+  const manager = as('usr_manager')
+  const engineer = as('usr_engineer')
   const S1 = elminaSeed.story.s1
   const viewpoint = elminaSeed.segments
     .find((s) => s.id === S1.segmentId)!
