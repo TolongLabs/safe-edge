@@ -215,6 +215,7 @@ export interface DroneProvider {
   getStatus(deviceId: string): Promise<DroneStatus>
   schedulePatrol(plan: PatrolPlan): Promise<PatrolRun>
   dispatchPatrol(runId: string, approval: HumanApproval): Promise<void>
+  updatePatrol(runId: string, plan: PatrolPlan, approval: HumanApproval): Promise<void>
   cancelPatrol(runId: string): Promise<void>
   onEvent(handler: (event: ProviderEvent) => void): () => void
 }
@@ -231,12 +232,12 @@ export interface EvidenceStore {
 }
 ```
 
-| Adapter             | Hackathon status | Maps to                                                                                                                                                                                   |
-| ------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `drone-sim`         | Real             | The scene engine's flight model and scenario events                                                                                                                                       |
-| `drone-dji-cloud`   | Typed stub       | DJI Cloud API: dock binding on `/requests`, wayline tasks (`flighttask_prepare`, `flighttask_execute`, method names snippet-only, verify first), `live_start_push`, media upload callback |
-| `drone-mavlink`     | Typed stub       | MAVLink mission upload (`MISSION_COUNT`, `MISSION_REQUEST_INT`, `MISSION_ITEM_INT`, `MISSION_ACK`) through a small server-side bridge; PX4 SITL only if a teammate already runs it        |
-| `workorder-procore` | P2 sandbox       | Procore Observations: `POST /rest/v1.0/observations/items` plus the upload flow. API-created observations do not notify assignees automatically.                                          |
+| Adapter             | Hackathon status | Maps to                                                                                                                                                                                                                            |
+| ------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `drone-sim`         | Real             | The scene engine's flight model and scenario events. Waits in flight at unreleased separation holds; follows approved re-plans in flight. Lives in its host process: an API restart completes its in-flight patrols as interrupted |
+| `drone-dji-cloud`   | Typed stub       | DJI Cloud API: dock binding on `/requests`, wayline tasks (`flighttask_prepare`, `flighttask_execute`, method names snippet-only, verify first), `live_start_push`, media upload callback                                          |
+| `drone-mavlink`     | Typed stub       | MAVLink mission upload (`MISSION_COUNT`, `MISSION_REQUEST_INT`, `MISSION_ITEM_INT`, `MISSION_ACK`) through a small server-side bridge; PX4 SITL only if a teammate already runs it                                                 |
+| `workorder-procore` | P2 sandbox       | Procore Observations: `POST /rest/v1.0/observations/items` plus the upload flow. API-created observations do not notify assignees automatically.                                                                                   |
 
 ## Patrol planner
 

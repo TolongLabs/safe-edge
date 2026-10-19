@@ -80,8 +80,9 @@ export type PatrolRun = z.infer<typeof PatrolRun>
 const eventBase = { runId: RunId, deviceId: DeviceId, at: Timestamp, simulated: z.boolean() }
 
 /**
- * The provider event stream, in time order. Waypoint indexes are the plan's `waypoints` indexes: `takeoff` leaves
- * waypoint 0, `waypoint` reaches 1 to n − 2, and `landed` reaches n − 1 (or the dock, after a cancel).
+ * The provider event stream, in time order. Waypoint indexes are the `waypoints` indexes of the plan the drone flies
+ * (after `updatePatrol` switches it to a re-plan, the re-plan's): `takeoff` leaves waypoint 0, `waypoint` reaches 1 to
+ * n − 2, and `landed` reaches n − 1 (or the dock, after a cancel or a hold's wait ran out).
  */
 export const ProviderEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('takeoff'), ...eventBase, planId: PatrolPlanId, pose: Pose }),
