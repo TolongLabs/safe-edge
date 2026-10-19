@@ -220,6 +220,36 @@ paths:
       x-safe-edge-agent-scope: patrol.propose
       x-safe-edge-events:
         - edge.patrol.planned.v1
+  /patrol-plans/{id}:
+    get:
+      operationId: getPatrolPlan
+      summary: Read a patrol plan
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - patrol-plans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^plan_
+      responses:
+        "200":
+          description: Read a patrol plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatrolPlan"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /patrol-plans/{id}/approve:
     post:
       operationId: approvePatrolPlan
@@ -344,6 +374,36 @@ paths:
         - pilot
       x-safe-edge-events:
         - edge.patrol.started.v1
+  /patrols/{id}:
+    get:
+      operationId: getPatrol
+      summary: Read a patrol
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - patrols
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^ptl_
+      responses:
+        "200":
+          description: Read a patrol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patrol"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /patrols/{id}/complete:
     post:
       operationId: completePatrol

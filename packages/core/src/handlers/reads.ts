@@ -10,7 +10,9 @@ type ReadOperation =
   | 'listDocks'
   | 'listDroneProfiles'
   | 'listPatrolPlans'
+  | 'getPatrolPlan'
   | 'listPatrols'
+  | 'getPatrol'
   | 'listCandidates'
   | 'getCandidate'
   | 'listFindings'
@@ -44,7 +46,15 @@ export const reads: Handlers<ReadOperation> = {
   listDocks: (tx) => ok(tx.all('docks')),
   listDroneProfiles: (tx) => ok(tx.all('droneProfiles')),
   listPatrolPlans: (tx) => ok(tx.all('patrolPlans')),
+  getPatrolPlan: (tx, { params }) => {
+    const plan = tx.get('patrolPlans', params.id)
+    return plan ? ok(plan) : tx.notFound(`No patrol plan ${params.id}`)
+  },
   listPatrols: (tx) => ok(tx.all('patrols')),
+  getPatrol: (tx, { params }) => {
+    const patrol = tx.get('patrols', params.id)
+    return patrol ? ok(patrol) : tx.notFound(`No patrol ${params.id}`)
+  },
   listCandidates: (tx, { query }) =>
     ok(tx.all('candidates').filter((c) => matches(c.status, query.status) && matches(c.segmentId, query.segmentId))),
   getCandidate: (tx, { params }) => {

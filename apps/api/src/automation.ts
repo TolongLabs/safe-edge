@@ -96,7 +96,7 @@ export function startAutomation({
     onFailure: (error) => recordAutomationFailure(core, 'drone', error)
   })
   const fly = async (patrolId: string) => {
-    const patrol = read(core.dispatch('listPatrols', AUTOMATION_ACTOR, {})).find((p) => p.id === patrolId)!
+    const patrol = read(core.dispatch('getPatrol', AUTOMATION_ACTOR, { params: { id: patrolId } }))
     if (patrol.provider !== 'sim')
       throw new Error(`This API flies only drone-sim; ${patrol.id} names ${patrol.provider}`)
     await drone.fly(patrol)

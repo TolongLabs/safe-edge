@@ -166,6 +166,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/patrol-plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a patrol plan
+         * @description Roles: any. Agents need scope `edge.read`.
+         */
+        get: operations["getPatrolPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/patrol-plans/{id}/approve": {
         parameters: {
             query?: never;
@@ -224,6 +244,26 @@ export interface paths {
          * @description Roles: pilot. Agents are refused. Emits edge.patrol.started.v1.
          */
         post: operations["startPatrol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patrols/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a patrol
+         * @description Roles: any. Agents need scope `edge.read`.
+         */
+        get: operations["getPatrol"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2387,6 +2427,31 @@ export interface operations {
             403: components["responses"]["Denied"];
         };
     };
+    getPatrolPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read a patrol plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolPlan"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     approvePatrolPlan: {
         parameters: {
             query?: never;
@@ -2494,6 +2559,31 @@ export interface operations {
             400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
+        };
+    };
+    getPatrol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read a patrol */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Patrol"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
         };
     };
     completePatrol: {

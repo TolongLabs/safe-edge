@@ -70,6 +70,10 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
     const { patrol, plan } = flight
     if (event.type === 'waypoint' && event.kind === 'station') {
       const stop = plan.tasks.findIndex((t) => t.segmentId === event.segmentId)
+      if (stop < 0) {
+        const message = `${plan.id} has no station on ${event.segmentId}, which the drone reported reaching at waypoint ${event.index}`
+        throw new Error(message)
+      }
       flight.committed = Math.max(flight.committed, stop + 1)
     }
     if (event.type === 'observation') {
@@ -122,8 +126,7 @@ export function bridgeDrone({ provider, dispatch, actor, publish, onFailure }: D
 
   return {
     async fly(patrol) {
-      const plan = call('listPatrolPlans', {}).find((p) => p.id === patrol.planId)
-      if (plan === undefined) throw new Error(`No patrol plan ${patrol.planId}`)
+      const plan = call('getPatrolPlan', { params: { id: patrol.planId } })
       if (plan.approvedBy === null || plan.approvedAt === null) throw new Error(`${plan.id} has no pilot approval`)
       const lengthM = new Map(
         plan.tasks.map((t) => [t.segmentId, call('getSegment', { params: { id: t.segmentId } }).segment.lengthM])

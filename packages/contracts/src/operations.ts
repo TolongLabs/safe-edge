@@ -208,6 +208,18 @@ export const operations = {
     status: 200,
     events: []
   },
+  getPatrolPlan: {
+    method: 'get',
+    path: '/patrol-plans/{id}',
+    summary: 'Read a patrol plan',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    params: IdParam.patrolPlan,
+    response: PatrolPlan,
+    status: 200,
+    events: []
+  },
   createPatrolPlan: {
     method: 'post',
     path: '/patrol-plans',
@@ -252,6 +264,18 @@ export const operations = {
     roles: 'any',
     agentScope: 'edge.read',
     response: PatrolList,
+    status: 200,
+    events: []
+  },
+  getPatrol: {
+    method: 'get',
+    path: '/patrols/{id}',
+    summary: 'Read a patrol',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    params: IdParam.patrol,
+    response: Patrol,
     status: 200,
     events: []
   },

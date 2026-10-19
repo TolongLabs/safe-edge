@@ -1,7 +1,7 @@
 // PLAN-7 over HTTP, on the seeded API: plans keep 50 m from the third parties the request reports and from the seed's
 // S1 path crowd, and the separation holds they get wait for the pilot.
 import { describe, expect, test } from 'bun:test'
-import { PatrolPlan, type CreatePatrolPlanRequest, type ReportedThirdParty } from '@safe-edge/contracts'
+import { Patrol, PatrolPlan, type CreatePatrolPlanRequest, type ReportedThirdParty } from '@safe-edge/contracts'
 import { S1, seed, startApi } from './support.ts'
 
 const NOT_BEFORE = '2026-10-24T23:30:00.000Z'
@@ -139,4 +139,29 @@ describe('the take-off and landing hold on the dock', () => {
     expect(released.holds).toEqual([{ ...plan.holds[0]!, releasedBy: 'usr_pilot', releasedAt: plan.window.start }])
     expect(await json(await start(), 201)).toMatchObject({ planId: plan.id, status: 'in_flight' })
   })
+})
+
+test('a plan and a patrol are read by their IDs; an unknown one is 404', async () => {
+  const api = startApi()
+  const read = (path: string) => api.request('get', path, { token: 'tok_manager' })
+  const plan = PatrolPlan.parse(
+    await (await api.request('post', '/patrol-plans', { token: 'tok_manager', body: request([FAR_BANK]) })).json()
+  )
+  await api.request('post', `/patrol-plans/${plan.id}/approve`, { token: 'tok_pilot' })
+  api.setNow(plan.window.start)
+  const started = await api.request('post', '/patrols', {
+    token: 'tok_pilot',
+    body: { planId: plan.id, provider: 'mavlink', droneId: 'drn_assumed' }
+  })
+  const patrol = Patrol.parse(await started.json())
+
+  expect(PatrolPlan.parse(await (await read(`/patrol-plans/${plan.id}`)).json())).toMatchObject({
+    id: plan.id,
+    status: 'approved'
+  })
+  expect(Patrol.parse(await (await read(`/patrols/${patrol.id}`)).json())).toEqual(patrol)
+  for (const path of ['/patrol-plans/plan_99', '/patrols/ptl_99']) {
+    const missing = await read(path)
+    expect({ path, status: missing.status }).toEqual({ path, status: 404 })
+  }
 })

@@ -150,3 +150,32 @@ describe('the drone bridge counts stations, not frames', () => {
     )
   })
 })
+
+describe('the drone bridge fails loudly on a report that does not fit the plan', () => {
+  test('a station on a segment the plan does not fly, or a frame at a waypoint that is not its station, is a failure', async () => {
+    const { plan, emit, frame, landed, coverage, failures } = await flying()
+    const station = plan.waypoints.findIndex((w) => w.kind === 'station')
+    const elsewhere = 'seg_866518980_9'
+    expect(plan.tasks.some((t) => t.segmentId === elsewhere)).toBe(false)
+    const waypoint = plan.waypoints[station]!
+    emit({
+      type: 'waypoint',
+      runId: 'run_1',
+      deviceId: 'scripted-1',
+      at: plan.window.start,
+      simulated: true,
+      index: station,
+      kind: 'station',
+      segmentId: elsewhere,
+      pose: { lon: waypoint.lon, lat: waypoint.lat, altM: waypoint.altM, headingDeg: 0, pitchDeg: 0 }
+    })
+    emit({ ...frame(station), segmentId: elsewhere } as ProviderEvent)
+    expect(failures.map((error) => (error as Error).message)).toEqual([
+      `${plan.id} has no station on ${elsewhere}, which the drone reported reaching at waypoint ${station}`,
+      `${plan.id} has no station on ${elsewhere} at waypoint ${station}`
+    ])
+    // Nothing it reported counted: landing now leaves every segment unknown.
+    emit(landed)
+    expect(coverage().every((c) => c.inspectedM === 0)).toBe(true)
+  })
+})
