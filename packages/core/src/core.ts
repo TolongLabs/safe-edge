@@ -29,11 +29,17 @@ export interface Clock {
   now(): string
 }
 
+/** Writes a transport makes that no operation names: failed webhook deliveries, failed automation steps. */
+const TRANSPORT_ACTIONS = ['deliverWebhook', 'runAutomation'] as const
+type TransportAction = (typeof TRANSPORT_ACTIONS)[number]
+const isTransportAction = (action: StoredAction): action is TransportAction =>
+  (TRANSPORT_ACTIONS as readonly string[]).includes(action)
+
 /**
  * What a transport stores outside core: the API's operations' records, its own failed webhook deliveries, and failed
  * automation steps (`recordAutomationFailure`).
  */
-export type StoredAction = OperationId | 'deliverWebhook' | 'runAutomation'
+export type StoredAction = OperationId | TransportAction
 
 export interface IdGenerator {
   next(prefix: IdPrefix): string
@@ -122,7 +128,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     record: { id: string },
     before: { id: string } | null = null
   ) => {
-    const handledBy = action === 'deliverWebhook' || action === 'runAutomation' ? 'api' : operations[action].handledBy
+    const handledBy = isTransportAction(action) ? 'api' : operations[action].handledBy
     if (handledBy !== 'api') throw new Error(`${action} is handled by ${handledBy}, whose writes core audits itself`)
     openTx(Actor.parse(actor), clock.now()).commitStored(action, record, before)
   }
