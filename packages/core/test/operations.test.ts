@@ -67,6 +67,10 @@ describe('the operations table in core', () => {
     h.call('createWorkOrder', 'usr_agent', {
       body: { findingId: played.findingId, remedyId: null, notes: 'Follow-up' }
     })
+    h.call('setWorkOrderExternalRef', 'usr_system', {
+      params: { id: played.workOrderId },
+      body: { externalRef: '9378' }
+    })
     const notice = h.call('draftNotice', 'usr_manager', {
       body: { kind: 'monthly_report', subjectId: null, title: 'October report', body: 'One finding closed' }
     }).data

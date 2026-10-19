@@ -471,7 +471,7 @@ paths:
     get:
       operationId: getCandidate
       summary: A candidate with its observations and baseline
-      description: "Roles: manager, engineer, reviewer. Agents need scope `inspection.read`."
+      description: "Roles: manager, engineer, reviewer, system. Agents need scope `inspection.read`."
       tags:
         - candidates
       parameters:
@@ -498,6 +498,7 @@ paths:
         - manager
         - engineer
         - reviewer
+        - system
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
   /candidates/{id}/decision:
@@ -993,6 +994,45 @@ paths:
       x-safe-edge-roles:
         - manager
       x-safe-edge-agent-scope: workorder.draft
+      x-safe-edge-events: []
+  /work-orders/{id}/external-ref:
+    post:
+      operationId: setWorkOrderExternalRef
+      summary: Record the external work-order system's record for a work order, once (system only)
+      description: "Roles: system. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetWorkOrderExternalRefRequest"
+      responses:
+        "200":
+          description: Record the external work-order system's record for a work order, once (system only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
       x-safe-edge-events: []
   /work-orders/{id}/submit:
     post:
@@ -3911,6 +3951,15 @@ components:
             - type: "null"
         notes:
           type: string
+      additionalProperties: false
+    SetWorkOrderExternalRefRequest:
+      type: object
+      properties:
+        externalRef:
+          type: string
+          minLength: 1
+      required:
+        - externalRef
       additionalProperties: false
     SubmitWorkOrderRequest:
       type: object
