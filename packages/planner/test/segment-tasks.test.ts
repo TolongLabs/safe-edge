@@ -75,7 +75,7 @@ describe('camera stations for the selected lake and retention-pond segments', as
   const selected = splitEdges({ ...elmina, maxBendDeg: MAX_BEND_DEG, pointObstructionToleranceM: 3 })
   // An assumed camera for the test, not a chosen aircraft.
   const camera: CameraProfile = { hfovDeg: 70, vfovDeg: 55, imageWidthPx: 4000, imageHeightPx: 3000, maxZoom: 1 }
-  const capture = { camera, rangeM: 15, forwardOverlap: 0.6 }
+  const capture = { camera, rangeM: 15, forwardOverlap: 0.6, viewpoints: [] }
   const plan = planStations({ edges: elmina.edges, segments: selected, ...capture, altitudeM: 9 })
   const STAND_OFF_M = 12 // sqrt(15² − 9²)
   const SPACING_M = 8.4 // 2 × 15 × tan(35°) = 21.01 m footprint along the edge, × (1 − 0.6)

@@ -126,7 +126,9 @@ export async function buildSeed(): Promise<Seed> {
     camera: droneProfile.camera,
     rangeM: RANGE_M,
     forwardOverlap: FORWARD_OVERLAP,
-    altitudeM: ALTITUDE_M
+    altitudeM: ALTITUDE_M,
+    // The viewpoints are made from these stations, below.
+    viewpoints: []
   })
   const stations = tasks[0]!.stations
   const key = `${story.osmId}_${story.index}`
