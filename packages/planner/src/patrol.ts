@@ -159,9 +159,9 @@ interface Insertion extends Stop {
  * (see `flightWindow`). Greedy insertion adds, at its cheapest place in the route, the task with the highest priority
  * per added watt-hour, while the whole route, return included, stays within the usable battery minus the reserve and
  * lands before the window closes. Geofences are hard limits. The whole flight keeps CAR 2016 regulation 143's distances
- * from third parties: stations stand further off with zoom or wait for a clear pass (see `keepSeparation`); a stop whose
- * flight line or transit in passes people, vessels or vehicles waits once for them, within the budget; the dock holds
- * take-off while its climb, descent or transits are not clear (see `dockHold`); and no leg flies within 50 m of a
+ * from third parties: stations stand further off with zoom or wait for a clear pass (see `keepSeparation`); a stop
+ * whose flight line or transit in passes people, vessels or vehicles waits once for them, within the budget; the dock
+ * holds take-off while its climb, descent or transits are not clear (see `dockHold`); and no leg flies within 50 m of a
  * structure or 150 m of an assembly of more than 1,000 persons. The plan comes back `proposed`: only a pilot's approval
  * lets it fly.
  */
@@ -225,8 +225,8 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   // Without an authorisation, a designated area keeps the aircraft 150 m away, as a no-fly zone would.
   const keptFrom = [...noFly, ...(input.authorisation ? [] : designated)]
   // People, vessels and vehicles move away, so a leg near them waits for the pilot or observer to see it clear. A
-  // structure stays put, and the plan keeps clear of an assembly rather than wait for it to break up: no leg flies within
-  // 50 m of a structure or 150 m of an assembly, and one that close to the dock keeps every patrol on the ground.
+  // structure stays put, and the plan keeps clear of an assembly rather than wait for it to break up: no leg flies
+  // within 50 m of a structure or 150 m of an assembly, and one that close to the dock keeps every patrol grounded.
   const movable = input.thirdParties.filter((p) => p.kind !== 'structure')
   const structures = input.thirdParties.filter((p) => p.kind === 'structure')
   const assemblies = input.thirdParties.filter(isAssembly)
