@@ -18,7 +18,10 @@ import {
   type ScenarioPlayer
 } from '@safe-edge/sdk'
 import { useEffect, useRef, useState } from 'react'
+import { button } from './button.ts'
 import { loadPlanner } from './planner.ts'
+import { Recorder } from './Recorder.tsx'
+import { recordingShot, steadyFrames } from './recording.ts'
 
 const SPEEDS = [1, 8, 30] as const
 /** The simulated aircraft every scenario flies (`hostDroneSim` names them `sim-1`, …). */
@@ -145,11 +148,14 @@ function flightView(plan: PlanResult) {
  */
 export function ScenarioPanel({
   scene,
-  onPasses
+  onPasses,
+  recording
 }: {
   scene: ElminaScene
   /** The demo's passes after every step, for the screens beside the scene. */
   onPasses: (passes: Array<{ segmentId: string; state: PassState; validTo: string | null }>) => void
+  /** Recording mode: a fixed camera path, one steady step a frame, and a recorder in place of the playback controls. */
+  recording: boolean
 }) {
   const [id, setId] = useState<Scenario['id']>(() => {
     const asked = new URLSearchParams(location.search).get('scenario')
@@ -178,7 +184,15 @@ export function ScenarioPanel({
     shown.current = { planId: null, now: '', flying: false, markers: '', played: -1 }
     setFlight(null)
     loadPlanner()
-      .then((planner) => createScenarioPlayer({ scenarios: elminaScenarios, id, planner, speed: 8 }))
+      .then((planner) =>
+        createScenarioPlayer({
+          scenarios: elminaScenarios,
+          id,
+          planner,
+          speed: 8,
+          ...(recording && { frames: steadyFrames() })
+        })
+      )
       .then((created) => {
         if (cancelled) return
         // Each update reads the demo after the seek that caused it; a newer update supersedes an older one.
@@ -216,7 +230,8 @@ export function ScenarioPanel({
           const placed = status ? scene.placeDrone(status) : null
           // The camera picks up the drone when it leaves the dock during playback.
           const flying = status?.state === 'in_flight'
-          if (flying && !shown.current.flying && created.playing) scene.followDrone(true)
+          if (recording) scene.setCameraShot(recordingShot(created.scenario, created.now, created.airborne))
+          else if (flying && !shown.current.flying && created.playing) scene.followDrone(true)
           shown.current.flying = flying
           setFlight(placed)
           setVersion((v) => v + 1)
@@ -229,14 +244,17 @@ export function ScenarioPanel({
     return () => {
       cancelled = true
       unsubscribe()
+      if (recording) scene.setCameraShot(null)
     }
-  }, [id, scene, onPasses])
+  }, [id, scene, onPasses, recording])
 
   const card: React.CSSProperties = {
     position: 'absolute',
     right: 12,
     bottom: 12,
     width: 'min(380px, calc(100% - 24px))',
+    maxHeight: 'calc(100% - 24px)',
+    overflowY: 'auto',
     padding: 16,
     borderRadius: 12,
     background: '#fbfcfb',
@@ -360,52 +378,59 @@ export function ScenarioPanel({
         ))}
       </ol>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          disabled={!player}
-          onClick={player?.playing ? () => player.pause() : play}
-          style={button(true)}
-        >
-          {player?.playing ? 'Pause' : now >= end ? 'Play again' : now > start ? 'Resume' : 'Play'}
-        </button>
-        <button type="button" disabled={!player} onClick={() => void player?.reset()} style={button(false)}>
-          Reset
-        </button>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          Speed
-          <select
-            value={player?.speed ?? 8}
+      {recording && player && <Recorder key={id} player={player} scenario={scenario} />}
+      {!recording && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            type="button"
             disabled={!player}
-            onChange={(event) => player?.setSpeed(Number(event.target.value))}
-            style={{ font: 'inherit', minHeight: 32 }}
+            onClick={player?.playing ? () => player.pause() : play}
+            style={button(true)}
           >
-            {SPEEDS.map((s) => (
-              <option key={s} value={s}>
-                {s}×
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      <input
-        type="range"
-        aria-label="Scenario time"
-        min={start}
-        max={end}
-        step={1000}
-        value={scrubTo ?? now}
-        disabled={!player}
-        onChange={(event) => {
-          if (!player) return
-          // The slider holds the scrubbed time until the seek lands, so a re-render meanwhile cannot snap it back.
-          const to = Number(event.target.value)
-          setScrubTo(to)
-          player.pause()
-          void player.seek(new Date(to).toISOString()).finally(() => setScrubTo((held) => (held === to ? null : held)))
-        }}
-        style={{ width: '100%', accentColor: '#17302a', height: 24 }}
-      />
+            {player?.playing ? 'Pause' : now >= end ? 'Play again' : now > start ? 'Resume' : 'Play'}
+          </button>
+          <button type="button" disabled={!player} onClick={() => void player?.reset()} style={button(false)}>
+            Reset
+          </button>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            Speed
+            <select
+              value={player?.speed ?? 8}
+              disabled={!player}
+              onChange={(event) => player?.setSpeed(Number(event.target.value))}
+              style={{ font: 'inherit', minHeight: 32 }}
+            >
+              {SPEEDS.map((s) => (
+                <option key={s} value={s}>
+                  {s}×
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+      {!recording && (
+        <input
+          type="range"
+          aria-label="Scenario time"
+          min={start}
+          max={end}
+          step={1000}
+          value={scrubTo ?? now}
+          disabled={!player}
+          onChange={(event) => {
+            if (!player) return
+            // The slider holds the scrubbed time until the seek lands, so a re-render meanwhile cannot snap it back.
+            const to = Number(event.target.value)
+            setScrubTo(to)
+            player.pause()
+            void player
+              .seek(new Date(to).toISOString())
+              .finally(() => setScrubTo((held) => (held === to ? null : held)))
+          }}
+          style={{ width: '100%', accentColor: '#17302a', height: 24 }}
+        />
+      )}
       <p style={{ margin: 0, fontSize: 12, lineHeight: '16px', color: '#5d6b66' }}>
         The demo’s own core plays each step on a fixed-step clock. Holds on the ground pass at two hours a second. The
         drone is drawn {DRONE_DRAWN_SCALE}× life size; the dock’s roof is an assumed site.
@@ -413,16 +438,3 @@ export function ScenarioPanel({
     </section>
   )
 }
-
-const button = (primary: boolean) =>
-  ({
-    minHeight: 32,
-    padding: '0 14px',
-    borderRadius: 8,
-    border: primary ? 'none' : '1.5px solid #17302a',
-    background: primary ? '#17302a' : '#fbfcfb',
-    color: primary ? '#ffffff' : '#17302a',
-    font: 'inherit',
-    fontWeight: 600,
-    cursor: 'pointer'
-  }) as const

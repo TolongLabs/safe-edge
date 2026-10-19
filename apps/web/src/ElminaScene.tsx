@@ -17,6 +17,8 @@ import { ScenarioPanel } from './ScenarioPanel.tsx'
 import { SegmentCard } from './SegmentCard.tsx'
 
 const layerUrls = { water: waterUrl, parks: parksUrl, paths: pathsUrl, buildings: buildingsUrl }
+/** `?record` opens recording mode: the camera follows a fixed path and the user's camera controls are off. */
+const recording = new URLSearchParams(location.search).has('record')
 
 async function loadLayers(): Promise<ElminaLayers> {
   const entries = await Promise.all(
@@ -139,7 +141,7 @@ export function ElminaScene() {
     <div ref={container} style={{ position: 'relative', width: '100%', height: '100dvh' }} data-testid="elmina-scene">
       {status === 'loading' && <p>Loading the Elmina map…</p>}
       {status instanceof Error && <p role="alert">The Elmina map did not load: {status.message}</p>}
-      {status === 'ready' && (
+      {status === 'ready' && !recording && (
         <button type="button" onClick={toggle} style={{ position: 'absolute', top: 8, left: 8 }}>
           {mode === 'orbit' ? 'Orbit controls' : 'Map controls'}: switch to {mode === 'orbit' ? 'map' : 'orbit'}
         </button>
@@ -168,7 +170,7 @@ export function ElminaScene() {
         </p>
       )}
       {status === 'ready' && <Legend />}
-      {status === 'ready' && ready && <ScenarioPanel scene={ready} onPasses={onPasses} />}
+      {status === 'ready' && ready && <ScenarioPanel scene={ready} onPasses={onPasses} recording={recording} />}
       {selectedSegment && (
         <SegmentCard
           segment={selectedSegment}
