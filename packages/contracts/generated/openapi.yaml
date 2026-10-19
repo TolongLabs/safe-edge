@@ -1909,7 +1909,7 @@ paths:
   /scenario/clock:
     post:
       operationId: setScenarioClock
-      summary: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+      summary: "Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered"
       description: "Roles: system. Agents are refused."
       tags:
         - scenario
@@ -1923,7 +1923,7 @@ paths:
               $ref: "#/components/schemas/SetScenarioClockRequest"
       responses:
         "200":
-          description: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+          description: "Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered"
           content:
             application/json:
               schema:
@@ -2214,6 +2214,7 @@ components:
         - separation_hold
         - outside_window
         - invalid_coverage
+        - clock_backwards
     Denial:
       type: object
       properties:

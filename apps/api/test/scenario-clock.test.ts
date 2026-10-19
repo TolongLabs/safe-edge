@@ -2,6 +2,7 @@
 // with SAFE_EDGE_CLOCK=scenario, the API's clock is the one the scenario player sets before each event, through the
 // audited setScenarioClock operation. Production refuses it.
 import { afterAll, expect, test } from 'bun:test'
+import { AuditEvent } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { mkdtemp, rm } from 'node:fs/promises'
@@ -10,7 +11,7 @@ import { join } from 'node:path'
 import { testEnv } from '../../../test/spawn.ts'
 import { ensureDevTokens } from '../src/dev-tokens.ts'
 import { S6, play, scenarioClockPlayer } from './s6.ts'
-import { seed } from './support.ts'
+import { seed, startApi } from './support.ts'
 
 const apiDir = join(import.meta.dir, '..')
 
@@ -143,4 +144,30 @@ test('production refuses the scenario clock: it will not start with one, and its
   })
   // Nothing moved, so the audit chain is still empty.
   expect(await as('tok_manager').listAudit({})).toEqual([])
+})
+
+test('the scenario clock moves forward only: an earlier time is refused, audited, and the clock stays put', async () => {
+  const api = startApi()
+  const set = (now: string) => api.request('post', '/scenario/clock', { token: 'tok_system', body: { now } })
+  const later = '2026-10-21T00:00:00.000Z'
+  const earlier = '2026-10-20T23:59:59.000Z'
+  expect((await set(later)).status).toBe(200)
+
+  const back = await set(earlier)
+  expect(back.status).toBe(403)
+  expect(await back.json()).toEqual({
+    ok: false,
+    rule: 'clock_backwards',
+    message: `The scenario clock is at ${later}; it moves forward only, so it cannot go back to ${earlier}`
+  })
+  // Setting the time it already shows is not a move back.
+  expect((await set(later)).status).toBe(200)
+
+  const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_gm' })).json())
+  expect(audit.map((e) => [e.action, e.decision, e.rule, e.subjectId, e.at])).toEqual([
+    ['setScenarioClock', 'allowed', null, 'clock', later],
+    ['setScenarioClock', 'denied', 'clock_backwards', 'setScenarioClock', later],
+    ['setScenarioClock', 'allowed', null, 'clock', later]
+  ])
+  expect(verifyAuditChain(audit)).toMatchObject({ ok: true })
 })

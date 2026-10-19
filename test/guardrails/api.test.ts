@@ -345,6 +345,9 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     expect({ role, ...refused }).toEqual({ role, ...denied(role === 'agent' ? 'agents_draft_only' : 'role_forbidden') })
   }
   await as('dev_pilot', 'post', release)
+  // The plan's window opened before S3's re-test, and the scenario clock moves forward only (clock_backwards): the
+  // harness puts it back unaudited, and the system sets it to the time it shows through the operation.
+  api.setNow(plan.window.start)
   await as('dev_system', 'post', '/scenario/clock', { now: plan.window.start })
   const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
   await as('dev_drone_sim', 'post', `/patrols/${patrol.id}/complete`, {

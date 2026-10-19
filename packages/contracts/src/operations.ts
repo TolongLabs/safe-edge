@@ -867,7 +867,8 @@ export const operations = {
     path: '/scenario/clock',
     summary:
       'Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs ' +
-      'started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)',
+      'started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). ' +
+      'The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered',
     handledBy: 'api',
     roles: ['system'],
     agentScope: null,

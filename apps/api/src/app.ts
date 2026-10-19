@@ -110,6 +110,7 @@ export function createApp({
     dispatch: journal.command('dispatch', unjournaled.dispatch) as Dispatch,
     checkAccess: journal.command('checkAccess', unjournaled.checkAccess),
     recordStored: journal.command('recordStored', unjournaled.recordStored),
+    refuse: journal.command('refuse', unjournaled.refuse),
     tick: journal.command('tick', unjournaled.tick)
   }
   const hub = createEventHub({
@@ -324,6 +325,12 @@ export function createApp({
     setScenarioClock: (c, { body }) => {
       if (baseClock.set === undefined) {
         return fail(c, 501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
+      }
+      // Moving back would stamp later writes before earlier ones on the audit chain.
+      const at = clock.now()
+      if (Date.parse(body.now) < Date.parse(at)) {
+        const message = `The scenario clock is at ${at}; it moves forward only, so it cannot go back to ${body.now}`
+        return c.json(core.refuse('setScenarioClock', c.get('actor'), 'clock_backwards', message), 403)
       }
       const moved = setScenarioClock(c.get('actor'), body.now)
       // After the journaled move, so each write the automation makes is its own entry and replays once.
