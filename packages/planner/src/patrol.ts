@@ -16,7 +16,14 @@ import {
 } from '@safe-edge/contracts'
 import type { MultiPolygon, Polygon, Position } from 'geojson'
 import { rankingPriority, scorePriority, type ScoreInputs } from './score.ts'
-import { keepSeparation, separationHold, separationReason, type Separation, type ThirdParty } from './separation.ts'
+import {
+  keepSeparation,
+  separationHold,
+  separationReason,
+  takeoffLandingHold,
+  type Separation,
+  type ThirdParty
+} from './separation.ts'
 import type { Edge, Segment } from './segments.ts'
 import { planStations, type Rejection, type SegmentTask, type Station } from './stations.ts'
 import { flightWindow, weatherBlockers } from './window.ts'
@@ -302,6 +309,10 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
             }
     )
   }
+
+  // Every route that flies takes off from the dock or lands back on it.
+  const dockHold = committed || route.length > 0 ? takeoffLandingHold(dock, input.thirdParties) : null
+  if (dockHold) holds.push(dockHold)
 
   // A held stop waits at the last waypoint before its first station that is too close, where the drone is clear of them.
   const waitsBefore = new Map<string, string>()

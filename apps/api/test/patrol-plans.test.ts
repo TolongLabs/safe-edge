@@ -82,3 +82,56 @@ describe('separation holds on API-served plans', () => {
     expect(plan.tasks.map((t) => t.segmentId).toSorted()).toEqual([PATH_SEGMENT, FAR_BANK, S1.segmentId].toSorted())
   })
 })
+
+describe('the take-off and landing hold on the dock', () => {
+  test('a person within 30 m of the dock holds the launch until the pilot records the dock clear', async () => {
+    const api = startApi()
+    const [dock] = seed.docks
+    // Someone 20 m south of the dock on its roof's building, reported with the request: a labelled fixture.
+    const byTheDock: ThirdParty = {
+      id: 'obs_person_dock',
+      kind: 'person',
+      label: 'person by the dock building',
+      geometry: { type: 'Point', coordinates: [dock!.position.lon, dock!.position.lat - 20 / 111_320] },
+      observedAt: '2026-10-24T23:00:00.000Z',
+      simulated: true,
+      source: 'fixture'
+    }
+    const json = async (response: Response, status: number) => {
+      expect(response.status).toBe(status)
+      return response.json()
+    }
+    const plan = PatrolPlan.parse(
+      await json(
+        await api.request('post', '/patrol-plans', {
+          token: 'tok_manager',
+          body: request([S1.segmentId], [byTheDock])
+        }),
+        201
+      )
+    )
+    expect(plan.holds.map((h) => [h.kind, h.segmentId, h.until])).toEqual([['separation', null, null]])
+    expect(plan.holds[0]!.reason).toEndWith('(CAR 2016 reg. 143(1)(g))')
+    await json(await api.request('post', `/patrol-plans/${plan.id}/approve`, { token: 'tok_pilot' }), 200)
+
+    api.setNow(plan.window.start)
+    const start = () =>
+      api.request('post', '/patrols', {
+        token: 'tok_pilot',
+        body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' }
+      })
+    expect(await json(await start(), 403)).toEqual({
+      ok: false,
+      rule: 'separation_hold',
+      message: `${plan.id} cannot take off yet: ${plan.holds[0]!.reason}`
+    })
+
+    // The pilot (never the manager or the agent) records the dock clear, by naming it as the hold's place.
+    const release = (token: string) => api.request('post', `/patrol-plans/${plan.id}/holds/dock/release`, { token })
+    expect(await json(await release('tok_manager'), 403)).toMatchObject({ rule: 'role_forbidden' })
+    expect(await json(await release('tok_agent'), 403)).toMatchObject({ rule: 'agents_draft_only' })
+    const released = PatrolPlan.parse(await json(await release('tok_pilot'), 200))
+    expect(released.holds).toEqual([{ ...plan.holds[0]!, releasedBy: 'usr_pilot', releasedAt: plan.window.start }])
+    expect(await json(await start(), 201)).toMatchObject({ planId: plan.id, status: 'in_flight' })
+  })
+})

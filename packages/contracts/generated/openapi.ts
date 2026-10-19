@@ -196,7 +196,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Record that the pilot or observer saw a waiting segment's path clear
+         * Record that the pilot or observer saw a waiting segment's path, or the dock, clear
          * @description Roles: pilot. Agents are refused.
          */
         post: operations["releasePlanHold"];
@@ -1036,7 +1036,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "outside_window" | "invalid_coverage";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "separation_hold" | "outside_window" | "invalid_coverage";
         Denial: {
             /** @constant */
             ok: false;
@@ -2210,13 +2210,13 @@ export interface operations {
             };
             path: {
                 id: string;
-                segmentId: string;
+                segmentId: string | "dock";
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Record that the pilot or observer saw a waiting segment's path clear */
+            /** @description Record that the pilot or observer saw a waiting segment's path, or the dock, clear */
             200: {
                 headers: {
                     [name: string]: unknown;

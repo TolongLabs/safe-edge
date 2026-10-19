@@ -252,6 +252,40 @@ describe('flight windows', async () => {
     ])
   })
 
+  test('take-off and landing wait while a person is within 30 m of the dock, and only then', () => {
+    // CAR 2016 reg. 143(1)(g): not "within 30 metres of any person during take-off or landing". Labelled fixtures south
+    // of the dock, away from the lake: one 20 m off, one 40 m off.
+    const south = (m: number): ThirdParty => ({
+      id: `obs_person_${m}m`,
+      kind: 'person',
+      label: `person ${m} m south of the dock`,
+      geometry: { type: 'Point', coordinates: [dock.position.lon, dock.position.lat - m / 111_320] },
+      observedAt: myt('2026-10-20T19:50:00'),
+      simulated: true,
+      source: 'fixture'
+    })
+    const base = input(['seg_866518980_5'], myt('2026-10-20T20:00:00'))
+    const near = planPatrol({ ...base, thirdParties: [south(20), south(40)] })
+    expect(near.holds).toEqual([
+      {
+        kind: 'separation',
+        segmentId: null,
+        until: null,
+        releasedBy: null,
+        releasedAt: null,
+        reason: `"person 20 m south of the dock" (person, seen ${myt('2026-10-20T19:50:00')}) is within 30 m of ${dock.name}, closest 20 m; take-off and landing wait for the pilot or observer to confirm no one is within 30 m of the dock (CAR 2016 reg. 143(1)(g))`
+      }
+    ])
+    // The route itself is unchanged: the hold is on the dock, not on any segment.
+    expect(near.waypoints).toEqual(planPatrol(base).waypoints)
+
+    expect(planPatrol({ ...base, thirdParties: [south(40)] }).holds).toEqual([])
+    // A mapped structure by the dock is not a person: rule (g) is about people.
+    expect(
+      planPatrol({ ...base, thirdParties: [{ ...south(20), kind: 'structure', observedAt: null }] }).holds
+    ).toEqual([])
+  })
+
   test('a station within 50 m of a person moves to a longer zoom stand-off when the camera allows it', () => {
     const id = 'seg_866518980_7' // 298 m of lake bank in the park, with a footway 11 to 18 m behind it
     const zoomDrone = { ...drone, camera: { ...drone.camera, maxZoom: 3 } }

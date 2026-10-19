@@ -94,7 +94,9 @@ export const patrolHandlers = (
   releasePlanHold: (tx, { params }) => {
     const plan = tx.get('patrolPlans', params.id)
     if (!plan) return tx.notFound(`No patrol plan ${params.id}`)
-    const index = plan.holds.findIndex((h) => h.kind === 'separation' && h.segmentId === params.segmentId)
+    // `dock` names the take-off and landing hold, the separation hold without a segment.
+    const at = params.segmentId === 'dock' ? null : params.segmentId
+    const index = plan.holds.findIndex((h) => h.kind === 'separation' && h.segmentId === at)
     if (index < 0) return tx.notFound(`${plan.id} has no separation hold on ${params.segmentId}`)
     const hold = plan.holds[index]!
     if (hold.releasedBy !== null) {
@@ -117,7 +119,7 @@ export const patrolHandlers = (
     }
     const next = supersededBy(tx, plan)
     if (next) return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; fly that instead`, plan.id)
-    // Weather and lightning holds stop the launch until they end; separation holds wait at their segment in flight.
+    // Weather and lightning holds stop the launch until they end; separation holds on segments wait there in flight.
     const launchHolds = plan.holds.filter(
       (h) => h.segmentId === null && h.until !== null && Date.parse(tx.now) < Date.parse(h.until)
     )
@@ -125,6 +127,9 @@ export const patrolHandlers = (
       const holds = launchHolds.map((h) => `${h.kind} hold until ${h.until}: ${h.reason}`).join('; ')
       return tx.deny('weather_hold', `${plan.id} cannot launch yet: ${holds}`, plan.id)
     }
+    // People within 30 m of the dock hold the take-off until the pilot records the dock clear.
+    const dockHold = plan.holds.find((h) => h.kind === 'separation' && h.segmentId === null && h.releasedBy === null)
+    if (dockHold) return tx.deny('separation_hold', `${plan.id} cannot take off yet: ${dockHold.reason}`, plan.id)
     // The agreed window: from its start, up to (not at) its end.
     const now = Date.parse(tx.now)
     if (now < Date.parse(plan.window.start) || now >= Date.parse(plan.window.end)) {

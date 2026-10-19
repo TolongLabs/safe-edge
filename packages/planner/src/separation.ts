@@ -3,7 +3,7 @@ import { booleanPointInPolygon } from '@turf/boolean-point-in-polygon'
 import { destination } from '@turf/destination'
 import { distance } from '@turf/distance'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
-import type { ThirdParty as ContractThirdParty, PlanHold } from '@safe-edge/contracts'
+import type { ThirdParty as ContractThirdParty, Dock, PlanHold } from '@safe-edge/contracts'
 import type { Feature, Polygon, Position } from 'geojson'
 import type { Station } from './stations.ts'
 
@@ -17,6 +17,14 @@ const STAND_OFF_STEP_M = 1
  * structure not under the remote pilot's control. Measured horizontally, which is never more than the slant distance.
  */
 export const SEPARATION_M = 50
+
+/**
+ * CAR 2016 regulation 143(1)(g): no flight "within 30 metres of any person during take-off or landing" without the
+ * Director General's authorisation. Rule (f) already keeps 50 m from any person, so (g) only adds something if take-off
+ * and landing are read as the moments 50 m gives way to 30 m: the planner keeps people 30 m from the dock and stations
+ * 50 m from everyone.
+ */
+export const TAKEOFF_LANDING_SEPARATION_M = 30
 
 /**
  * A person, vessel, vehicle or structure not under the remote pilot's control: the contracts' `ThirdParty`, whose
@@ -125,6 +133,27 @@ export function separationHold(
     releasedBy: null,
     releasedAt: null,
     reason: `stations ${waiting.map((w) => w.station.id).join(', ')} are within ${SEPARATION_M} m of ${named(waiting.flatMap((w) => w.parties))}, closest ${closestM.toFixed(0)} m; the segment waits for the pilot or observer to confirm the path is clear; the plan budgets ${(waitS / 60).toFixed(1)} min of hover before ${before.id} for it, and a longer wait uses the reserve`
+  }
+}
+
+/**
+ * The hold on the dock while a person is within 30 m of it: take-off and landing wait for the pilot or observer to
+ * confirm the dock is clear. Null when no one is that close. Core's `releasePlanHold` (at `dock`) records the confirm.
+ */
+export function takeoffLandingHold(dock: Dock, thirdParties: ThirdParty[]): PlanHold | null {
+  const close = thirdParties
+    .filter((p) => p.kind === 'person')
+    .map((party) => ({ party, m: distanceTo([dock.position.lon, dock.position.lat], party.geometry) }))
+    .filter((n) => n.m < TAKEOFF_LANDING_SEPARATION_M)
+  if (close.length === 0) return null
+  const closestM = Math.min(...close.map((n) => n.m))
+  return {
+    kind: 'separation',
+    segmentId: null,
+    until: null,
+    releasedBy: null,
+    releasedAt: null,
+    reason: `${named(close.map((n) => n.party))} ${close.length === 1 ? 'is' : 'are'} within ${TAKEOFF_LANDING_SEPARATION_M} m of ${dock.name}, closest ${closestM.toFixed(0)} m; take-off and landing wait for the pilot or observer to confirm no one is within ${TAKEOFF_LANDING_SEPARATION_M} m of the dock (CAR 2016 reg. 143(1)(g))`
   }
 }
 

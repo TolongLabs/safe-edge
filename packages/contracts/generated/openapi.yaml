@@ -254,7 +254,7 @@ paths:
   /patrol-plans/{id}/holds/{segmentId}/release:
     post:
       operationId: releasePlanHold
-      summary: Record that the pilot or observer saw a waiting segment's path clear
+      summary: Record that the pilot or observer saw a waiting segment's path, or the dock, clear
       description: "Roles: pilot. Agents are refused."
       tags:
         - patrol-plans
@@ -269,12 +269,16 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            pattern: ^seg_
+            anyOf:
+              - type: string
+                pattern: ^seg_
+              - type: string
+                const: dock
+            description: The held segment, or `dock` for the take-off and landing hold on the plan's dock
         - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
-          description: Record that the pilot or observer saw a waiting segment's path clear
+          description: Record that the pilot or observer saw a waiting segment's path, or the dock, clear
           content:
             application/json:
               schema:
@@ -2020,6 +2024,7 @@ components:
         - plan_not_approved
         - plan_superseded
         - weather_hold
+        - separation_hold
         - outside_window
         - invalid_coverage
     Denial:

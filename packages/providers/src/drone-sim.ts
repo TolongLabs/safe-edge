@@ -206,7 +206,7 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
       // model the wait at the segment, so it flies only a plan whose holds were released.
       const held = plan.holds.filter((h) => h.kind === 'separation' && h.releasedBy === null)
       if (held.length > 0) {
-        const segments = held.map((h) => h.segmentId).join(', ')
+        const segments = held.map((h) => h.segmentId ?? 'the dock').join(', ')
         throw new ApprovalRequiredError(
           `${plan.id} holds ${segments}: the pilot must confirm the path is clear, then schedule the released plan`
         )

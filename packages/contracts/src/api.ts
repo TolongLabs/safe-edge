@@ -459,7 +459,12 @@ export type DemoResetResult = z.infer<typeof DemoResetResult>
 export const IdParam = {
   segment: z.object({ id: SegmentId }),
   patrolPlan: z.object({ id: PatrolPlanId }),
-  planHold: z.object({ id: PatrolPlanId, segmentId: SegmentId }),
+  planHold: z.object({
+    id: PatrolPlanId,
+    segmentId: z
+      .union([SegmentId, z.literal('dock')])
+      .describe("The held segment, or `dock` for the take-off and landing hold on the plan's dock")
+  }),
   patrol: z.object({ id: PatrolId }),
   candidate: z.object({ id: CandidateId }),
   finding: z.object({ id: FindingId }),
