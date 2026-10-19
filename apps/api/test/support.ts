@@ -1,10 +1,11 @@
-// Starts the API the way index.ts does, but on a free port with an injected clock, and calls it over real HTTP.
+// Starts the API the way index.ts does, but on a free port with a scenario clock, and calls it over real HTTP.
 import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
 import type { Actor, RaiseCandidateRequest, Role } from '@safe-edge/contracts'
 import { Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from '../src/app.ts'
+import { scenarioClock } from '../src/clock.ts'
 import type { WebhookOptions } from '../src/events.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
@@ -48,8 +49,7 @@ export function startApi({
   workOrders?: ApiOptions['workOrders']
   claude?: Anthropic
 } = {}) {
-  let now = seed.asOf
-  const clock = { now: () => now }
+  const clock = scenarioClock(seed.asOf)
   const agent = claude && { claude, token: 'tok_agent' }
   const app = createApp({
     seed,
@@ -101,9 +101,7 @@ export function startApi({
     request,
     /** Every request the server answered, in order. */
     log,
-    setNow: (iso: string) => {
-      now = iso
-    }
+    setNow: clock.set
   }
 }
 
@@ -126,3 +124,24 @@ export const tier2Candidate = {
 
 export const raiseTier2 = (api: Api, token: Token | string = 'tok_provider') =>
   api.request('post', '/candidates', { token, body: tier2Candidate })
+
+/** Reads server-sent event frames (blank-line separated) as they arrive. */
+export function sseFrames(body: ReadableStream<Uint8Array>) {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  return {
+    async next(): Promise<string> {
+      while (!buffer.includes('\n\n')) {
+        const { done, value } = await reader.read()
+        if (done) throw new Error('the event stream closed')
+        buffer += decoder.decode(value, { stream: true })
+      }
+      const end = buffer.indexOf('\n\n')
+      const frame = buffer.slice(0, end)
+      buffer = buffer.slice(end + 2)
+      return frame
+    },
+    cancel: () => reader.cancel()
+  }
+}

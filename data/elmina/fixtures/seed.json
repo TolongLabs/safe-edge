@@ -305,6 +305,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_0",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -327,6 +329,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_1",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -347,6 +351,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_2",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -367,6 +373,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_3",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -387,6 +395,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_4",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -410,6 +420,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_5",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -431,6 +443,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_6",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -457,6 +471,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_7",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -477,6 +493,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_8",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -500,6 +518,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_9",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -521,6 +541,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_10",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -622,6 +644,8 @@
       ],
       "baselineId": "bsl_866518980_11",
       "passId": "pass_866518980_11",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -642,6 +666,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_12",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -662,6 +688,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_13",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -682,6 +710,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_14",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -706,6 +736,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_15",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -726,6 +758,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_16",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -746,6 +780,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_17",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -773,6 +809,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_18",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -794,6 +832,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_19",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -820,6 +860,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_866518980_20",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -850,6 +892,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_0",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -871,6 +915,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_1",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -904,6 +950,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_2",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -925,6 +973,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_3",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -947,6 +997,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_4",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -975,6 +1027,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_5",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1000,6 +1054,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_6",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1026,6 +1082,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_7",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1048,6 +1106,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_8",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1070,6 +1130,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_9",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1090,6 +1152,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055739_10",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1114,6 +1178,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055740_0",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1134,6 +1200,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055740_1",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1161,6 +1229,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055740_2",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1182,6 +1252,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055740_3",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1210,6 +1282,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055740_4",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1232,6 +1306,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055740_5",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1252,6 +1328,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_383055740_6",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1272,6 +1350,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_0",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1292,6 +1372,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_1",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1312,6 +1394,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_2",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1332,6 +1416,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_3",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1352,6 +1438,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_4",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1372,6 +1460,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_5",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1392,6 +1482,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_6",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     },
@@ -1412,6 +1504,8 @@
       "expectedInventory": [],
       "baselineId": null,
       "passId": "pass_404002712_7",
+      "patrolIntervalDays": 7,
+      "lastPatrolledAt": "2026-10-16T01:00:00.000Z",
       "simulated": true,
       "source": "fixture"
     }
@@ -2073,6 +2167,17 @@
       "maxWindMps": 12,
       "camera": { "hfovDeg": 70, "vfovDeg": 55, "imageWidthPx": 4000, "imageHeightPx": 3000, "maxZoom": 3 },
       "missionFormats": ["wpml", "qgc_plan"],
+      "simulated": true,
+      "source": "fixture"
+    }
+  ],
+  "thirdParties": [
+    {
+      "id": "tp_s1_path_crowd",
+      "kind": "person",
+      "label": "S1: people on the lakeside footway",
+      "geometry": { "type": "Point", "coordinates": [101.5144008, 3.1793557] },
+      "observedAt": "2026-10-20T21:20:00.000Z",
       "simulated": true,
       "source": "fixture"
     }

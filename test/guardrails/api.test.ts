@@ -20,6 +20,10 @@ import {
   tier2Candidate
 } from './support.ts'
 
+/** A segment whose pass is expiring, and when its patrol is missed: a whole 7-day interval after the seed's last patrol. */
+const EXPIRING = 'seg_866518980_5'
+const MISSED_PATROL_DUE = '2026-10-23T01:00:00.000Z'
+
 test('the installer cannot accept their own work: 403 role_forbidden, and 403 two_person_rule even with a reviewer token', async () => {
   // A small township where one person installs and reviews: usr_installer also holds a reviewer token.
   const api = startGuardedApi({
@@ -95,7 +99,8 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     patrols: patrol.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
-    tasks: played.decision.tasks[0]!.id
+    tasks: played.decision.tasks[0]!.id,
+    segments: S1.segmentId
   }
   // The four named actions send exactly what a person sends. Policy runs before validation, so for the rest an empty
   // body changes nothing about the answer.
@@ -211,8 +216,13 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
     setWorkOrderExternalRef: { externalRef: 'procore-observation-1' },
-    recordWorkOrderExternalError: { step: 'createFinding', message: 'Procore answered 503' }
+    recordWorkOrderExternalError: { step: 'createFinding', message: 'Procore answered 503' },
+    reportMissedPatrol: undefined, // no body
+    setScenarioClock: { now: MISSED_PATROL_DUE } // the test API's clock is a scenario clock; time stays put
   }
+  // S1's pass is already suspended, so the missed patrol goes to an expiring pass once its patrol interval has run out.
+  const paths: Partial<Record<OperationId, string>> = { reportMissedPatrol: `/segments/${EXPIRING}/missed-patrol` }
+  api.setNow(MISSED_PATROL_DUE)
   const ids = {
     'patrol-plans': flying.id,
     patrols: patrol.id,
@@ -234,7 +244,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
         continue
       }
       if (!(operationId in requests)) throw new Error(`No ${role} request for ${operationId}`)
-      const response = await api.request(op.method, pathFor(op, ids), { token, body: requests[operationId] })
+      const path = paths[operationId] ?? pathFor(op, ids)
+      const response = await api.request(op.method, path, { token, body: requests[operationId] })
       expect({ token, operationId, ok: response.ok }).toEqual({ token, operationId, ok: true })
     }
   }
@@ -248,7 +259,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   expect(await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))).toEqual(validBefore)
   // The Tier 2 candidates automation raised above hold the pass too, so the manager rejects them as false alarms.
   const raised: { id: string }[] = await json(
-    api.request('get', '/candidates?status=candidate', { token: 'dev_manager' })
+    api.request('get', `/candidates?status=candidate&segmentId=${S1.segmentId}`, { token: 'dev_manager' })
   )
   expect(raised).toHaveLength(2)
   for (const { id } of raised) {
@@ -297,7 +308,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   await as('dev_manager', 'post', `/work-orders/${draft.id}/external-retry`)
   const plan = await as('dev_manager', 'post', '/patrol-plans', patrolRequest)
   await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
-  api.setNow(plan.window.start)
+  await as('dev_system', 'post', '/scenario/clock', { now: plan.window.start })
   const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
   await as('dev_drone_sim', 'post', `/patrols/${patrol.id}/complete`, {
     coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }]
@@ -313,8 +324,26 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     eventTypes: ['edge.pass.issued.v1']
   })
   await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
-  // A false alarm after S3: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+  // The other suspensions: damage the walk crew saw, and a patrol interval that ran out.
+  await as('dev_crew', 'post', '/damage-reports', {
+    segmentId: S1.segmentId,
+    observationIds: [],
+    inventoryItemId: null,
+    itemStatus: null,
+    class: 'bank_change',
+    rationale: 'The bank has slumped beside the bench',
+    simulated: true
+  })
+  api.setNow(MISSED_PATROL_DUE)
+  await as('dev_system', 'post', `/segments/${EXPIRING}/missed-patrol`)
+  // A false alarm after S3: the drone reports the panel missing again, the agent summarises it for the Inbox card,
+  // the manager rejects it, a reviewer clears it.
   const alarm = await as('dev_drone_sim', 'post', '/candidates', tier2Candidate)
+  await as('dev_agent', 'post', `/candidates/${alarm.id}/agent-summary`, {
+    text: `Fence panel 4 reported missing again on ${S1.segmentId} (${alarm.id})`,
+    citations: [S1.segmentId, alarm.id],
+    model: 'claude-opus-5-5'
+  })
   await as('dev_manager', 'post', `/candidates/${alarm.id}/decision`, { decision: 'reject', reason: 'A shadow' })
   await as('dev_reviewer', 'post', `/candidates/${alarm.id}/clearance`, {
     checklist: played.retest.retest.checklist,
@@ -375,7 +404,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   expect(chain.filter((e) => e.action === 'previewRouteClosure')).toEqual([])
   // Every write the API serves today was exercised.
   const notReachable = {
-    releasePlanHold: 'needs a separation hold, which the API planner never makes: it sees no third parties (#79)',
+    releasePlanHold: "needs a separation hold; the sweep's plan (S1's segment) keeps clear of every third party (#130)",
     triageImages: 'answers 501 until #74',
     // The agent's flows need Claude (apps/api/test/agent.test.ts replays recorded runs). They write only through
     // the agent's own createWorkOrder and draftNotice calls, made with its token like the ones above.

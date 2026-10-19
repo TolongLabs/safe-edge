@@ -256,7 +256,7 @@ const draftWorkOrder = tool({
   name: 'draft_work_order',
   title: 'Draft a work order',
   description:
-    'Creates a draft work order linked to a confirmed finding. It stays a draft: a person submits it after an engineer approves the remedy.',
+    'Creates a draft work order linked to a confirmed finding. It stays a draft: a person submits it after an engineer approves the remedy. A finding has one open work order: confirming a candidate drafts one, so when the finding already has a draft you get that draft back unchanged (your notes are not saved), and while its work order is past draft you are refused.',
   scope: 'workorder.draft',
   readOnly: false,
   input: CreateWorkOrderRequest.extend({

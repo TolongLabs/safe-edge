@@ -3,6 +3,7 @@ import { Seed } from '@safe-edge/core'
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
+import { clockFrom } from './clock.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import {
   PROCORE_DEVELOPER_SANDBOX,
@@ -17,8 +18,10 @@ const repoRoot = join(import.meta.dir, '../../..')
 const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
 
 const seed = Seed.parse(await readJson('data/elmina/fixtures/seed.json'))
-const clock = { now: () => new Date().toISOString() }
-// The seed maps no third parties and no observation feeds them yet (DECISIONS #79), so plans see none.
+// The wall clock, or with SAFE_EDGE_CLOCK=scenario the clock a scenario player sets (refused in production).
+const clock = clockFrom(process.env, seed.asOf)
+// Observed third parties reach plans through core: the seed's (S1's path crowd) and each create-plan request's. Mapped
+// structures such as buildings arrive with #59's Overpass extract; the research extract maps none.
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
 
 // The API keeps its state in SAFE_EDGE_DATA_DIR/api.sqlite and picks it up again on restart (journal.ts). The file

@@ -83,7 +83,14 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   const seed = Seed.parse(rawSeed)
   checkSeed(seed)
   const state = createState(seed)
-  const handlers: Handlers = { ...reads, ...patrolHandlers(planner), ...inbox, ...fixLens, ...work, ...notices }
+  const handlers: Handlers = {
+    ...reads,
+    ...patrolHandlers(planner, seed.thirdParties),
+    ...inbox,
+    ...fixLens,
+    ...work,
+    ...notices
+  }
   const openTx = (actor: Actor, now: string) => new Tx(state, actor, now, (prefix) => ids.next(prefix), seed.townshipId)
 
   const checkAccess = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {
@@ -136,10 +143,13 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
       if (!op.events.includes(event.type))
         throw new Error(`${operationId} emitted ${event.type}, which its operation does not list`)
     }
+    if (result.status !== undefined && !(result.status in (op.responses ?? {}))) {
+      throw new Error(`${operationId} answered ${result.status}, which its operation does not list`)
+    }
     tx.commit(operationId)
     return {
       ok: true,
-      status: operations[operationId].status,
+      status: result.status ?? operations[operationId].status,
       data: structuredClone(result.data),
       events: structuredClone(tx.events)
     }

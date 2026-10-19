@@ -2,28 +2,7 @@
 import { afterAll, expect, test } from 'bun:test'
 import { AuditEvent, EdgeEvent, RegisteredWebhook, Webhook } from '@safe-edge/contracts'
 import { Webhook as StandardWebhook } from 'standardwebhooks'
-import { S1, raiseTier2, seed, startApi, type Api } from './support.ts'
-
-/** Reads server-sent event frames (blank-line separated) as they arrive. */
-function sseFrames(body: ReadableStream<Uint8Array>) {
-  const reader = body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-  return {
-    async next(): Promise<string> {
-      while (!buffer.includes('\n\n')) {
-        const { done, value } = await reader.read()
-        if (done) throw new Error('the event stream closed')
-        buffer += decoder.decode(value, { stream: true })
-      }
-      const end = buffer.indexOf('\n\n')
-      const frame = buffer.slice(0, end)
-      buffer = buffer.slice(end + 2)
-      return frame
-    },
-    cancel: () => reader.cancel()
-  }
-}
+import { S1, raiseTier2, seed, sseFrames, startApi, type Api } from './support.ts'
 
 test('GET /v1/events streams the CloudEvents of a Tier 2 candidate between heartbeats', async () => {
   const api = startApi({ heartbeatMs: 50 })

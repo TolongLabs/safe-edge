@@ -84,7 +84,8 @@ export const EVENT_SUMMARIES: Record<EventType, string> = {
   'edge.patrol.completed.v1': 'A patrol landed and reported coverage per segment.',
   'edge.candidate.raised.v1': 'A provider, the system or the agent raised a candidate; core assigned its tier.',
   'edge.candidate.decided.v1': 'A manager confirmed, rejected or asked to recapture a candidate.',
-  'edge.pass.suspended.v1': "A segment's pass was suspended, e.g. by a Tier 2 candidate.",
+  'edge.pass.suspended.v1':
+    "A segment's pass was suspended by a Tier 2 candidate: a missing or changed safety item, a damage report or a missed patrol.",
   'edge.work_order.drafted.v1': 'A person or the agent drafted a work order.',
   'edge.work_order.submitted.v1': 'A manager or engineer submitted a work order with an approved remedy.',
   'edge.repair.completed.v1': 'The installer marked the repair complete.',

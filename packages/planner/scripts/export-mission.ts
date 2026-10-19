@@ -1,7 +1,7 @@
 // Plans a demo patrol over the real Elmina water edges and writes it as a DJI WPML KMZ and a QGroundControl .plan,
 // both stamped "not flight-ready", for opening in DJI Pilot 2 or QGroundControl.
 // Usage: bun run export:mission <outDir>
-import { Dock, DroneProfile, EdgePass, type ContextSnapshot } from '@safe-edge/contracts'
+import { Dock, DroneProfile, EdgePass, ThirdParty, type ContextSnapshot } from '@safe-edge/contracts'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { NOT_FLIGHT_READY, exportQgcPlan, exportWpmlKmz } from '../src/export/index.ts'
@@ -27,11 +27,17 @@ const reading = (kind: 'rainfall' | 'water_level', value: number): ContextSnapsh
 })
 
 /**
- * A patrol over all 47 Elmina segments from the shared seed's dock, drone and passes, with no open flags, no rain and
- * normal water, at the capture settings core's tests use. The seed drone's battery cannot cover every segment.
+ * A patrol over all 47 Elmina segments from the shared seed's dock, drone, passes and S1 path crowd, with no open flags,
+ * no rain and normal water, at the capture settings core's tests use. The seed drone's battery cannot cover every
+ * segment.
  */
 export async function demoPlan(readJson: (path: string) => Promise<unknown>) {
-  const seed = (await readJson(SEED_PATH)) as { docks: unknown[]; droneProfiles: unknown[]; passes: unknown[] }
+  const seed = (await readJson(SEED_PATH)) as {
+    docks: unknown[]
+    droneProfiles: unknown[]
+    passes: unknown[]
+    thirdParties: unknown[]
+  }
   const dock = Dock.parse(seed.docks[0])
   const drone = DroneProfile.parse(seed.droneProfiles[0])
   const passes = seed.passes.map((p) => EdgePass.parse(p))
@@ -55,7 +61,9 @@ export async function demoPlan(readJson: (path: string) => Promise<unknown>) {
     passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: NOW })),
     flags: segments.map((s) => ({ segmentId: s.id, severity: null, readAt: NOW })),
     geofences: [],
-    thirdParties: []
+    authorisation: null,
+    thirdParties: seed.thirdParties.map((p) => ThirdParty.parse(p)),
+    separationWaitS: 120
   })
   return { plan, dock, drone, groundAmslM }
 }

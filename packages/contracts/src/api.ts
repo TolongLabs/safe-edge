@@ -1,10 +1,10 @@
 import * as z from 'zod'
 import {
+  AgentSummary,
   Asset,
   AuditEvent,
   Baseline,
   Candidate,
-  CandidateClass,
   CandidateStatus,
   ContextSnapshot,
   Dock,
@@ -25,6 +25,7 @@ import {
   PlanReplan,
   Remedy,
   RemedyType,
+  ReportedClass,
   Retest,
   RetestCheck,
   Route,
@@ -33,6 +34,7 @@ import {
   SegmentCoverage,
   Severity,
   Task,
+  ReportedThirdParty,
   Uncertainty,
   User,
   WorkOrder,
@@ -116,6 +118,12 @@ export const CreatePatrolPlanRequest = named(
     context: z.array(ContextSnapshot),
     notBefore: Timestamp,
     altitudeCapM: z.number().positive().describe('Agreed with air traffic control'),
+    thirdParties: z
+      .array(ReportedThirdParty)
+      .optional()
+      .describe(
+        "People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller"
+      ),
     replan: PlanReplan.optional().describe(
       "Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider"
     )
@@ -166,7 +174,7 @@ export const RaiseCandidateRequest = named(
     observationIds: z.array(ObservationId),
     inventoryItemId: InventoryItemId.nullable(),
     itemStatus: ItemStatus.nullable(),
-    class: CandidateClass,
+    class: ReportedClass,
     score: z.number().min(0).max(1),
     uncertainty: Uncertainty.nullable(),
     gridCell: z
@@ -179,6 +187,23 @@ export const RaiseCandidateRequest = named(
   })
 )
 export type RaiseCandidateRequest = z.infer<typeof RaiseCandidateRequest>
+
+/** A person's first-hand report of damage on a segment (PRD PROOF-4). Core files it as a Tier 2 candidate. */
+export const ReportDamageRequest = named(
+  'ReportDamageRequest',
+  z.object({
+    segmentId: SegmentId,
+    observationIds: z
+      .array(ObservationId)
+      .describe('Photos of the damage the reporter recorded on this segment (POST /observations); may be empty'),
+    inventoryItemId: InventoryItemId.nullable().describe('The damaged expected item, when it is one'),
+    itemStatus: ItemStatus.extract(['missing', 'changed']).nullable(),
+    class: ReportedClass,
+    rationale: z.string().min(1).describe('What the reporter saw'),
+    simulated: z.boolean()
+  })
+)
+export type ReportDamageRequest = z.infer<typeof ReportDamageRequest>
 
 export const DecideCandidateRequest = named(
   'DecideCandidateRequest',
@@ -400,15 +425,25 @@ export type AgentAnswer = z.infer<typeof AgentAnswer>
  * of tokens or turns, or skipped the draft it was asked for. `askAgent` sends it as a `stopped` event instead of
  * `answer`; the draft operations return it with status 502.
  */
-export const AgentStopped = z.object({
-  ok: z.literal(false),
-  error: z.literal('agent_stopped'),
-  message: z.string(),
-  stopReason: z.string().describe("Claude's stop_reason for the last turn"),
-  category: z.string().nullable().describe('The refusal category, when Claude refused'),
-  model: z.string()
-})
+export const AgentStopped = named(
+  'AgentStopped',
+  z.object({
+    ok: z.literal(false),
+    error: z.literal('agent_stopped'),
+    message: z.string(),
+    stopReason: z.string().describe("Claude's stop_reason for the last turn"),
+    category: z.string().nullable().describe('The refusal category, when Claude refused'),
+    model: z.string()
+  })
+)
 export type AgentStopped = z.infer<typeof AgentStopped>
+
+/** The agent's summary for a candidate's card; core stamps the label, the agent and the time. */
+export const RecordAgentSummaryRequest = named(
+  'RecordAgentSummaryRequest',
+  AgentSummary.pick({ text: true, citations: true, model: true })
+)
+export type RecordAgentSummaryRequest = z.infer<typeof RecordAgentSummaryRequest>
 
 /** The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order. */
 export const DraftInboxRequest = named('DraftInboxRequest', z.object({ candidateId: CandidateId }))
@@ -420,7 +455,9 @@ export const InboxDraft = named(
     candidateId: CandidateId,
     findingId: FindingId.nullable().describe('Null while the candidate is not confirmed; no work order then'),
     summary: z.string().describe("The agent's summary for the Inbox card"),
-    workOrder: WorkOrder.nullable().describe("The agent's draft; a person edits and submits it"),
+    workOrder: WorkOrder.nullable().describe(
+      "The finding's open draft: the one confirming made, which the agent's draft request returns unchanged, or the agent's own when the finding had none open. A person edits and submits it"
+    ),
     ...agentProvenance
   })
 )
@@ -467,6 +504,13 @@ export const RegisteredWebhook = named(
 )
 export type RegisteredWebhook = z.infer<typeof RegisteredWebhook>
 
+export const SetScenarioClockRequest = named('SetScenarioClockRequest', z.object({ now: Timestamp }))
+export type SetScenarioClockRequest = z.infer<typeof SetScenarioClockRequest>
+
+/** The API's scenario clock: the time it stamps on every record until the scenario player sets it again. */
+export const ScenarioClock = named('ScenarioClock', z.object({ id: z.literal('clock'), now: Timestamp }))
+export type ScenarioClock = z.infer<typeof ScenarioClock>
+
 export const DemoResetResult = z.object({ reset: z.literal(true) })
 export type DemoResetResult = z.infer<typeof DemoResetResult>
 
@@ -475,7 +519,12 @@ export type DemoResetResult = z.infer<typeof DemoResetResult>
 export const IdParam = {
   segment: z.object({ id: SegmentId }),
   patrolPlan: z.object({ id: PatrolPlanId }),
-  planHold: z.object({ id: PatrolPlanId, segmentId: SegmentId }),
+  planHold: z.object({
+    id: PatrolPlanId,
+    segmentId: z
+      .union([SegmentId, z.literal('dock')])
+      .describe("The held segment, or `dock` for the take-off and landing hold on the plan's dock")
+  }),
   patrol: z.object({ id: PatrolId }),
   candidate: z.object({ id: CandidateId }),
   finding: z.object({ id: FindingId }),

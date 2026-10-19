@@ -13,11 +13,13 @@ import {
   type Operations,
   type PatrolPlanner,
   type RegisteredWebhook,
+  type ScenarioClock,
   type UploadEvidenceRequest,
   type WorkOrderProvider
 } from '@safe-edge/contracts'
 import type Anthropic from '@anthropic-ai/sdk'
-import { counterIds, createCore, type Clock, type Core, type Seed } from '@safe-edge/core'
+import { APIUserAbortError } from '@anthropic-ai/sdk'
+import { counterIds, createCore, type Core, type Seed } from '@safe-edge/core'
 import { Database } from 'bun:sqlite'
 import type { EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
@@ -27,6 +29,7 @@ import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
 import { createAgent } from './agent.ts'
+import type { ApiClock } from './clock.ts'
 import { createEventHub, newWebhookSecret, type WebhookOptions } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
 import { openJournal } from './journal.ts'
@@ -37,7 +40,8 @@ export interface ApiOptions {
   seed: Seed
   /** Needed only by `createPatrolPlan`. */
   planner?: PatrolPlanner
-  clock: Clock
+  /** A scenario clock (one with `set`) serves setScenarioClock; on the wall clock that operation answers 501. */
+  clock: ApiClock
   /**
    * The SQLite file the API keeps its state in (journal.ts), replayed on start; `:memory:` keeps it for the life of
    * the process only. One API process per file.
@@ -106,6 +110,17 @@ export function createApp({
     recordStored: core.recordStored
   })
   const evidence = createEvidenceStore({ clock, ids })
+  // The scenario clock's time is state too: replaying its moves puts it back where the last process left it.
+  const setScenarioClock = journal.command('setScenarioClock', (actor: Actor, now: string): ScenarioClock => {
+    if (baseClock.set === undefined)
+      throw new Error('This store moved a scenario clock; start with SAFE_EDGE_CLOCK=scenario')
+    const before: ScenarioClock = { id: 'clock', now: clock.now() }
+    baseClock.set(now)
+    // Audited after the move, so the chain shows the change at the time it set.
+    const after: ScenarioClock = { id: 'clock', now: clock.now() }
+    core.recordStored('setScenarioClock', actor, after, before)
+    return after
+  })
   const uploadEvidence = journal.command('uploadEvidence', (actor: Actor, body: UploadEvidenceRequest) => {
     const ref = evidence.put(body, actor)
     core.recordStored('uploadEvidence', actor, ref)
@@ -215,16 +230,25 @@ export function createApp({
       return streamSSE(
         c,
         async (stream) => {
+          // A person who hangs up (closes the panel) cancels the run: the abort reaches the request open to Claude.
+          const hungUp = new AbortController()
+          stream.onAbort(() => hungUp.abort())
           // Claude can think and call tools for longer than Bun's idle timeout before it writes text, so the stream
           // opens with a comment and keeps a heartbeat, as /events does.
           await stream.write(': connected\n\n')
           const heartbeat = setInterval(() => void stream.write(': heartbeat\n\n'), heartbeatMs)
           try {
-            const result = await agent.ask(body.question, (text) =>
-              stream.writeSSE({ event: 'delta', data: JSON.stringify({ text } satisfies AgentDelta) })
+            const result = await agent.ask(
+              body.question,
+              (text) => stream.writeSSE({ event: 'delta', data: JSON.stringify({ text } satisfies AgentDelta) }),
+              hungUp.signal
             )
             if (result.ok) await stream.writeSSE({ event: 'answer', data: JSON.stringify(result.answer) })
             else await stream.writeSSE({ event: 'stopped', data: JSON.stringify(result) })
+          } catch (error) {
+            // Nobody is listening for the answer, so the cancelled run is not an error.
+            if (hungUp.signal.aborted && error instanceof APIUserAbortError) return
+            throw error
           } finally {
             clearInterval(heartbeat)
           }
@@ -276,6 +300,12 @@ export function createApp({
       const secret = newWebhookSecret()
       const webhook = hub.register(c.get('actor'), body, secret)
       return c.json({ ...webhook, secret } satisfies RegisteredWebhook, 201)
+    },
+    setScenarioClock: (c, { body }) => {
+      if (baseClock.set === undefined) {
+        return fail(c, 501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
+      }
+      return c.json(setScenarioClock(c.get('actor'), body.now), 200)
     }
   }
 

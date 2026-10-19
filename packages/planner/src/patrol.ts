@@ -2,7 +2,8 @@ import { bearing } from '@turf/bearing'
 import { booleanIntersects } from '@turf/boolean-intersects'
 import { destination } from '@turf/destination'
 import { distance } from '@turf/distance'
-import { lineString, point, polygon } from '@turf/helpers'
+import { lineString, multiLineString, point, polygon } from '@turf/helpers'
+import { nearestPointOnLine } from '@turf/nearest-point-on-line'
 import {
   PatrolPlan,
   type ContextSnapshot,
@@ -14,9 +15,16 @@ import {
   type PriorityScore,
   type Waypoint
 } from '@safe-edge/contracts'
-import type { MultiPolygon, Polygon, Position } from 'geojson'
+import type { Feature, LineString, MultiPolygon, Point, Polygon, Position } from 'geojson'
 import { rankingPriority, scorePriority, type ScoreInputs } from './score.ts'
-import { keepSeparation, separationHold, separationReason, type Separation, type ThirdParty } from './separation.ts'
+import {
+  keepSeparation,
+  separationHold,
+  separationReason,
+  takeoffLandingHold,
+  type Separation,
+  type ThirdParty
+} from './separation.ts'
 import type { Edge, Segment } from './segments.ts'
 import { planStations, type Rejection, type SegmentTask, type Station } from './stations.ts'
 import { flightWindow, weatherBlockers } from './window.ts'
@@ -36,11 +44,21 @@ export const assumedEnergyModel = {
   stationHoverS: 3
 } as const
 
+/**
+ * CAR 2016 regulation 143(1)(a), (b): no flight "over any designated area" or "within 150 metres of any designated
+ * area" without the Director General's authorisation, where (3) a designated area is "any area which is used for
+ * residential, commercial, industrial or recreational purposes".
+ */
+export const DESIGNATED_AREA_M = 150
+
 /** A hard limit on the plan, never a score penalty. */
 export interface Geofence {
   id: string
-  /** `no_fly`: the aircraft never enters it. `no_capture` (homes, playgrounds): no camera frame may cover it. */
-  kind: 'no_fly' | 'no_capture'
+  /**
+   * `no_fly`: the aircraft never enters it. `no_capture` (homes, playgrounds): no camera frame may cover it.
+   * `designated_area` (CAR 2016 reg. 143(3)): without an `authorisation`, the aircraft stays more than 150 m from it.
+   */
+  kind: 'no_fly' | 'no_capture' | 'designated_area'
   label: string
   geometry: Polygon | MultiPolygon
   simulated: boolean
@@ -69,8 +87,23 @@ export interface PatrolPlanInput extends ScoreInputs {
   /** How long the agreed window stays open after first light. The route must land before it closes. */
   windowMinutes: number
   geofences: Geofence[]
+  /** The Director General's authorisation to fly over and within 150 m of designated areas, or null without one. */
+  authorisation: FlightAuthorisation | null
   /** People, vessels, vehicles and structures not under the pilot's control, from observations or the map. */
   thirdParties: ThirdParty[]
+  /**
+   * How long the drone may hover before a held segment for the pilot or observer to confirm its path is clear. It counts
+   * against the battery and the window like flying does.
+   */
+  separationWaitS: number
+}
+
+/** An authorisation from the Director General of Civil Aviation (CAR 2016 reg. 143(1), applied for under reg. 189). */
+export interface FlightAuthorisation {
+  /** Its reference, as the pilot should quote it. */
+  ref: string
+  simulated: boolean
+  source: string
 }
 
 interface Candidate {
@@ -81,7 +114,7 @@ interface Candidate {
   waiting: Separation['waiting']
   priority: PriorityScore
   rank: number
-  /** Flying from the first station to the last and hovering at each. */
+  /** Flying from the first station to the last, hovering at each, and waiting for a clear path when it is held. */
   energyWh: number
   durationS: number
 }
@@ -165,9 +198,12 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
 
   const noFly = geofences.filter((g) => g.kind === 'no_fly')
   const noCapture = geofences.filter((g) => g.kind === 'no_capture')
+  const designated = geofences.filter((g) => g.kind === 'designated_area')
+  // Without an authorisation, a designated area keeps the aircraft 150 m away, as a no-fly zone would.
+  const keptFrom = [...noFly, ...(input.authorisation ? [] : designated)]
   const legBlockers = memo((a: Position, b: Position) => {
     const path = samePosition(a, b) ? point(a) : lineString([a, b])
-    return noFly.filter((zone) => booleanIntersects(path, zone.geometry))
+    return keptFrom.filter((zone) => within(path, zone, zone.kind === 'designated_area' ? DESIGNATED_AREA_M : 0))
   })
 
   const committedIds = new Set(committed?.tasks.map((t) => t.segmentId))
@@ -215,22 +251,25 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
       rejected.push({ segmentId, code: 'separation_hold', reason })
       if (stations.length === 0) continue
     }
-    const crossed = stations.slice(1).flatMap((s, i) => legBlockers(position(stations[i]!), position(s)))
+    const legs =
+      stations.length === 1 ? [[stations[0]!, stations[0]!]] : stations.slice(1).map((s, i) => [stations[i]!, s])
+    const crossed = legs.flatMap(([a, b]) => legBlockers(position(a!), position(b!)))
     if (crossed.length > 0) {
-      rejected.push({ segmentId, code: 'geofence', reason: `its flight line enters no-fly zone ${labels(crossed)}` })
+      rejected.push({ segmentId, ...keptOut(crossed, 'its flight line', 'enters') })
       continue
     }
     const priority = scorePriority(segmentId, input)
     const flownWh = stations.slice(1).reduce((wh, s, i) => wh + flyWh(position(stations[i]!), position(s)), 0)
     const flownS = stations.slice(1).reduce((t, s, i) => t + flyS(position(stations[i]!), position(s)), 0)
+    const waitS = waiting.length > 0 ? input.separationWaitS : 0
     pending.push({
       task,
       stations,
       waiting,
       priority,
       rank: rankingPriority(priority),
-      energyWh: flownWh + stations.length * hoverWh,
-      durationS: flownS + stations.length * assumedEnergyModel.stationHoverS
+      energyWh: flownWh + stations.length * hoverWh + (drone.hoverPowerW * waitS) / 3600,
+      durationS: flownS + stations.length * assumedEnergyModel.stationHoverS + waitS
     })
   }
 
@@ -280,8 +319,11 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
       clear.length === 0
         ? {
             segmentId,
-            code: 'geofence',
-            reason: `every straight transit to it crosses no-fly zone ${labels(options.flatMap((o) => o.blockedBy))}`
+            ...keptOut(
+              options.flatMap((o) => o.blockedBy),
+              'every straight transit to it',
+              'crosses'
+            )
           }
         : charged.length > 0
           ? {
@@ -297,8 +339,21 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     )
   }
 
-  for (const { candidate } of route) {
-    if (candidate.waiting.length > 0) holds.push(separationHold(candidate.task.segmentId, candidate.waiting))
+  // Every route that flies takes off from the dock or lands back on it.
+  const dockHold = committed || route.length > 0 ? takeoffLandingHold(dock, input.thirdParties) : null
+  if (dockHold) holds.push(dockHold)
+
+  // A held stop waits at the last waypoint before its first station that is too close, where the drone is clear of them.
+  const waitsBefore = new Set<string>()
+  for (const stop of route) {
+    const { candidate } = stop
+    if (candidate.waiting.length === 0) continue
+    const waitingIds = new Set(candidate.waiting.map((w) => w.station.id))
+    const first = ordered(stop, candidate.stations).find((s) => waitingIds.has(s.id))!
+    waitsBefore.add(first.id)
+    holds.push(
+      separationHold(candidate.task.segmentId, candidate.waiting, { waitS: input.separationWaitS, before: first })
+    )
   }
 
   const flown = route.flatMap((stop) =>
@@ -342,6 +397,10 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
       arrive('transit', dockAt, atDock(altitudeM, out))
     }
     for (const { station, segmentId } of flown) {
+      if (waitsBefore.has(station.id)) {
+        clockS += input.separationWaitS
+        energyWh += (drone.hoverPowerW * input.separationWaitS) / 3600
+      }
       fly(position(station))
       arrive('station', at, { ...station.pose, viewpointId: null, segmentId })
       clockS += assumedEnergyModel.stationHoverS
@@ -354,6 +413,9 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     arrive('landing', dockAt, atDock(dock.position.altM, home))
   }
   const ground = [...dockAt, dock.position.altM]
+  // What the authorisation covers on this route; without one, the route keeps 150 m from every designated area.
+  const routeLine = input.authorisation && waypoints.length > 0 && lineString(waypoints.map((w) => [w.lon, w.lat]))
+  const overflown = routeLine ? designated.filter((zone) => within(routeLine, zone, DESIGNATED_AREA_M)) : []
 
   return PatrolPlan.parse({
     id: input.id,
@@ -384,12 +446,23 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     energyWh,
     reserveWh: drone.usableBatteryWh - energyWh,
     rejected: [...(committed?.rejected ?? []), ...rejected],
+    authorisation:
+      input.authorisation && overflown.length > 0
+        ? {
+            ref: input.authorisation.ref,
+            reason: `the route flies over or within ${DESIGNATED_AREA_M} m of designated area ${labels(overflown)} (CAR 2016 reg. 143(1)(a), (b))`,
+            simulated: input.authorisation.simulated
+          }
+        : null,
     replan: start.replan,
     approvedBy: null,
     approvedAt: null,
     simulated:
       committed?.simulated === true ||
-      [dock, drone, ...input.segments, ...input.context, ...geofences].some((r) => r.simulated),
+      [dock, drone, ...input.segments, ...input.context, ...geofences, ...input.thirdParties].some(
+        (r) => r.simulated
+      ) ||
+      input.authorisation?.simulated === true,
     source: 'system'
   })
 }
@@ -443,6 +516,55 @@ function frame(station: Station, footprint: SegmentTask['footprint']) {
     )
   const ring = [corner(-1, -1), corner(1, -1), corner(1, 1), corner(-1, 1)]
   return polygon([[...ring, ring[0]!]])
+}
+
+/**
+ * Why a flight line or transit is out: a no-fly zone it enters or crosses, else the designated areas it comes within
+ * 150 m of without an authorisation.
+ */
+function keptOut(
+  zones: Geofence[],
+  what: string,
+  verb: 'enters' | 'crosses'
+): { code: 'geofence' | 'authorisation'; reason: string } {
+  const noFly = zones.filter((z) => z.kind === 'no_fly')
+  if (noFly.length > 0) return { code: 'geofence', reason: `${what} ${verb} no-fly zone ${labels(noFly)}` }
+  return {
+    code: 'authorisation',
+    reason: `${what} comes within ${DESIGNATED_AREA_M} m of designated area ${labels(zones)} without the Director General's authorisation (CAR 2016 reg. 143(1)(a), (b))`
+  }
+}
+
+/**
+ * Whether a path comes within `m` metres of a zone (`m` = 0: touches it). Apart from crossing, the nearest two
+ * polylines come is at a vertex of one of them, so checking each vertex against the other line is exact.
+ */
+function within(path: Feature<Point | LineString>, zone: Geofence, m: number): boolean {
+  const rings = zone.geometry.type === 'Polygon' ? zone.geometry.coordinates : zone.geometry.coordinates.flat()
+  const vertices = path.geometry.type === 'Point' ? [path.geometry.coordinates] : path.geometry.coordinates
+  if (!boxesMeet(vertices, rings.flat(), m)) return false
+  if (booleanIntersects(path, zone.geometry)) return true
+  if (m === 0) return false
+  const edge = multiLineString(rings)
+  if (vertices.some((v) => nearestPointOnLine(edge, v, meters).properties.pointDistance <= m)) return true
+  if (path.geometry.type === 'Point') return false
+  const line = path.geometry
+  return rings.flat().some((v) => nearestPointOnLine(line, v, meters).properties.pointDistance <= m)
+}
+
+/** Whether the bounding boxes of two sets of points come within `m` metres (a cheap test before the exact one). */
+function boxesMeet(a: Position[], b: Position[], m: number): boolean {
+  const box = (ps: Position[]) => {
+    const lons = ps.map((p) => p[0]!)
+    const lats = ps.map((p) => p[1]!)
+    return [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)] as const
+  }
+  const [aWest, aSouth, aEast, aNorth] = box(a)
+  const [bWest, bSouth, bEast, bNorth] = box(b)
+  // A degree of latitude is at least 110.5 km; dividing by less errs towards the exact test.
+  const dLat = m / 110_000
+  const dLon = dLat / Math.cos(((aSouth + aNorth) / 2) * (Math.PI / 180))
+  return aWest <= bEast + dLon && bWest <= aEast + dLon && aSouth <= bNorth + dLat && bSouth <= aNorth + dLat
 }
 
 function labels(zones: Geofence[]): string {

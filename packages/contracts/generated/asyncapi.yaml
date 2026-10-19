@@ -354,7 +354,7 @@ components:
         additionalProperties: false
     passSuspended:
       name: edge.pass.suspended.v1
-      summary: A segment's pass was suspended, e.g. by a Tier 2 candidate.
+      summary: "A segment's pass was suspended by a Tier 2 candidate: a missing or changed safety item, a damage report or a missed patrol."
       contentType: application/cloudevents+json
       payload:
         type: object

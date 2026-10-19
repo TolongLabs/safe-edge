@@ -17,7 +17,8 @@ describe('the labelled Elmina seed', () => {
       ...seed.baselines,
       ...seed.passes,
       ...seed.docks,
-      ...seed.droneProfiles
+      ...seed.droneProfiles,
+      ...seed.thirdParties
     ]
     expect(records.length).toBeGreaterThan(60)
     for (const record of records)

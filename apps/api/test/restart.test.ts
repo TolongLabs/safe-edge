@@ -198,3 +198,18 @@ test('a journal that no longer replays to what it recorded stops the start, nami
   db.close()
   await expect(startApiProcess(env)).rejects.toThrow(`Journal entry ${seq} (dispatch) replays differently than it ran`)
 }, 30_000)
+
+test("a dev API on the scenario clock starts again at the scenario's time, not the seed's", async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
+  afterAll(() => rm(dir, { recursive: true }))
+  const env = { NODE_ENV: 'test', SAFE_EDGE_CLOCK: 'scenario', SAFE_EDGE_DATA_DIR: dir }
+  const scenarioTime = '2026-10-21T00:40:00.000Z'
+  const first = await startApiProcess(env)
+  const set = await first.request('post', '/scenario/clock', 'tok_system', { now: scenarioTime })
+  expect(set.status).toBe(200)
+  await first.crash()
+
+  const api = await startApiProcess(env)
+  const raised = await call(api, Candidate, 'post', '/candidates', 'tok_provider', tier2Candidate)
+  expect(raised.raisedAt).toBe(scenarioTime)
+}, 30_000)

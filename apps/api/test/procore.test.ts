@@ -145,15 +145,6 @@ async function submitS1(api: Api) {
     CandidateDecision
   )
 
-  // The agent drafts a second work order for the same finding. Neither draft goes anywhere.
-  const agentDraft = await post(
-    api,
-    '/work-orders',
-    'tok_agent',
-    { findingId: finding!.id, remedyId: null, notes: 'Replace fence panel 4' },
-    WorkOrder
-  )
-
   // A person takes the manager's draft through the gates and submits it: interim protection, an approved remedy.
   await post(api, `/tasks/${(await tasksOf(api, finding!.id))[0]!.id}/complete`, 'tok_crew', undefined, Task)
   const gap = await post(
@@ -199,7 +190,7 @@ async function submitS1(api: Api) {
     { installerUserId: 'usr_installer', dueAt: '2026-10-24T09:00:00.000Z' },
     WorkOrder
   )
-  return { photo, finding: finding!, workOrder: workOrder!, agentDraft, remedy }
+  return { photo, finding: finding!, workOrder: workOrder!, remedy }
 }
 
 /** Calls `read` until it returns a value: the hand-off runs on the API's own time, after the request behind it. */
@@ -249,7 +240,7 @@ const retry = (api: Api, workOrderId: string, token: Token) =>
 test('submitting a work order files a Procore Observation with its photo and links it; drafts stay in Safe Edge', async () => {
   const { workOrders, handedOff } = procoreAdapter()
   const api = startApi({ workOrders })
-  const { photo, finding, workOrder, agentDraft } = await submitS1(api)
+  const { photo, finding, workOrder } = await submitS1(api)
 
   expect(await handedOff).toBeNull()
   const filed = procore.observations[0]!
@@ -270,8 +261,6 @@ test('submitting a work order files a Procore Observation with its photo and lin
     await (await api.request('get', `/work-orders/${workOrder.id}`, { token: 'tok_manager' })).json()
   )
   expect(linked.externalRef).toBe(String(filed.id))
-  const draft = await api.request('get', `/work-orders/${agentDraft.id}`, { token: 'tok_manager' })
-  expect(WorkOrder.parse(await draft.json())).toMatchObject({ status: 'draft', externalRef: null })
   const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_manager' })).json())
   expect(audit.at(-1)).toMatchObject({
     action: 'setWorkOrderExternalRef',
