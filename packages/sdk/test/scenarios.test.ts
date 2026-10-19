@@ -125,6 +125,35 @@ describe('SIM-5: the scenario player plays S1 to S6 on the memory transport', ()
   })
 })
 
+describe('SIM-9: playback keeps the flight at flight speed', () => {
+  test('a slow frame on the ground stops at take-off, so S1 flies at 8× however long frames take', async () => {
+    let frame: (elapsedMs: number) => void = () => {}
+    const player = await createScenarioPlayer({
+      scenarios: elminaScenarios,
+      id: 's1',
+      planner,
+      speed: 8,
+      frames: (onFrame) => ((frame = onFrame), () => {})
+    })
+    await player.seek('2026-10-21T22:36:00.000Z')
+    /** Delivers one frame and waits until the player has spent it and is ready for the next. */
+    const step = async (elapsedMs: number) => {
+      const spent = new Promise<void>((done) => {
+        const off = player.subscribe(() => (off(), done()))
+      })
+      frame(elapsedMs)
+      await spent
+      await new Promise((ready) => setTimeout(ready))
+    }
+    player.play()
+    // One second at the ground rate is two hours, which would cover the whole five-minute patrol.
+    await step(1_000)
+    expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:30.000Z', true])
+    await step(1_000)
+    expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:38.000Z', true])
+  })
+})
+
 describe('SIM-7: rain follows the scenario', () => {
   test("S1 rains as hard as its JPS reading and is under the dock's rain limit when the drone takes off", async () => {
     const player = await playerFor('s1')

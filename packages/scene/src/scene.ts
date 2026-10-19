@@ -59,7 +59,17 @@ export interface SceneOptions {
   onSelect?: (segmentId: string | null) => void
 }
 
-const MAX_PIXEL_RATIO = 1.5
+/** The TRD's frame budgets: 30 fps on a laptop, 24 fps on a phone (a coarse pointer), at these pixel ratios at most. */
+const BUDGETS = {
+  laptop: { frameMs: 1000 / 30, maxPixelRatio: 1.5 },
+  phone: { frameMs: 1000 / 24, maxPixelRatio: 1 }
+}
+/** While frames miss the budget, the pixel ratio steps down by this much a window, to this floor. */
+const PIXEL_RATIO_STEP = 0.25
+const MIN_PIXEL_RATIO = 0.75
+const BUDGET_WINDOW_FRAMES = 90
+/** A longer gap between frames is a hidden tab or a one-off stall, not what drawing costs. */
+const IGNORED_GAP_MS = 250
 const GROUND_SIZE_M = 12_000
 /** A press that moves further than this is a drag of the camera, not a click. */
 const CLICK_SLOP_PX = 5
@@ -73,7 +83,10 @@ export function createElminaScene(
   options: SceneOptions = {}
 ): ElminaScene {
   const renderer = new WebGLRenderer({ antialias: true })
-  renderer.setPixelRatio(Math.min(devicePixelRatio, MAX_PIXEL_RATIO))
+  const budget = matchMedia('(pointer: coarse)').matches ? BUDGETS.phone : BUDGETS.laptop
+  let pixelRatio = Math.min(devicePixelRatio, budget.maxPixelRatio)
+  renderer.setPixelRatio(pixelRatio)
+  renderer.domElement.dataset.pixelRatio = String(pixelRatio)
   container.append(renderer.domElement)
 
   const scene = new Scene()
@@ -300,11 +313,27 @@ export function createElminaScene(
   observer.observe(container)
   resize()
 
+  // Fill rate is what a weak GPU runs out of, so frames that miss the budget cost resolution, not smoothness.
+  let windowMs = 0
+  let windowFrames = 0
+  const keepToBudget = (frameMs: number) => {
+    if (frameMs <= 0 || frameMs >= IGNORED_GAP_MS) return
+    windowMs += frameMs
+    if (++windowFrames < BUDGET_WINDOW_FRAMES) return
+    if (windowMs / windowFrames > budget.frameMs && pixelRatio > MIN_PIXEL_RATIO) {
+      pixelRatio = Math.max(MIN_PIXEL_RATIO, pixelRatio - PIXEL_RATIO_STEP)
+      renderer.setPixelRatio(pixelRatio)
+      renderer.domElement.dataset.pixelRatio = String(pixelRatio)
+    }
+    windowMs = windowFrames = 0
+  }
+
   const timer = new Timer()
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
   renderer.setAnimationLoop((time) => {
     timer.update(time)
     const seconds = timer.getDelta()
+    keepToBudget(seconds * 1000)
     active.update()
     rain.update(reducedMotion.matches ? 0 : seconds, active.target, camera.position.distanceTo(active.target))
     renderer.render(scene, camera)
