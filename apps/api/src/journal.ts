@@ -27,8 +27,9 @@ export interface Journal {
    * entries `run`'s commands append and the rows `alongside` writes to the same database commit together or not at
    * all, so a kill cannot keep one without the other. If `run` throws, the entries it appended still commit (memory
    * holds their writes) and the error goes on. If `alongside` or the commit fails after `run` appended, nothing commits
-   * and the journal breaks, as after a failed append. Both must be synchronous, which keeps every other caller's
-   * entries out of the transaction. A section cannot run inside a command, a replay or another section.
+   * and the journal breaks, as after a failed append. Only what runs synchronously is inside the transaction, which
+   * keeps every other caller's entries out of it: a `run` that returns a promise has the promise's later work outside.
+   * A section cannot run inside a command, a replay or another section.
    */
   atomic<R>(run: () => R, alongside: (result: R) => void): R
 }
@@ -170,7 +171,6 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
       let result: R
       try {
         result = run()
-        if (result instanceof Promise) throw new Error('An atomic section must be synchronous')
       } catch (error) {
         // A failed append broke the journal, and nothing of the section may commit; otherwise the entries stay.
         if (broken) abort(error)

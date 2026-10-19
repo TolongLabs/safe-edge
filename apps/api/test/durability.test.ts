@@ -2,14 +2,15 @@
 // by Idempotency-Key and the webhook allowlist. The API runs as its own process and is killed with SIGKILL, as a crash
 // would, then started again on the same data directory.
 import { afterAll, expect, test } from 'bun:test'
-import { AuditEvent, EdgeEvent, RegisteredWebhook, Webhook } from '@safe-edge/contracts'
+import { AuditEvent, Candidate, EdgeEvent, RegisteredWebhook, Webhook } from '@safe-edge/contracts'
+import { Database } from 'bun:sqlite'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { eventually } from '../../../test/spawn.ts'
 import { startApiProcess } from './process.ts'
 import { Webhook as StandardWebhook } from 'standardwebhooks'
-import { tier2Candidate } from './support.ts'
+import { S1, tier2Candidate } from './support.ts'
 
 type ApiProcess = Awaited<ReturnType<typeof startApiProcess>>
 
@@ -148,3 +149,46 @@ test('a pending webhook retry survives a kill, goes out when it was due, and its
   await Bun.sleep(500)
   expect(hooks.received).toHaveLength(3)
 }, 40_000)
+
+test('a kill between the journal write and the idempotency write cannot make a same-key retry run twice', async () => {
+  const dir = await dataDir()
+  const env = { NODE_ENV: 'test', SAFE_EDGE_DATA_DIR: dir }
+  const first = await startApiProcess(env)
+  // A trigger makes keeping the answer take far longer than the test waits: the API stops between its write to the
+  // journal and its write of the answer, and is killed there.
+  const db = new Database(join(dir, 'api.sqlite'))
+  db.run('create table slow (n integer)')
+  db.run(
+    'insert into slow with recursive c(n) as (select 1 union all select n + 1 from c where n < 1000) select n from c'
+  )
+  db.run('create trigger slow_answer before insert on idempotency begin select count(*) from slow, slow, slow; end')
+  db.close()
+  const key = { 'idempotency-key': 'drone-report-s1-panel-4' }
+  const lost = first.request('post', '/candidates', 'tok_provider', tier2Candidate, key).catch((error: Error) => error)
+  // The API serves one request at a time in JavaScript: while the trigger runs, it cannot even answer its health check.
+  await eventually('The API stuck keeping the answer', () =>
+    fetch(`${first.url}/v1/health`, { signal: AbortSignal.timeout(300) }).then(
+      () => undefined,
+      (error: Error) => (error.name === 'TimeoutError' ? true : Promise.reject(error))
+    )
+  )
+  await first.crash()
+  expect(await lost).toBeInstanceOf(Error)
+  const cleanup = new Database(join(dir, 'api.sqlite'))
+  cleanup.run('drop trigger slow_answer')
+  cleanup.run('drop table slow')
+  cleanup.close()
+
+  // The drone retries its report with the same key: it is raised once, whatever the killed API had written.
+  const api = await startApiProcess(env)
+  const retried = await api.request('post', '/candidates', 'tok_provider', tier2Candidate, key)
+  expect(retried.status).toBe(201)
+  const candidate = Candidate.parse(await retried.json())
+  const again = await api.request('post', '/candidates', 'tok_provider', tier2Candidate, key)
+  expect(await again.json()).toEqual(candidate)
+  const raised = (await audit(api)).filter((e) => e.action === 'raiseCandidate')
+  expect(raised.map((e) => e.subjectId)).toEqual([candidate.id, `pass_${S1.segmentId.slice('seg_'.length)}`])
+  expect((await call(api, Candidate.array(), 'get', '/candidates', 'tok_manager')).map((c) => c.id)).toEqual([
+    candidate.id
+  ])
+}, 30_000)
