@@ -1,6 +1,6 @@
 # Licences
 
-Every library, model, dataset and 3D asset that the Safe Edge prototype uses, with its licence, its source and the credit the app must show. The [TRD](/docs/TRD.md#security-and-privacy) requires this file. Each licence below was checked at its source on 18 October 2026.
+Every library, model, dataset and 3D asset that the Safe Edge prototype uses, with its licence, its source and the credit the app must show. The [TRD](/docs/TRD.md#security-and-privacy) requires this file. Each licence below was checked at its source on 18 October 2026, and the libraries against the installed packages on 19 October 2026.
 
 Contents:
 
@@ -18,40 +18,55 @@ Contents:
 - Add a row here before a library, model, dataset or asset lands in the repo. Check its licence on its live page.
 - Use no AGPL or GPL model, and no code under a non-commercial licence.
 - The app copies each **Credit** cell word for word. To change a credit, change it here first.
-- MIT and Apache-2.0 require the licence text to travel with every distributed copy of the code. Keep the licence notices in the public build.
+- MIT, ISC and Apache-2.0 require the licence text to travel with every distributed copy of the code. Keep the licence notices in the public build.
 
 ## Libraries
 
-Versions are the latest on npm on 18 October 2026. `bun.lock` pins what is installed. Update a row when a major version or a licence changes. No library needs an on-screen credit.
+Versions are the ones `bun.lock` installs. A "planned" row is in the TRD but not installed yet, and shows the version the TRD names. Update a row when a version or a licence changes. No library needs an on-screen credit.
 
-| Package                                              | Version        | Licence    | Used in                             |
-| ---------------------------------------------------- | -------------- | ---------- | ----------------------------------- |
-| [`three`][three]                                     | 0.186.1        | MIT        | Web: scene engine                   |
-| [`3d-tiles-renderer`][3d-tiles]                      | 0.5.3          | Apache-2.0 | Web: optional photoreal fly-in (P2) |
-| [`@turf/turf`][turf]                                 | 7.4.0          | MIT        | Planner: edge geometry              |
-| [`react`, `react-dom`][react]                        | 19.3.1         | MIT        | Web: 2D screens                     |
-| [`zod`][zod]                                         | 4.6.7          | MIT        | Contracts: schemas                  |
-| [`hono`][hono]                                       | 4.13.13        | MIT        | API: REST server                    |
-| [`@anthropic-ai/sdk`][anthropic-sdk]                 | 0.135.0        | MIT        | API: Claude calls                   |
-| [`@modelcontextprotocol/server`][mcp]                | 2.3.1          | Apache-2.0 | MCP server                          |
-| [`vite`][vite], [`@vitejs/plugin-react`][vite-react] | 8.3.4, 6.1.2   | MIT        | Build only                          |
-| [`typescript`][typescript]                           | 7.0.2          | Apache-2.0 | Build only                          |
-| [`openapi-typescript`][openapi-ts]                   | 7.13.0         | MIT        | Build only: types from the contract |
-| [`@playwright/test`][playwright]                     | 1.64.1         | Apache-2.0 | Tests only                          |
-| `prettier`, `husky`, `lint-staged`, `@commitlint/*`  | See `bun.lock` | MIT        | Repo tooling only                   |
+| Package                                                            | Version          | Licence         | Used in                                            |
+| ------------------------------------------------------------------ | ---------------- | --------------- | -------------------------------------------------- |
+| [`zod`][zod]                                                       | 4.6.7            | MIT             | Contracts, core, SDK, API, MCP, providers: schemas |
+| [`@noble/hashes`][noble]                                           | 2.4.0            | MIT             | Core: audit-chain hashes                           |
+| [`@turf/*`][turf] (13 modules)                                     | 7.4.0            | MIT             | Planner and providers: edge geometry               |
+| [`fflate`][fflate]                                                 | 0.8.3            | MIT             | Planner: KMZ mission export                        |
+| [`hono`][hono]                                                     | 4.13.13          | MIT             | API: REST server                                   |
+| [`@anthropic-ai/sdk`][anthropic-sdk]                               | 0.135.0          | MIT             | API: Claude calls                                  |
+| [`@modelcontextprotocol/server`][mcp]                              | 2.3.1            | Apache-2.0      | MCP server                                         |
+| [`react`, `react-dom`][react]                                      | 19.3.1           | MIT             | Web: 2D screens                                    |
+| [`three`][three]                                                   | 0.186.1, planned | MIT             | Web: scene engine (#60)                            |
+| [`3d-tiles-renderer`][3d-tiles]                                    | 0.5.3, planned   | Apache-2.0      | Web: optional photoreal fly-in (P2, #69)           |
+| [`vite`][vite], [`@vitejs/plugin-react`][vite-react]               | 8.3.4, 6.1.2     | MIT             | Build only                                         |
+| [`typescript`][typescript]                                         | 6.0.3            | Apache-2.0      | Build only                                         |
+| [`openapi-typescript`][openapi-ts]                                 | 7.13.0           | MIT             | Build only: types from the contract                |
+| [`yaml`][yaml]                                                     | 2.9.1            | ISC             | Build only: writes the contract files              |
+| [`@asyncapi/parser`][asyncapi], [`@redocly/openapi-core`][redocly] | 3.6.6, 1.34.21   | Apache-2.0, MIT | Tests only: validate the contract files            |
+| [`@modelcontextprotocol/client`][mcp]                              | 2.3.1            | Apache-2.0      | Tests only: a real MCP client                      |
+| [`@xmldom/xmldom`][xmldom]                                         | 0.9.12           | MIT             | Tests only: reads the exported mission files       |
+| [`@playwright/test`][playwright]                                   | 1.64.1, planned  | Apache-2.0      | Tests only: end to end (#85)                       |
+| `@types/*`                                                         | See `bun.lock`   | MIT             | Type definitions only                              |
+| `prettier`, `husky`, `lint-staged`, `@commitlint/*`                | See `bun.lock`   | MIT             | Repo tooling only                                  |
 
-[three]: https://github.com/mrdoob/three.js
-[3d-tiles]: https://github.com/NASA-AMMOS/3DTilesRendererJS
-[turf]: https://github.com/Turfjs/turf
-[react]: https://github.com/react/react
+A scan of all 324 installed packages on 19 October 2026 found no GPL or AGPL licence. The only copyleft licence is MPL-2.0 on `lightningcss`, the CSS tool Vite runs at build time; none of its code ships in the build. The rest are MIT, Apache-2.0, ISC, BSD, 0BSD, Unlicense and Python-2.0.
+
 [zod]: https://github.com/colinhacks/zod
+[noble]: https://github.com/paulmillr/noble-hashes
+[turf]: https://github.com/Turfjs/turf
+[fflate]: https://github.com/101arrowz/fflate
 [hono]: https://github.com/honojs/hono
 [anthropic-sdk]: https://github.com/anthropics/anthropic-sdk-typescript
 [mcp]: https://github.com/modelcontextprotocol/typescript-sdk
+[react]: https://github.com/react/react
+[three]: https://github.com/mrdoob/three.js
+[3d-tiles]: https://github.com/NASA-AMMOS/3DTilesRendererJS
 [vite]: https://github.com/vitejs/vite
 [vite-react]: https://github.com/vitejs/vite-plugin-react
 [typescript]: https://github.com/microsoft/TypeScript
 [openapi-ts]: https://github.com/openapi-ts/openapi-typescript
+[yaml]: https://github.com/eemeli/yaml
+[asyncapi]: https://github.com/asyncapi/parser-js
+[redocly]: https://github.com/Redocly/redocly-cli
+[xmldom]: https://github.com/xmldom/xmldom
 [playwright]: https://github.com/microsoft/playwright
 
 ## Models and AI services
