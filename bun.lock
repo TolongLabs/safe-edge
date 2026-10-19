@@ -85,6 +85,14 @@
     },
     "packages/providers": {
       "name": "@safe-edge/providers",
+      "dependencies": {
+        "@safe-edge/contracts": "workspace:*",
+        "@safe-edge/planner": "workspace:*",
+        "@turf/distance": "7.4.0",
+      },
+      "devDependencies": {
+        "@safe-edge/core": "workspace:*",
+      },
     },
     "packages/scene": {
       "name": "@safe-edge/scene",
