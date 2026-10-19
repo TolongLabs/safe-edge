@@ -46,12 +46,11 @@ export const elminaPlanner: PatrolPlanner = ({ id, now, request, dock, droneProf
     forwardOverlap: 0.6,
     altitudeM: Math.min(9, request.altitudeCapM),
     altitudeCapM: request.altitudeCapM,
-    window: {
-      start: request.notBefore,
-      end: new Date(Date.parse(request.notBefore) + 2 * 3_600_000).toISOString(),
-      reason: 'requested'
-    },
+    // A site setting the request lacks: how long the agreed window stays open after first light.
+    notBefore: request.notBefore,
+    windowMinutes: 120,
     geofences: [],
+    thirdParties: [],
     passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: now })),
     flags: segments.map((s) => ({
       segmentId: s.id,
