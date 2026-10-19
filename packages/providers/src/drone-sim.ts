@@ -202,6 +202,15 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
           `${runId}'s approval does not match ${plan.id}'s: ${plan.approvedBy} approved it at ${plan.approvedAt}`
         )
       }
+      // A separation hold waits for a person to confirm the path is clear (core's releasePlanHold). The sim does not
+      // model the wait at the segment, so it flies only a plan whose holds were released.
+      const held = plan.holds.filter((h) => h.kind === 'separation' && h.releasedBy === null)
+      if (held.length > 0) {
+        const segments = held.map((h) => h.segmentId).join(', ')
+        throw new ApprovalRequiredError(
+          `${plan.id} holds ${segments}: the pilot must confirm the path is clear, then schedule the released plan`
+        )
+      }
       const now = clock.now()
       run.flight = flyPlan(run, Date.parse(now))
       record.status = 'in_flight'

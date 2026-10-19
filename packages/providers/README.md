@@ -75,7 +75,9 @@ The sim has no camera, so `observation.image` is null, `quality` is nominal (`sh
 
 `dispatchPatrol` rejects with `ApprovalRequiredError` unless the scheduled plan is `approved` and the `HumanApproval` equals what core recorded on `approvePatrolPlan` (`planId`, `approvedBy`, `approvedAt`). Only a pilot can approve in core, never an agent. Scheduling a proposed plan is allowed, but that run can never fly: once a pilot approves, schedule the approved plan again.
 
-The DJI and MAVLink adapters must apply the same check before they send any flight command.
+A `separation` hold (#79) waits for a person to confirm the path is clear. The sim does not model that wait at the segment, so it also refuses, with the same error, a plan that still has an unreleased separation hold: the pilot records the path clear with `releasePlanHold`, then schedules the released plan. Weather and lightning holds stop the launch in core's `startPatrol`, which the pilot calls before dispatching.
+
+The DJI and MAVLink adapters must apply the same checks before they send any flight command.
 
 ## Feeding core
 

@@ -114,6 +114,36 @@ describe('drone-sim refuses to fly without a human approval', () => {
     expect(await h.sim.getStatus('sim-1')).toMatchObject({ state: 'docked', runId: null, batteryPercent: 100 })
     expect(h.events).toEqual([])
   })
+
+  test('a separation hold flies only after the pilot records the path clear', async () => {
+    // People at the water's edge by segment 9 (as in core's flight-holds test): no stand-off clears them by 50 m.
+    const people: ThirdParty = {
+      id: 'obs_people_edge',
+      kind: 'person',
+      label: 'people at the water edge',
+      geometry: { type: 'Point', coordinates: [101.514434, 3.179979] },
+      observedAt: '2026-10-21T21:50:00.000Z',
+      simulated: true,
+      source: 'fixture'
+    }
+    const h = await start({ thirdParties: [people] })
+    const approved = h.approve(h.plan([...SEGMENT_IDS, 'seg_866518980_9']).id)
+    expect(approved.holds.map((x) => [x.kind, x.segmentId, x.releasedBy])).toEqual([
+      ['separation', 'seg_866518980_9', null]
+    ])
+    const approval = { planId: approved.id, approvedBy: approved.approvedBy!, approvedAt: approved.approvedAt! }
+    const held = await h.sim.schedulePatrol(approved)
+    await expect(h.sim.dispatchPatrol(held.id, approval)).rejects.toThrow('confirm the path is clear')
+    await h.sim.cancelPatrol(held.id)
+
+    const released = h.call('releasePlanHold', 'usr_pilot', {
+      params: { id: approved.id, segmentId: 'seg_866518980_9' }
+    }).data
+    const run = await h.sim.schedulePatrol(released)
+    await h.sim.dispatchPatrol(run.id, approval)
+    h.sim.tick()
+    expect(h.events.map((e) => e.type)).toEqual(['takeoff'])
+  })
 })
 
 type Harness = Awaited<ReturnType<typeof start>>
