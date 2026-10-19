@@ -14,7 +14,7 @@ Contents:
 The client launches the server itself, so there is no `dev` script. It needs two environment variables, and fails at startup without them:
 
 - `SAFE_EDGE_API_URL`: the API's `/v1` base, for example `http://localhost:3000/v1` from `bun run dev`.
-- `SAFE_EDGE_AGENT_TOKEN`: the agent's bearer token. Locally, that is `dev_agent` from `data/elmina/fixtures/dev-tokens.json`.
+- `SAFE_EDGE_AGENT_TOKEN`: the agent's bearer token. Locally, that is `dev_agent` from `data/elmina/fixtures/dev-tokens.json`. At startup the server asks the API who the token acts as (`GET /v1/me`) and exits unless it is an agent, so a person's token can't pass the model's drafts off as that person's.
 
 Protocol messages use stdout, so the server logs only to stderr. A client still on the 2025 handshake gets the unsupported-protocol-version error.
 

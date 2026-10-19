@@ -103,6 +103,27 @@ paths:
       x-safe-edge-roles: any
       x-safe-edge-agent-scope: edge.read
       x-safe-edge-events: []
+  /me:
+    get:
+      operationId: getMe
+      summary: "Who the bearer token acts as: type, ID, role and scopes"
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - me
+      responses:
+        "200":
+          description: "Who the bearer token acts as: type, ID, role and scopes"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Actor"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /docks:
     get:
       operationId: listDocks
@@ -1262,6 +1283,7 @@ paths:
           in: query
           required: false
           schema:
+            description: A record's events and those of records on a segment. Only the unfiltered list, oldest first, is a chain.
             type: string
       responses:
         "200":
@@ -1830,6 +1852,33 @@ components:
         - agent
         - system
         - provider
+    Actor:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/ActorType"
+        id:
+          type: string
+          minLength: 1
+        role:
+          $ref: "#/components/schemas/Role"
+        scopes:
+          type: array
+          items:
+            type: string
+            enum:
+              - edge.read
+              - inspection.read
+              - finding.propose
+              - workorder.draft
+              - notice.draft
+              - patrol.propose
+      required:
+        - type
+        - id
+        - role
+        - scopes
+      additionalProperties: false
     ActorRef:
       type: object
       properties:
@@ -3592,10 +3641,11 @@ components:
         prevHash:
           type: string
           pattern: ^[0-9a-f]{64}$
+          description: The previous event's hash; 64 zeros for the first event
         hash:
           type: string
           pattern: ^[0-9a-f]{64}$
-          description: SHA-256 of prevHash plus the canonical event JSON
+          description: "Hex SHA-256 of the UTF-8 text prevHash followed by the canonical JSON of this event without hash. Canonical JSON: object keys sorted, no whitespace, every value as JSON.stringify writes it."
       required:
         - id
         - at

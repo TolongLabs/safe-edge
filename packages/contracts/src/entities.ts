@@ -636,11 +636,17 @@ export const AuditEvent = named(
     decision: z.enum(['allowed', 'denied']),
     rule: PolicyRule.nullable(),
     policyVersion: z.string(),
-    prevHash: z.string().regex(/^[0-9a-f]{64}$/),
+    prevHash: z
+      .string()
+      .regex(/^[0-9a-f]{64}$/)
+      .describe("The previous event's hash; 64 zeros for the first event"),
     hash: z
       .string()
       .regex(/^[0-9a-f]{64}$/)
-      .describe('SHA-256 of prevHash plus the canonical event JSON')
+      .describe(
+        'Hex SHA-256 of the UTF-8 text prevHash followed by the canonical JSON of this event without hash. ' +
+          'Canonical JSON: object keys sorted, no whitespace, every value as JSON.stringify writes it.'
+      )
   })
 )
 export type AuditEvent = z.infer<typeof AuditEvent>
