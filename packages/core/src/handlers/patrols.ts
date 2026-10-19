@@ -59,7 +59,7 @@ export const patrolHandlers = (
         segments,
         passes: segments.flatMap((s) => (s.passId === null ? [] : [tx.must('passes', s.passId)])),
         findings: tx.all('findings').filter((f) => ids.has(f.segmentId)),
-        thirdParties: [...thirdParties, ...(body.thirdParties ?? [])]
+        thirdParties: [...thirdParties, ...(body.thirdParties ?? []).map((p) => ({ ...p, source: tx.source }))]
       })
     )
     if (plan.id !== id || plan.status !== 'proposed' || plan.approvedBy !== null || plan.approvedAt !== null) {

@@ -371,7 +371,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   expect(chain.filter((e) => e.action === 'previewRouteClosure')).toEqual([])
   // Every write the API serves today was exercised.
   const notReachable = {
-    releasePlanHold: 'needs a separation hold, which the API planner never makes: it sees no third parties (#79)',
+    releasePlanHold: "needs a separation hold; the sweep's plan (S1's segment) keeps clear of every third party (#130)",
     triageImages: 'answers 501 until #74',
     // The agent's flows need Claude (apps/api/test/agent.test.ts replays recorded runs). They write only through
     // the agent's own createWorkOrder and draftNotice calls, made with its token like the ones above.

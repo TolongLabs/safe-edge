@@ -117,10 +117,10 @@ export const CreatePatrolPlanRequest = named(
     notBefore: Timestamp,
     altitudeCapM: z.number().positive().describe('Agreed with air traffic control'),
     thirdParties: z
-      .array(ThirdParty)
+      .array(ThirdParty.omit({ source: true }))
       .optional()
       .describe(
-        "People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot"
+        "People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller"
       ),
     replan: PlanReplan.optional().describe(
       "Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider"
