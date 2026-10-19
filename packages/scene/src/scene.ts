@@ -9,6 +9,7 @@ import {
   Raycaster,
   Scene,
   Vector2,
+  Vector3,
   WebGLRenderer
 } from 'three'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
@@ -19,6 +20,7 @@ import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js
 import { toLocal } from './frame.ts'
 import { basePalette, buildBaseLayers, type ElminaLayers } from './layers.ts'
 import { buildEdgeAssets, type EdgeAssetView } from './assets.ts'
+import { buildFlight, type FlightState, type FlightView } from './flight.ts'
 import { buildSegmentRibbons, segmentAt, segmentMidpoint, type SegmentView } from './segments.ts'
 
 /** Orbit rotates around the target with the left button; map pans with it, like a web map. */
@@ -28,6 +30,10 @@ export interface ElminaScene {
   setControlMode(mode: ControlMode): void
   /** Outlines a segment (or none) and, with `focus`, moves the camera to it, `distanceM` away (420 m by default). */
   select(segmentId: string | null, options?: { focus?: boolean; distanceM?: number }): void
+  /** Places the planned flight's drone at `atMs` (epoch milliseconds). The scene must have been made with a `flight`. */
+  setFlightTime(atMs: number): FlightState
+  /** With `true`, the camera moves to the drone and then keeps it in view as it flies. */
+  followDrone(follow: boolean): void
   dispose(): void
 }
 
@@ -38,6 +44,8 @@ export interface SceneOptions {
   assets?: EdgeAssetView[]
   /** Called with the clicked segment's ID, or null when a click misses every segment. */
   onSelect?: (segmentId: string | null) => void
+  /** A planned patrol to fly: the dock, the route, the drone and its camera frustum. */
+  flight?: FlightView
 }
 
 const MAX_PIXEL_RATIO = 1.5
@@ -77,6 +85,8 @@ export function createElminaScene(
   // World-unit ribbons pass the depth test over anything near the ground, so the modelled assets draw after them.
   assets.objects.forEach((o) => (o.renderOrder = objects.length + 2))
   scene.add(...objects)
+  const flight = options.flight ? buildFlight(options.flight) : null
+  if (flight) scene.add(...flight.objects)
 
   // Start south of the lake, looking north over the retention ponds to Sungai Buloh.
   const camera = new PerspectiveCamera(45, 1, 1, 30_000)
@@ -132,6 +142,32 @@ export function createElminaScene(
       camera.position.set(x, 0, z).add(offset)
       active.update()
     }
+  }
+
+  let following = false
+  const followFrom = new Vector3()
+  const followDrone = (follow: boolean) => {
+    if (!flight) throw new Error('This scene has no flight to follow')
+    following = follow
+    if (!follow) return
+    // Start close, behind and above the drone, looking down at it.
+    const offset = new Vector3(-60, 45, 70)
+    for (const c of Object.values(controls)) c.target.copy(flight.dronePosition)
+    camera.position.copy(flight.dronePosition).add(offset)
+    followFrom.copy(flight.dronePosition)
+    active.update()
+  }
+  const setFlightTime = (atMs: number) => {
+    if (!flight) throw new Error('This scene has no flight to place')
+    const state = flight.update(atMs)
+    if (following) {
+      // Carry the camera along by the drone's move, so orbiting and zooming still work while it follows.
+      const moved = flight.dronePosition.clone().sub(followFrom)
+      for (const c of Object.values(controls)) c.target.add(moved)
+      camera.position.add(moved)
+      followFrom.copy(flight.dronePosition)
+    }
+    return state
   }
 
   const raycaster = new Raycaster()
@@ -197,7 +233,10 @@ export function createElminaScene(
   return {
     setControlMode,
     select,
+    setFlightTime,
+    followDrone,
     dispose() {
+      flight?.dispose()
       renderer.setAnimationLoop(null)
       renderer.domElement.removeEventListener('pointerdown', onPointerDown)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)

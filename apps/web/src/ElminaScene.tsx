@@ -12,7 +12,9 @@ import parksUrl from '../../../data/elmina/osm/parks.geojson?url'
 import pathsUrl from '../../../data/elmina/osm/paths.geojson?url'
 import waterUrl from '../../../data/elmina/osm/water.geojson?url'
 import seedUrl from '../../../data/elmina/fixtures/seed.json?url'
+import { FlightCard } from './FlightCard.tsx'
 import { Legend } from './Legend.tsx'
+import { planS1, type S1Flight } from './s1.ts'
 import { SegmentCard } from './SegmentCard.tsx'
 
 const layerUrls = { water: waterUrl, parks: parksUrl, paths: pathsUrl, buildings: buildingsUrl }
@@ -83,18 +85,21 @@ export function ElminaScene() {
   const [mode, setMode] = useState<ControlMode>('orbit')
   const [segments, setSegments] = useState<SegmentView[]>([])
   const [selected, setSelected] = useState<string | null>(null)
+  const [flight, setFlight] = useState<{ scene: Scene; s1: S1Flight } | null>(null)
 
   useEffect(() => {
     let disposed = false
-    Promise.all([loadLayers(), loadSegments()])
-      .then(([layers, { segments: views, assets }]) => {
+    Promise.all([loadLayers(), loadSegments(), planS1()])
+      .then(([layers, { segments: views, assets }, s1]) => {
         if (disposed) return
         scene.current = createElminaScene(container.current!, layers, {
           segments: views,
           assets,
-          onSelect: setSelected
+          onSelect: setSelected,
+          flight: s1.flight
         })
         setSegments(views)
+        setFlight({ scene: scene.current, s1 })
         // ?segment=<id>[&distance=<m>] opens the scene on one segment, for links from the Inbox and for recordings.
         const query = new URLSearchParams(location.search)
         const linked = query.get('segment')
@@ -131,6 +136,13 @@ export function ElminaScene() {
         </button>
       )}
       {status === 'ready' && <Legend />}
+      {status === 'ready' && flight && (
+        <FlightCard
+          scene={flight.scene}
+          s1={flight.s1}
+          segmentName={(id) => segments.find((s) => s.id === id)?.name ?? id}
+        />
+      )}
       {selectedSegment && (
         <SegmentCard
           segment={selectedSegment}
