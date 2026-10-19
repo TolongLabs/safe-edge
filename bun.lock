@@ -45,6 +45,12 @@
         "@modelcontextprotocol/client": "2.3.1",
       },
     },
+    "apps/site": {
+      "name": "@safe-edge/site",
+      "devDependencies": {
+        "vite": "^8.3.4",
+      },
+    },
     "apps/web": {
       "name": "@safe-edge/web",
       "dependencies": {
@@ -286,6 +292,8 @@
     "@safe-edge/scene": ["@safe-edge/scene@workspace:packages/scene"],
 
     "@safe-edge/sdk": ["@safe-edge/sdk@workspace:packages/sdk"],
+
+    "@safe-edge/site": ["@safe-edge/site@workspace:apps/site"],
 
     "@safe-edge/web": ["@safe-edge/web@workspace:apps/web"],
 
