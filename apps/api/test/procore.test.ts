@@ -15,11 +15,14 @@ import {
   RetestOutcome,
   Task,
   WorkOrder,
-  type RecordRetestRequest
+  type RecordRetestRequest,
+  type WorkOrderProvider
 } from '@safe-edge/contracts'
 import { ProcoreWorkOrderProvider, SAFETY_HAZARD_OBSERVATION_TYPE } from '@safe-edge/providers'
 import { startProcoreDouble } from '../../../packages/providers/test/procore-double.ts'
+import { playS1toRepair, startCore } from '../../../packages/core/test/support.ts'
 import type { ApiOptions } from '../src/app.ts'
+import { forwardWorkOrders } from '../src/work-orders.ts'
 import { S1, seed, startApi, type Api, type Token } from './support.ts'
 
 // FF D8 FF E0 followed by "safe-edge", as in evidence.test.ts.
@@ -440,5 +443,40 @@ test('a retry on an API without a work-order system fails at once, on the record
     step: 'createFinding',
     message: 'This API instance has no work-order system configured',
     at: seed.asOf
+  })
+})
+
+test('the hand-off records what the work-order system did, a refusal or an outage, but never a bug of its own', async () => {
+  const h = startCore()
+  const { workOrderId } = playS1toRepair(h, 'submitted')
+  const externalError = () => h.call('getWorkOrder', 'usr_manager', { params: { id: workOrderId } }).data.externalError
+  const forwarder = (provider: WorkOrderProvider) => forwardWorkOrders({ core: h.core, subscribe: () => {}, provider })
+
+  // A bug is not Procore's: it is not recorded on the work order, and the hand-off fails with it.
+  const buggy: WorkOrderProvider = {
+    createFinding: async () => {
+      throw new TypeError('finding.class.replaceAll is not a function')
+    },
+    addEvidence: async () => {},
+    updateStatus: async () => {}
+  }
+  await expect(forwarder(buggy).retry(workOrderId, 'createFinding')).rejects.toThrow(TypeError)
+  expect(externalError()).toBeNull()
+
+  // Procore cannot be reached: that is recorded, for a person to retry.
+  const closed = Bun.serve({ port: 0, fetch: () => new Response() })
+  const nobody = closed.url.href
+  closed.stop(true)
+  const unreachable = new ProcoreWorkOrderProvider({
+    loginBaseUrl: nobody,
+    apiBaseUrl: nobody,
+    ...credentials,
+    observationType: SAFETY_HAZARD_OBSERVATION_TYPE,
+    readEvidence: async () => PHOTO
+  })
+  await forwarder(unreachable).retry(workOrderId, 'createFinding')
+  expect(externalError()).toMatchObject({
+    step: 'createFinding',
+    message: expect.stringContaining('Procore POST /oauth/token could not be reached')
   })
 })

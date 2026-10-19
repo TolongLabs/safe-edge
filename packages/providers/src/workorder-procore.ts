@@ -6,6 +6,7 @@ import type {
   WorkOrderProvider
 } from '@safe-edge/contracts'
 import * as z from 'zod'
+import { WorkOrderProviderError } from './errors.ts'
 
 // The WorkOrderProvider port on Procore Observations. Every request below follows Procore's developer docs, read on
 // 19 Oct 2026 (paths under https://developers.procore.com; quotes in packages/providers/README.md):
@@ -94,9 +95,33 @@ const EXTENSION = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp
   string
 >
 
-async function expectOk(response: Response, request: string): Promise<Response> {
-  if (!response.ok) throw new Error(`Procore ${request} answered ${response.status}: ${await response.text()}`)
+/**
+ * One request to Procore or its storage service. Unreachable or refused is Procore's failure (WorkOrderProviderError);
+ * any other error is a bug and throws as it is.
+ */
+async function send(url: URL | string, init: RequestInit, request: string): Promise<Response> {
+  let response: Response
+  try {
+    response = await fetch(url, init)
+  } catch (error) {
+    if (!(error instanceof TypeError)) throw error
+    throw new WorkOrderProviderError(`Procore ${request} could not be reached: ${error.message}`, { cause: error })
+  }
+  if (!response.ok) {
+    throw new WorkOrderProviderError(`Procore ${request} answered ${response.status}: ${await response.text()}`)
+  }
   return response
+}
+
+/** A body Procore documents; anything else is Procore's failure, not a bug here. */
+async function documented<S extends z.ZodType>(response: Response, schema: S, request: string): Promise<z.output<S>> {
+  const parsed = schema.safeParse(await response.json())
+  if (!parsed.success) {
+    throw new WorkOrderProviderError(
+      `Procore ${request} answered an undocumented body: ${z.prettifyError(parsed.error)}`
+    )
+  }
+  return parsed.data
 }
 
 function observationDescription(finding: Finding): string {
@@ -166,7 +191,8 @@ export class ProcoreWorkOrderProvider implements WorkOrderProvider {
     const type = types.find((t) => t.name === observationType && t.active !== false && t.parent_inactive !== true)
     if (type === undefined) {
       const names = types.map((t) => t.name).join(', ')
-      throw new Error(`Procore project ${projectId} has no active observation type "${observationType}" (${names})`)
+      const message = `Procore project ${projectId} has no active observation type "${observationType}" (${names})`
+      throw new WorkOrderProviderError(message)
     }
     return type.id
   }
@@ -182,7 +208,7 @@ export class ProcoreWorkOrderProvider implements WorkOrderProvider {
     const form = new FormData()
     for (const [name, value] of Object.entries(upload.fields)) form.append(name, value)
     form.append('file', new Blob([bytes], { type: image.mediaType }), filename)
-    await expectOk(await fetch(upload.url, { method: 'POST', body: form }), `storage upload of ${image.id}`)
+    await send(upload.url, { method: 'POST', body: form }, `storage upload of ${image.id}`)
     return upload.uuid
   }
 
@@ -192,7 +218,8 @@ export class ProcoreWorkOrderProvider implements WorkOrderProvider {
     schema: S,
     body?: object
   ): Promise<z.output<S>> {
-    const response = await fetch(new URL(path, this.#config.apiBaseUrl), {
+    const request = `${method} ${path}`
+    const init: RequestInit = {
       method,
       headers: {
         Authorization: `Bearer ${await this.#accessToken()}`,
@@ -200,19 +227,20 @@ export class ProcoreWorkOrderProvider implements WorkOrderProvider {
         ...(body === undefined ? {} : { 'Content-Type': 'application/json' })
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) })
-    })
-    return schema.parse(await (await expectOk(response, `${method} ${path}`)).json())
+    }
+    return documented(await send(new URL(path, this.#config.apiBaseUrl), init, request), schema, request)
   }
 
   async #accessToken(): Promise<string> {
     if (this.#token !== null && Date.now() < this.#token.expiresAt) return this.#token.value
     const { loginBaseUrl, clientId, clientSecret } = this.#config
-    const response = await fetch(new URL('/oauth/token', loginBaseUrl), {
+    const init: RequestInit = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret })
-    })
-    const token = Token.parse(await (await expectOk(response, 'POST /oauth/token')).json())
+    }
+    const request = 'POST /oauth/token'
+    const token = await documented(await send(new URL('/oauth/token', loginBaseUrl), init, request), Token, request)
     // Renewed a minute early, so a token never lapses mid-request.
     this.#token = { value: token.access_token, expiresAt: Date.now() + (token.expires_in - 60) * 1000 }
     return token.access_token

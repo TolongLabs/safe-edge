@@ -155,7 +155,8 @@ export function createApp({
   const afterDispatch: { [K in CoreOperationId]?: (data: OperationOutput<K>) => void } = {
     // A person cleared a failed hand-off; the API resumes it from the step that failed.
     retryWorkOrderHandOff: ({ workOrder, retried }) => {
-      if (forwarder) return forwarder.retry(workOrder.id, retried.step)
+      // A bug in the hand-off rejects, unhandled, and stops the API; Procore's own failures go on the record.
+      if (forwarder) return void forwarder.retry(workOrder.id, retried.step)
       // This API runs without a work-order system, so the retry fails at once, on the record like any other failure.
       const body = { step: retried.step, message: 'This API instance has no work-order system configured' }
       const recorded = core.dispatch('recordWorkOrderExternalError', WORK_ORDERS, {

@@ -23,3 +23,11 @@ export class ProviderNotImplementedError extends Error {
     this.method = method
   }
 }
+
+/**
+ * The work-order system refused a request, answered with something other than the documented response, or could not
+ * be reached. What a hand-off records on the work order for a person to retry; any other error is a bug.
+ */
+export class WorkOrderProviderError extends Error {
+  override name = 'WorkOrderProviderError'
+}
