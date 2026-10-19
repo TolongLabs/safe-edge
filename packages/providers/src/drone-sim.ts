@@ -13,7 +13,7 @@ import {
 } from '@safe-edge/contracts'
 import { assumedEnergyModel } from '@safe-edge/planner'
 import { distance } from '@turf/distance'
-import { ApprovalRequiredError } from './errors.ts'
+import { ApprovalRequiredError, OutsideWindowError } from './errors.ts'
 
 /** Seconds of flight between `battery` events. */
 const BATTERY_SAMPLE_S = 10
@@ -81,8 +81,9 @@ interface Run {
 /**
  * A headless, deterministic drone provider (TRD "SDK and provider adapters": `drone-sim`). It flies an approved plan's
  * waypoints with #71's stated energy model (`assumedEnergyModel`): cruise speed and power along the ground, hover power
- * for 3 m/s climbs and descents, and a hover at each camera station. No wind. Each flight starts on a full battery,
- * because the dock charges between flights. Browser-safe: the Three.js scene subscribes to it with `onEvent`.
+ * for 3 m/s climbs and descents, and a hover at each camera station, where it takes a frame at the station's zoom. No
+ * wind. Each flight starts on a full battery, because the dock charges between flights. It refuses a dispatch that
+ * could not land before the plan's window closes. Browser-safe: the Three.js scene subscribes to it with `onEvent`.
  */
 export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
   const fleet = new Map<string, DeviceState>(
@@ -212,7 +213,15 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
         )
       }
       const now = clock.now()
-      run.flight = flyPlan(run, Date.parse(now))
+      const flight = flyPlan(run, Date.parse(now))
+      // The agreed window: the drone must be back on the dock before it closes.
+      const landsAt = new Date(flight.t0 + flight.legs.at(-1)!.endS * 1000).toISOString()
+      if (Date.parse(landsAt) >= Date.parse(plan.window.end)) {
+        throw new OutsideWindowError(
+          `${plan.id} would land at ${landsAt}, after its window closes at ${plan.window.end}`
+        )
+      }
+      run.flight = flight
       record.status = 'in_flight'
       record.dispatchedAt = now
       record.approval = given.data
@@ -313,6 +322,7 @@ function flyPlan(run: Run, t0: number): Flight {
           waypointIndex: index,
           segmentId: waypoint.segmentId!,
           viewpointId: waypoint.viewpointId,
+          zoom: waypoint.zoom,
           captureSource: 'drone',
           image: null,
           pose,

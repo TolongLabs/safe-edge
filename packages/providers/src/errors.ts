@@ -5,6 +5,11 @@ export class ApprovalRequiredError extends Error {
   override name = 'ApprovalRequiredError'
 }
 
+/** `dispatchPatrol` was called too late for the flight to land before the plan's window closes. */
+export class OutsideWindowError extends Error {
+  override name = 'OutsideWindowError'
+}
+
 /** A typed stub's method: the adapter documents its vendor mapping but does not talk to the vendor yet. */
 export class ProviderNotImplementedError extends Error {
   override name = 'ProviderNotImplementedError'

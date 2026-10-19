@@ -130,10 +130,17 @@ export const patrolHandlers = (
     // People within 30 m of the dock hold the take-off until the pilot records the dock clear.
     const dockHold = plan.holds.find((h) => h.kind === 'separation' && h.segmentId === null && h.releasedBy === null)
     if (dockHold) return tx.deny('separation_hold', `${plan.id} cannot take off yet: ${dockHold.reason}`, plan.id)
-    // The agreed window: from its start, up to (not at) its end.
+    // The agreed window: from its start, up to (not at) its end, and landing before the end.
     const now = Date.parse(tx.now)
     if (now < Date.parse(plan.window.start) || now >= Date.parse(plan.window.end)) {
       const message = `${plan.id} flies from ${plan.window.start} until ${plan.window.end}; it is ${tx.now}`
+      return tx.deny('outside_window', message, plan.id)
+    }
+    const [takeoff, landing] = [plan.waypoints[0], plan.waypoints.at(-1)]
+    const flightMs = takeoff && landing ? Date.parse(landing.eta) - Date.parse(takeoff.eta) : 0
+    if (now + flightMs >= Date.parse(plan.window.end)) {
+      const landsAt = new Date(now + flightMs).toISOString()
+      const message = `${plan.id} would land at ${landsAt}, after its window closes at ${plan.window.end}`
       return tx.deny('outside_window', message, plan.id)
     }
     const patrol: Patrol = {

@@ -15,7 +15,7 @@ import {
 import type { ThirdParty } from '@safe-edge/planner'
 import { distance } from '@turf/distance'
 import { plannerWith, seed, startCore } from '../../core/test/support.ts'
-import { ApprovalRequiredError, createDroneSim } from '../src/index.ts'
+import { ApprovalRequiredError, OutsideWindowError, createDroneSim } from '../src/index.ts'
 
 // S1 (two fixed viewpoints) and two other lake segments: real Elmina geometry from the seed.
 const SEGMENT_IDS = [seed.story.s1.segmentId, 'seg_866518980_5', 'seg_866518980_6']
@@ -108,6 +108,67 @@ describe('drone-sim refuses to fly without a human approval', () => {
     await h.sim.dispatchPatrol(run.id, approval)
     h.sim.tick()
     expect(h.events.map((e) => e.type)).toEqual(['takeoff'])
+  })
+})
+
+describe('drone-sim honours the plan: its zoom and its window', () => {
+  test("each frame is taken at its station's zoom, with the far bank's stations standing off from S1's path crowd", async () => {
+    const h = await start()
+    // Across the lake from the seed's S1 path crowd, the stations stand further off and zoom in to keep 50 m.
+    const approved = h.approve(h.plan(['seg_866518980_7']).id)
+    expect(approved.holds).toEqual([])
+    const run = await h.sim.schedulePatrol(approved)
+    h.setNow(approved.window.start)
+    await h.sim.dispatchPatrol(run.id, {
+      planId: approved.id,
+      approvedBy: approved.approvedBy!,
+      approvedAt: approved.approvedAt!
+    })
+    h.setNow(approved.window.end)
+    h.sim.tick()
+
+    const frames = h.events.flatMap((e) => (e.type === 'observation' ? [e] : []))
+    const stations = approved.waypoints.filter((w) => w.kind === 'station')
+    expect(frames.map((e) => e.zoom)).toEqual(stations.map((w) => w.zoom))
+    expect(frames.some((e) => e.zoom > 1)).toBe(true)
+    expect(h.events.at(-1)).toMatchObject({ type: 'landed', outcome: 'completed' })
+  })
+
+  test('it refuses to fly a plan it could not land before the window closes', async () => {
+    const h = await start()
+    const approved = h.approve(h.plan().id)
+    const approval = { planId: approved.id, approvedBy: approved.approvedBy!, approvedAt: approved.approvedAt! }
+    const flightMs = Date.parse(approved.waypoints.at(-1)!.eta) - Date.parse(approved.window.start)
+    const run = await h.sim.schedulePatrol(approved)
+
+    // Dispatched a second later than the last moment it could still land before the window ends.
+    h.setNow(new Date(Date.parse(approved.window.end) - flightMs + 1000).toISOString())
+    const lateLanding = new Date(Date.parse(h.now()) + flightMs).toISOString()
+    // Core refuses to start that patrol too, as an audited outside_window denial.
+    const startInCore = () =>
+      h.attempt('startPatrol', 'usr_pilot', { body: { planId: approved.id, provider: 'sim', droneId: 'sim-1' } })
+    expect(startInCore()).toMatchObject({
+      ok: false,
+      rule: 'outside_window',
+      message: `${approved.id} would land at ${lateLanding}, after its window closes at ${approved.window.end}`
+    })
+    const late = h.sim.dispatchPatrol(run.id, approval)
+    await expect(late).rejects.toThrow(OutsideWindowError)
+    await expect(late).rejects.toThrow(
+      `${approved.id} would land at ${lateLanding}, after its window closes at ${approved.window.end}`
+    )
+    expect(await h.sim.getStatus('sim-1')).toMatchObject({ state: 'docked', batteryPercent: 100 })
+    expect(h.events).toEqual([])
+
+    // The run stays scheduled: with a second to spare it flies, and lands inside the window.
+    h.setNow(new Date(Date.parse(approved.window.end) - flightMs - 1000).toISOString())
+    expect(startInCore()).toMatchObject({ ok: true, data: { status: 'in_flight' } })
+    await h.sim.dispatchPatrol(run.id, approval)
+    h.setNow(approved.window.end)
+    h.sim.tick()
+    const landed = h.events.at(-1)!
+    expect(landed).toMatchObject({ type: 'landed', outcome: 'completed' })
+    expect(Date.parse(landed.at)).toBeLessThan(Date.parse(approved.window.end))
   })
 })
 

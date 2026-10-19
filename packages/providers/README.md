@@ -60,13 +60,13 @@ sim.tick()
 
 Every event has `type`, `runId` (`simrun_<n>`), `deviceId`, `at` and `simulated: true`. A `pose` is the camera pose: `lon`, `lat`, `altM` above ground, `headingDeg` clockwise from north and gimbal `pitchDeg` (negative looks down). Indexes are the plan's `waypoints` indexes.
 
-| `type`        | When                                                      | Other fields                                                                                                                                            |
-| ------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `takeoff`     | At dispatch, leaving waypoint 0 on the dock               | `planId`, `pose`                                                                                                                                        |
-| `waypoint`    | On reaching each waypoint 1 to n − 2 (transits, stations) | `index`, `kind`, `segmentId` (null on transits), `pose`                                                                                                 |
-| `observation` | At each camera station, straight after its `waypoint`     | `waypointIndex`, `segmentId`, `viewpointId` (the plan station's, null when none), `captureSource: 'drone'`, `image`, `pose`, `quality`, `privacyAction` |
-| `battery`     | Every 10 s of flight                                      | `remainingWh`, `percent` of the usable battery                                                                                                          |
-| `landed`      | On reaching the last waypoint, or the dock after a cancel | `outcome` (`completed` or `cancelled`), `pose`, `remainingWh`                                                                                           |
+| `type`        | When                                                      | Other fields                                                                                                                                                                    |
+| ------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `takeoff`     | At dispatch, leaving waypoint 0 on the dock               | `planId`, `pose`                                                                                                                                                                |
+| `waypoint`    | On reaching each waypoint 1 to n − 2 (transits, stations) | `index`, `kind`, `segmentId` (null on transits), `pose`                                                                                                                         |
+| `observation` | At each camera station, straight after its `waypoint`     | `waypointIndex`, `segmentId`, `viewpointId` (the plan station's, null when none), `zoom` (the station's), `captureSource: 'drone'`, `image`, `pose`, `quality`, `privacyAction` |
+| `battery`     | Every 10 s of flight                                      | `remainingWh`, `percent` of the usable battery                                                                                                                                  |
+| `landed`      | On reaching the last waypoint, or the dock after a cancel | `outcome` (`completed` or `cancelled`), `pose`, `remainingWh`                                                                                                                   |
 
 The sim has no camera, so `observation.image` is null, `quality` is nominal (`sharpness: 1`, `occlusion: 0`) and `privacyAction` is `none`. A scenario that needs imagery attaches its fixture images. Validate events with `ProviderEvent.parse`.
 
@@ -80,7 +80,11 @@ The sim has no camera, so `observation.image` is null, `quality` is nominal (`sh
 
 `dispatchPatrol` rejects with `ApprovalRequiredError` unless the scheduled plan is `approved` and the `HumanApproval` equals what core recorded on `approvePatrolPlan` (`planId`, `approvedBy`, `approvedAt`). Only a pilot can approve in core, never an agent. Scheduling a proposed plan is allowed, but that run can never fly: once a pilot approves, schedule the approved plan again.
 
-A `separation` hold (#79) waits for a person to confirm the path is clear. The sim does not model that wait at the segment, so it also refuses, with the same error, a plan that still has an unreleased separation hold: the pilot records the path clear with `releasePlanHold`, then schedules the released plan. Weather and lightning holds stop the launch in core's `startPatrol`, which the pilot calls before dispatching.
+A `separation` hold (#79) waits for a person to confirm the path is clear, on a segment or (#125, people within 30 m) on the dock. The sim does not model that wait, so it also refuses, with the same error, a plan that still has an unreleased separation hold: the pilot records the path clear with `releasePlanHold`, then schedules the released plan. A released hold flies without the wait the plan budgeted for it, so that flight lands earlier than the plan's ETAs. Weather and lightning holds stop the launch in core's `startPatrol`, which the pilot calls before dispatching.
+
+## Window gate
+
+`dispatchPatrol` rejects with `OutsideWindowError` when the flight, launched now, would land at or after the plan's `window.end`. The run stays scheduled. Core's `startPatrol` refuses the same start as `outside_window`.
 
 The DJI and MAVLink adapters must apply the same checks before they send any flight command.
 

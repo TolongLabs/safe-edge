@@ -93,13 +93,17 @@ export const ProviderEvent = z.discriminatedUnion('type', [
     segmentId: SegmentId.nullable(),
     pose: Pose
   }),
-  /** One frame at a camera station. `viewpointId` is the plan station's, null when the plan links none. */
+  /**
+   * One frame at a camera station, taken at the station's zoom. `viewpointId` is the plan station's, null when the plan
+   * links none.
+   */
   z.object({
     type: z.literal('observation'),
     ...eventBase,
     waypointIndex: z.number().int().positive(),
     segmentId: SegmentId,
     viewpointId: ViewpointId.nullable(),
+    zoom: Waypoint.shape.zoom,
     captureSource: z.literal('drone'),
     image: EvidenceRef.nullable(),
     pose: Pose,
