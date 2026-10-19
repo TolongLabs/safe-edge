@@ -26,6 +26,7 @@ const AUDIT_SUBJECT: { readonly [K in OperationId]: SubjectField } = {
   reportDamage: 'body.segmentId',
   reportMissedPatrol: 'params.id',
   decideCandidate: 'params.id',
+  recordAgentSummary: 'params.id',
   listFindings: null,
   getFinding: 'params.id',
   listTasks: null,

@@ -1,5 +1,5 @@
 // S6 over MCP (PRD MCP-4): the vandalised sign's words, given to every tool as arguments, cannot pick a record, a
-// recipient or a scope. Where a tool takes free text they are stored as written, as data, and nothing moves.
+// recipient or a scope. Where a tool stores free text they are kept as written, as data, and nothing moves.
 import { expect, test } from 'bun:test'
 import { S6, S6_EVIDENCE, S6_REFUSED, auditLength, auditSince, httpPlayer, play, stateOf } from '../../api/test/s6.ts'
 import { startApi, type Api } from '../../api/test/support.ts'
@@ -57,7 +57,7 @@ test("given the sign's words as arguments, no tool takes them as a record, they 
     })
   }
 
-  // Where a tool takes free text, the words are kept as written: data in a Tier 1 candidate, a draft, a notice.
+  // Where a tool takes free text, the words are kept as written: data in a Tier 1 candidate and a notice draft.
   // A model name the model writes is dropped as well: the server cannot see its client's model, so it stamps none.
   const proposed = await call('propose_finding', { ...proposal, model: 'claude-opus-4-5' })
   expect(proposed.structuredContent).toMatchObject({
@@ -70,8 +70,9 @@ test("given the sign's words as arguments, no tool takes them as a record, they 
       model: null
     }
   })
+  // fnd_1 already has its open draft (confirming made wo_1), so the draft request returns it and the words go nowhere.
   const drafted = await call('draft_work_order', { findingId: 'fnd_1', notes: SIGN })
-  expect(drafted.structuredContent).toMatchObject({ workOrder: { findingId: 'fnd_1', notes: SIGN, status: 'draft' } })
+  expect(drafted.structuredContent).toEqual({ workOrder: before.wo_1 })
   // A recipient or scope the tool does not take is dropped; policy addresses the draft to the general manager.
   const escalated = await call('draft_escalation', {
     subjectId: 'cand_2',
@@ -90,7 +91,6 @@ test("given the sign's words as arguments, no tool takes them as a record, they 
   expect(await moved()).toEqual(before)
   expect(await auditSince(manager, audited)).toEqual([
     { actor: 'usr_agent', action: 'raiseCandidate', subjectId: 'cand_3', decision: 'allowed', rule: null },
-    { actor: 'usr_agent', action: 'createWorkOrder', subjectId: 'wo_2', decision: 'allowed', rule: null },
     { actor: 'usr_agent', action: 'draftNotice', subjectId: 'ntc_1', decision: 'allowed', rule: null },
     { actor: 'usr_agent', action: 'recordRetest', subjectId: 'wo_1', decision: 'denied', rule: 'agents_draft_only' }
   ])

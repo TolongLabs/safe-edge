@@ -51,6 +51,7 @@ function raise(
     decidedBy: null,
     decidedAt: null,
     decisionReason: null,
+    agentSummary: null,
     source: tx.source
   }
   tx.put('candidates', candidate)
@@ -92,7 +93,7 @@ function raise(
 }
 
 export const inbox: Handlers<
-  'raiseCandidate' | 'reportDamage' | 'reportMissedPatrol' | 'decideCandidate' | 'completeTask'
+  'raiseCandidate' | 'reportDamage' | 'reportMissedPatrol' | 'decideCandidate' | 'recordAgentSummary' | 'completeTask'
 > = {
   raiseCandidate: (tx, { body }) => raise(tx, body, 'Tier 2 candidate'),
 
@@ -234,6 +235,23 @@ export const inbox: Handlers<
       segment.id
     )
     return ok({ candidate: decided, finding, tasks: [task], workOrder })
+  },
+
+  // Only an agent's token reaches this (the table names no role), so the label is true.
+  recordAgentSummary: (tx, { params, body }) => {
+    const candidate = tx.get('candidates', params.id)
+    if (!candidate) return tx.notFound(`No candidate ${params.id}`)
+    const summarised: Candidate = {
+      ...candidate,
+      agentSummary: {
+        label: 'ai_suggestion',
+        ...body,
+        draftedBy: { type: tx.actor.type, id: tx.actor.id },
+        draftedAt: tx.now
+      }
+    }
+    tx.put('candidates', summarised)
+    return ok(summarised)
   },
 
   completeTask: (tx, { params }) => {

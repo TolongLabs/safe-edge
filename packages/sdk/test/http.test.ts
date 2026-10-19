@@ -2,7 +2,8 @@
 // injectable clock. Bearer tokens `tok_<userId>` map to the seeded users.
 import { describe, expect, test } from 'bun:test'
 import { actorFor } from '@safe-edge/core'
-import { startApi as startRealApi } from '../../../apps/api/test/support.ts'
+import type { EdgeEvent } from '@safe-edge/contracts'
+import { startApi as startRealApi, tier2Candidate } from '../../../apps/api/test/support.ts'
 import { SafeEdgeApiError, SafeEdgeDeniedError, createSafeEdgeClient, elminaSeed } from '../src/index.ts'
 import { S1, playS1toS3 } from './story.ts'
 
@@ -50,6 +51,26 @@ describe('http transport: the same typed client against the v1 API', () => {
     const generated = writes.slice(0, -1).map((r) => r.idempotencyKey)
     expect(generated.every((key) => typeof key === 'string' && key.length >= 16)).toBe(true)
     expect(new Set(generated).size).toBe(generated.length)
+  })
+
+  test('streamEvents reads GET /v1/events: it resolves once subscribed, then yields each CloudEvent core emits', async () => {
+    api = startApi()
+    await expect(httpAs('usr_gm', 'tok_nobody').streamEvents()).rejects.toMatchObject({ status: 401 })
+    const events = await httpAs('usr_gm').streamEvents()
+    const candidate = await httpAs('usr_drone_sim').raiseCandidate({ body: tier2Candidate })
+
+    const seen: EdgeEvent[] = []
+    for await (const event of events) {
+      seen.push(event)
+      if (seen.length === 2) break
+    }
+    expect(seen.map((e) => [e.type, e.data])).toEqual([
+      ['edge.candidate.raised.v1', { candidateId: candidate.id, segmentId: S1.segmentId, tier: 2, simulated: true }],
+      [
+        'edge.pass.suspended.v1',
+        { passId: 'pass_866518980_11', segmentId: S1.segmentId, candidateId: candidate.id, simulated: true }
+      ]
+    ])
   })
 
   test('a 403 surfaces as a typed error naming the rule; 401 and 404 as typed API errors', async () => {

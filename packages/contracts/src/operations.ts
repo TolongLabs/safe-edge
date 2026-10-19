@@ -2,6 +2,7 @@ import type * as z from 'zod'
 import { Actor, type Role, type Scope } from './actors.ts'
 import {
   AgentAnswer,
+  AgentStopped,
   AskAgentRequest,
   AssetList,
   AuditEventList,
@@ -40,6 +41,7 @@ import {
   PatrolList,
   PatrolPlanList,
   RaiseCandidateRequest,
+  RecordAgentSummaryRequest,
   RecordClearanceRequest,
   RecordObservationRequest,
   RecordRetestRequest,
@@ -103,6 +105,8 @@ export interface OperationSpec {
   /** The JSON body on success; for streamed operations, the schema of each server-sent event's data. */
   readonly response: z.ZodType
   readonly status: 200 | 201
+  /** Responses besides `status` and the shared errors (400, 401, 403, 404), each with its JSON body. */
+  readonly responses?: { readonly [status: number]: { readonly description: string; readonly schema: z.ZodType } }
   readonly stream?: true
   readonly events: readonly EventType[]
 }
@@ -364,6 +368,20 @@ export const operations = {
     status: 200,
     events: ['edge.candidate.decided.v1', 'edge.work_order.drafted.v1']
   },
+  recordAgentSummary: {
+    method: 'post',
+    path: '/candidates/{id}/agent-summary',
+    summary:
+      "Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion",
+    handledBy: 'core',
+    roles: [],
+    agentScope: 'finding.propose',
+    params: IdParam.candidate,
+    body: RecordAgentSummaryRequest,
+    response: Candidate,
+    status: 200,
+    events: []
+  },
   listFindings: {
     method: 'get',
     path: '/findings',
@@ -504,13 +522,20 @@ export const operations = {
   createWorkOrder: {
     method: 'post',
     path: '/work-orders',
-    summary: 'Create a draft from a finding and a remedy',
+    summary:
+      'Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one',
     handledBy: 'core',
     roles: ['manager'],
     agentScope: 'workorder.draft',
     body: CreateWorkOrderRequest,
     response: WorkOrder,
     status: 201,
+    responses: {
+      200: {
+        description: "The finding's open draft, unchanged (confirming a candidate drafts one); nothing was created",
+        schema: WorkOrder
+      }
+    },
     events: ['edge.work_order.drafted.v1']
   },
   updateWorkOrder: {
@@ -749,13 +774,19 @@ export const operations = {
     method: 'post',
     path: '/agent/inbox-drafts',
     summary:
-      'The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft',
+      "The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft",
     handledBy: 'api',
     roles: ['manager'],
     agentScope: null,
     body: DraftInboxRequest,
     response: InboxDraft,
     status: 200,
+    responses: {
+      502: {
+        description: 'Claude refused, or finished without the draft the workflow asked for; the summary is not stored',
+        schema: AgentStopped
+      }
+    },
     events: []
   },
   draftMonthlyReport: {
@@ -769,6 +800,12 @@ export const operations = {
     body: DraftMonthlyReportRequest,
     response: MonthlyReportDraft,
     status: 200,
+    responses: {
+      502: {
+        description: 'Claude refused, or finished without saving exactly one monthly report',
+        schema: AgentStopped
+      }
+    },
     events: []
   },
   streamEvents: {
