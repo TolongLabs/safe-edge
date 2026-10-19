@@ -1,5 +1,6 @@
 import {
   DRONE_DRAWN_SCALE,
+  type DayPhase,
   type ElminaScene,
   type FlightPoint,
   type FlightState,
@@ -8,8 +9,10 @@ import {
 } from '@safe-edge/scene'
 import {
   createScenarioPlayer,
+  elminaRainfall,
   elminaScenarios,
   elminaSeed,
+  rainAt,
   type Played,
   type Scenario,
   type ScenarioPlayer
@@ -31,6 +34,25 @@ const localTime = new Intl.DateTimeFormat('en-GB', {
   second: '2-digit'
 })
 const hhmm = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kuala_Lumpur', hour: '2-digit', minute: '2-digit' })
+
+const dayWords: Record<DayPhase, string> = { night: 'Night', dawn: 'Dawn', day: 'Day', dusk: 'Dusk' }
+
+/** A rain rate in the JPS one-hour bins: light 1–10 mm, moderate 11–30 mm, heavy 31–60 mm, very heavy above 60 mm. */
+const rainWords = (mmH: number) =>
+  mmH <= 0
+    ? 'dry'
+    : `${mmH <= 10 ? 'light' : mmH <= 30 ? 'moderate' : mmH <= 60 ? 'heavy' : 'very heavy'} rain, ${mmH} mm/h`
+
+const realRain = elminaRainfall.reading
+const realRainTime = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Asia/Kuala_Lumpur',
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+})
 
 const phaseWords: Record<FlightState['phase'], string> = {
   docked: 'On the dock',
@@ -137,6 +159,7 @@ export function ScenarioPanel({
   const [, setVersion] = useState(0)
   const [flight, setFlight] = useState<FlightState | null>(null)
   const [scrubTo, setScrubTo] = useState<number | null>(null)
+  const [day, setDay] = useState<DayPhase | null>(null)
   const shown = useRef<{ planId: string | null; now: string; flying: boolean }>({
     planId: null,
     now: '',
@@ -163,6 +186,7 @@ export function ScenarioPanel({
           if (plan && (plan.id !== shown.current.planId || rewound)) scene.showFlight(flightView(plan))
           if (!plan && shown.current.planId !== null) scene.showFlight(null)
           shown.current = { ...shown.current, planId: plan?.id ?? null, now: created.now }
+          setDay(scene.setConditions({ at: created.now, rainMmH: rainAt(elminaScenarios, id, created.now) }))
           const [status, passes, markers] = await Promise.all([
             plan ? created.client.droneStatus(DRONE) : null,
             created.client.listPasses({}),
@@ -269,6 +293,23 @@ export function ScenarioPanel({
         <time dateTime={new Date(now).toISOString()}>{localTime.format(now)}</time>
         {player === null && ' · loading the demo…'}
       </p>
+
+      <div style={{ display: 'grid', gap: 4 }}>
+        <p style={{ margin: 0 }}>
+          {day && `${dayWords[day]}, `}
+          {rainWords(rainAt(elminaScenarios, id, new Date(now).toISOString()))}
+          <span style={{ color: '#5d6b66' }}> · simulated</span>
+        </p>
+        <p style={{ margin: 0, fontSize: 12, lineHeight: '16px', color: '#5d6b66' }}>
+          Real reading:{' '}
+          <a href={realRain.url ?? undefined} target="_blank" rel="noreferrer" style={{ color: '#17302a' }}>
+            {realRain.value?.toFixed(1)} mm in the hour to{' '}
+            <time dateTime={realRain.observedAt}>{realRainTime.format(Date.parse(realRain.observedAt))}</time>
+          </a>{' '}
+          at {elminaRainfall.station}, {realRain.publisher} gauge {realRain.stationId}. Saved snapshot; the scenario’s
+          rain is simulated.
+        </p>
+      </div>
 
       {flight && (
         <div style={{ display: 'grid', gap: 4 }}>

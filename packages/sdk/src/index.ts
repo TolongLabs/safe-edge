@@ -15,8 +15,8 @@ export {
   type ScenarioPlayer,
   type ScenarioPlayerOptions
 } from './player.ts'
-export { Scenario, ScenarioEvent } from './scenario.ts'
-export { elminaScenarios } from './scenarios.ts'
+export { rainAt, Scenario, ScenarioEvent, WeatherStep } from './scenario.ts'
+export { elminaRainfall, elminaScenarios } from './scenarios.ts'
 
 /**
  * A typed Safe Edge client with one method per operationId in the contracts' operations table.

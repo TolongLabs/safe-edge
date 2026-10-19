@@ -4,7 +4,10 @@ import { join } from 'node:path'
 import {
   createElminaPlanner,
   createScenarioPlayer,
+  elminaRainfall,
   elminaScenarios,
+  elminaSeed,
+  rainAt,
   type Played,
   type Scenario,
   type ScenarioPlayer
@@ -119,6 +122,36 @@ describe('SIM-5: the scenario player plays S1 to S6 on the memory transport', ()
     expect(player.played.at(-1)).toMatchObject({ outcome: 'refused', rule: 'agents_draft_only' })
     const pass = (await player.client.listPasses({})).find((p) => p.segmentId === S1_SEGMENT)
     expect(pass?.state).toBe('suspended')
+  })
+})
+
+describe('SIM-7: rain follows the scenario', () => {
+  test("S1 rains as hard as its JPS reading and is under the dock's rain limit when the drone takes off", async () => {
+    const player = await playerFor('s1')
+    await player.seek(scenario('s1').end)
+    const plan = player.played.find((p) => p.event.operationId === 'createPatrolPlan')!
+    const { dockId, context } = (plan.event.input.body ?? {}) as {
+      dockId: string
+      context: Array<{ kind: string; value: number }>
+    }
+    const reading = context.find((c) => c.kind === 'rainfall')!
+    expect(rainAt(elminaScenarios, 's1', plan.event.at)).toBe(reading.value)
+    const [patrol] = await player.client.listPatrols()
+    const dock = elminaSeed.docks.find((d) => d.id === dockId)!
+    expect(rainAt(elminaScenarios, 's1', patrol!.startedAt!)).toBeLessThanOrEqual(dock.rainLimitMmPerH)
+    // S2 continues from S1, so it keeps S1's dry morning.
+    expect(rainAt(elminaScenarios, 's2', scenario('s2').start)).toBe(0)
+  })
+
+  test('the real JPS reading keeps its station and timestamp and is not simulated', () => {
+    expect(elminaRainfall.station).toBe('Rem KTM Sungai Buloh (F2)')
+    expect(elminaRainfall.reading).toMatchObject({
+      kind: 'rainfall',
+      stationId: '27880',
+      observedAt: '2026-10-18T20:00:00.000Z',
+      simulated: false,
+      source: 'provider'
+    })
   })
 })
 

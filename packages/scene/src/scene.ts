@@ -8,6 +8,7 @@ import {
   PlaneGeometry,
   Raycaster,
   Scene,
+  Timer,
   Vector2,
   Vector3,
   WebGLRenderer
@@ -23,7 +24,9 @@ import { basePalette, buildBaseLayers, type ElminaLayers } from './layers.ts'
 import { buildEdgeAssets, type EdgeAssetView } from './assets.ts'
 import { buildFlight, type DronePlacement, type Flight, type FlightState, type FlightView } from './flight.ts'
 import { buildMarkers, type SceneMarkers } from './markers.ts'
+import { buildRain } from './rain.ts'
 import { buildSegmentRibbons, segmentAt, segmentMidpoint, type PassState, type SegmentView } from './segments.ts'
+import { lightingAt, type DayPhase } from './sky.ts'
 
 /** Orbit rotates around the target with the left button; map pans with it, like a web map. */
 export type ControlMode = 'orbit' | 'map'
@@ -42,6 +45,8 @@ export interface ElminaScene {
   setMarkers(markers: SceneMarkers): void
   /** With `true`, the camera moves to the drone and then keeps it in view as it flies. */
   followDrone(follow: boolean): void
+  /** Lights the scene for a moment at Elmina (sun height and bearing) and draws rain at `rainMmH`, both simulated. */
+  setConditions(conditions: { at: string; rainMmH: number }): DayPhase
   dispose(): void
 }
 
@@ -73,10 +78,11 @@ export function createElminaScene(
 
   const scene = new Scene()
   scene.background = new Color(basePalette.sky)
-  scene.add(new HemisphereLight(0xffffff, basePalette.ground, 2))
+  const sky = new HemisphereLight(0xffffff, basePalette.ground, 2)
   const sun = new DirectionalLight(0xffffff, 1.5)
   sun.position.set(-1, 2, 1)
-  scene.add(sun)
+  const rain = buildRain()
+  scene.add(sky, sun, rain.points)
 
   const ground = new Mesh(
     new PlaneGeometry(GROUND_SIZE_M, GROUND_SIZE_M).rotateX(-Math.PI / 2),
@@ -92,6 +98,21 @@ export function createElminaScene(
   // World-unit ribbons pass the depth test over anything near the ground, so the modelled assets draw after them.
   assets.objects.forEach((o) => (o.renderOrder = ribbonOrder + 1))
   scene.add(...objects, ...ribbons)
+  // Flat surfaces are unlit, so the time of day dims them through their colour instead of the lights.
+  const unlit = objects
+    .map((o) => o.material)
+    .filter((m): m is MeshBasicMaterial | LineMaterial => m instanceof MeshBasicMaterial || m instanceof LineMaterial)
+    .map((material) => ({ material, base: material.color.clone() }))
+  const setConditions = ({ at, rainMmH }: { at: string; rainMmH: number }) => {
+    const lighting = lightingAt(new Date(at), rainMmH)
+    ;(scene.background as Color).copy(lighting.sky)
+    sky.intensity = lighting.hemisphere
+    sun.intensity = lighting.sun
+    sun.position.set(...lighting.sunDirection)
+    for (const { material, base } of unlit) material.color.copy(base).multiply(lighting.tint)
+    rain.setRate(rainMmH, lighting.daylight)
+    return lighting.phase
+  }
   const setPassStates = (states: Record<string, PassState>) => {
     if (!segments.some((s) => states[s.id] !== undefined && states[s.id] !== s.state)) return
     segments = segments.map((s) => ({ ...s, state: states[s.id] ?? s.state }))
@@ -279,8 +300,13 @@ export function createElminaScene(
   observer.observe(container)
   resize()
 
-  renderer.setAnimationLoop(() => {
+  const timer = new Timer()
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
+  renderer.setAnimationLoop((time) => {
+    timer.update(time)
+    const seconds = timer.getDelta()
     active.update()
+    rain.update(reducedMotion.matches ? 0 : seconds, active.target, camera.position.distanceTo(active.target))
     renderer.render(scene, camera)
     labels.render(scene, camera)
   })
@@ -293,11 +319,14 @@ export function createElminaScene(
     followDrone,
     setPassStates,
     setMarkers,
+    setConditions,
     dispose() {
       showFlight(null)
       setMarkers({ pins: [], dropped: [], unknowns: [] })
       labels.domElement.remove()
       renderer.setAnimationLoop(null)
+      rain.dispose()
+      timer.dispose()
       renderer.domElement.removeEventListener('pointerdown', onPointerDown)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)
       select(null)
