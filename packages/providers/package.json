@@ -7,5 +7,14 @@
   },
   "scripts": {
     "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@safe-edge/contracts": "workspace:*",
+    "@safe-edge/planner": "workspace:*",
+    "@turf/distance": "7.4.0"
+  },
+  "devDependencies": {
+    "@safe-edge/core": "workspace:*",
+    "@safe-edge/sdk": "workspace:*"
   }
 }
