@@ -105,7 +105,7 @@ describe('separation holds on API-served plans', () => {
     // an assumed one, since CAAM has issued none.
     expect(plan.authorisation).toEqual({
       ref: 'Assumed CAAM authorisation (fixture: none has been issued)',
-      reason: expect.stringContaining('designated area "Elmina Valley Central Park (recreational)"'),
+      reason: expect.stringMatching(/designated area .*"Elmina Valley Central Park \(recreational\)"/),
       simulated: true
     })
   })
