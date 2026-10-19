@@ -115,6 +115,19 @@ describe('the operations table in core', () => {
     }).data
     h.call('releasePlanHold', 'usr_pilot', { params: { id: plan.id, segmentId: S1.segmentId } })
     h.call('completePatrol', 'usr_pilot', { params: { id: patrol.id }, body: { coverage: [] } })
+    // The other suspensions: a segment unpatrolled since the seed's last patrol, and damage the crew saw.
+    h.call('reportMissedPatrol', 'usr_system', { params: { id: 'seg_866518980_12' } })
+    h.call('reportDamage', 'usr_crew', {
+      body: {
+        segmentId: S1.segmentId,
+        observationIds: [],
+        inventoryItemId: null,
+        itemStatus: null,
+        class: 'bank_change',
+        rationale: 'The bank has slumped beside the bench',
+        simulated: true
+      }
+    })
 
     // Reads, each checked against its response schema by `call`.
     const reader = 'usr_gm'

@@ -128,7 +128,8 @@ No credentials are checked in. To get them:
 
 1.  Run `scripts/procore-sandbox-wizard.sh`. It walks you through creating the Developer Portal account and an app with a service account (Service Account Authentication), and installing the app in its Developer Sandbox. It then checks the credentials against the sandbox and writes `PROCORE_CLIENT_ID`, `PROCORE_CLIENT_SECRET`, `PROCORE_COMPANY_ID` and `PROCORE_PROJECT_ID` to the gitignored root `.env`.
 1.  Run `bun run procore:smoke`. It files one Observation with a photo in the sandbox (`login-sandbox.procore.com`, `sandbox.procore.com`) through this adapter, then prints the Observation's ID and API URL. The photo is the repo's Safe Edge workflow diagram. The script fails when any variable is missing, and it refuses to run in CI.
-1.  `bun run dev` loads the root `.env` into the API, so confirmed candidates go to the sandbox. With no `PROCORE_*` variable set, the API keeps work orders in Safe Edge. With only some of them set, it refuses to start.
+1.  `bun run dev` loads the root `.env` into the API, so submitted work orders go to the sandbox. With no `PROCORE_*` variable set, the API keeps work orders in Safe Edge. With only some of them set, it refuses to start.
+1.  Run `bun run procore:e2e` for the whole path. It starts the dev API, plays S1 over HTTP with the dev tokens up to the manager's submit, reads the work order's `externalRef`, then fetches that Observation from the sandbox and checks its photo is the uploaded one, byte for byte. Like the smoke test, it fails when any variable is missing and refuses to run in CI. A recorded run is in [Procore sandbox hand-off](/docs/evidence/procore-sandbox.md).
 
 ## See also
 

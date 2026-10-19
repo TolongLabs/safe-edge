@@ -314,6 +314,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/damage-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass
+         * @description Roles: crew, manager. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1.
+         */
+        post: operations["reportDamage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/segments/{id}/missed-patrol": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass
+         * @description Roles: system. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1.
+         */
+        post: operations["reportMissedPatrol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/candidates/{id}/decision": {
         parameters: {
             query?: never;
@@ -324,7 +364,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Confirm, reject (with reason) or recapture
+         * Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
          * @description Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1.
          */
         post: operations["decideCandidate"];
@@ -1115,6 +1155,10 @@ export interface components {
             expectedInventory: components["schemas"]["InventoryItem"][];
             baselineId: string | null;
             passId: string | null;
+            /** @description How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later */
+            patrolIntervalDays: number;
+            /** @description When a completed patrol last inspected some of the segment */
+            lastPatrolledAt: string | null;
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
@@ -1415,7 +1459,9 @@ export interface components {
         };
         Tier: 1 | 2 | 3;
         /** @enum {string} */
-        CandidateClass: "inventory_item" | "worn_path" | "bank_change" | "vegetation" | "floating_debris" | "water_level_change" | "text_in_image" | "other";
+        CandidateClass: "inventory_item" | "worn_path" | "bank_change" | "vegetation" | "floating_debris" | "water_level_change" | "text_in_image" | "other" | "missed_patrol";
+        /** @enum {string} */
+        ReportedClass: "inventory_item" | "worn_path" | "bank_change" | "vegetation" | "floating_debris" | "water_level_change" | "text_in_image" | "other";
         /** @enum {string} */
         Uncertainty: "low" | "medium" | "high";
         /** @enum {string} */
@@ -1442,8 +1488,9 @@ export interface components {
             inventoryItemId: string | null;
             itemStatus: components["schemas"]["ItemStatus"] | null;
             class: components["schemas"]["CandidateClass"];
-            /** @description Assigned by core: 2 for a missing or changed safety item, 3 for not visible, else 1 */
+            /** @description Assigned by core: 2 for a missing or changed safety item, a damage report or a missed patrol, 3 for not visible, else 1 */
             tier: components["schemas"]["Tier"];
+            /** @description Detection score; 1 for a damage report or a missed patrol, which a person saw or core counted */
             score: number;
             uncertainty: components["schemas"]["Uncertainty"] | null;
             gridCell: string | null;
@@ -1716,12 +1763,24 @@ export interface components {
             observationIds: string[];
             inventoryItemId: string | null;
             itemStatus: components["schemas"]["ItemStatus"] | null;
-            class: components["schemas"]["CandidateClass"];
+            class: components["schemas"]["ReportedClass"];
             score: number;
             uncertainty: components["schemas"]["Uncertainty"] | null;
             gridCell: string | null;
             rationale: string;
             model: string | null;
+            simulated: boolean;
+        };
+        ReportDamageRequest: {
+            segmentId: string;
+            /** @description Photos of the damage the reporter recorded on this segment (POST /observations); may be empty */
+            observationIds: string[];
+            /** @description The damaged expected item, when it is one */
+            inventoryItemId: string | null;
+            itemStatus: ("missing" | "changed") | null;
+            class: components["schemas"]["ReportedClass"];
+            /** @description What the reporter saw */
+            rationale: string;
             simulated: boolean;
         };
         DecideCandidateRequest: {
@@ -2463,6 +2522,64 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    reportDamage: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportDamageRequest"];
+            };
+        };
+        responses: {
+            /** @description A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Candidate"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    reportMissedPatrol: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Candidate"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     decideCandidate: {
         parameters: {
             query?: never;
@@ -2481,7 +2598,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Confirm, reject (with reason) or recapture */
+            /** @description Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition) */
             200: {
                 headers: {
                     [name: string]: unknown;

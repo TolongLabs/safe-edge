@@ -47,6 +47,7 @@ import {
   RecordRetestRequest,
   RecordWorkOrderExternalErrorRequest,
   RegisterWebhookRequest,
+  ReportDamageRequest,
   RetestOutcome,
   RouteClosure,
   RouteClosureRequest,
@@ -327,10 +328,37 @@ export const operations = {
     status: 201,
     events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
   },
+  reportDamage: {
+    method: 'post',
+    path: '/damage-reports',
+    summary:
+      'A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass',
+    handledBy: 'core',
+    // The walk crew on the edges, and the manager, who takes reports from residents and the council.
+    roles: ['crew', 'manager'],
+    agentScope: null,
+    body: ReportDamageRequest,
+    response: Candidate,
+    status: 201,
+    events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
+  },
+  reportMissedPatrol: {
+    method: 'post',
+    path: '/segments/{id}/missed-patrol',
+    summary:
+      "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass",
+    handledBy: 'core',
+    roles: ['system'],
+    agentScope: null,
+    params: IdParam.segment,
+    response: Candidate,
+    status: 201,
+    events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
+  },
   decideCandidate: {
     method: 'post',
     path: '/candidates/{id}/decision',
-    summary: 'Confirm, reject (with reason) or recapture',
+    summary: 'Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)',
     handledBy: 'core',
     roles: ['manager'],
     agentScope: null,

@@ -5,7 +5,6 @@ import {
   AuditEvent,
   Baseline,
   Candidate,
-  CandidateClass,
   CandidateStatus,
   ContextSnapshot,
   Dock,
@@ -26,6 +25,7 @@ import {
   PlanReplan,
   Remedy,
   RemedyType,
+  ReportedClass,
   Retest,
   RetestCheck,
   Route,
@@ -166,7 +166,7 @@ export const RaiseCandidateRequest = named(
     observationIds: z.array(ObservationId),
     inventoryItemId: InventoryItemId.nullable(),
     itemStatus: ItemStatus.nullable(),
-    class: CandidateClass,
+    class: ReportedClass,
     score: z.number().min(0).max(1),
     uncertainty: Uncertainty.nullable(),
     gridCell: z
@@ -179,6 +179,23 @@ export const RaiseCandidateRequest = named(
   })
 )
 export type RaiseCandidateRequest = z.infer<typeof RaiseCandidateRequest>
+
+/** A person's first-hand report of damage on a segment (PRD PROOF-4). Core files it as a Tier 2 candidate. */
+export const ReportDamageRequest = named(
+  'ReportDamageRequest',
+  z.object({
+    segmentId: SegmentId,
+    observationIds: z
+      .array(ObservationId)
+      .describe('Photos of the damage the reporter recorded on this segment (POST /observations); may be empty'),
+    inventoryItemId: InventoryItemId.nullable().describe('The damaged expected item, when it is one'),
+    itemStatus: ItemStatus.extract(['missing', 'changed']).nullable(),
+    class: ReportedClass,
+    rationale: z.string().min(1).describe('What the reporter saw'),
+    simulated: z.boolean()
+  })
+)
+export type ReportDamageRequest = z.infer<typeof ReportDamageRequest>
 
 export const DecideCandidateRequest = named(
   'DecideCandidateRequest',

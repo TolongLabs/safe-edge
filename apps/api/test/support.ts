@@ -22,12 +22,6 @@ tokens.set('tok_agent_unscoped', { type: 'agent', id: 'usr_agent', role: 'agent'
 tokens.set('tok_agent_read_only', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: ['edge.read'] })
 export type Token = `tok_${Role}` | 'tok_agent_unscoped' | 'tok_agent_read_only'
 
-/** The committed dev tokens (`dev_manager`, `dev_agent`, …), loaded from their file as `bun run dev` loads them. */
-export const fixtureDevTokens = await devTokens(
-  { SAFE_EDGE_DEV_TOKENS_FILE: join(repoRoot, 'data/elmina/fixtures/dev-tokens.json') },
-  seed.users
-)
-
 /** One request as the server saw it: who sent it, and what came back (JSON bodies only; streams are not read). */
 export interface Exchange {
   method: string
@@ -120,3 +114,24 @@ export const tier2Candidate = {
 
 export const raiseTier2 = (api: Api, token: Token | string = 'tok_provider') =>
   api.request('post', '/candidates', { token, body: tier2Candidate })
+
+/** Reads server-sent event frames (blank-line separated) as they arrive. */
+export function sseFrames(body: ReadableStream<Uint8Array>) {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  return {
+    async next(): Promise<string> {
+      while (!buffer.includes('\n\n')) {
+        const { done, value } = await reader.read()
+        if (done) throw new Error('the event stream closed')
+        buffer += decoder.decode(value, { stream: true })
+      }
+      const end = buffer.indexOf('\n\n')
+      const frame = buffer.slice(0, end)
+      buffer = buffer.slice(end + 2)
+      return frame
+    },
+    cancel: () => reader.cancel()
+  }
+}

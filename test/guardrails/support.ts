@@ -1,4 +1,4 @@
-// The guardrail suite's stage: the real API on a free port behind the committed dev tokens, met over HTTP. It reuses
+// The guardrail suite's stage: the real API on a free port behind its own tokens, met over HTTP. It reuses
 // the API harness (apps/api/test) and the SDK's S1 story (packages/sdk/test) rather than copying them.
 import {
   AuditEvent,
@@ -12,7 +12,8 @@ import {
 } from '@safe-edge/contracts'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { expect } from 'bun:test'
-import { S1, fixtureDevTokens, startApi } from '../../apps/api/test/support.ts'
+import { devTokens } from '../../apps/api/src/tokens.ts'
+import { S1, seed, startApi } from '../../apps/api/test/support.ts'
 import type { Stage } from '../../packages/sdk/test/story.ts'
 
 export { S1, raiseTier2, tier2Candidate } from '../../apps/api/test/support.ts'
@@ -30,26 +31,39 @@ export function operationFor(method: string, path: string): OperationId | undefi
   return httpOperations.find(matches)?.[0]
 }
 
-/** The committed dev token of the seeded user holding a role. */
+/**
+ * The stage's tokens, `dev_<name>` for each seeded `usr_<name>`, loaded as dev tokens are. They are the names of the
+ * dev tokens the repo used to commit; `bun run dev` now generates random ones (test/dev.test.ts) and refuses these.
+ */
+const stageTokens = await devTokens(
+  {
+    SAFE_EDGE_DEV_TOKENS: JSON.stringify(
+      Object.fromEntries(seed.users.map((user) => [user.id.replace(/^usr_/, 'dev_'), user.id]))
+    )
+  },
+  seed.users
+)
+
+/** The stage's token for the seeded user holding a role. */
 export function devTokenForRole(role: Role): string {
-  const entry = [...fixtureDevTokens].find(([, actor]) => actor.role === role)
+  const entry = [...stageTokens].find(([, actor]) => actor.role === role)
   if (entry === undefined) throw new Error(`No dev token acts as a ${role}`)
   return entry[0]
 }
 
-/** The committed dev token of a seeded user (`dev_<name>` for `usr_<name>`). */
+/** The stage's token for a seeded user (`dev_<name>` for `usr_<name>`). */
 export function devTokenFor(userId: string): string {
-  const entry = [...fixtureDevTokens].find(([, actor]) => actor.id === userId)
+  const entry = [...stageTokens].find(([, actor]) => actor.id === userId)
   if (entry === undefined) throw new Error(`No dev token acts as ${userId}`)
   return entry[0]
 }
 
 /**
- * The API as `bun run dev` serves it, but on a free port with a settable clock: behind the committed dev tokens
- * (data/elmina/fixtures/dev-tokens.json), plus any extra tokens a test issues.
+ * The API as `bun run dev` serves it, but on a free port with a settable clock: behind the stage's tokens, plus any
+ * extra tokens a test issues.
  */
 export function startGuardedApi(extra: Record<string, Actor> = {}) {
-  const tokens = new Map([...fixtureDevTokens, ...Object.entries(extra)])
+  const tokens = new Map([...stageTokens, ...Object.entries(extra)])
   const api = startApi({ tokens })
   const baseUrl = new URL('/v1', api.url).href
 
@@ -58,7 +72,7 @@ export function startGuardedApi(extra: Record<string, Actor> = {}) {
     if (actor === undefined) throw new Error(`Unknown token ${token}`)
     return actor
   }
-  /** The SDK story's stage: each seeded user drives the http client with their own dev token. */
+  /** The SDK story's stage: each seeded user drives the http client with their own token. */
   const stage: Stage = {
     as: (userId) => createSafeEdgeClient({ transport: 'http', baseUrl, token: devTokenFor(userId) }),
     setNow: api.setNow

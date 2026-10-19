@@ -1,5 +1,5 @@
 // #57: the guardrails, met the way an integrator meets them: the real v1 API on a free port, over HTTP, with the
-// committed dev tokens. One test per "Done when" bullet (TRD "Testing" item 2, PRD MCP-3); the MCP side is in
+// stage's own dev tokens. One test per "Done when" bullet (TRD "Testing" item 2, PRD MCP-3); the MCP side is in
 // mcp.test.ts. The same rules at core level: packages/core/test/guardrails.test.ts.
 import { afterAll, expect, test } from 'bun:test'
 import { Role, type Denial, type OperationId } from '@safe-edge/contracts'
@@ -19,6 +19,10 @@ import {
   startGuardedApi,
   tier2Candidate
 } from './support.ts'
+
+/** A segment whose pass is expiring, and when its patrol is missed: a whole 7-day interval after the seed's last patrol. */
+const EXPIRING = 'seg_866518980_5'
+const MISSED_PATROL_DUE = '2026-10-23T01:00:00.000Z'
 
 test('the installer cannot accept their own work: 403 role_forbidden, and 403 two_person_rule even with a reviewer token', async () => {
   // A small township where one person installs and reviews: usr_installer also holds a reviewer token.
@@ -95,7 +99,8 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     patrols: patrol.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
-    tasks: played.decision.tasks[0]!.id
+    tasks: played.decision.tasks[0]!.id,
+    segments: S1.segmentId
   }
   // The four named actions send exactly what a person sends. Policy runs before validation, so for the rest an empty
   // body changes nothing about the answer.
@@ -211,8 +216,12 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
     setWorkOrderExternalRef: { externalRef: 'procore-observation-1' },
-    recordWorkOrderExternalError: { message: 'Procore answered 503' }
+    recordWorkOrderExternalError: { message: 'Procore answered 503' },
+    reportMissedPatrol: undefined // no body
   }
+  // S1's pass is already suspended, so the missed patrol goes to an expiring pass once its patrol interval has run out.
+  const paths: Partial<Record<OperationId, string>> = { reportMissedPatrol: `/segments/${EXPIRING}/missed-patrol` }
+  api.setNow(MISSED_PATROL_DUE)
   const ids = {
     'patrol-plans': flying.id,
     patrols: patrol.id,
@@ -234,7 +243,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
         continue
       }
       if (!(operationId in requests)) throw new Error(`No ${role} request for ${operationId}`)
-      const response = await api.request(op.method, pathFor(op, ids), { token, body: requests[operationId] })
+      const path = paths[operationId] ?? pathFor(op, ids)
+      const response = await api.request(op.method, path, { token, body: requests[operationId] })
       expect({ token, operationId, ok: response.ok }).toEqual({ token, operationId, ok: true })
     }
   }
@@ -248,7 +258,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   expect(await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))).toEqual(validBefore)
   // The Tier 2 candidates automation raised above hold the pass too, so the manager rejects them as false alarms.
   const raised: { id: string }[] = await json(
-    api.request('get', '/candidates?status=candidate', { token: 'dev_manager' })
+    api.request('get', `/candidates?status=candidate&segmentId=${S1.segmentId}`, { token: 'dev_manager' })
   )
   expect(raised).toHaveLength(2)
   for (const { id } of raised) {
@@ -309,6 +319,18 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     eventTypes: ['edge.pass.issued.v1']
   })
   await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
+  // The other suspensions: damage the walk crew saw, and a patrol interval that ran out.
+  await as('dev_crew', 'post', '/damage-reports', {
+    segmentId: S1.segmentId,
+    observationIds: [],
+    inventoryItemId: null,
+    itemStatus: null,
+    class: 'bank_change',
+    rationale: 'The bank has slumped beside the bench',
+    simulated: true
+  })
+  api.setNow(MISSED_PATROL_DUE)
+  await as('dev_system', 'post', `/segments/${EXPIRING}/missed-patrol`)
   // A false alarm after S3: the drone reports the panel missing again, the agent summarises it for the Inbox card,
   // the manager rejects it, a reviewer clears it.
   const alarm = await as('dev_drone_sim', 'post', '/candidates', tier2Candidate)

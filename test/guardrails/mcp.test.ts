@@ -1,5 +1,5 @@
 // #57: the guardrails, met the way an agent meets them: the MCP server over stdio, launched as apps/mcp/mcp.json does
-// with the committed agent dev token, driven by the official MCP client, against the real API on a free port.
+// with the stage's agent token, driven by the official MCP client, against the real API on a free port.
 // TRD "Testing" item 3, PRD MCP-3. The HTTP side is in api.test.ts.
 import { expect, test } from 'bun:test'
 import { connectMcp, runMcpToExit } from '../../apps/mcp/test/support.ts'
