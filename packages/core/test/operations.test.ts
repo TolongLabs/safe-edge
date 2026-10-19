@@ -11,7 +11,7 @@ import {
 } from '@safe-edge/contracts'
 import type { ThirdParty } from '@safe-edge/planner'
 import { verifyAuditChain } from '../src/index.ts'
-import { S1, playS1toRepair, plannerWith, startCore } from './support.ts'
+import { S1, playS1toRepair, plannerWith, raiseOnS1, startCore } from './support.ts'
 
 const coreOperations = (Object.keys(operations) as (keyof typeof operations)[]).filter(
   (id): id is CoreOperationId => operations[id].handledBy === 'core'
@@ -49,7 +49,7 @@ describe('the operations table in core', () => {
     expect(verifyAuditChain(h.audit()).ok).toBe(true)
   })
 
-  test('every core operation runs a real command for a caller the table allows', () => {
+  test('every core operation runs a real command for a caller the table allows', async () => {
     // Someone on S1's water edge (a vertex of its seed geometry), so its patrol plan has a separation hold to release.
     const onTheEdge: ThirdParty = {
       id: 'obs_person_s1',
@@ -60,9 +60,22 @@ describe('the operations table in core', () => {
       simulated: true,
       source: 'fixture'
     }
-    const h = startCore({ planner: plannerWith({ thirdParties: [onTheEdge] }) })
+    const h = startCore({ planner: await plannerWith({ thirdParties: [onTheEdge] }) })
     const played = playS1toRepair(h)
     h.call('recordRetest', 'usr_reviewer', { body: played.retest })
+    // Then a false alarm: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+    const alarm = raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: S1.inventoryItemId,
+      itemStatus: 'missing',
+      class: 'inventory_item',
+      rationale: 'Panel 4 missing again'
+    }).data
+    h.call('decideCandidate', 'usr_manager', {
+      params: { id: alarm.id },
+      body: { decision: 'reject', reason: 'Shadow' }
+    })
+    const { workOrderId: _, ...clearance } = played.retest
+    h.call('recordClearance', 'usr_reviewer', { params: { id: alarm.id }, body: clearance })
 
     h.call('createWorkOrder', 'usr_agent', {
       body: { findingId: played.findingId, remedyId: null, notes: 'Follow-up' }
@@ -70,6 +83,10 @@ describe('the operations table in core', () => {
     h.call('setWorkOrderExternalRef', 'usr_system', {
       params: { id: played.workOrderId },
       body: { externalRef: '9378' }
+    })
+    h.call('recordWorkOrderExternalError', 'usr_system', {
+      params: { id: played.workOrderId },
+      body: { message: 'Procore POST /rest/v1.1/projects/1234/uploads answered 503' }
     })
     const notice = h.call('draftNotice', 'usr_manager', {
       body: { kind: 'monthly_report', subjectId: null, title: 'October report', body: 'One finding closed' }
@@ -88,6 +105,7 @@ describe('the operations table in core', () => {
       }
     }).data
     h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
+    h.setNow(plan.window.start)
     const patrol = h.call('startPatrol', 'usr_pilot', {
       body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' }
     }).data

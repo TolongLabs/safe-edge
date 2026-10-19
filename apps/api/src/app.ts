@@ -1,4 +1,5 @@
 import {
+  failureStatus,
   operations,
   type Actor,
   type AgentDelta,
@@ -48,6 +49,9 @@ export interface ApiOptions {
 }
 
 type Env = { Variables: { actor: Actor } }
+
+/** Who delivers webhooks and records their failures: the API itself. */
+const WEBHOOKS: Actor = { type: 'system', id: 'api.webhooks', role: 'system', scopes: [] }
 type ApiOperationId = { [K in OperationId]: Operations[K]['handledBy'] extends 'api' ? K : never }[OperationId]
 type ApiHandlers = {
   [K in ApiOperationId]: (c: Context<Env>, input: OperationInput<K>) => Response | Promise<Response>
@@ -59,7 +63,11 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
 export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, agent: agentOptions }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
-  const hub = createEventHub()
+  // A failed webhook delivery is the API's own write to the webhook, on the audit chain like any other.
+  const hub = createEventHub({
+    clock,
+    onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
+  })
   const evidence = createEvidenceStore({ clock, ids })
   if (workOrders) {
     const provider = workOrders(async (ref) => evidence.bytes(ref))
@@ -172,7 +180,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
       // Looked up as the person asking, so an unknown candidate is their 404, and only stored IDs reach the prompt.
       const actor = c.get('actor')
       const found = core.dispatch('getCandidate', actor, { params: { id: body.candidateId } })
-      if (!found.ok) return 'rule' in found ? c.json(found, 403) : c.json(found, 404)
+      if (!found.ok) return c.json(found, failureStatus(found))
       const { candidate } = found.data
       const findings = core.dispatch('listFindings', actor, { query: { segmentId: candidate.segmentId } })
       if (!findings.ok) throw new Error(`listFindings refused ${actor.id}: ${findings.message}`)
@@ -199,8 +207,15 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
           await stream.write(': heartbeat\n\n')
         }
       }),
+    listWebhooks: (c) => c.json(hub.list(), 200),
     registerWebhook: (c, { body }) => {
-      const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: c.get('actor').id, createdAt: clock.now() }
+      const webhook: Webhook = {
+        id: ids.next('whk'),
+        ...body,
+        createdBy: c.get('actor').id,
+        createdAt: clock.now(),
+        failures: []
+      }
       hub.register(webhook)
       core.recordStored('registerWebhook', c.get('actor'), webhook)
       return c.json(webhook, 201)
@@ -231,7 +246,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
 
     if (op.handledBy === 'api') return apiHandlers[operationId as ApiOperationId](c, input as never)
     const result = core.dispatch(operationId as CoreOperationId, actor, input as never)
-    if (!result.ok) return 'rule' in result ? c.json(result, 403) : c.json(result, 404)
+    if (!result.ok) return c.json(result, failureStatus(result))
     hub.publish(result.events)
     return c.json(result.data as object, result.status)
   }

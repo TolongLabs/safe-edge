@@ -1,63 +1,41 @@
 // drone-sim through the DroneProvider port, wired to core the way a transport would: the plan comes from
-// `@safe-edge/planner` over real Elmina segments (through the SDK's Elmina adapter), the pilot approves it through
+// `@safe-edge/planner` over real Elmina segments (through its Elmina adapter), the pilot approves it through
 // core's dispatch, the sim flies it, and its observations go back through dispatch (`POST /observations`) until core
 // completes the patrol.
 import { describe, expect, test } from 'bun:test'
 import {
   ProviderEvent,
-  operations,
-  type Actor,
-  type CoreOperationId,
-  type DispatchResult,
   type DispatchSuccess,
   type DroneStatus,
   type Observation,
-  type OperationInput,
   type PatrolPlan,
   type Pose,
   type Segment
 } from '@safe-edge/contracts'
-import { actorFor, counterIds, createCore, type Seed } from '@safe-edge/core'
 import type { ThirdParty } from '@safe-edge/planner'
-import { createElminaPlanner } from '@safe-edge/sdk'
 import { distance } from '@turf/distance'
-import { join } from 'node:path'
+import { plannerWith, seed, startCore } from '../../core/test/support.ts'
 import { ApprovalRequiredError, createDroneSim } from '../src/index.ts'
-
-const repoRoot = join(import.meta.dir, '../../..')
-const seed = (await Bun.file(join(repoRoot, 'data/elmina/fixtures/seed.json')).json()) as Seed
 
 // S1 (two fixed viewpoints) and two other lake segments: real Elmina geometry from the seed.
 const SEGMENT_IDS = [seed.story.s1.segmentId, 'seg_866518980_5', 'seg_866518980_6']
 const APPROVED_AT = '2026-10-21T22:00:00.000Z'
 const NOT_BEFORE = '2026-10-21T23:30:00.000Z'
 
-/** One core and one sim sharing a clock, driven as seeded users. */
+/** One core (core's own test harness, driven as seeded users) and one sim sharing its clock. */
 async function start({ thirdParties = [] }: { thirdParties?: ThirdParty[] } = {}) {
-  let now = seed.asOf
-  const clock = { now: () => now }
-  const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties })
-  const core = createCore({ seed, clock, ids: counterIds(), planner })
-  const actor = (userId: string): Actor => actorFor(seed.users.find((u) => u.id === userId)!)
-  const attempt = <K extends CoreOperationId>(op: K, userId: string, input: OperationInput<K>): DispatchResult<K> =>
-    core.dispatch(op, actor(userId), input)
-  const call = <K extends CoreOperationId>(op: K, userId: string, input: OperationInput<K>): DispatchSuccess<K> => {
-    const result = attempt(op, userId, input)
-    if (!result.ok) throw new Error(`${op} as ${userId} failed: ${JSON.stringify(result)}`)
-    operations[op].response.parse(result.data)
-    return result
-  }
-  const [dock] = call('listDocks', 'usr_pilot', {}).data
-  const [drone] = call('listDroneProfiles', 'usr_pilot', {}).data
+  const h = startCore({ planner: await plannerWith({ thirdParties }) })
+  const [dock] = h.call('listDocks', 'usr_pilot', {}).data
+  const [drone] = h.call('listDroneProfiles', 'usr_pilot', {}).data
   const sim = createDroneSim({
-    clock,
+    clock: { now: h.now },
     devices: [{ id: 'sim-1', name: 'Simulated dock aircraft', dock: dock!, drone: drone! }]
   })
   const events: ProviderEvent[] = []
   sim.onEvent((event) => events.push(ProviderEvent.parse(event)))
 
   const plan = (segmentIds = SEGMENT_IDS): PatrolPlan =>
-    call('createPatrolPlan', 'usr_manager', {
+    h.call('createPatrolPlan', 'usr_manager', {
       body: {
         dockId: dock!.id,
         droneProfileId: drone!.id,
@@ -68,23 +46,10 @@ async function start({ thirdParties = [] }: { thirdParties?: ThirdParty[] } = {}
       }
     }).data
   const approve = (planId: string): PatrolPlan => {
-    now = APPROVED_AT
-    return call('approvePatrolPlan', 'usr_pilot', { params: { id: planId } }).data
+    h.setNow(APPROVED_AT)
+    return h.call('approvePatrolPlan', 'usr_pilot', { params: { id: planId } }).data
   }
-  return {
-    core,
-    sim,
-    events,
-    drone: drone!,
-    attempt,
-    call,
-    plan,
-    approve,
-    now: () => now,
-    setNow: (iso: string) => {
-      now = iso
-    }
-  }
+  return { ...h, sim, events, drone: drone!, plan, approve }
 }
 
 describe('drone-sim refuses to fly without a human approval', () => {

@@ -576,7 +576,7 @@ components:
         additionalProperties: false
     retestRecorded:
       name: edge.retest.recorded.v1
-      summary: A reviewer other than the installer recorded a re-test.
+      summary: "A reviewer recorded a re-test: of a repair they did not install (workOrderId), or a clearance of a rejected or recapture Tier 2 candidate they did not decide (candidateId)."
       contentType: application/cloudevents+json
       payload:
         type: object
@@ -610,8 +610,15 @@ components:
                 type: string
                 pattern: ^rt_
               workOrderId:
-                type: string
-                pattern: ^wo_
+                anyOf:
+                  - type: string
+                    pattern: ^wo_
+                  - type: "null"
+              candidateId:
+                anyOf:
+                  - type: string
+                    pattern: ^cand_
+                  - type: "null"
               result:
                 type: string
                 enum:
@@ -622,6 +629,7 @@ components:
             required:
               - retestId
               - workOrderId
+              - candidateId
               - result
               - simulated
             additionalProperties: false

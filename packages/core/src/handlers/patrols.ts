@@ -1,36 +1,17 @@
 import {
   PatrolPlan,
-  type CreatePatrolPlanRequest,
-  type Dock,
-  type DroneProfile,
-  type EdgePass,
-  type Finding,
   type Patrol,
+  type PatrolPlanner,
   type Segment,
   type SegmentCoverage,
   type Task
 } from '@safe-edge/contracts'
 import { canonicalJson } from '../audit.ts'
+import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
-/**
- * The planning port. Core never imports `@safe-edge/planner`; whoever creates the core passes an adapter over its
- * `planPatrol` (#71), which holds what the store does not: planner geometry, capture settings, geofences and
- * water-level bands. Synchronous, like the rest of core. Core supplies the plan ID and the time, and stores the plan
- * only if it comes back proposed and unapproved. A re-plan request (`request.replan`) also gets the plan it supersedes
- * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`.
- */
-export type PatrolPlanner = (input: {
-  id: string
-  now: string
-  request: CreatePatrolPlanRequest
-  previous: PatrolPlan | null
-  dock: Dock
-  droneProfile: DroneProfile
-  segments: Segment[]
-  passes: EdgePass[]
-  findings: Finding[]
-}) => PatrolPlan
+/** Coverage lengths are float sums in metres: a micrometre either way is rounding, not coverage. */
+const ROUNDING_M = 1e-6
 
 type PatrolOperation =
   'createPatrolPlan' | 'approvePatrolPlan' | 'releasePlanHold' | 'startPatrol' | 'completePatrol' | 'recordObservation'
@@ -51,7 +32,7 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     const previous = supersedes && tx.get('patrolPlans', supersedes.planId)
     if (supersedes && !previous) return tx.notFound(`No patrol plan ${supersedes.planId}`)
     if (supersedes && previous) {
-      const next = tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === previous.id)
+      const next = supersededBy(tx, previous)
       if (next) return tx.deny('invalid_transition', `${previous.id} was already re-planned as ${next.id}`, previous.id)
       if (supersedes.committedTasks > previous.tasks.length) {
         const message = `${previous.id} has ${previous.tasks.length} stops, so ${supersedes.committedTasks} cannot be committed`
@@ -95,6 +76,9 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (!plan) return tx.notFound(`No patrol plan ${params.id}`)
     if (plan.status !== 'proposed')
       return tx.deny('invalid_transition', `${plan.id} is already ${plan.status}`, plan.id)
+    const next = supersededBy(tx, plan)
+    if (next)
+      return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; approve that instead`, plan.id)
     const approved = { ...plan, status: 'approved' as const, approvedBy: tx.actor.id, approvedAt: tx.now }
     tx.put('patrolPlans', approved)
     return ok(approved)
@@ -125,6 +109,8 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (plan.status !== 'approved') {
       return tx.deny('plan_not_approved', `${plan.id} needs a pilot's approval before it can fly`, plan.id)
     }
+    const next = supersededBy(tx, plan)
+    if (next) return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; fly that instead`, plan.id)
     // Weather and lightning holds stop the launch until they end; separation holds wait at their segment in flight.
     const launchHolds = plan.holds.filter(
       (h) => h.segmentId === null && h.until !== null && Date.parse(tx.now) < Date.parse(h.until)
@@ -132,6 +118,12 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (launchHolds.length > 0) {
       const holds = launchHolds.map((h) => `${h.kind} hold until ${h.until}: ${h.reason}`).join('; ')
       return tx.deny('weather_hold', `${plan.id} cannot launch yet: ${holds}`, plan.id)
+    }
+    // The agreed window: from its start, up to (not at) its end.
+    const now = Date.parse(tx.now)
+    if (now < Date.parse(plan.window.start) || now >= Date.parse(plan.window.end)) {
+      const message = `${plan.id} flies from ${plan.window.start} until ${plan.window.end}; it is ${tx.now}`
+      return tx.deny('outside_window', message, plan.id)
     }
     const patrol: Patrol = {
       id: tx.id('ptl'),
@@ -156,16 +148,31 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (!patrol) return tx.notFound(`No patrol ${params.id}`)
     if (patrol.status !== 'in_flight')
       return tx.deny('invalid_transition', `${patrol.id} is already completed`, patrol.id)
-    for (const { segmentId } of body.coverage) {
-      if (!tx.get('segments', segmentId)) return tx.notFound(`No segment ${segmentId}`)
+    // Unknown is not inspected (TRD rule 4): every metre of a reported segment is inspected or unknown, so a report
+    // naming a segment twice or claiming more than its length is refused, and any length it leaves out is unknown.
+    const reported = new Set<string>()
+    const covered: SegmentCoverage[] = []
+    for (const c of body.coverage) {
+      const segment = tx.get('segments', c.segmentId)
+      if (!segment) return tx.notFound(`No segment ${c.segmentId}`)
+      if (reported.has(segment.id)) {
+        return tx.deny('invalid_coverage', `${segment.id} is reported twice on ${patrol.id}`, patrol.id)
+      }
+      reported.add(segment.id)
+      const claimed = c.inspectedM + c.unknownM
+      if (claimed > segment.lengthM + ROUNDING_M) {
+        const message = `${patrol.id} reports ${claimed} m of ${segment.id}, which is ${segment.lengthM} m long`
+        return tx.deny('invalid_coverage', message, patrol.id)
+      }
+      const left = segment.lengthM - claimed
+      covered.push(left > ROUNDING_M ? { ...c, unknownM: segment.lengthM - c.inspectedM } : c)
     }
     // A planned segment the drone did not report on is unknown along its whole length, never inspected.
-    const reported = new Set(body.coverage.map((c) => c.segmentId))
     const unreported: SegmentCoverage[] = tx
       .must('patrolPlans', patrol.planId)
       .tasks.filter((t) => !reported.has(t.segmentId))
       .map((t) => ({ segmentId: t.segmentId, inspectedM: 0, unknownM: tx.must('segments', t.segmentId).lengthM }))
-    const coverage = [...body.coverage, ...unreported]
+    const coverage = [...covered, ...unreported]
     const completed: Patrol = { ...patrol, status: 'completed', completedAt: tx.now, coverage }
     tx.put('patrols', completed)
     for (const c of coverage.filter((c) => c.unknownM > 0)) {
@@ -201,3 +208,7 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     return ok(observation)
   }
 })
+
+/** The re-plan that replaced `plan`, if any. A superseded plan is never approved or flown. */
+const supersededBy = (tx: Tx, plan: PatrolPlan) =>
+  tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === plan.id)

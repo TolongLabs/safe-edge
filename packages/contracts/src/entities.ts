@@ -491,7 +491,12 @@ export const Candidate = named(
       .regex(/^[A-D][1-4]$/)
       .nullable(),
     rationale: z.string(),
-    model: z.string().nullable().describe('The model that proposed it; null for scripted or human input'),
+    model: z
+      .string()
+      .nullable()
+      .describe(
+        "The model that proposed it, as the model API reported serving the turn (never the model's own words); null for scripted or human input, or when the caller cannot see the model (an MCP client)"
+      ),
     status: CandidateStatus,
     raisedBy: ActorRef,
     raisedAt: Timestamp,
@@ -568,6 +573,12 @@ export const WorkOrder = named(
     completedAt: Timestamp.nullable(),
     completionEvidence: z.array(EvidenceRef),
     externalRef: z.string().nullable().describe('Procore observation ID'),
+    externalError: z
+      .object({ message: z.string().min(1), at: Timestamp })
+      .nullable()
+      .describe(
+        'Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried'
+      ),
     createdAt: Timestamp,
     ...provenance
   })
@@ -586,11 +597,15 @@ export const RetestCheck = named(
 )
 export type RetestCheck = z.infer<typeof RetestCheck>
 
+/** A repair re-test (`workOrderId`) or a clearance re-test of a false alarm (`candidateId`); exactly one is set. */
 export const Retest = named(
   'Retest',
   z.object({
     id: RetestId,
-    workOrderId: WorkOrderId,
+    workOrderId: WorkOrderId.nullable().describe('The completed repair re-tested; null for a clearance'),
+    candidateId: CandidateId.nullable().describe(
+      'The rejected or recapture Tier 2 candidate a clearance re-test clears; null for a repair re-test'
+    ),
     reviewerUserId: UserId,
     checklist: z.array(RetestCheck),
     evidence: z.array(EvidenceRef),

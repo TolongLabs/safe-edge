@@ -49,10 +49,12 @@ const unsubscribe = demo.subscribe((event) => {
 })
 
 await demo.resetDemo() // the seed again, an empty audit chain, ID counters from 1
+await demo.tick('2026-11-01T02:00:00.000Z') // passes move to expiring and expired on the scenario clock
 ```
 
 - `subscribe` hears every event core emits in this demo, whichever user acted. It is memory-only for now: the http client does not yet read the API's `GET /v1/events` stream.
 - `resetDemo` restores the seed for every client made with `as`, and subscribers stay subscribed. It emits no event, so refetch what the screen shows after calling it. The agent user cannot reset.
+- `tick(now)` runs core's time-driven pass moves (S4's expiring passes): valid to expiring 30 days before `validTo`, then to expired. The system acts, whichever user the client is, so a tick never makes a pass valid. Subscribers get the `edge.pass.expiring.v1` and `edge.pass.expired.v1` events, and `tick` returns them. It is memory-only: the HTTP API exposes no tick.
 
 ## Patrol plans in demo mode
 

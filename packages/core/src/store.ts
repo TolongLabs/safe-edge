@@ -204,7 +204,8 @@ export class Tx {
   /** The record a handler refused to change, for the denial's audit event. */
   deniedSubject: string | undefined
 
-  deny(rule: PolicyRule, message: string, subjectId?: string): Denial {
+  /** A refusal of a change to `subjectId`, the record the denial's audit event names. */
+  deny(rule: PolicyRule, message: string, subjectId: string): Denial {
     this.deniedSubject = subjectId
     return { ok: false, rule, message }
   }
@@ -225,8 +226,8 @@ export class Tx {
   }
 
   /** Appends a write the transport stored outside the core's collections (an evidence file, a webhook). */
-  commitStored(action: string, record: { id: string }): void {
-    this.state.audit.push(this.entry([], action, record.id, null, record, null, null))
+  commitStored(action: string, record: { id: string }, before: { id: string } | null): void {
+    this.state.audit.push(this.entry([], action, record.id, before, record, null, null))
   }
 
   /** Appends a refused attempt; nothing staged in this transaction is kept. */
@@ -247,7 +248,10 @@ export class Tx {
     if ('segmentId' in record && typeof record.segmentId === 'string') return record.segmentId
     if ('findingId' in record && typeof record.findingId === 'string')
       return this.must('findings', record.findingId).segmentId
-    if ('workOrderId' in record) return this.segmentOf(this.must('workOrders', record.workOrderId))
+    if ('workOrderId' in record && typeof record.workOrderId === 'string')
+      return this.segmentOf(this.must('workOrders', record.workOrderId))
+    if ('candidateId' in record && typeof record.candidateId === 'string')
+      return this.must('candidates', record.candidateId).segmentId
     return null
   }
 

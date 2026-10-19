@@ -1,13 +1,17 @@
-import { afterEach, describe, expect, test } from 'bun:test'
-import { SafeEdgeApiError, SafeEdgeDeniedError, createSafeEdgeClient } from '../src/index.ts'
-import { startApi } from './server.ts'
+// The http transport against the real v1 API (apps/api), started by the API's own test harness on a free port with an
+// injectable clock. Bearer tokens `tok_<userId>` map to the seeded users.
+import { describe, expect, test } from 'bun:test'
+import { actorFor } from '@safe-edge/core'
+import { startApi as startRealApi } from '../../../apps/api/test/support.ts'
+import { SafeEdgeApiError, SafeEdgeDeniedError, createSafeEdgeClient, elminaSeed } from '../src/index.ts'
 import { S1, playS1toS3 } from './story.ts'
 
+const tokens = new Map(elminaSeed.users.map((user) => [`tok_${user.id}`, actorFor(user)]))
+const startApi = () => startRealApi({ tokens })
 let api: ReturnType<typeof startApi>
-afterEach(() => api.stop())
 
-const httpAs = (userId: string, token = api.tokenFor(userId)) =>
-  createSafeEdgeClient({ transport: 'http', baseUrl: api.baseUrl, token })
+const httpAs = (userId: string, token = `tok_${userId}`) =>
+  createSafeEdgeClient({ transport: 'http', baseUrl: new URL('/v1', api.url).href, token })
 
 describe('http transport: the same typed client against the v1 API', () => {
   test('S1 to S3 over HTTP leaves the same records and audit chain as the memory transport', async () => {
@@ -36,11 +40,11 @@ describe('http transport: the same typed client against the v1 API', () => {
     )
     await manager.listFindings()
 
-    const writes = api.received.filter((r) => r.method !== 'GET')
-    const reads = api.received.filter((r) => r.method === 'GET')
+    const writes = api.log.filter((r) => r.method !== 'GET')
+    const reads = api.log.filter((r) => r.method === 'GET')
     expect(writes.length).toBe(16)
     expect(reads.length).toBe(1)
-    expect(api.received.every((r) => /^Bearer tok_usr_\w+$/.test(r.authorization ?? ''))).toBe(true)
+    expect(api.log.every((r) => /^tok_usr_\w+$/.test(r.token ?? ''))).toBe(true)
     expect(reads[0]!.idempotencyKey).toBeNull()
     expect(writes.at(-1)!.idempotencyKey).toBe('retry-me-1')
     const generated = writes.slice(0, -1).map((r) => r.idempotencyKey)

@@ -38,7 +38,7 @@ import {
   WorkOrder,
   WorkOrderStatus
 } from './entities.ts'
-import { EventType } from './events.ts'
+import { EventType, Webhook } from './events.ts'
 import {
   CandidateId,
   DockId,
@@ -72,6 +72,7 @@ import { TriageResult } from './triage.ts'
 const list = <T extends z.ZodType>(id: string, item: T) => named(id, z.array(item))
 
 export const AssetList = list('AssetList', Asset)
+export const WebhookList = list('WebhookList', Webhook)
 export const AuditEventList = list('AuditEventList', AuditEvent)
 export const SegmentList = list('SegmentList', Segment)
 export const UserList = list('UserList', User)
@@ -127,7 +128,16 @@ export const StartPatrolRequest = named(
 )
 export type StartPatrolRequest = z.infer<typeof StartPatrolRequest>
 
-export const CompletePatrolRequest = named('CompletePatrolRequest', z.object({ coverage: z.array(SegmentCoverage) }))
+export const CompletePatrolRequest = named(
+  'CompletePatrolRequest',
+  z.object({
+    coverage: z
+      .array(SegmentCoverage)
+      .describe(
+        "At most one entry per segment, with inspectedM + unknownM no more than the segment's length (else 403 invalid_coverage). Length an entry leaves out, and every planned segment it omits, is unknown"
+      )
+  })
+)
 export type CompletePatrolRequest = z.infer<typeof CompletePatrolRequest>
 
 export const RecordObservationRequest = named(
@@ -210,6 +220,12 @@ export const SetWorkOrderExternalRefRequest = named(
 )
 export type SetWorkOrderExternalRefRequest = z.infer<typeof SetWorkOrderExternalRefRequest>
 
+export const RecordWorkOrderExternalErrorRequest = named(
+  'RecordWorkOrderExternalErrorRequest',
+  z.object({ message: z.string().min(1).describe("The work-order system's error") })
+)
+export type RecordWorkOrderExternalErrorRequest = z.infer<typeof RecordWorkOrderExternalErrorRequest>
+
 export const SubmitWorkOrderRequest = named(
   'SubmitWorkOrderRequest',
   z.object({ installerUserId: UserId, dueAt: Timestamp })
@@ -234,8 +250,20 @@ export const RecordRetestRequest = named(
 )
 export type RecordRetestRequest = z.infer<typeof RecordRetestRequest>
 
-/** An accepted re-test issues the pass. */
-export const RetestOutcome = named('RetestOutcome', z.object({ retest: Retest, pass: EdgePass.nullable() }))
+/** A clearance re-test: a reviewer checks the edge a rejected or recapture Tier 2 candidate suspended. */
+export const RecordClearanceRequest = named('RecordClearanceRequest', RecordRetestRequest.omit({ workOrderId: true }))
+export type RecordClearanceRequest = z.infer<typeof RecordClearanceRequest>
+
+/** An accepted re-test issues the pass, once no other suspicion on the segment is open. */
+export const RetestOutcome = named(
+  'RetestOutcome',
+  z.object({
+    retest: Retest,
+    pass: EdgePass.nullable().describe(
+      "The pass this re-test issued; null when it was rejected or another Tier 2 candidate or finding on the segment is still open (the suspended pass's stateReason names them)"
+    )
+  })
+)
 export type RetestOutcome = z.infer<typeof RetestOutcome>
 
 export const CreateOpeningRequest = named(

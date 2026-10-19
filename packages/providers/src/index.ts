@@ -8,6 +8,7 @@ export {
   PROCORE_DEVELOPER_SANDBOX,
   ProcoreWorkOrderProvider,
   readProcoreEnv,
+  SAFETY_HAZARD_OBSERVATION_TYPE,
   type EvidenceReader,
   type ProcoreConfig,
   type ProcoreCredentials

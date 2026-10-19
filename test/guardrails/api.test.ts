@@ -81,6 +81,7 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
   // And a patrol in flight, so completing one is a real request too.
   const flying = await json(api.request('post', '/patrol-plans', { token: 'dev_manager', body: patrolRequest }))
   await json(api.request('post', `/patrol-plans/${flying.id}/approve`, { token: 'dev_pilot' }))
+  api.setNow(flying.window.start)
   const patrol = await json(
     api.request('post', '/patrols', {
       token: 'dev_pilot',
@@ -132,9 +133,11 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
   // The same requests from the right people go through: only the agent's identity refused them.
   const statusFor = (token: string, method: string, path: string, body?: unknown) =>
     api.request(method, path, { token, body }).then((response) => response.status)
+  // The re-test goes first: once the manager confirms the agent's proposal, its finding is open work on the segment,
+  // and an accepted re-test restores the pass only when nothing else is open there.
   const decision = asAPersonWould.decideCandidate
-  expect(await statusFor('dev_manager', 'post', `/candidates/${proposed.id}/decision`, decision)).toBe(200)
   expect(await statusFor('dev_reviewer', 'post', '/retests', played.retest)).toBe(201)
+  expect(await statusFor('dev_manager', 'post', `/candidates/${proposed.id}/decision`, decision)).toBe(200)
   expect(await statusFor('dev_manager', 'post', `/notices/${notice.id}/send`)).toBe(200)
   expect((await api.pass()).state).toBe('valid')
 })
@@ -172,6 +175,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   const played = await playS1toRepair(api.stage)
   const flying = await json(api.request('post', '/patrol-plans', { token: 'dev_manager', body: patrolRequest }))
   await json(api.request('post', `/patrol-plans/${flying.id}/approve`, { token: 'dev_pilot' }))
+  api.setNow(flying.window.start)
   const patrol = await json(
     api.request('post', '/patrols', {
       token: 'dev_pilot',
@@ -206,7 +210,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     completePatrol: { coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }] },
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
-    setWorkOrderExternalRef: { externalRef: 'procore-observation-1' }
+    setWorkOrderExternalRef: { externalRef: 'procore-observation-1' },
+    recordWorkOrderExternalError: { message: 'Procore answered 503' }
   }
   const ids = {
     'patrol-plans': flying.id,
@@ -241,6 +246,19 @@ test('no system or provider call makes a pass valid, whichever operation it trie
 
   expect((await api.pass()).state).toBe('suspended')
   expect(await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))).toEqual(validBefore)
+  // The Tier 2 candidates automation raised above hold the pass too, so the manager rejects them as false alarms.
+  const raised: { id: string }[] = await json(
+    api.request('get', '/candidates?status=candidate', { token: 'dev_manager' })
+  )
+  expect(raised).toHaveLength(2)
+  for (const { id } of raised) {
+    await json(
+      api.request('post', `/candidates/${id}/decision`, {
+        token: 'dev_manager',
+        body: { decision: 'reject', reason: 'Scripted repeat of the S1 report' }
+      })
+    )
+  }
   // A person who reviews makes it valid, and that is the only write to a valid pass on the whole chain.
   const accepted = await answer(api.request('post', '/retests', { token: 'dev_reviewer', body: played.retest }))
   expect(accepted.status).toBe(201)
@@ -272,8 +290,10 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   })
   await as('dev_manager', 'post', `/notices/${notice.id}/send`)
   await as('dev_system', 'post', `/work-orders/${draft.id}/external-ref`, { externalRef: 'procore-observation-1' })
+  await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, { message: 'Procore answered 503' })
   const plan = await as('dev_manager', 'post', '/patrol-plans', patrolRequest)
   await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
+  api.setNow(plan.window.start)
   const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
   await as('dev_drone_sim', 'post', `/patrols/${patrol.id}/complete`, {
     coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }]
@@ -289,6 +309,15 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     eventTypes: ['edge.pass.issued.v1']
   })
   await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
+  // A false alarm after S3: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+  const alarm = await as('dev_drone_sim', 'post', '/candidates', tier2Candidate)
+  await as('dev_manager', 'post', `/candidates/${alarm.id}/decision`, { decision: 'reject', reason: 'A shadow' })
+  await as('dev_reviewer', 'post', `/candidates/${alarm.id}/clearance`, {
+    checklist: played.retest.retest.checklist,
+    evidence: [],
+    result: 'accepted',
+    reason: 'Panel 4 is in place; the frame was a shadow'
+  })
 
   // And one refused attempt at every write: the agent at a people-only row, otherwise a role the row leaves out.
   const ids = {

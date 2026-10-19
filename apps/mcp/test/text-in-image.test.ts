@@ -34,8 +34,7 @@ test("given the sign's words as arguments, no tool takes them as a record, they 
     score: 0.5,
     uncertainty: 'low',
     gridCell: 'B3',
-    rationale: SIGN,
-    model: 'claude-opus-5-5'
+    rationale: SIGN
   }
 
   // Where a tool takes a record, the words are none: the tool's schema refuses them, or the API finds no such record.
@@ -59,9 +58,17 @@ test("given the sign's words as arguments, no tool takes them as a record, they 
   }
 
   // Where a tool takes free text, the words are kept as written: data in a Tier 1 candidate, a draft, a notice.
-  const proposed = await call('propose_finding', proposal)
+  // A model name the model writes is dropped as well: the server cannot see its client's model, so it stamps none.
+  const proposed = await call('propose_finding', { ...proposal, model: 'claude-opus-4-5' })
   expect(proposed.structuredContent).toMatchObject({
-    candidate: { rationale: SIGN, class: 'text_in_image', tier: 1, status: 'candidate', raisedBy: { type: 'agent' } }
+    candidate: {
+      rationale: SIGN,
+      class: 'text_in_image',
+      tier: 1,
+      status: 'candidate',
+      raisedBy: { type: 'agent' },
+      model: null
+    }
   })
   const drafted = await call('draft_work_order', { findingId: 'fnd_1', notes: SIGN })
   expect(drafted.structuredContent).toMatchObject({ workOrder: { findingId: 'fnd_1', notes: SIGN, status: 'draft' } })

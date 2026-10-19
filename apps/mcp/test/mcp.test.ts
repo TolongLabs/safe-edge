@@ -105,8 +105,7 @@ test('the API, not the MCP server, enforces scope: a token without finding.propo
       score: 0.5,
       uncertainty: 'high',
       gridCell: null,
-      rationale: 'A worn path leads to the bank',
-      model: 'claude-opus-5-5'
+      rationale: 'A worn path leads to the bank'
     }
   })
 
@@ -165,13 +164,14 @@ test('the agent reads context, proposes, triages and drafts through every other 
     score: 0.6,
     uncertainty: 'medium',
     gridCell: 'C2',
-    rationale: signText,
-    model: 'claude-opus-5-5'
+    rationale: signText
   })
+  // The server cannot see which model its client runs, so the proposal names none rather than the model's claim.
   expect(candidate).toMatchObject({
     status: 'candidate',
     tier: 1,
     raisedBy: { type: 'agent', id: 'usr_agent' },
+    model: null,
     simulated: true
   })
   const evidence = await call('get_inspection_evidence', { candidateId: candidate.id })

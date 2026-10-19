@@ -140,6 +140,7 @@ export const inbox: Handlers<'raiseCandidate' | 'decideCandidate' | 'completeTas
       completedAt: null,
       completionEvidence: [],
       externalRef: null,
+      externalError: null,
       createdAt: tx.now,
       ...provenance
     }

@@ -8,15 +8,17 @@ import {
   type EdgeEvent,
   type OperationId,
   type OperationInput,
-  type OperationSpec
+  type OperationSpec,
+  type PatrolPlanner
 } from '@safe-edge/contracts'
 import { fixLens } from './handlers/fix-lens.ts'
 import type { Handlers } from './handlers/handler.ts'
 import { inbox } from './handlers/inbox.ts'
 import { notices } from './handlers/notices.ts'
-import { patrolHandlers, type PatrolPlanner } from './handlers/patrols.ts'
+import { patrolHandlers } from './handlers/patrols.ts'
 import { reads } from './handlers/reads.ts'
 import { work } from './handlers/work.ts'
+import { refusedSubject } from './audit-subjects.ts'
 import { authorize, expiringFrom, movePass } from './policy.ts'
 import { Seed } from './seed.ts'
 import { Tx, createState, type IdPrefix } from './store.ts'
@@ -25,6 +27,9 @@ export interface Clock {
   /** The current time as an ISO 8601 UTC string. */
   now(): string
 }
+
+/** What the API stores outside core: its operations' records, and its own failed webhook deliveries. */
+export type StoredAction = OperationId | 'deliverWebhook'
 
 export interface IdGenerator {
   next(prefix: IdPrefix): string
@@ -48,10 +53,11 @@ export interface Core {
    */
   checkAccess(operationId: OperationId, actor: Actor, input?: { params?: unknown; body?: unknown }): Denial | null
   /**
-   * Appends an allowed write that a transport stored itself (a `handledBy: 'api'` row: evidence, webhooks), with
-   * `before` null and `after` the record, so every write is on the audit chain. Call it once `checkAccess` allowed it.
+   * Appends an allowed write that the API stored itself, so every write is on the audit chain: a `handledBy: 'api'`
+   * row's record (evidence, webhooks; call it once `checkAccess` allowed it), or the API's own change to one, such as a
+   * failed webhook delivery (`deliverWebhook`). `before` is the record it replaced, null for a new one.
    */
-  recordStored(operationId: OperationId, actor: Actor, record: { id: string }): void
+  recordStored(action: StoredAction, actor: Actor, record: { id: string }, before?: { id: string } | null): void
   /**
    * Time-driven pass moves: valid → expiring 30 days before `validTo`, and → expired at `validTo`. Acts as the system,
    * which the one-way rule never lets make a pass valid. Returns the events to publish.
@@ -83,15 +89,19 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   const checkAccess = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {
     const who = Actor.parse(actor)
     const refused = authorize(operationId, operations[operationId], who)
-    if (refused) openTx(who, clock.now()).commitDenial(operationId, refused.rule, defaultSubject(operationId, input))
+    if (refused) openTx(who, clock.now()).commitDenial(operationId, refused.rule, refusedSubject(operationId, input))
     return refused
   }
 
-  const recordStored = (operationId: OperationId, actor: Actor, record: { id: string }) => {
-    const { handledBy } = operations[operationId]
-    if (handledBy !== 'api')
-      throw new Error(`${operationId} is handled by ${handledBy}, whose writes core audits itself`)
-    openTx(Actor.parse(actor), clock.now()).commitStored(operationId, record)
+  const recordStored = (
+    action: StoredAction,
+    actor: Actor,
+    record: { id: string },
+    before: { id: string } | null = null
+  ) => {
+    const handledBy = action === 'deliverWebhook' ? 'api' : operations[action].handledBy
+    if (handledBy !== 'api') throw new Error(`${action} is handled by ${handledBy}, whose writes core audits itself`)
+    openTx(Actor.parse(actor), clock.now()).commitStored(action, record, before)
   }
 
   const dispatch = <K extends CoreOperationId>(
@@ -115,8 +125,10 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     } as OperationInput<K>
     const result = (handlers[operationId] as Handlers[K])(tx, parsed)
     if (!result.ok) {
-      if ('rule' in result)
-        tx.commitDenial(operationId, result.rule, tx.deniedSubject ?? defaultSubject(operationId, raw))
+      if ('rule' in result) {
+        if (tx.deniedSubject === undefined) throw new Error(`${operationId} denied ${result.rule} without tx.deny`)
+        tx.commitDenial(operationId, result.rule, tx.deniedSubject)
+      }
       return result
     }
 
@@ -161,16 +173,6 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   }
 
   return { dispatch: dispatch as Dispatch, checkAccess, recordStored, tick }
-}
-
-/** The record a refused call was about, from its input; the operation itself when there is none. */
-function defaultSubject(operationId: string, input: { params?: unknown; body?: unknown }): string {
-  const params = (input.params ?? {}) as { id?: unknown }
-  const body = (input.body ?? {}) as Record<string, unknown>
-  const subject = [params.id, body.workOrderId, body.findingId, body.planId, body.segmentId].find(
-    (v): v is string => typeof v === 'string'
-  )
-  return subject ?? operationId
 }
 
 /** Fails loudly on a seed whose records point at nothing. Every segment carries a pass (never issued = `none`). */
