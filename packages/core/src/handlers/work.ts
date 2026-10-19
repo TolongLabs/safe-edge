@@ -66,6 +66,19 @@ export const work: Handlers<WorkOperation> = {
   createWorkOrder: (tx, { body }) => {
     const finding = tx.get('findings', body.findingId)
     if (!finding) return tx.notFound(`No finding ${body.findingId}`)
+    // One open work order per finding. Confirming drafts one, so another request (the agent's draft) gets that draft
+    // back unchanged. One past draft blocks another until its re-test closes or reopens the finding.
+    const open = tx
+      .all('workOrders')
+      .find((w) => w.findingId === finding.id && w.status !== 'accepted' && w.status !== 'rejected')
+    if (open?.status === 'draft') return ok(open, 200)
+    if (open) {
+      return tx.deny(
+        'invalid_transition',
+        `${finding.id} already has work order ${open.id} (${open.status})`,
+        finding.id
+      )
+    }
     const remedy = remedyFor(tx, finding, body.remedyId)
     if (typeof remedy === 'string') return tx.notFound(remedy)
     const workOrder: WorkOrder = {

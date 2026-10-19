@@ -474,6 +474,24 @@ export const CandidateStatus = named(
 )
 export type CandidateStatus = z.infer<typeof CandidateStatus>
 
+/** The agent's summary on a candidate's Inbox card (PRD INBOX-1), stored by `POST /agent/inbox-drafts`. */
+export const AgentSummary = named(
+  'AgentSummary',
+  z.object({
+    label: z.literal('ai_suggestion').describe('Show it as an AI suggestion: no person has checked it'),
+    text: z.string().min(1),
+    citations: z
+      .array(z.string())
+      .describe(
+        "Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited"
+      ),
+    model: z.string().min(1).describe("The model the Claude API reported serving the run, never the model's own words"),
+    draftedBy: ActorRef,
+    draftedAt: Timestamp
+  })
+)
+export type AgentSummary = z.infer<typeof AgentSummary>
+
 export const Candidate = named(
   'Candidate',
   z.object({
@@ -503,6 +521,9 @@ export const Candidate = named(
     decidedBy: UserId.nullable(),
     decidedAt: Timestamp.nullable(),
     decisionReason: z.string().nullable(),
+    agentSummary: AgentSummary.nullable().describe(
+      'Null until the agent summarises it; a new summary replaces the last'
+    ),
     ...provenance
   })
 )

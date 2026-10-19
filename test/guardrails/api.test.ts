@@ -309,8 +309,14 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     eventTypes: ['edge.pass.issued.v1']
   })
   await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
-  // A false alarm after S3: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+  // A false alarm after S3: the drone reports the panel missing again, the agent summarises it for the Inbox card,
+  // the manager rejects it, a reviewer clears it.
   const alarm = await as('dev_drone_sim', 'post', '/candidates', tier2Candidate)
+  await as('dev_agent', 'post', `/candidates/${alarm.id}/agent-summary`, {
+    text: `Fence panel 4 reported missing again on ${S1.segmentId} (${alarm.id})`,
+    citations: [S1.segmentId, alarm.id],
+    model: 'claude-opus-5-5'
+  })
   await as('dev_manager', 'post', `/candidates/${alarm.id}/decision`, { decision: 'reject', reason: 'A shadow' })
   await as('dev_reviewer', 'post', `/candidates/${alarm.id}/clearance`, {
     checklist: played.retest.retest.checklist,

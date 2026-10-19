@@ -77,6 +77,10 @@ describe('the operations table in core', () => {
     const { workOrderId: _, ...clearance } = played.retest
     h.call('recordClearance', 'usr_reviewer', { params: { id: alarm.id }, body: clearance })
 
+    h.call('recordAgentSummary', 'usr_agent', {
+      params: { id: alarm.id },
+      body: { text: `A false alarm on ${S1.segmentId}`, citations: [alarm.id], model: 'claude-opus-5-5' }
+    })
     h.call('createWorkOrder', 'usr_agent', {
       body: { findingId: played.findingId, remedyId: null, notes: 'Follow-up' }
     })

@@ -4,7 +4,7 @@ import { ok, type Handlers } from './handler.ts'
 
 const DECIDED = { confirm: 'confirmed', reject: 'rejected', recapture: 'needs_recapture' } as const
 
-export const inbox: Handlers<'raiseCandidate' | 'decideCandidate' | 'completeTask'> = {
+export const inbox: Handlers<'raiseCandidate' | 'decideCandidate' | 'recordAgentSummary' | 'completeTask'> = {
   raiseCandidate: (tx, { body }) => {
     const segment = tx.get('segments', body.segmentId)
     if (!segment) return tx.notFound(`No segment ${body.segmentId}`)
@@ -26,6 +26,7 @@ export const inbox: Handlers<'raiseCandidate' | 'decideCandidate' | 'completeTas
       decidedBy: null,
       decidedAt: null,
       decisionReason: null,
+      agentSummary: null,
       source: tx.source
     }
     tx.put('candidates', candidate)
@@ -164,6 +165,23 @@ export const inbox: Handlers<'raiseCandidate' | 'decideCandidate' | 'completeTas
       segment.id
     )
     return ok({ candidate: decided, finding, tasks: [task], workOrder })
+  },
+
+  // Only an agent's token reaches this (the table names no role), so the label is true.
+  recordAgentSummary: (tx, { params, body }) => {
+    const candidate = tx.get('candidates', params.id)
+    if (!candidate) return tx.notFound(`No candidate ${params.id}`)
+    const summarised: Candidate = {
+      ...candidate,
+      agentSummary: {
+        label: 'ai_suggestion',
+        ...body,
+        draftedBy: { type: tx.actor.type, id: tx.actor.id },
+        draftedAt: tx.now
+      }
+    }
+    tx.put('candidates', summarised)
+    return ok(summarised)
   },
 
   completeTask: (tx, { params }) => {

@@ -53,11 +53,15 @@ export interface AgentOptions {
 }
 
 export function createAgent({ claude, context }: AgentOptions) {
-  /** Runs the tool loop on one user turn, streaming text to `onText`, and checks how Claude stopped. */
+  /**
+   * Runs the tool loop on one user turn, streaming text to `onText`, and checks how Claude stopped. Aborting `signal`
+   * aborts the request open to Claude and ends the loop with the SDK's `APIUserAbortError`.
+   */
   async function run(
     prompt: string,
     effort: 'medium' | 'high',
-    onText: (text: string) => Promise<void> = async () => {}
+    onText: (text: string) => Promise<void> = async () => {},
+    signal?: AbortSignal
   ): Promise<Finished> {
     const calls: ToolCall[] = []
     // The model the API reports serving the turn whose tool calls run next (after any fallback). The runner runs a
@@ -67,22 +71,25 @@ export function createAgent({ claude, context }: AgentOptions) {
       if (served === undefined) throw new Error('A tool ran before Claude answered')
       return served
     }
-    const runner = claude.beta.messages.toolRunner({
-      model: AGENT_MODEL,
-      max_tokens: 64_000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      output_config: { effort },
-      tool_choice: { type: 'auto' },
-      // The system prompt (with the tools before it) is the shared prefix; the automatic breakpoint caches the
-      // growing tool loop.
-      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-      cache_control: { type: 'ephemeral' },
-      tools: claudeTools({ ...context, model }, calls),
-      messages: [{ role: 'user', content: prompt }],
-      max_iterations: MAX_TURNS,
-      stream: true
-    })
+    const runner = claude.beta.messages.toolRunner(
+      {
+        model: AGENT_MODEL,
+        max_tokens: 64_000,
+        betas: ['server-side-fallback-2026-07-01'],
+        fallbacks: 'default',
+        output_config: { effort },
+        tool_choice: { type: 'auto' },
+        // The system prompt (with the tools before it) is the shared prefix; the automatic breakpoint caches the
+        // growing tool loop.
+        system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+        cache_control: { type: 'ephemeral' },
+        tools: claudeTools({ ...context, model }, calls),
+        messages: [{ role: 'user', content: prompt }],
+        max_iterations: MAX_TURNS,
+        stream: true
+      },
+      { signal }
+    )
     const fallbacks: AgentFallback[] = []
     let last: BetaMessage | undefined
     for await (const stream of runner) {
@@ -108,19 +115,21 @@ export function createAgent({ claude, context }: AgentOptions) {
   }
 
   return {
-    /** The Ask panel: answers a person's question, streaming text as it is written. */
+    /** The Ask panel: answers a person's question, streaming text as it is written, until `signal` aborts. */
     async ask(
       question: string,
-      onText: (text: string) => Promise<void>
+      onText: (text: string) => Promise<void>,
+      signal: AbortSignal
     ): Promise<{ ok: true; answer: AgentAnswer } | AgentStopped> {
-      const result = await run(question, 'medium', onText)
+      const result = await run(question, 'medium', onText, signal)
       if (!result.ok) return result
       return { ok: true, answer: { answer: result.text, ...provenance(result.text, result) } }
     },
 
     /**
-     * The Inbox: a summary of the candidate for its card and, once it is a finding, a work order draft. Only IDs of
-     * stored records go into the prompt; the evidence text reaches Claude inside tool results.
+     * The Inbox: a summary of the candidate, stored on it for its card, and once it is a finding, its work order draft
+     * (the open draft confirming made, which the draft request returns). Only IDs of stored records go into the prompt;
+     * the evidence text reaches Claude inside tool results.
      */
     async draftInbox(
       candidate: Candidate,
@@ -136,9 +145,11 @@ export function createAgent({ claude, context }: AgentOptions) {
       ].join('\n')
       const result = await run(prompt, 'medium')
       if (!result.ok) return result
-      const drafts = result.calls
+      // Distinct work orders: a repeated draft request returns the finding's same open draft.
+      const returned = result.calls
         .filter((call) => call.name === 'draft_work_order')
         .map((call) => WorkOrder.parse(call.output.workOrder))
+      const drafts = [...new Map(returned.map((workOrder) => [workOrder.id, workOrder])).values()]
       const draftedFor = drafts.map((workOrder) => workOrder.findingId)
       const expected = finding === null ? [] : [finding.id]
       if (draftedFor.join() !== expected.join()) {
@@ -154,6 +165,11 @@ export function createAgent({ claude, context }: AgentOptions) {
         workOrder: drafts[0] ?? null,
         ...provenance(result.text, result)
       }
+      // Stored with the agent's token, so the card reads it as the agent's, with the model the API reported.
+      await context.client.recordAgentSummary({
+        params: { id: candidate.id },
+        body: { text: draft.summary, citations: draft.citations, model: draft.model }
+      })
       return { ok: true, draft }
     },
 
