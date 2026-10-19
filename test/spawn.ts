@@ -51,7 +51,7 @@ export async function eventually<T>(
  * The first answer `url` gives once the spawned process serving it is up. Fails if the process exits first (with its
  * stderr, when piped) or nothing answers within 20 s.
  */
-export function answer(url: string, server: Subprocess<'ignore', 'ignore' | 'inherit', 'pipe' | 'inherit'>) {
+export function answer(url: string, server: Subprocess<'ignore', 'ignore' | 'inherit' | 'pipe', 'pipe' | 'inherit'>) {
   return eventually(
     `An answer from ${url}`,
     async () => {

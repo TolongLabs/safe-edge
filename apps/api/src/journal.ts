@@ -17,8 +17,11 @@ export interface Journal {
    * `fn` must be synchronous, and its arguments JSON.
    */
   command<A extends unknown[], R>(kind: string, fn: (...args: A) => R): (...args: A) => R
-  /** Replays every appended call in order, once all commands are registered. Throws if any replays differently. */
-  replay(): void
+  /**
+   * Replays every appended call in order, once all commands are registered. Throws if any replays differently. Returns
+   * the last clock reading the journal holds, or null when none.
+   */
+  replay(): string | null
 }
 
 /**
@@ -114,10 +117,12 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
           'select seq, kind, args, clock, outcome from journal order by seq'
         )
         .all()
+      let last: string | null = null
       for (const { seq, kind, args, clock: readings, outcome } of entries) {
         const fn = commands.get(kind)
         if (fn === undefined) throw new Error(`Journal entry ${seq} is a ${kind}, which this API does not have`)
         replaying = { seq, clock: JSON.parse(readings) }
+        last = replaying.clock.at(-1) ?? last
         let replayed = 'threw'
         let thrown: unknown
         try {
@@ -133,6 +138,7 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
           throw new Error(message, { cause: thrown })
         }
       }
+      return last
     }
   }
   return journal

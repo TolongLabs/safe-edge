@@ -20,7 +20,7 @@ Protocol messages use stdout, so the server logs only to stderr. A client still 
 
 ## Connect Claude Code
 
-Start the API (`bun run dev`). Then, from the repo root, either pass the config file for one session:
+Start the API (`bun run dev`). It runs on the scenario clock at the seed's date, 20 October, unless started with `SAFE_EDGE_CLOCK=wall`, so expiry answers count from that date. Then, from the repo root, either pass the config file for one session:
 
 ```sh
 SAFE_EDGE_AGENT_TOKEN=$(bun run --silent dev:token usr_agent) claude --mcp-config apps/mcp/mcp.json \

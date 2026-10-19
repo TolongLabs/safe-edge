@@ -13,7 +13,7 @@ Contents:
 
 ## Setup
 
-- The dev API on port 3876: `cd apps/api && PORT=3876 bun run src/dev.ts`, the entry `bun run dev` uses. On this machine's first start it generated a random token for every seeded user into `~/.local/state/safe-edge/dev-tokens.json`, outside the repo, mode 0600. Its clock is the wall clock.
+- The dev API on port 3876: `cd apps/api && PORT=3876 bun run src/dev.ts`, the entry `bun run dev` uses. On this machine's first start it generated a random token for every seeded user into `~/.local/state/safe-edge/dev-tokens.json`, outside the repo, mode 0600. Its clock is the wall clock. Since #147 that entry starts on the scenario clock, at the seed's date; `SAFE_EDGE_CLOCK=wall` repeats this run's clock.
 - Story state: S1 on `seg_866518980_11` was played through the API with the people's generated tokens, as `packages/sdk/test/story.ts` does, and stopped after the installer completed the repair. That left `fnd_1` in `retest_pending` and `wo_1` `completed`, waiting for a reviewer's re-test.
 - The client ran from the repo root with the Safe Edge tools and the file tools `Read`, `Glob` and `Grep`. The agent's token reached the MCP server through the environment only. `--permission-mode dontAsk` refuses anything that would need approval, such as a file tool reading outside the working directory. Shell and web tools were off.
 

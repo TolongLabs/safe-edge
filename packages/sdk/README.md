@@ -83,7 +83,7 @@ await api.uploadEvidence({ body: { mediaType: 'image/jpeg', dataBase64, captured
 - Every request sends `Authorization: Bearer <token>`; the API maps the token to a user.
 - Every write sends a fresh `Idempotency-Key`. To retry a write safely, pass your own and reuse it: `api.draftNotice(input, { idempotencyKey })`.
 - The http client also has the HTTP-only operations (`uploadEvidence`, `getEvidenceUrl`, `triageImages`, `registerWebhook`, `setScenarioClock`, and the agent's `draftInbox` and `draftMonthlyReport`) and lacks `resetDemo`. Responses are checked against the contract.
-- To replay a scenario against a dev API started with `SAFE_EDGE_CLOCK=scenario`, set its clock to each event's time as the system user before the event: `system.setScenarioClock({ body: { now: event.at } })`. Records then carry the scenario's times, as they do with the memory transport's `clock`. An API on the wall clock, as production always is, answers 501.
+- To replay a scenario against the dev API, which `bun run dev` starts on the scenario clock (`SAFE_EDGE_CLOCK=wall` opts out), set its clock to each event's time as the system user before the event: `system.setScenarioClock({ body: { now: event.at } })`. Records then carry the scenario's times, as they do with the memory transport's `clock`. An API on the wall clock, as production always is, answers 501.
 
 ## Streams over HTTP: Ask and events
 
