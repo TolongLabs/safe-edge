@@ -2,7 +2,8 @@
 // edge.pass.suspended.v1 and land on the audit chain, and neither makes a pass valid. Core-level: packages/core/test/suspensions.test.ts.
 import { expect, test } from 'bun:test'
 import { AuditEvent, EdgeEvent, EdgePass, type ReportDamageRequest } from '@safe-edge/contracts'
-import { S1, fixtureDevTokens, sseFrames, startApi, type Api } from './support.ts'
+import { actorFor } from '@safe-edge/core'
+import { S1, seed, sseFrames, startApi, type Api } from './support.ts'
 
 const S1_PASS = 'pass_866518980_11'
 const SOON = 'seg_866518980_12'
@@ -116,32 +117,30 @@ test('the agent cannot file either report: 403 agents_draft_only, audited, and t
 })
 
 test('over HTTP neither report restores valid: only a reviewing person clears them, a reviewer token on the system is refused', async () => {
-  const api = startApi({
-    tokens: new Map([
-      ...fixtureDevTokens,
-      ['dev_system_reviewing', { type: 'system', id: 'usr_system', role: 'reviewer', scopes: [] }]
-    ])
-  })
+  const tokens = new Map(seed.users.map((user) => [`tok_${user.role}`, actorFor(user)]))
+  // Automation mis-issued a reviewer token: the one-way rule still holds.
+  tokens.set('tok_system_reviewing', { type: 'system', id: 'usr_system', role: 'reviewer', scopes: [] })
+  const api = startApi({ tokens })
   const as = (token: string, method: string, path: string, body?: unknown) =>
     answer(api.request(method, path, { token, body }))
   api.setNow(DUE)
-  const missed = (await as('dev_system', 'post', `/segments/${S1.segmentId}/missed-patrol`)).body
+  const missed = (await as('tok_system', 'post', `/segments/${S1.segmentId}/missed-patrol`)).body
   // On the suspended pass: another damage report is only a candidate, a second missed patrol is refused.
-  const reported = await as('dev_crew', 'post', '/damage-reports', damage)
+  const reported = await as('tok_crew', 'post', '/damage-reports', damage)
   expect(reported.status).toBe(201)
-  expect(await as('dev_system', 'post', `/segments/${S1.segmentId}/missed-patrol`)).toEqual(
+  expect(await as('tok_system', 'post', `/segments/${S1.segmentId}/missed-patrol`)).toEqual(
     denied('invalid_transition')
   )
   // An expired pass stays expired.
   const expired = { ...damage, segmentId: 'seg_866518980_6', inventoryItemId: null, itemStatus: null }
-  expect((await as('dev_crew', 'post', '/damage-reports', expired)).status).toBe(201)
-  expect((await passOf(api, 'seg_866518980_6', 'dev_manager')).state).toBe('expired')
+  expect((await as('tok_crew', 'post', '/damage-reports', expired)).status).toBe(201)
+  expect((await passOf(api, 'seg_866518980_6', 'tok_manager')).state).toBe('expired')
 
   for (const [id, decision] of [
     [missed.id, 'recapture'],
     [reported.body.id, 'reject']
   ]) {
-    await as('dev_manager', 'post', `/candidates/${id}/decision`, { decision, reason: 'Walked it; nothing missing' })
+    await as('tok_manager', 'post', `/candidates/${id}/decision`, { decision, reason: 'Walked it; nothing missing' })
   }
   const clearance = {
     checklist: [
@@ -152,19 +151,19 @@ test('over HTTP neither report restores valid: only a reviewing person clears th
     reason: 'Walked the segment; every panel is in place'
   }
   for (const id of [missed.id, reported.body.id]) {
-    expect(await as('dev_system_reviewing', 'post', `/candidates/${id}/clearance`, clearance)).toEqual(
+    expect(await as('tok_system_reviewing', 'post', `/candidates/${id}/clearance`, clearance)).toEqual(
       denied('one_way_rule')
     )
   }
-  expect((await passOf(api, S1.segmentId, 'dev_manager')).state).toBe('suspended')
+  expect((await passOf(api, S1.segmentId, 'tok_manager')).state).toBe('suspended')
 
   // The reviewer clears the rejected report, but the missed patrol, sent for recapture, still holds the pass.
-  const first = await as('dev_reviewer', 'post', `/candidates/${reported.body.id}/clearance`, clearance)
+  const first = await as('tok_reviewer', 'post', `/candidates/${reported.body.id}/clearance`, clearance)
   expect(first).toMatchObject({ status: 201, body: { pass: null } })
-  const second = await as('dev_reviewer', 'post', `/candidates/${missed.id}/clearance`, clearance)
+  const second = await as('tok_reviewer', 'post', `/candidates/${missed.id}/clearance`, clearance)
   expect(second).toMatchObject({ status: 201, body: { pass: { state: 'valid', issuedBy: 'usr_reviewer' } } })
 
-  const madeValid = (await auditOf(api, 'dev_gm')).filter(
+  const madeValid = (await auditOf(api, 'tok_gm')).filter(
     (e) => (e.after as { state?: string } | null)?.state === 'valid'
   )
   expect(madeValid.map((e) => [e.action, e.subjectId, e.actor])).toEqual([
