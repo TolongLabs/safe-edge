@@ -22,32 +22,32 @@ Contents:
 
 ## Libraries
 
-Versions are the ones `bun.lock` installs. A "planned" row is in the TRD but not installed yet, and shows the version the TRD names. Update a row when a version or a licence changes. No library needs an on-screen credit.
+Versions are the ones `bun.lock` installs. A "planned" row is in the TRD but not installed yet. It shows the version the TRD names, or the latest stable version when the TRD names none. Update a row when a version or a licence changes. No library needs an on-screen credit.
 
-| Package                                                            | Version          | Licence         | Used in                                            |
-| ------------------------------------------------------------------ | ---------------- | --------------- | -------------------------------------------------- |
-| [`zod`][zod]                                                       | 4.6.7            | MIT             | Contracts, core, SDK, API, MCP, providers: schemas |
-| [`@noble/hashes`][noble]                                           | 2.4.0            | MIT             | Core: audit-chain hashes                           |
-| [`@turf/*`][turf] (13 modules)                                     | 7.4.0            | MIT             | Planner and providers: edge geometry               |
-| [`fflate`][fflate]                                                 | 0.8.3            | MIT             | Planner: KMZ mission export                        |
-| [`hono`][hono]                                                     | 4.13.13          | MIT             | API: REST server                                   |
-| [`@anthropic-ai/sdk`][anthropic-sdk]                               | 0.135.0          | MIT             | API: Claude calls                                  |
-| [`@modelcontextprotocol/server`][mcp]                              | 2.3.1            | Apache-2.0      | MCP server                                         |
-| [`react`, `react-dom`][react]                                      | 19.3.1           | MIT             | Web: 2D screens                                    |
-| [`three`][three]                                                   | 0.186.1, planned | MIT             | Web: scene engine (#60)                            |
-| [`3d-tiles-renderer`][3d-tiles]                                    | 0.5.3, planned   | Apache-2.0      | Web: optional photoreal fly-in (P2, #69)           |
-| [`vite`][vite], [`@vitejs/plugin-react`][vite-react]               | 8.3.4, 6.1.2     | MIT             | Build only                                         |
-| [`typescript`][typescript]                                         | 6.0.3            | Apache-2.0      | Build only                                         |
-| [`openapi-typescript`][openapi-ts]                                 | 7.13.0           | MIT             | Build only: types from the contract                |
-| [`yaml`][yaml]                                                     | 2.9.1            | ISC             | Build only: writes the contract files              |
-| [`@asyncapi/parser`][asyncapi], [`@redocly/openapi-core`][redocly] | 3.6.6, 1.34.21   | Apache-2.0, MIT | Tests only: validate the contract files            |
-| [`@modelcontextprotocol/client`][mcp]                              | 2.3.1            | Apache-2.0      | Tests only: a real MCP client                      |
-| [`@xmldom/xmldom`][xmldom]                                         | 0.9.12           | MIT             | Tests only: reads the exported mission files       |
-| [`@playwright/test`][playwright]                                   | 1.64.1, planned  | Apache-2.0      | Tests only: end to end (#85)                       |
-| `@types/*`                                                         | See `bun.lock`   | MIT             | Type definitions only                              |
-| `prettier`, `husky`, `lint-staged`, `@commitlint/*`                | See `bun.lock`   | MIT             | Repo tooling only                                  |
+| Package                                                            | Version          | Licence         | Used in                                                         |
+| ------------------------------------------------------------------ | ---------------- | --------------- | --------------------------------------------------------------- |
+| [`zod`][zod]                                                       | 4.6.7            | MIT             | Contracts, core, SDK, agent tools, API, MCP, providers: schemas |
+| [`@noble/hashes`][noble]                                           | 2.4.0            | MIT             | Core: audit-chain hashes                                        |
+| [`@turf/*`][turf] (13 modules)                                     | 7.4.0            | MIT             | Planner and providers: edge geometry                            |
+| [`fflate`][fflate]                                                 | 0.8.3            | MIT             | Planner: KMZ mission export                                     |
+| [`hono`][hono]                                                     | 4.13.13          | MIT             | API: REST server                                                |
+| [`@anthropic-ai/sdk`][anthropic-sdk]                               | 0.135.0          | MIT             | API: Claude calls                                               |
+| [`@modelcontextprotocol/server`][mcp]                              | 2.3.1            | Apache-2.0      | MCP server                                                      |
+| [`react`, `react-dom`][react]                                      | 19.3.1           | MIT             | Web: 2D screens                                                 |
+| [`three`][three]                                                   | 0.186.1, planned | MIT             | Web: scene engine (#60)                                         |
+| [`3d-tiles-renderer`][3d-tiles]                                    | 0.5.3, planned   | Apache-2.0      | Web: optional photoreal fly-in (P2, #69)                        |
+| [`vite`][vite], [`@vitejs/plugin-react`][vite-react]               | 8.3.4, 6.1.2     | MIT             | Build only                                                      |
+| [`typescript`][typescript]                                         | 6.0.3            | Apache-2.0      | Build only                                                      |
+| [`openapi-typescript`][openapi-ts]                                 | 7.13.0           | MIT             | Build only: types from the contract                             |
+| [`yaml`][yaml]                                                     | 2.9.1            | ISC             | Build only: writes the contract files                           |
+| [`@asyncapi/parser`][asyncapi], [`@redocly/openapi-core`][redocly] | 3.6.6, 1.34.21   | Apache-2.0, MIT | Tests only: validate the contract files                         |
+| [`@modelcontextprotocol/client`][mcp]                              | 2.3.1            | Apache-2.0      | Tests only: a real MCP client                                   |
+| [`@xmldom/xmldom`][xmldom]                                         | 0.9.12           | MIT             | Tests only: reads the exported mission files                    |
+| [`@playwright/test`][playwright]                                   | 1.64.1, planned  | Apache-2.0      | Tests only: end to end (#85)                                    |
+| `@types/*`                                                         | See `bun.lock`   | MIT             | Type definitions only                                           |
+| `prettier`, `husky`, `lint-staged`, `@commitlint/*`                | See `bun.lock`   | MIT             | Repo tooling only                                               |
 
-A scan of all 324 installed packages on 19 October 2026 found no GPL or AGPL licence. The only copyleft licence is MPL-2.0 on `lightningcss`, the CSS tool Vite runs at build time; none of its code ships in the build. The rest are MIT, Apache-2.0, ISC, BSD, 0BSD, Unlicense and Python-2.0.
+A scan of the 324 packages installed on Linux x64 on 19 October 2026 found no GPL or AGPL licence. The only copyleft licence is MPL-2.0 on `lightningcss`, the CSS tool Vite runs at build time; none of its code ships in the build. The rest are MIT, Apache-2.0, ISC, BSD, 0BSD, Unlicense and Python-2.0, plus one package under MIT or CC0-1.0.
 
 [zod]: https://github.com/colinhacks/zod
 [noble]: https://github.com/paulmillr/noble-hashes
