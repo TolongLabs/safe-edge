@@ -364,7 +364,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
+         * Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition)
          * @description Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1.
          */
         post: operations["decideCandidate"];
@@ -442,7 +442,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List interim protection and field-check tasks
+         * List interim protection, field-check and recapture tasks
          * @description Roles: any. Agents need scope `edge.read`.
          */
         get: operations["listTasks"];
@@ -1596,8 +1596,12 @@ export interface components {
         Task: {
             id: string;
             /** @enum {string} */
-            kind: "interim_protection" | "field_check";
+            kind: "interim_protection" | "field_check" | "recapture";
             segmentId: string;
+            /** @description The viewpoint to capture again: that of the candidate's photo; null for the whole segment or another kind */
+            viewpointId: string | null;
+            /** @description The candidate that opened it (recapture, or a Tier 3 field check) */
+            candidateId: string | null;
             findingId: string | null;
             assigneeUserId: string | null;
             /** @enum {string} */
@@ -2707,7 +2711,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition) */
+            /** @description Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2818,7 +2822,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List interim protection and field-check tasks */
+            /** @description List interim protection, field-check and recapture tasks */
             200: {
                 headers: {
                     [name: string]: unknown;

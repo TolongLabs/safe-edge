@@ -596,7 +596,7 @@ paths:
   /candidates/{id}/decision:
     post:
       operationId: decideCandidate
-      summary: Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
+      summary: Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition)
       description: "Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1."
       tags:
         - candidates
@@ -616,7 +616,7 @@ paths:
               $ref: "#/components/schemas/DecideCandidateRequest"
       responses:
         "200":
-          description: Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
+          description: Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition)
           content:
             application/json:
               schema:
@@ -749,7 +749,7 @@ paths:
   /tasks:
     get:
       operationId: listTasks
-      summary: List interim protection and field-check tasks
+      summary: List interim protection, field-check and recapture tasks
       description: "Roles: any. Agents need scope `edge.read`."
       tags:
         - tasks
@@ -770,7 +770,7 @@ paths:
             pattern: ^seg_
       responses:
         "200":
-          description: List interim protection and field-check tasks
+          description: List interim protection, field-check and recapture tasks
           content:
             application/json:
               schema:
@@ -3744,9 +3744,22 @@ components:
           enum:
             - interim_protection
             - field_check
+            - recapture
         segmentId:
           type: string
           pattern: ^seg_
+        viewpointId:
+          anyOf:
+            - type: string
+              pattern: ^vp_
+            - type: "null"
+          description: "The viewpoint to capture again: that of the candidate's photo; null for the whole segment or another kind"
+        candidateId:
+          anyOf:
+            - type: string
+              pattern: ^cand_
+            - type: "null"
+          description: The candidate that opened it (recapture, or a Tier 3 field check)
         findingId:
           anyOf:
             - type: string
@@ -3780,6 +3793,8 @@ components:
         - id
         - kind
         - segmentId
+        - viewpointId
+        - candidateId
         - findingId
         - assigneeUserId
         - status

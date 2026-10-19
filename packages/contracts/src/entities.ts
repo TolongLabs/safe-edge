@@ -626,13 +626,21 @@ export const Finding = named(
 )
 export type Finding = z.infer<typeof Finding>
 
-/** Interim protection after a confirmed finding, or a field check for unknown coverage. */
+/**
+ * Interim protection after a confirmed finding, a field check for unknown coverage or a not-visible item, or a
+ * recapture a manager asked for. A recapture is done when a new frame of its viewpoint is recorded, or for the whole
+ * segment when a patrol that took off after it opened inspects some of the segment.
+ */
 export const Task = named(
   'Task',
   z.object({
     id: TaskId,
-    kind: z.enum(['interim_protection', 'field_check']),
+    kind: z.enum(['interim_protection', 'field_check', 'recapture']),
     segmentId: SegmentId,
+    viewpointId: ViewpointId.nullable().describe(
+      "The viewpoint to capture again: that of the candidate's photo; null for the whole segment or another kind"
+    ),
+    candidateId: CandidateId.nullable().describe('The candidate that opened it (recapture, or a Tier 3 field check)'),
     findingId: FindingId.nullable(),
     assigneeUserId: UserId.nullable(),
     status: z.enum(['open', 'done']),

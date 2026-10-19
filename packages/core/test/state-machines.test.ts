@@ -36,7 +36,7 @@ function approvedRemedy(h: Harness, type: 'fence_gap' | 'low_barrier' = 'fence_g
 const deniedWith = (rule: string) => ({ ok: false, rule })
 
 describe('Candidate: candidate → confirmed | rejected | needs_recapture, by a person, once', () => {
-  test('reject and recapture record the reason and open no work; a decided candidate cannot be decided again', () => {
+  test('reject and recapture record the reason and open no finding; a decided candidate cannot be decided again', () => {
     const h = startCore()
     const raise = () =>
       raiseOnS1(h, 'usr_drone_sim', {

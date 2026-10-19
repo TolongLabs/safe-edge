@@ -203,6 +203,8 @@ export const patrolHandlers = (
         id: tx.id('task'),
         kind: 'field_check',
         segmentId: segment.id,
+        viewpointId: null,
+        candidateId: null,
         findingId: null,
         assigneeUserId: tx.must('assets', segment.assetId).custodianUserId,
         status: 'open',
