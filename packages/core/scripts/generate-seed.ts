@@ -30,6 +30,12 @@ const STORY_MIN_LENGTH_M = 30
 /** The date the fixtures describe. Pass dates are written relative to it, so `tick` has work to do. */
 const AS_OF = '2026-10-20T00:00:00.000Z'
 const fixture = { simulated: true, source: 'fixture' } as const
+/**
+ * An assumed weekly patrol (PRODUCT.md: today's practice is a weekly walk), last done the Friday before AS_OF, so a
+ * missed patrol falls due on 23 October.
+ */
+const PATROL_INTERVAL_DAYS = 7
+const LAST_PATROLLED_AT = '2026-10-16T01:00:00.000Z'
 
 // Capture settings for the viewpoints, as in #70's tests: an assumed camera, not a chosen aircraft.
 const RANGE_M = 15
@@ -192,6 +198,8 @@ export async function buildSeed(): Promise<Seed> {
       expectedInventory: isStory ? expectedInventory : [],
       baselineId: isStory ? baseline.id : null,
       passId: s.id.replace(/^seg_/, 'pass_'),
+      patrolIntervalDays: PATROL_INTERVAL_DAYS,
+      lastPatrolledAt: LAST_PATROLLED_AT,
       ...fixture
     }
   })

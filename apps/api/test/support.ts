@@ -120,3 +120,24 @@ export const tier2Candidate = {
 
 export const raiseTier2 = (api: Api, token: Token | string = 'tok_provider') =>
   api.request('post', '/candidates', { token, body: tier2Candidate })
+
+/** Reads server-sent event frames (blank-line separated) as they arrive. */
+export function sseFrames(body: ReadableStream<Uint8Array>) {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  return {
+    async next(): Promise<string> {
+      while (!buffer.includes('\n\n')) {
+        const { done, value } = await reader.read()
+        if (done) throw new Error('the event stream closed')
+        buffer += decoder.decode(value, { stream: true })
+      }
+      const end = buffer.indexOf('\n\n')
+      const frame = buffer.slice(0, end)
+      buffer = buffer.slice(end + 2)
+      return frame
+    },
+    cancel: () => reader.cancel()
+  }
+}
