@@ -306,7 +306,7 @@ export function createApp({
         }
       )
     },
-    // Synchronous up to the call to Claude, so a refused lookup, which is audited, answers at once.
+    // Synchronous up to the call to Claude, so a refused lookup (an audited write) is kept with its journal entry.
     draftInbox: (c, { body }) => {
       if (agent === undefined) return noAgent()
       // Looked up as the person asking, so an unknown candidate is their 404, and only stored IDs reach the prompt.

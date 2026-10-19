@@ -234,6 +234,7 @@ test("a scenario clock won't start behind a store the wall clock wrote later: it
       tokens,
       heartbeatMs: 5_000,
       webhooks: { origins: [], allowLoopback: true, retryDelaysMs: [] },
+      idempotencyRetentionMs: 24 * 60 * 60 * 1000,
       every: () => {}
     })
   const wallTime = '2026-10-25T09:00:00.000Z'

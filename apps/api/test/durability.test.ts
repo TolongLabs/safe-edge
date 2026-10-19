@@ -122,15 +122,19 @@ test('a pending webhook retry survives a kill, goes out when it was due, and its
   const events = hooks.received.map(({ headers, body }) =>
     EdgeEvent.parse(new StandardWebhook(hook.secret).verify(body, headers))
   )
-  expect(events.map((e) => e.type)).toEqual(Array<string>(3).fill('edge.pass.suspended.v1'))
+  expect(events.map((e) => e.type)).toEqual([
+    'edge.pass.suspended.v1',
+    'edge.pass.suspended.v1',
+    'edge.pass.suspended.v1'
+  ])
   expect(new Set(events.map((e) => e.id)).size).toBe(1)
   // The retry the killed API owed went out from the restarted one, when it was due: 2 s after the first attempt, or
   // at once if the restart had taken longer than that.
-  const [first1, second, third] = hooks.received.map((r) => r.at) as [number, number, number]
-  expect(second).toBeGreaterThan(killedAt)
-  expect(second - first1).toBeGreaterThanOrEqual(2000)
-  expect(second).toBeLessThan(Math.max(first1 + 2000, upAt) + 1000)
-  expect(third - second).toBeGreaterThanOrEqual(200)
+  const [firstAt, secondAt, thirdAt] = hooks.received.map((r) => r.at) as [number, number, number]
+  expect(secondAt).toBeGreaterThan(killedAt)
+  expect(secondAt - firstAt).toBeGreaterThanOrEqual(2000)
+  expect(secondAt).toBeLessThan(Math.max(firstAt + 2000, upAt) + 1000)
+  expect(thirdAt - secondAt).toBeGreaterThanOrEqual(200)
 
   const failure = { eventId: events[0]!.id, at: expect.any(String), error: 'HTTP 503: busy' }
   expect(listed!.failures).toEqual([
