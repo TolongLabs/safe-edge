@@ -1,0 +1,50 @@
+{
+  "id": "s5",
+  "title": "S5, integration",
+  "summary": "Simulated. An AI assistant connected through the MCP server, acting as the agent, asks which passes expire in 30 days and gets them with their record IDs. It then tries to accept the repair on wo_1, and the server refuses: only a named reviewer can.",
+  "simulated": true,
+  "source": "scenario",
+  "after": "s3",
+  "start": "2026-10-23T02:00:00.000Z",
+  "end": "2026-10-23T02:10:00.000Z",
+  "setup": [],
+  "events": [
+    {
+      "at": "2026-10-23T02:01:00.000Z",
+      "type": "read",
+      "as": "usr_agent",
+      "operationId": "listPasses",
+      "input": {
+        "query": {
+          "expiresWithinDays": 30
+        }
+      },
+      "note": "10:01 local, 23 Oct: the assistant's MCP tool lists the passes that expire within 30 days, with their IDs."
+    },
+    {
+      "at": "2026-10-23T02:03:00.000Z",
+      "type": "attempt",
+      "as": "usr_agent",
+      "operationId": "recordRetest",
+      "input": {
+        "body": {
+          "workOrderId": "wo_1",
+          "checklist": [
+            {
+              "kind": "saved_view",
+              "subjectId": "vp_866518980_11_2",
+              "result": "pass",
+              "reason": "Looks fine in the photo",
+              "measuredMm": null
+            }
+          ],
+          "evidence": [],
+          "result": "accepted",
+          "reason": "Accepting on the reviewer’s behalf"
+        }
+      },
+      "refusedWith": "agents_draft_only",
+      "note": "The assistant tries to accept the repair. The server refuses it: the agent can read, propose and draft, never accept."
+    }
+  ]
+}

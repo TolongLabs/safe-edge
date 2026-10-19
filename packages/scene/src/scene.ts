@@ -20,8 +20,8 @@ import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js
 import { toLocal } from './frame.ts'
 import { basePalette, buildBaseLayers, type ElminaLayers } from './layers.ts'
 import { buildEdgeAssets, type EdgeAssetView } from './assets.ts'
-import { buildFlight, type FlightState, type FlightView } from './flight.ts'
-import { buildSegmentRibbons, segmentAt, segmentMidpoint, type SegmentView } from './segments.ts'
+import { buildFlight, type DronePlacement, type Flight, type FlightState, type FlightView } from './flight.ts'
+import { buildSegmentRibbons, segmentAt, segmentMidpoint, type PassState, type SegmentView } from './segments.ts'
 
 /** Orbit rotates around the target with the left button; map pans with it, like a web map. */
 export type ControlMode = 'orbit' | 'map'
@@ -30,8 +30,12 @@ export interface ElminaScene {
   setControlMode(mode: ControlMode): void
   /** Outlines a segment (or none) and, with `focus`, moves the camera to it, `distanceM` away (420 m by default). */
   select(segmentId: string | null, options?: { focus?: boolean; distanceM?: number }): void
-  /** Places the planned flight's drone at `atMs` (epoch milliseconds). The scene must have been made with a `flight`. */
-  setFlightTime(atMs: number): FlightState
+  /** Draws a planned patrol (the dock, the route, the drone and its frustum), replacing any before; null removes it. */
+  showFlight(flight: FlightView | null): void
+  /** Puts the drone where drone-sim reports it. Needs a flight from `showFlight`. */
+  placeDrone(drone: DronePlacement): FlightState
+  /** Redraws the segments in new pass states, keyed by segment ID; segments left out keep theirs. */
+  setPassStates(states: Record<string, PassState>): void
   /** With `true`, the camera moves to the drone and then keeps it in view as it flies. */
   followDrone(follow: boolean): void
   dispose(): void
@@ -44,8 +48,6 @@ export interface SceneOptions {
   assets?: EdgeAssetView[]
   /** Called with the clicked segment's ID, or null when a click misses every segment. */
   onSelect?: (segmentId: string | null) => void
-  /** A planned patrol to fly: the dock, the route, the drone and its camera frustum. */
-  flight?: FlightView
 }
 
 const MAX_PIXEL_RATIO = 1.5
@@ -77,16 +79,41 @@ export function createElminaScene(
     new MeshBasicMaterial({ color: basePalette.ground, depthWrite: false })
   )
   ground.name = 'ground'
-  const segments = options.segments ?? []
-  const ribbons = buildSegmentRibbons(segments)
+  let segments = options.segments ?? []
+  let ribbons = buildSegmentRibbons(segments)
   const assets = buildEdgeAssets(options.assets ?? [])
-  const objects = [ground, ...buildBaseLayers(layers), ...assets.objects, ...ribbons]
-  ribbons.forEach((r) => (r.renderOrder = objects.length + 1))
+  const objects = [ground, ...buildBaseLayers(layers), ...assets.objects]
+  const ribbonOrder = objects.length + 1
+  ribbons.forEach((r) => (r.renderOrder = ribbonOrder))
   // World-unit ribbons pass the depth test over anything near the ground, so the modelled assets draw after them.
-  assets.objects.forEach((o) => (o.renderOrder = objects.length + 2))
-  scene.add(...objects)
-  const flight = options.flight ? buildFlight(options.flight) : null
-  if (flight) scene.add(...flight.objects)
+  assets.objects.forEach((o) => (o.renderOrder = ribbonOrder + 1))
+  scene.add(...objects, ...ribbons)
+  const setPassStates = (states: Record<string, PassState>) => {
+    if (!segments.some((s) => states[s.id] !== undefined && states[s.id] !== s.state)) return
+    segments = segments.map((s) => ({ ...s, state: states[s.id] ?? s.state }))
+    scene.remove(...ribbons)
+    for (const r of ribbons) {
+      r.geometry.dispose()
+      r.material.dispose()
+    }
+    ribbons = buildSegmentRibbons(segments)
+    ribbons.forEach((r) => {
+      r.renderOrder = ribbonOrder
+      r.material.resolution.set(container.clientWidth, container.clientHeight)
+    })
+    scene.add(...ribbons)
+  }
+
+  let flight: Flight | null = null
+  const showFlight = (view: FlightView | null) => {
+    if (flight) {
+      scene.remove(...flight.objects)
+      flight.dispose()
+      following = false
+    }
+    flight = view ? buildFlight(view) : null
+    if (flight) scene.add(...flight.objects)
+  }
 
   // Start south of the lake, looking north over the retention ponds to Sungai Buloh.
   const camera = new PerspectiveCamera(45, 1, 1, 30_000)
@@ -157,9 +184,9 @@ export function createElminaScene(
     followFrom.copy(flight.dronePosition)
     active.update()
   }
-  const setFlightTime = (atMs: number) => {
+  const placeDrone = (drone: DronePlacement) => {
     if (!flight) throw new Error('This scene has no flight to place')
-    const state = flight.update(atMs)
+    const state = flight.place(drone)
     if (following) {
       // Carry the camera along by the drone's move, so orbiting and zooming still work while it follows.
       const moved = flight.dronePosition.clone().sub(followFrom)
@@ -233,10 +260,12 @@ export function createElminaScene(
   return {
     setControlMode,
     select,
-    setFlightTime,
+    showFlight,
+    placeDrone,
     followDrone,
+    setPassStates,
     dispose() {
-      flight?.dispose()
+      showFlight(null)
       renderer.setAnimationLoop(null)
       renderer.domElement.removeEventListener('pointerdown', onPointerDown)
       renderer.domElement.removeEventListener('pointerup', onPointerUp)
@@ -244,7 +273,7 @@ export function createElminaScene(
       outlineMaterial.dispose()
       observer.disconnect()
       for (const c of Object.values(controls)) c.dispose()
-      for (const o of objects) {
+      for (const o of [...objects, ...ribbons]) {
         o.geometry.dispose()
         o.material.dispose()
       }

@@ -1,0 +1,45 @@
+{
+  "id": "s4",
+  "title": "S4, governance",
+  "summary": "Simulated. Nine days on, the township general manager opens the governance board: passes expiring within 30 days, overdue work and unknown coverage. The agent drafts the monthly report from the records; drafting calls Claude, so it plays against the API only.",
+  "simulated": true,
+  "source": "scenario",
+  "after": "s3",
+  "start": "2026-10-22T08:30:00.000Z",
+  "end": "2026-10-31T02:00:00.000Z",
+  "setup": [],
+  "events": [
+    {
+      "at": "2026-10-31T01:00:00.000Z",
+      "type": "read",
+      "as": "usr_gm",
+      "operationId": "listPasses",
+      "input": {
+        "query": {
+          "expiresWithinDays": 30
+        }
+      },
+      "note": "09:00 local, 31 Oct: the general manager opens the board on the passes that expire within 30 days."
+    },
+    {
+      "at": "2026-10-31T01:01:00.000Z",
+      "type": "read",
+      "as": "usr_gm",
+      "operationId": "listWorkOrders",
+      "input": {},
+      "note": "And the open work orders, with what is overdue."
+    },
+    {
+      "at": "2026-10-31T01:05:00.000Z",
+      "type": "report",
+      "as": "usr_gm",
+      "operationId": "draftMonthlyReport",
+      "input": {
+        "body": {
+          "month": "2026-10"
+        }
+      },
+      "note": "The general manager asks the agent for October's governance report. The agent drafts it, citing the record IDs it used; it cannot send or approve anything."
+    }
+  ]
+}

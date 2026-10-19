@@ -2,6 +2,7 @@ import {
   dispatchOrThrow,
   type Actor,
   type Dispatch,
+  type DroneStatus,
   type EdgeEvent,
   type Patrol,
   type PatrolPlan
@@ -37,6 +38,8 @@ export interface DroneSimHost {
   planChanged(): void
   /** For core's re-plan subscriber: the committed stops of an in-flight patrol's plan. */
   committedTasks(patrol: Patrol, plan: PatrolPlan): number
+  /** Where a simulated drone is by the clock, with its battery: for the scene to draw it. */
+  status(deviceId: string): Promise<DroneStatus>
 }
 
 /**
@@ -74,6 +77,7 @@ export function hostDroneSim({ dispatch, clock, actor, publish, onFailure }: Dro
     },
     tick: () => sim.tick(),
     planChanged: () => void bridge.sync().catch(onFailure),
-    committedTasks: (patrol, plan) => bridge.committedTasks(patrol, plan)
+    committedTasks: (patrol, plan) => bridge.committedTasks(patrol, plan),
+    status: (deviceId) => sim.getStatus(deviceId)
   }
 }
