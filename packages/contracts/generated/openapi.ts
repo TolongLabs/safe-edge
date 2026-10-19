@@ -1408,6 +1408,11 @@ export interface components {
             findingId: string;
         } | {
             /** @constant */
+            kind: "recapture_requested";
+            segmentId: string;
+            candidateId: string;
+        } | {
+            /** @constant */
             kind: "pass_expiring";
             segmentId: string;
             passId: string;

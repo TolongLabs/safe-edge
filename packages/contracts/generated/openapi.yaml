@@ -3128,6 +3128,22 @@ components:
           properties:
             kind:
               type: string
+              const: recapture_requested
+            segmentId:
+              type: string
+              pattern: ^seg_
+            candidateId:
+              type: string
+              pattern: ^cand_
+          required:
+            - kind
+            - segmentId
+            - candidateId
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
               const: pass_expiring
             segmentId:
               type: string

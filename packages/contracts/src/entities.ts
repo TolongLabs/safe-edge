@@ -372,6 +372,7 @@ export const ReplanTrigger = named(
       warning: ContextSnapshot.describe('A `weather_warning` or `lightning_warning` in force')
     }),
     z.object({ kind: z.literal('flag_confirmed'), segmentId: SegmentId, findingId: FindingId }),
+    z.object({ kind: z.literal('recapture_requested'), segmentId: SegmentId, candidateId: CandidateId }),
     z.object({ kind: z.literal('pass_expiring'), segmentId: SegmentId, passId: PassId, validTo: Timestamp }),
     z.object({
       kind: z.literal('repair_completed'),
