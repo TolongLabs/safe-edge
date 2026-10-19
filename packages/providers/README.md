@@ -94,14 +94,14 @@ Whoever hosts the sim (the API or the scenario player) turns its events into cor
 
 ## Sending findings to Procore
 
-When a manager confirms a candidate, core drafts a work order (`edge.work_order.drafted.v1`). If the API was started with the `PROCORE_*` variables, it sends that work order's finding to Procore (`apps/api/src/work-orders.ts`):
+When a manager or engineer submits a work order (`edge.work_order.submitted.v1`), it leaves Safe Edge. Drafts never do: neither the one confirming a candidate drafts nor the agent's, because only people edit and submit (PRD INBOX-4). If the API was started with the `PROCORE_*` variables, it sends the submitted work order's finding to Procore (`apps/api/src/work-orders.ts`):
 
 1.  It reads the work order, the finding and the candidate's observations through `dispatch`, as the system actor `api.work-orders`.
 2.  `createFinding` files an Observation of the type Safety Hazard in the configured project. Its name is `Safe Edge <finding>: <class> on <segment>`, its priority comes from the finding's severity, and its description is marked SIMULATED for demo data.
 3.  The API stores the Observation ID as the work order's `externalRef` with `setWorkOrderExternalRef` (system only, set once, audited), before any photo goes.
 4.  `addEvidence` uploads each observation photo and attaches it to the Observation.
 
-A failure is logged and not retried. Every new work order gets its own Observation, including the one a reopened finding gets. Nothing calls `updateStatus` yet. It maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
+A failure is logged and not retried. Every submitted work order gets its own Observation, including the one a reopened finding gets. Nothing calls `updateStatus` yet. It maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
 
 ### Procore does not notify assignees
 

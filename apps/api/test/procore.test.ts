@@ -1,8 +1,19 @@
-// An accepted finding goes to SDP's defect system: the API hands each drafted work order, with its photo, to the
-// workorder-procore adapter, and records the Observation ID on the work order. Procore here is the contract double
+// A finding goes to SDP's defect system once a person submits its work order: the API hands each submitted work order,
+// with its photo, to the workorder-procore adapter, and records the Observation ID on the work order. Drafts, the
+// agent's included, stay in Safe Edge (INBOX-4: people edit and submit; the agent cannot). Procore here is the contract double
 // (packages/providers/test/procore-double.ts), which accepts only the documented request shapes.
 import { afterAll, expect, test } from 'bun:test'
-import { AuditEvent, Candidate, CandidateDecision, EvidenceRef, Observation, WorkOrder } from '@safe-edge/contracts'
+import {
+  AuditEvent,
+  Candidate,
+  CandidateDecision,
+  EvidenceRef,
+  Observation,
+  Opening,
+  Remedy,
+  Task,
+  WorkOrder
+} from '@safe-edge/contracts'
 import { ProcoreWorkOrderProvider } from '@safe-edge/providers'
 import { startProcoreDouble } from '../../../packages/providers/test/procore-double.ts'
 import { S1, seed, startApi, type Api } from './support.ts'
@@ -16,7 +27,7 @@ const credentials = { clientId: 'safe-edge-sandbox', clientSecret: 'sandbox-secr
 const procore = startProcoreDouble(credentials)
 afterAll(() => procore.stop())
 
-/** Polls until `read` returns a value; the hand-off runs after the confirming request has answered. */
+/** Polls until `read` returns a value; the hand-off runs after the submitting request has answered. */
 async function eventually<T>(read: () => T | undefined | Promise<T | undefined>): Promise<T> {
   const deadline = Date.now() + 3_000
   for (;;) {
@@ -39,7 +50,14 @@ async function post<T>(
   return schema.parse(await response.json())
 }
 
-test('confirming a candidate files a Procore Observation with its photo and links it to the work order', async () => {
+async function tasksOf(api: Api, findingId: string) {
+  const response = await api.request('get', '/tasks?status=open', { token: 'tok_manager' })
+  return Task.array()
+    .parse(await response.json())
+    .filter((task) => task.findingId === findingId)
+}
+
+test('submitting a work order files a Procore Observation with its photo and links it; drafts stay in Safe Edge', async () => {
   const api = startApi({
     workOrders: (readEvidence) =>
       new ProcoreWorkOrderProvider({
@@ -105,6 +123,60 @@ test('confirming a candidate files a Procore Observation with its photo and link
     CandidateDecision
   )
 
+  // The agent drafts a second work order for the same finding. Neither draft goes anywhere.
+  const agentDraft = await post(
+    api,
+    '/work-orders',
+    'tok_agent',
+    { findingId: finding!.id, remedyId: null, notes: 'Replace fence panel 4' },
+    WorkOrder
+  )
+
+  // A person takes the manager's draft through the gates and submits it: interim protection, an approved remedy.
+  await post(api, `/tasks/${(await tasksOf(api, finding!.id))[0]!.id}/complete`, 'tok_crew', undefined, Task)
+  const gap = await post(
+    api,
+    '/openings',
+    'tok_manager',
+    {
+      segmentId: S1.segmentId,
+      type: 'fence_gap',
+      photoMarks: [{ evidenceId: photo.id, x: 0.45, y: 0.6 }],
+      measuredMm: 1200
+    },
+    Opening
+  )
+  const remedy = await post(
+    api,
+    '/remedies',
+    'tok_engineer',
+    {
+      segmentId: S1.segmentId,
+      type: 'panel_replacement',
+      label: 'Replace panel 4',
+      blocksOpeningIds: [gap.id],
+      quantities: [{ item: 'Fence panel 2.4 m', amount: 1, unit: 'panel' }],
+      acceptanceTest: 'No gap over 100 mm along the run',
+      quote: 'quote_needed'
+    },
+    Remedy
+  )
+  await post(api, `/remedies/${remedy.id}/approve`, 'tok_engineer', undefined, Remedy)
+  const edited = await api.request('patch', `/work-orders/${workOrder!.id}`, {
+    token: 'tok_manager',
+    body: { remedyId: remedy.id }
+  })
+  expect(edited.status).toBe(200)
+  // Every draft so far was published before these requests ran, and none reached Procore.
+  expect(procore.observations).toEqual([])
+
+  await post(
+    api,
+    `/work-orders/${workOrder!.id}/submit`,
+    'tok_manager',
+    { installerUserId: 'usr_installer', dueAt: '2026-10-24T09:00:00.000Z' },
+    WorkOrder
+  )
   const filed = await eventually(() =>
     procore.observations[0]?.attachments.length === 1 ? procore.observations[0] : undefined
   )
@@ -125,6 +197,8 @@ test('confirming a candidate files a Procore Observation with its photo and link
     await (await api.request('get', `/work-orders/${workOrder!.id}`, { token: 'tok_manager' })).json()
   )
   expect(linked.externalRef).toBe(String(filed.id))
+  const draft = await api.request('get', `/work-orders/${agentDraft.id}`, { token: 'tok_manager' })
+  expect(WorkOrder.parse(await draft.json())).toMatchObject({ status: 'draft', externalRef: null })
   const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_manager' })).json())
   expect(audit.at(-1)).toMatchObject({
     action: 'setWorkOrderExternalRef',
