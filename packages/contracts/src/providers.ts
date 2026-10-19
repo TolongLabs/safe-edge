@@ -153,13 +153,16 @@ export type ExternalRecordRef = z.infer<typeof ExternalRecordRef>
 export const ExternalWorkStatus = z.enum(['open', 'ready_for_review', 'rejected', 'closed'])
 export type ExternalWorkStatus = z.infer<typeof ExternalWorkStatus>
 
-/** How accepted findings reach a work-order or defect system, without core knowing which one. */
+/**
+ * How accepted findings reach a work-order or defect system, without core knowing which one. Safe Edge stores only
+ * the record's `id` (the work order's `externalRef`), so the later calls take just that.
+ */
 export interface WorkOrderProvider {
   /** Files the finding in the external system. */
   createFinding(input: Finding): Promise<ExternalRecordRef>
   /** Attaches evidence images to the external record. */
-  addEvidence(ref: ExternalRecordRef, evidence: EvidenceRef[]): Promise<void>
-  updateStatus(ref: ExternalRecordRef, status: ExternalWorkStatus): Promise<void>
+  addEvidence(ref: Pick<ExternalRecordRef, 'id'>, evidence: EvidenceRef[]): Promise<void>
+  updateStatus(ref: Pick<ExternalRecordRef, 'id'>, status: ExternalWorkStatus): Promise<void>
 }
 
 /**

@@ -94,3 +94,6 @@ graphify-out/*
 # Impeccable
 .agents/skills/impeccable/scripts/bin/
 .claude/skills/impeccable/scripts/bin/
+
+# API state (apps/api/.data, SAFE_EDGE_DATA_DIR)
+.data/

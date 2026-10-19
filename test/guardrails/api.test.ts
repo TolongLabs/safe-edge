@@ -233,7 +233,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
     setWorkOrderExternalRef: { externalRef: 'procore-observation-1' },
-    recordWorkOrderExternalError: { message: 'Procore answered 503' },
+    recordWorkOrderExternalError: { step: 'createFinding', message: 'Procore answered 503' },
     reportMissedPatrol: undefined, // no body
     setScenarioClock: { now: MISSED_PATROL_DUE } // the test API's clock is a scenario clock; time stays put
   }
@@ -320,7 +320,11 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   })
   await as('dev_manager', 'post', `/notices/${notice.id}/send`)
   await as('dev_system', 'post', `/work-orders/${draft.id}/external-ref`, { externalRef: 'procore-observation-1' })
-  await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, { message: 'Procore answered 503' })
+  await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, {
+    step: 'createFinding',
+    message: 'Procore answered 503'
+  })
+  await as('dev_manager', 'post', `/work-orders/${draft.id}/external-retry`)
   // Someone on S1's edge, reported with the plan request (#125): the plan holds S1 until the pilot sees the path clear.
   const plan = await as('dev_manager', 'post', '/patrol-plans', { ...patrolRequest, thirdParties: [PERSON_ON_S1] })
   expect(plan.holds).toMatchObject([{ kind: 'separation', segmentId: S1.segmentId, releasedBy: null }])
@@ -553,6 +557,11 @@ function answeredRecord(body: unknown): { id: string } {
     typeof value === 'object' && value !== null && typeof (value as { id?: unknown }).id === 'string'
   const record = isRecord(body) ? body : Object.values(body as object).find(isRecord)
   if (record === undefined) throw new Error(`No record in ${JSON.stringify(body)}`)
+  // A webhook registration answers with its signing secret once; the audited record never carries it.
+  if ('secret' in record) {
+    const { secret: _, ...stored } = record
+    return stored
+  }
   return record
 }
 

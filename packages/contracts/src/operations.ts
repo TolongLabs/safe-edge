@@ -27,6 +27,7 @@ import {
   EdgePassList,
   EvidenceUrl,
   FindingList,
+  HandOffRetry,
   IdParam,
   InboxDraft,
   ListAuditQuery,
@@ -47,6 +48,7 @@ import {
   RecordRetestRequest,
   RecordWorkOrderExternalErrorRequest,
   RegisterWebhookRequest,
+  RegisteredWebhook,
   ReportDamageRequest,
   RetestOutcome,
   RouteClosure,
@@ -570,13 +572,26 @@ export const operations = {
     method: 'post',
     path: '/work-orders/{id}/external-error',
     summary:
-      'Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)',
+      'Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)',
     handledBy: 'core',
     roles: ['system'],
     agentScope: null,
     params: IdParam.workOrder,
     body: RecordWorkOrderExternalErrorRequest,
     response: WorkOrder,
+    status: 200,
+    events: []
+  },
+  retryWorkOrderHandOff: {
+    method: 'post',
+    path: '/work-orders/{id}/external-retry',
+    summary:
+      'Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)',
+    handledBy: 'core',
+    roles: ['manager', 'engineer'],
+    agentScope: null,
+    params: IdParam.workOrder,
+    response: HandOffRetry,
     status: 200,
     events: []
   },
@@ -836,12 +851,13 @@ export const operations = {
   registerWebhook: {
     method: 'post',
     path: '/webhooks',
-    summary: 'Register a webhook endpoint for CloudEvents',
+    summary:
+      'Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)',
     handledBy: 'api',
     roles: ['integrator'],
     agentScope: null,
     body: RegisterWebhookRequest,
-    response: Webhook,
+    response: RegisteredWebhook,
     status: 201,
     events: []
   },

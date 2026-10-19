@@ -130,19 +130,24 @@ export class ProcoreWorkOrderProvider implements WorkOrderProvider {
     return { id: String(created.id), url: new URL(path, this.#config.apiBaseUrl).href }
   }
 
-  async addEvidence(ref: ExternalRecordRef, evidence: EvidenceRef[]): Promise<void> {
+  async addEvidence(ref: Pick<ExternalRecordRef, 'id'>, evidence: EvidenceRef[]): Promise<void> {
     if (evidence.length === 0) return
     const uploadIds: string[] = []
     for (const image of evidence) uploadIds.push(await this.#upload(image))
     await this.#patchObservation(ref, { upload_ids: uploadIds })
   }
 
-  /** Procore appends a response log entry and notifies the distribution list when the status changes. */
-  async updateStatus(ref: ExternalRecordRef, status: ExternalWorkStatus): Promise<void> {
+  /**
+   * Procore appends a response log entry and notifies the distribution list when the status changes (reference
+   * "Observations", Update Observation Item). The tutorial's lifecycle (documentation/tutorial-observations): the
+   * assignee sets `ready_for_review` once the work is done, and the reviewer sets `closed`; `not_accepted` is the
+   * reference's status for work sent back.
+   */
+  async updateStatus(ref: Pick<ExternalRecordRef, 'id'>, status: ExternalWorkStatus): Promise<void> {
     await this.#patchObservation(ref, { status: STATUS[status] })
   }
 
-  async #patchObservation(ref: ExternalRecordRef, observation: object): Promise<void> {
+  async #patchObservation(ref: Pick<ExternalRecordRef, 'id'>, observation: object): Promise<void> {
     await this.#rest('PATCH', `/rest/v1.0/observations/items/${ref.id}`, CreatedObservation, {
       project_id: this.#config.projectId,
       observation

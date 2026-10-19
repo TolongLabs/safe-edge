@@ -27,6 +27,9 @@
         "hono": "^4.13.13",
         "zod": "^4.6.7",
       },
+      "devDependencies": {
+        "standardwebhooks": "1.1.1",
+      },
     },
     "apps/mcp": {
       "name": "@safe-edge/mcp",

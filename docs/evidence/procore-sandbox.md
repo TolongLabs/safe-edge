@@ -7,6 +7,7 @@ Contents:
 1.  [Setup](#setup)
 1.  [Run](#run)
 1.  [Result](#result)
+1.  [Status changes through the repair](#status-changes-through-the-repair)
 1.  [Other Observations in the sandbox](#other-observations-in-the-sandbox)
 1.  [See also](#see-also)
 
@@ -41,6 +42,23 @@ Procore sandbox project 374160, Observation 371386 "Safe Edge fnd_1: inventory i
 
 The attachment's `url` is on `sandbox.procore.com` and answers 401 without the token. With it, it redirects to Amazon S3, which serves the PNG.
 
+## Status changes through the repair
+
+On 19 October 2026 the extended `procore:e2e` (#127) carried S1 past the submit, on a fresh temporary data directory. After the photo check, `usr_installer` started and completed `wo_1`, and `usr_reviewer` recorded an accepted re-test, which made the pass valid. The API moved the Observation with `WorkOrderProvider.updateStatus`, and the script read each status back from the sandbox with a token of its own:
+
+```text
+2026-10-19T10:02:22.830Z submitted wo_1 (finding fnd_1, photo evd_1)
+2026-10-19T10:02:25.836Z wo_1 externalRef is Procore Observation 371390
+Procore sandbox project 374160, Observation 371390 "Safe Edge fnd_1: inventory item on seg_866518980_11"
+  created_at 2026-10-19T10:02:25Z, status initiated
+  attachment 13145984 evd_1.png: sha256 9ea49766287640e0504847442a83448466890cb954e75ce115d75c750918c5c5, the same bytes as data/elmina/scenarios/s6-vandalised-sign.png
+  https://sandbox.procore.com/rest/v1.0/observations/items/371390?project_id=374160
+2026-10-19T10:02:34.946Z wo_1 completed: Observation 371390 is ready_for_review
+2026-10-19T10:02:37.469Z re-test accepted: Observation 371390 is closed
+```
+
+A rejected re-test sends `not_accepted`. That path ran only against the contract double, not the sandbox.
+
 ## Other Observations in the sandbox
 
 | Observation | Created by                                    | Photo                                                              |
@@ -48,6 +66,7 @@ The attachment's `url` is on `sandbox.procore.com` and answers 401 without the t
 | 371383      | `bun run procore:smoke`, the adapter directly | `docs/images/shortlist/safe-edge-workflow.png`                     |
 | 371385      | The first `procore:e2e` run, at 09:13:48Z     | The S6 frame, attached as file 13145972 with the same sha256 above |
 | 371386      | The `procore:e2e` run above                   | The S6 frame, file 13145973                                        |
+| 371390      | The `procore:e2e` status run, now closed      | The S6 frame, file 13145984                                        |
 
 The first `procore:e2e` run filed and linked 371385 the same way, but its byte check fetched the attachment URL without the token and got a 401. The script now sends the token, and a check of 371385 afterwards found the same bytes.
 
