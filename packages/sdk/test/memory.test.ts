@@ -132,7 +132,7 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
   test('with the Elmina planner injected, a planned patrol is proposed and only the pilot can approve it', async () => {
     // The browser fetches the layers; here Bun reads them from the repo.
     const repoRoot = join(import.meta.dir, '../../..')
-    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json())
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
     const demo = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager', planner })
     const seen: string[] = []
     demo.subscribe((event) => seen.push(event.type))

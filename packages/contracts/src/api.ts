@@ -348,6 +348,7 @@ export type DemoResetResult = z.infer<typeof DemoResetResult>
 export const IdParam = {
   segment: z.object({ id: SegmentId }),
   patrolPlan: z.object({ id: PatrolPlanId }),
+  planHold: z.object({ id: PatrolPlanId, segmentId: SegmentId }),
   patrol: z.object({ id: PatrolId }),
   candidate: z.object({ id: CandidateId }),
   finding: z.object({ id: FindingId }),
