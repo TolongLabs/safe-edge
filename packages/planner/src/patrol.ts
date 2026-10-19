@@ -19,9 +19,12 @@ import type { Feature, LineString, MultiPolygon, Point, Polygon, Position } from
 import { rankingPriority, scorePriority, type ScoreInputs } from './score.ts'
 import {
   keepSeparation,
+  nearby,
+  SEPARATION_M,
   separationHold,
   separationReason,
   takeoffLandingHold,
+  type Nearby,
   type Separation,
   type ThirdParty
 } from './separation.ts'
@@ -114,9 +117,11 @@ interface Candidate {
   stations: Station[]
   /** Stations that wait for a clear pass. */
   waiting: Separation['waiting']
+  /** People, vessels and vehicles near its flight line between stations that are clear of them. */
+  flightLine: Nearby[]
   priority: PriorityScore
   rank: number
-  /** Flying from the first station to the last, hovering at each, and waiting for a clear path when it is held. */
+  /** Flying from the first station to the last and hovering at each, without a wait for a clear path. */
   energyWh: number
   durationS: number
 }
@@ -207,6 +212,9 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     const path = samePosition(a, b) ? point(a) : lineString([a, b])
     return keptFrom.filter((zone) => within(path, zone, zone.kind === 'designated_area' ? DESIGNATED_AREA_M : 0))
   })
+  // People, vessels and vehicles move away, so a leg near them waits for the pilot or observer to see it clear.
+  const movable = input.thirdParties.filter((p) => p.kind !== 'structure')
+  const legNear = memo((a: Position, b: Position) => nearby(samePosition(a, b) ? [a] : [a, b], movable, SEPARATION_M))
 
   const committedIds = new Set(committed?.tasks.map((t) => t.segmentId))
   const open = input.segments.filter((s) => !committedIds.has(s.id))
@@ -263,19 +271,36 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     const priority = scorePriority(segmentId, input)
     const flownWh = stations.slice(1).reduce((wh, s, i) => wh + flyWh(position(stations[i]!), position(s)), 0)
     const flownS = stations.slice(1).reduce((t, s, i) => t + flyS(position(stations[i]!), position(s)), 0)
-    const waitS = waiting.length > 0 ? input.separationWaitS : 0
+    const waitingIds = new Set(waiting.map((w) => w.station.id))
     pending.push({
       task,
       stations,
       waiting,
+      flightLine: stations
+        .slice(1)
+        .flatMap((s, i) =>
+          waitingIds.has(s.id) || waitingIds.has(stations[i]!.id) ? [] : legNear(position(stations[i]!), position(s))
+        ),
       priority,
       rank: rankingPriority(priority),
-      energyWh: flownWh + stations.length * hoverWh + (drone.hoverPowerW * waitS) / 3600,
-      durationS: flownS + stations.length * assumedEnergyModel.stationHoverS + waitS
+      energyWh: flownWh + stations.length * hoverWh,
+      durationS: flownS + stations.length * assumedEnergyModel.stationHoverS
     })
   }
 
   const route: Stop[] = []
+  // A stop waits once for a clear path, before the first part of it that is too close: the transit into it from the
+  // stop before, a station or its flight line. The transits from and to the dock are the dock's (see `dockHold`).
+  const waitS = input.separationWaitS
+  const waitWh = (drone.hoverPowerW * waitS) / 3600
+  const transitNear = (stop: Stop, previous: Position, fromDock: boolean) =>
+    fromDock ? [] : legNear(previous, ends(stop)[0])
+  const waits = (stop: Stop, previous: Position, fromDock: boolean) =>
+    stop.candidate.waiting.length > 0 ||
+    stop.candidate.flightLine.length > 0 ||
+    transitNear(stop, previous, fromDock).length > 0
+      ? 1
+      : 0
   const budgetWh = drone.usableBatteryWh - drone.reserveWh
   // So far: flying up to the start of the route, straight home from there, and the descent.
   let usedWh = departWh + flyWh(from, dockAt) + climbWh
@@ -285,15 +310,23 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   const insertions = (candidate: Candidate): Insertion[] =>
     Array.from({ length: route.length + 1 }, (_, index) => {
       const before = index === 0 ? from : ends(route[index - 1]!)[1]
-      const after = index === route.length ? dockAt : ends(route[index]!)[0]
+      const fromDock = index === 0 && !committed
+      const next = route[index]
+      const after = next ? ends(next)[0] : dockAt
       return [false, true].map((reversed): Insertion => {
-        const [entry, exit] = ends({ candidate, reversed })
+        const stop = { candidate, reversed }
+        const [entry, exit] = ends(stop)
+        // Its own wait, and the next stop's, whose transit now comes from this one.
+        const addedWaits =
+          waits(stop, before, fromDock) + (next ? waits(next, exit, false) - waits(next, before, fromDock) : 0)
         return {
           candidate,
           reversed,
           index,
-          addedWh: flyWh(before, entry) + candidate.energyWh + flyWh(exit, after) - flyWh(before, after),
-          addedS: flyS(before, entry) + candidate.durationS + flyS(exit, after) - flyS(before, after),
+          addedWh:
+            flyWh(before, entry) + candidate.energyWh + flyWh(exit, after) - flyWh(before, after) + addedWaits * waitWh,
+          addedS:
+            flyS(before, entry) + candidate.durationS + flyS(exit, after) - flyS(before, after) + addedWaits * waitS,
           blockedBy: [...legBlockers(before, entry), ...legBlockers(exit, after)]
         }
       })
@@ -345,18 +378,39 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   const dockHold = committed || route.length > 0 ? takeoffLandingHold(dock, input.thirdParties) : null
   if (dockHold) holds.push(dockHold)
 
-  // A held stop waits at the last waypoint before its first station that is too close, where the drone is clear of them.
+  // A held stop waits at the last waypoint before the first leg that is too close, where the drone is clear of them.
   const waitsBefore = new Set<string>()
-  for (const stop of route) {
+  const held = new Set<Stop>()
+  route.forEach((stop, i) => {
     const { candidate } = stop
-    if (candidate.waiting.length === 0) continue
+    const previous = i === 0 ? from : ends(route[i - 1]!)[1]
+    const fromDock = i === 0 && !committed
+    if (!waits(stop, previous, fromDock)) return
+    const transit = transitNear(stop, previous, fromDock)
     const waitingIds = new Set(candidate.waiting.map((w) => w.station.id))
-    const first = ordered(stop, candidate.stations).find((s) => waitingIds.has(s.id))!
+    const stations = ordered(stop, candidate.stations)
+    const first = stations.find(
+      (s, k) =>
+        waitingIds.has(s.id) ||
+        (k === 0 ? transit.length > 0 : legNear(position(stations[k - 1]!), position(s)).length > 0)
+    )!
     waitsBefore.add(first.id)
+    held.add(stop)
+    // A transit into a stop comes from the stop before it, or from the last committed one.
+    const previousSegment = () =>
+      i === 0 ? committed!.tasks.at(-1)!.segmentId : route[i - 1]!.candidate.task.segmentId
     holds.push(
-      separationHold(candidate.task.segmentId, candidate.waiting, { waitS: input.separationWaitS, before: first })
+      separationHold(
+        candidate.task.segmentId,
+        {
+          waiting: candidate.waiting,
+          flightLine: candidate.flightLine,
+          transit: transit.length > 0 ? { from: previousSegment(), to: candidate.task.segmentId, near: transit } : null
+        },
+        { waitS, before: first }
+      )
     )
-  }
+  })
 
   const flown = route.flatMap((stop) =>
     ordered(stop, stop.candidate.stations).map((station) => ({ station, segmentId: stop.candidate.task.segmentId }))
@@ -400,8 +454,8 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     }
     for (const { station, segmentId } of flown) {
       if (waitsBefore.has(station.id)) {
-        clockS += input.separationWaitS
-        energyWh += (drone.hoverPowerW * input.separationWaitS) / 3600
+        clockS += waitS
+        energyWh += waitWh
       }
       fly(position(station))
       arrive('station', at, { ...station.pose, viewpointId: station.viewpointId, segmentId })
@@ -437,7 +491,7 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
         flightLine: { type: 'LineString', coordinates: ordered(stop, stop.candidate.task.flightLine.coordinates) },
         stations: ordered(stop, stop.candidate.stations).map((s) => ({ ...s.pose, viewpointId: s.viewpointId })),
         priority: stop.candidate.priority,
-        energyWh: stop.candidate.energyWh
+        energyWh: stop.candidate.energyWh + (held.has(stop) ? waitWh : 0)
       }))
     ],
     waypoints,
