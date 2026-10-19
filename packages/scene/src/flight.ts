@@ -17,17 +17,13 @@ import {
 } from 'three'
 import { toLocal } from './frame.ts'
 
-/** One planner waypoint, as `PatrolPlan.waypoints` gives it: WGS84, metres above ground, a planned time. */
+/** One planner waypoint, as `PatrolPlan.waypoints` gives it: WGS84 and metres above ground. */
 export interface FlightPoint {
   lon: number
   lat: number
   altM: number
   headingDeg: number
-  gimbalPitchDeg: number
   kind: 'takeoff' | 'transit' | 'station' | 'landing'
-  eta: string
-  /** Cumulative energy used on arrival. */
-  energyWh: number
 }
 
 /** A planned patrol: the dock it leaves from, the route it flies and the aircraft's battery and camera. */
@@ -50,10 +46,19 @@ export interface FlightState {
   toward: number
 }
 
+/** Where the simulated drone is and what it has left, as drone-sim's `DroneStatus` reports it. */
+export interface DronePlacement {
+  state: 'docked' | 'in_flight'
+  pose: { lon: number; lat: number; altM: number; headingDeg: number; pitchDeg: number }
+  batteryWh: number
+}
+
 export interface Flight {
   objects: Object3D[]
-  /** Puts the drone where the plan has it at `atMs` (epoch milliseconds) and returns what it is doing. */
-  update(atMs: number): FlightState
+  /** Puts the drone on the route where drone-sim reports it and returns what it is doing. */
+  place(drone: DronePlacement): FlightState
+  /** Back on the dock before take-off: for a scenario played again from its start. */
+  restart(): void
   /** Where the drone is now, for a camera that follows it. */
   dronePosition: Vector3
   dispose(): void
@@ -84,15 +89,20 @@ const toScene = (p: { lon: number; lat: number; altM: number }) => {
   return new Vector3(east, p.altM, -north)
 }
 
+/** Route samples per leg between two waypoints, for finding where on the curve a reported pose is. */
+const SAMPLES_PER_LEG = 16
+/** How far ahead of the last placement to look for the next one, in samples: a few legs. */
+const LOOK_AHEAD = SAMPLES_PER_LEG * 4
+
 /**
  * The dock on its roof, the planned route as a smooth `CatmullRomCurve3`, and a procedural quadcopter with its camera
- * frustum. `update` places the drone on the curve at the planned time: between two waypoints it moves in proportion to
- * their ETAs, so it hovers at a station exactly as long as the plan holds it there.
+ * frustum. `place` puts the drone on the curve at the point nearest the pose drone-sim reports, searching forward from
+ * the last placement, so it follows the flight in order even where the route crosses itself, and hovers where the
+ * drone hovers.
  */
 export function buildFlight(view: FlightView): Flight {
   const { waypoints } = view
   if (waypoints.length < 2) throw new Error('A flight needs at least a take-off and a landing waypoint')
-  const etas = waypoints.map((w) => Date.parse(w.eta))
   const points = waypoints.map(toScene)
   const curve = new CatmullRomCurve3(points, false, 'centripetal')
 
@@ -136,49 +146,74 @@ export function buildFlight(view: FlightView): Flight {
 
   for (const o of [site, route, drone, frustum]) o.userData.layer = 'simulation'
 
+  const last = waypoints.length - 1
+  const samples: Array<{ t: number; at: Vector3 }> = []
+  for (let i = 0; i <= last * SAMPLES_PER_LEG; i++) {
+    const t = i / (last * SAMPLES_PER_LEG)
+    samples.push({ t, at: curve.getPoint(t) })
+  }
+  let cursor = 0
+  let flown = false
+  const reported = new Vector3()
   const at = new Vector3()
-  const update = (atMs: number): FlightState => {
-    const last = waypoints.length - 1
-    let toward: number
-    let fraction: number
-    if (atMs <= etas[0]!) [toward, fraction] = [0, 0]
-    else if (atMs >= etas[last]!) [toward, fraction] = [last, 1]
-    else {
-      toward = etas.findIndex((eta) => eta > atMs)
-      const span = etas[toward]! - etas[toward - 1]!
-      fraction = span > 0 ? (atMs - etas[toward - 1]!) / span : 1
+  const nearest = (from: number, to: number) => {
+    let best = from
+    for (let i = from + 1; i <= to; i++) {
+      if (samples[i]!.at.distanceToSquared(reported) < samples[best]!.at.distanceToSquared(reported)) best = i
     }
-    const from = Math.max(0, toward - 1)
-    const a = waypoints[from]!
-    const b = waypoints[toward]!
-    // CatmullRomCurve3 spaces its points evenly in t, so waypoint i sits at t = i / last.
-    curve.getPoint(atMs >= etas[last]! ? 1 : (from + (toward === 0 ? 0 : fraction)) / last, at)
-    drone.position.copy(at)
-    const heading = lerpAngle(a.headingDeg, b.headingDeg, fraction)
-    drone.rotation.set(0, -MathUtils.degToRad(heading), 0, 'YXZ')
-    gimbal.rotation.x = MathUtils.degToRad(MathUtils.lerp(a.gimbalPitchDeg, b.gimbalPitchDeg, fraction))
+    return best
+  }
 
-    const usedWh = MathUtils.lerp(a.energyWh, b.energyWh, toward === 0 ? 0 : fraction)
-    const remainingWh = Math.max(0, view.usableBatteryWh - usedWh)
-    const phase = phaseOf(atMs, etas, waypoints, toward)
-    const spin = phase === 'docked' || phase === 'landed' ? 0 : 0.9
+  const place = ({ state, pose, batteryWh }: DronePlacement): FlightState => {
+    if (state === 'in_flight') flown = true
+    reported.copy(toScene(pose))
+    if (state === 'docked') cursor = flown ? samples.length - 1 : 0
+    else {
+      cursor = nearest(cursor, Math.min(cursor + LOOK_AHEAD, samples.length - 1))
+      // A scrub ahead outruns the window: look along the rest of the route.
+      if (samples[cursor]!.at.distanceTo(reported) > FRUSTUM_RANGE_M) cursor = nearest(cursor, samples.length - 1)
+    }
+    // Between the nearest sample and the next, the share of the way the reported pose has come.
+    const a = samples[cursor]!
+    const b = samples[Math.min(cursor + 1, samples.length - 1)]!
+    const leg = b.at.clone().sub(a.at)
+    const share = leg.lengthSq() > 0 ? MathUtils.clamp(reported.clone().sub(a.at).dot(leg) / leg.lengthSq(), 0, 1) : 0
+    const t = MathUtils.lerp(a.t, b.t, share)
+    curve.getPoint(t, at)
+    drone.position.copy(at)
+    drone.rotation.set(0, -MathUtils.degToRad(pose.headingDeg), 0, 'YXZ')
+    gimbal.rotation.x = MathUtils.degToRad(pose.pitchDeg)
+
+    const toward = Math.min(last, Math.floor(t * last) + 1)
+    const phase = phaseOf(state, flown, waypoints, toward)
+    const spin = state === 'in_flight' ? 0.9 : 0
     for (const r of rotors) r.rotation.y += spin
     drone.updateMatrixWorld(true)
-    frustum.visible = phase !== 'docked' && phase !== 'landed'
+    frustum.visible = state === 'in_flight'
     frustum.update()
     return {
       phase,
-      remainingWh,
-      batteryPercent: (remainingWh / view.usableBatteryWh) * 100,
+      remainingWh: batteryWh,
+      batteryPercent: (batteryWh / view.usableBatteryWh) * 100,
       altM: at.y,
       toward
     }
   }
-  update(etas[0]!)
+  const restart = () => {
+    cursor = 0
+    flown = false
+    place({
+      state: 'docked',
+      pose: { ...view.dock, headingDeg: waypoints[0]!.headingDeg, pitchDeg: 0 },
+      batteryWh: view.usableBatteryWh
+    })
+  }
+  restart()
 
   return {
     objects: [site, route, drone, frustum],
-    update,
+    place,
+    restart,
     dronePosition: drone.position,
     dispose() {
       for (const o of [site, route, drone, frustum]) {
@@ -195,9 +230,13 @@ export function buildFlight(view: FlightView): Flight {
   }
 }
 
-function phaseOf(atMs: number, etas: number[], waypoints: FlightPoint[], toward: number): FlightPhase {
-  if (atMs <= etas[0]!) return 'docked'
-  if (atMs >= etas.at(-1)!) return 'landed'
+function phaseOf(
+  state: DronePlacement['state'],
+  flown: boolean,
+  waypoints: FlightPoint[],
+  toward: number
+): FlightPhase {
+  if (state === 'docked') return flown ? 'landed' : 'docked'
   const a = waypoints[toward - 1]!
   const b = waypoints[toward]!
   if (a.kind === 'takeoff') return 'takeoff'
@@ -205,12 +244,6 @@ function phaseOf(atMs: number, etas: number[], waypoints: FlightPoint[], toward:
   // Along a segment's flight line, between and at its camera stations, the drone is taking its photos.
   if (a.kind === 'station' && b.kind === 'station') return 'station'
   return waypoints.slice(toward).some((w) => w.kind === 'station') ? 'transit' : 'return'
-}
-
-/** Interpolates two compass headings the short way round. */
-function lerpAngle(fromDeg: number, toDeg: number, t: number) {
-  const delta = ((((toDeg - fromDeg) % 360) + 540) % 360) - 180
-  return fromDeg + delta * t
 }
 
 /**

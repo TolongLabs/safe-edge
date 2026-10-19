@@ -1,0 +1,217 @@
+{
+  "id": "s2",
+  "title": "S2, choosing a fix",
+  "summary": "Simulated. The manager opens finding fnd_1 in Fix Lens and records the two ways a child walks from the playground to the water: through the panel gap and around the fence end. Replacing panel 4 alone leaves the way around the fence end open; the full remedy closes both. The engineer approves it, and the manager sends the work order to the installer.",
+  "simulated": true,
+  "source": "scenario",
+  "after": "s1",
+  "start": "2026-10-21T23:45:00.000Z",
+  "end": "2026-10-22T00:30:00.000Z",
+  "setup": [],
+  "events": [
+    {
+      "at": "2026-10-21T23:50:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "createOpening",
+      "input": {
+        "body": {
+          "segmentId": "seg_866518980_11",
+          "type": "fence_gap",
+          "photoMarks": [
+            {
+              "evidenceId": "evd_s1_photo",
+              "x": 0.45,
+              "y": 0.6
+            }
+          ],
+          "measuredMm": 1200
+        }
+      },
+      "note": "07:50: the manager marks the gap where panel 4 was on the photo (opn_1, 1.2 m wide)."
+    },
+    {
+      "at": "2026-10-21T23:51:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "createOpening",
+      "input": {
+        "body": {
+          "segmentId": "seg_866518980_11",
+          "type": "fence_end",
+          "photoMarks": [
+            {
+              "evidenceId": "evd_s1_photo",
+              "x": 0.9,
+              "y": 0.6
+            }
+          ],
+          "measuredMm": 450
+        }
+      },
+      "note": "And the gap at the fence end (opn_2, 450 mm)."
+    },
+    {
+      "at": "2026-10-21T23:52:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "createRoute",
+      "input": {
+        "body": {
+          "segmentId": "seg_866518980_11",
+          "fromFeature": {
+            "kind": "play_area",
+            "label": "Playground path, through the panel gap"
+          },
+          "openingIds": ["opn_1"],
+          "status": "open"
+        }
+      },
+      "note": "Route rte_1: from the playground path through the panel gap to the water."
+    },
+    {
+      "at": "2026-10-21T23:53:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "createRoute",
+      "input": {
+        "body": {
+          "segmentId": "seg_866518980_11",
+          "fromFeature": {
+            "kind": "play_area",
+            "label": "Playground path, around the fence end"
+          },
+          "openingIds": ["opn_2"],
+          "status": "open"
+        }
+      },
+      "note": "Route rte_2: from the same path around the fence end."
+    },
+    {
+      "at": "2026-10-21T23:55:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "createRemedy",
+      "input": {
+        "body": {
+          "segmentId": "seg_866518980_11",
+          "type": "barrier_extension",
+          "label": "Replace panel 4",
+          "blocksOpeningIds": ["opn_1"],
+          "quantities": [
+            {
+              "item": "Fence panel 2.4 m",
+              "amount": 1,
+              "unit": "panel"
+            }
+          ],
+          "acceptanceTest": "No gap over 100 mm along the run",
+          "quote": "quote_needed"
+        }
+      },
+      "note": "Fix A (rem_1): replace panel 4 only."
+    },
+    {
+      "at": "2026-10-21T23:56:00.000Z",
+      "type": "read",
+      "as": "usr_manager",
+      "operationId": "previewRouteClosure",
+      "input": {
+        "params": {
+          "id": "seg_866518980_11"
+        },
+        "body": {
+          "remedyIds": ["rem_1"]
+        }
+      },
+      "note": "Fix Lens checks fix A: it closes rte_1 but leaves rte_2, the way around the fence end, open."
+    },
+    {
+      "at": "2026-10-21T23:58:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "createRemedy",
+      "input": {
+        "body": {
+          "segmentId": "seg_866518980_11",
+          "type": "barrier_extension",
+          "label": "Replace panel 4 and extend the fence end to the headwall",
+          "blocksOpeningIds": ["opn_1", "opn_2"],
+          "quantities": [
+            {
+              "item": "Fence panel 2.4 m",
+              "amount": 1,
+              "unit": "panel"
+            },
+            {
+              "item": "Fence extension",
+              "amount": 6,
+              "unit": "m"
+            }
+          ],
+          "acceptanceTest": "No gap over 100 mm along the run and around both fence ends",
+          "quote": "quote_needed"
+        }
+      },
+      "note": "Fix B (rem_2): replace panel 4 and extend the fence 6 m to the headwall."
+    },
+    {
+      "at": "2026-10-21T23:59:00.000Z",
+      "type": "read",
+      "as": "usr_manager",
+      "operationId": "previewRouteClosure",
+      "input": {
+        "params": {
+          "id": "seg_866518980_11"
+        },
+        "body": {
+          "remedyIds": ["rem_2"]
+        }
+      },
+      "note": "Fix Lens checks fix B: it closes both recorded routes."
+    },
+    {
+      "at": "2026-10-22T00:10:00.000Z",
+      "type": "fix",
+      "as": "usr_engineer",
+      "operationId": "approveRemedy",
+      "input": {
+        "params": {
+          "id": "rem_2"
+        }
+      },
+      "note": "08:10: the engineer approves fix B."
+    },
+    {
+      "at": "2026-10-22T00:15:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "updateWorkOrder",
+      "input": {
+        "params": {
+          "id": "wo_1"
+        },
+        "body": {
+          "remedyId": "rem_2"
+        }
+      },
+      "note": "The manager puts fix B on work order wo_1: marked photos, quantities and the acceptance test."
+    },
+    {
+      "at": "2026-10-22T00:16:00.000Z",
+      "type": "fix",
+      "as": "usr_manager",
+      "operationId": "submitWorkOrder",
+      "input": {
+        "params": {
+          "id": "wo_1"
+        },
+        "body": {
+          "installerUserId": "usr_installer",
+          "dueAt": "2026-10-24T09:00:00.000Z"
+        }
+      },
+      "note": "And sends it to the installer, due 24 Oct."
+    }
+  ]
+}

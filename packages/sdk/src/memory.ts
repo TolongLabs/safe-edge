@@ -4,6 +4,7 @@ import {
   type Actor,
   type CoreOperationId,
   type DispatchResult,
+  type DroneStatus,
   type EdgeEvent,
   type OperationSpec
 } from '@safe-edge/contracts'
@@ -70,6 +71,8 @@ export interface MemoryClient extends SafeEdgeClient, Methods<MemoryOperationId>
    * drone flies on the clock. Subscribers get the events, which are also returned.
    */
   tick(now: string): Promise<EdgeEvent[]>
+  /** Where the demo's simulated drone `deviceId` (`sim-1`, …) is by the demo clock, with its battery. */
+  droneStatus(deviceId: string): Promise<DroneStatus>
 }
 
 const wallClock: Clock = { now: () => new Date().toISOString() }
@@ -144,6 +147,7 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
         events.publish(scheduled)
         return [...flown, ...scheduled]
       },
+      droneStatus: (deviceId) => session.drone.status(deviceId),
       actor,
       as: (id) => clientFor(actorOf(id)),
       subscribe: events.subscribe

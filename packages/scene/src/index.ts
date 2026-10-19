@@ -2,6 +2,7 @@ export { buildEdgeAssets, type EdgeAssetView, type ItemType } from './assets.ts'
 export {
   buildFlight,
   DRONE_DRAWN_SCALE,
+  type DronePlacement,
   type Flight,
   type FlightPhase,
   type FlightPoint,

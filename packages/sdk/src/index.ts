@@ -6,6 +6,17 @@ export { createElminaPlanner } from '@safe-edge/planner'
 export { SafeEdgeApiError, SafeEdgeDeniedError } from './errors.ts'
 export type { AgentStreamEvent, HttpClient, HttpOptions, HttpStreams, StreamOptions } from './http.ts'
 export { elminaSeed, type MemoryClient, type MemoryOptions } from './memory.ts'
+export {
+  createScenarioPlayer,
+  FLIGHT_STEP_MS,
+  GROUND_PLAYBACK_RATE,
+  GROUND_STEP_MS,
+  type Played,
+  type ScenarioPlayer,
+  type ScenarioPlayerOptions
+} from './player.ts'
+export { Scenario, ScenarioEvent } from './scenario.ts'
+export { elminaScenarios } from './scenarios.ts'
 
 /**
  * A typed Safe Edge client with one method per operationId in the contracts' operations table.

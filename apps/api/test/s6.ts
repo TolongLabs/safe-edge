@@ -1,38 +1,11 @@
 // S6 from its scenario fixture (data/elmina/scenarios/s6-text-in-image.json), played through an SDK client: the
 // HTTP one against the API, or the memory one the scene's scenario player (#64) drives.
 import { expect } from 'bun:test'
-import { PolicyRule, Timestamp, UserId, operations, type CoreOperationId } from '@safe-edge/contracts'
-import { createSafeEdgeClient, type SafeEdgeClient } from '@safe-edge/sdk'
+import { Scenario, createSafeEdgeClient, type SafeEdgeClient, type ScenarioEvent } from '@safe-edge/sdk'
 import { join } from 'node:path'
-import * as z from 'zod'
 import { seed, type Api } from './support.ts'
 
-const coreOperationIds = Object.entries(operations)
-  .filter(([, op]) => op.handledBy === 'core')
-  .map(([id]) => id) as [CoreOperationId, ...CoreOperationId[]]
-
-/** One timed call: who acts, which operation, its input. IDs made by earlier events count from 1 after a reset. */
-const ScenarioEvent = z.object({
-  at: Timestamp,
-  type: z.enum(['candidate', 'decision', 'observation', 'attempt']),
-  as: UserId,
-  operationId: z.enum(coreOperationIds),
-  input: z.object({ params: z.record(z.string(), z.string()).optional(), body: z.unknown().optional() }),
-  refusedWith: PolicyRule.optional(),
-  note: z.string().min(1)
-})
-export type ScenarioEvent = z.infer<typeof ScenarioEvent>
-
-const Scenario = z.object({
-  id: z.string(),
-  title: z.string(),
-  summary: z.string(),
-  simulated: z.literal(true),
-  source: z.literal('scenario'),
-  signText: z.string(),
-  setup: z.array(ScenarioEvent),
-  events: z.array(ScenarioEvent)
-})
+export type { ScenarioEvent }
 
 export const repoRoot = join(import.meta.dir, '../../..')
 export const S6 = Scenario.parse(await Bun.file(join(repoRoot, 'data/elmina/scenarios/s6-text-in-image.json')).json())
@@ -51,7 +24,8 @@ export async function play(player: Player, events: readonly ScenarioEvent[]) {
   const results: unknown[] = []
   for (const event of events) {
     await player.setNow(event.at)
-    const call = (player.clientFor(event.as)[event.operationId] as (input: unknown) => Promise<unknown>)(event.input)
+    const client = player.clientFor(event.as) as unknown as Record<string, (input: unknown) => Promise<unknown>>
+    const call = client[event.operationId]!(event.input)
     if (event.refusedWith === undefined) results.push(await call)
     else await expect(call).rejects.toMatchObject({ status: 403, rule: event.refusedWith })
   }

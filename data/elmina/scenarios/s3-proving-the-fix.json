@@ -1,0 +1,79 @@
+{
+  "id": "s3",
+  "title": "S3, proving the fix",
+  "summary": "Simulated. The installer replaces panel 4, extends the fence and marks the work complete. A reviewer who did not install it re-tests it on a phone: the saved view and both routes pass. The pass returns, valid for 12 months, and the audit trail shows every step.",
+  "simulated": true,
+  "source": "scenario",
+  "after": "s2",
+  "start": "2026-10-22T00:30:00.000Z",
+  "end": "2026-10-22T08:30:00.000Z",
+  "setup": [],
+  "events": [
+    {
+      "at": "2026-10-22T06:30:00.000Z",
+      "type": "repair",
+      "as": "usr_installer",
+      "operationId": "startWorkOrder",
+      "input": {
+        "params": {
+          "id": "wo_1"
+        }
+      },
+      "note": "14:30 local: the installer starts the work."
+    },
+    {
+      "at": "2026-10-22T07:40:00.000Z",
+      "type": "repair",
+      "as": "usr_installer",
+      "operationId": "completeWorkOrder",
+      "input": {
+        "params": {
+          "id": "wo_1"
+        },
+        "body": {
+          "evidence": [],
+          "note": "Panel replaced, fence extended 6 m to the headwall"
+        }
+      },
+      "note": "15:40: the installer marks it complete. The installer cannot accept their own work."
+    },
+    {
+      "at": "2026-10-22T08:05:00.000Z",
+      "type": "retest",
+      "as": "usr_reviewer",
+      "operationId": "recordRetest",
+      "input": {
+        "body": {
+          "workOrderId": "wo_1",
+          "checklist": [
+            {
+              "kind": "saved_view",
+              "subjectId": "vp_866518980_11_2",
+              "result": "pass",
+              "reason": "Panel 4 in place",
+              "measuredMm": null
+            },
+            {
+              "kind": "route_check",
+              "subjectId": "rte_1",
+              "result": "pass",
+              "reason": "Gap closed",
+              "measuredMm": 40
+            },
+            {
+              "kind": "route_check",
+              "subjectId": "rte_2",
+              "result": "pass",
+              "reason": "Fence meets headwall",
+              "measuredMm": 60
+            }
+          ],
+          "evidence": [],
+          "result": "accepted",
+          "reason": "Both observed approaches closed"
+        }
+      },
+      "note": "16:05: reviewer Priya Nair, who did not install it, re-tests it on site: the saved view and both routes pass. pass_866518980_11 is valid again, to 22 Oct 2027."
+    }
+  ]
+}
