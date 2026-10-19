@@ -15,6 +15,7 @@ import {
   createReplanSubscriber,
   queuedRetest,
   recordAutomationFailure,
+  runSchedule,
   Seed,
   type Clock,
   type Core,
@@ -59,9 +60,11 @@ export interface MemoryClient extends SafeEdgeClient, Methods<MemoryOperationId>
    */
   subscribe(handler: (event: EdgeEvent) => void): () => void
   /**
-   * Moves the demo's passes to `now` on the scenario clock (core's `tick`): valid → expiring 30 days before `validTo`,
-   * then → expired. The system acts, whichever user this client is, so it never makes a pass valid. Subscribers get
-   * the events, which are also returned.
+   * Runs the scheduled pass at `now`, the one the API runs on its timer or scenario clock (core's `runSchedule`):
+   * passes move valid → expiring 30 days before `validTo`, then → expired, and every valid or expiring pass whose
+   * segment went a whole patrol interval uninspected gets a missed patrol, which suspends it. The system acts, whichever
+   * user this client is, so it never makes a pass valid. Pass the demo clock's time: core stamps the missed patrols
+   * with it. Subscribers get the events, which are also returned.
    */
   tick(now: string): Promise<EdgeEvent[]>
 }
@@ -123,7 +126,7 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
         session.core = fresh()
         return { reset: true }
       },
-      tick: async (now) => publish(session.core.tick(now)),
+      tick: async (now) => publish(runSchedule(session.core, now)),
       actor,
       as: (id) => clientFor(actorOf(id)),
       subscribe: (handler) => {

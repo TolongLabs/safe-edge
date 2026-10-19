@@ -129,28 +129,33 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
     expect(seen.length).toBe(8)
   })
 
-  test('tick(now) moves passes as the system, for S4: subscribers see each pass start expiring', async () => {
-    const { demo } = startDemo()
+  test('tick(now) runs the scheduled pass as the system, for S4: subscribers see each pass start expiring', async () => {
+    const { demo, stage } = startDemo()
     const seen: EdgeEvent[] = []
     demo.subscribe((event) => seen.push(event))
     // pass_866518980_12 is valid to 2026-12-01T02:00Z, so it starts expiring 30 days earlier.
+    stage.setNow('2026-11-01T02:00:00.000Z')
     const events = await demo.as('usr_gm').tick('2026-11-01T02:00:00.000Z')
-    expect(events.map((e): unknown[] => [e.type, e.data])).toEqual([
-      [
-        'edge.pass.expiring.v1',
-        {
-          passId: 'pass_866518980_12',
-          segmentId: 'seg_866518980_12',
-          validTo: '2026-12-01T02:00:00.000Z',
-          simulated: true
-        }
-      ]
-    ])
+    expect(events[0]).toMatchObject({
+      type: 'edge.pass.expiring.v1',
+      data: {
+        passId: 'pass_866518980_12',
+        segmentId: 'seg_866518980_12',
+        validTo: '2026-12-01T02:00:00.000Z',
+        simulated: true
+      }
+    })
+    // By then every seeded patrol interval has run out, so each pass still standing gets a missed patrol, as the API's
+    // scheduled pass does.
+    expect(events.slice(1).map((e) => [e.type, 'segmentId' in e.data ? e.data.segmentId : null])).toEqual(
+      ['seg_866518980_5', S1.segmentId, 'seg_866518980_12'].flatMap((segmentId) => [
+        ['edge.candidate.raised.v1', segmentId],
+        ['edge.pass.suspended.v1', segmentId]
+      ])
+    )
     expect(seen).toEqual(events)
-    expect(await demo.getPass({ params: { id: 'pass_866518980_12' } })).toMatchObject({ state: 'expiring' })
     // Whoever's client asks, the move is the system's, on the audit chain.
-    expect((await demo.listAudit()).at(-1)).toMatchObject({
-      action: 'tick',
+    expect((await demo.listAudit()).find((e) => e.action === 'tick')).toMatchObject({
       subjectId: 'pass_866518980_12',
       actor: { type: 'system', id: 'core.tick', role: 'system' },
       after: { state: 'expiring' }

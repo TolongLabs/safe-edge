@@ -50,13 +50,13 @@ const unsubscribe = demo.subscribe((event) => {
 })
 
 await demo.resetDemo() // the seed again, an empty audit chain, ID counters from 1
-await demo.tick('2026-11-01T02:00:00.000Z') // passes move to expiring and expired on the scenario clock
+await demo.tick('2026-11-01T02:00:00.000Z') // the scheduled pass: expiring and expired passes, missed patrols
 ```
 
 - `subscribe` hears every event core emits in this demo, whichever user acted. Over HTTP, read `GET /v1/events` with `streamEvents` instead (see [Streams over HTTP](#streams-over-http-ask-and-events)).
-- Core's re-plan subscriber runs in the demo as in the API: a confirmed flag, a completed repair or a pass starting to expire re-plans the open plans as the system (`core.replan`), and a repair with no plan open queues a re-test patrol. Each re-plan's `edge.patrol.planned.v1` reaches subscribers right after the event that caused it. It needs the planner (see [Patrol plans in demo mode](#patrol-plans-in-demo-mode)); without one, or for a patrol in flight (the demo flies no drone), the failure goes on the audit chain as `runAutomation` with subject `automation`.
+- Core's re-plan subscriber runs in the demo as in the API: a confirmed flag, a completed repair or a pass starting to expire re-plans the open plans as the system (`core.replan`), and a repair with no plan open queues a re-test patrol. Each re-plan's `edge.patrol.planned.v1` reaches subscribers right after the event that caused it. It needs the planner (see [Patrol plans in demo mode](#patrol-plans-in-demo-mode)); without one, or for a patrol in flight (the demo flies no drone), the failure goes on the audit chain as `runAutomation` with subject `automation`. A plan that fails is the only one left out: the trigger's other plans are re-planned.
 - `resetDemo` restores the seed for every client made with `as`, and subscribers stay subscribed. It emits no event, so refetch what the screen shows after calling it. The agent user cannot reset.
-- `tick(now)` runs core's time-driven pass moves (S4's expiring passes): valid to expiring 30 days before `validTo`, then to expired. The system acts, whichever user the client is, so a tick never makes a pass valid. Subscribers get the `edge.pass.expiring.v1` and `edge.pass.expired.v1` events, and `tick` returns them. It is memory-only: the HTTP API runs tick itself, on a timer or each time its scenario clock is set.
+- `tick(now)` runs the scheduled pass the HTTP API runs on its timer or each time its scenario clock is set (core's `runSchedule`): passes move valid to expiring 30 days before `validTo`, then to expired (S4), and every valid or expiring pass whose segment went a whole patrol interval uninspected gets a missed patrol, which suspends it. The system acts, whichever user the client is, so a tick never makes a pass valid. Set the demo clock to `now` first: core stamps the missed patrols with the clock. Subscribers get the events, and `tick` returns them. It is memory-only.
 
 ## Patrol plans in demo mode
 
