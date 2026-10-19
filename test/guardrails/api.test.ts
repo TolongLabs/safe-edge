@@ -102,7 +102,7 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     decideCandidate: { decision: 'confirm', severity: 'low' }, // confirm
     recordRetest: played.retest, // accept, which issues the pass
     submitWorkOrder: { installerUserId: 'usr_installer', dueAt: '2026-10-30T00:00:00.000Z' } // issue the work order
-    // sendNotice takes no body // send
+    // sendNotice (send) takes no body
   }
 
   // Enumerated from the operations table: every row with no agent scope.
@@ -130,15 +130,12 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
   expect((await api.pass()).state).toBe('suspended')
 
   // The same requests from the right people go through: only the agent's identity refused them.
-  const confirm = asAPersonWould.decideCandidate
-  expect(
-    (await answer(api.request('post', `/candidates/${proposed.id}/decision`, { token: 'dev_manager', body: confirm })))
-      .status
-  ).toBe(200)
-  expect((await answer(api.request('post', '/retests', { token: 'dev_reviewer', body: played.retest }))).status).toBe(
-    201
-  )
-  expect((await answer(api.request('post', `/notices/${notice.id}/send`, { token: 'dev_manager' }))).status).toBe(200)
+  const statusFor = (token: string, method: string, path: string, body?: unknown) =>
+    api.request(method, path, { token, body }).then((response) => response.status)
+  const decision = asAPersonWould.decideCandidate
+  expect(await statusFor('dev_manager', 'post', `/candidates/${proposed.id}/decision`, decision)).toBe(200)
+  expect(await statusFor('dev_reviewer', 'post', '/retests', played.retest)).toBe(201)
+  expect(await statusFor('dev_manager', 'post', `/notices/${notice.id}/send`)).toBe(200)
   expect((await api.pass()).state).toBe('valid')
 })
 
