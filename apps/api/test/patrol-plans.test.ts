@@ -1,16 +1,14 @@
 // PLAN-7 over HTTP, on the seeded API: plans keep 50 m from the third parties the request reports and from the seed's
 // S1 path crowd, and the separation holds they get wait for the pilot.
 import { describe, expect, test } from 'bun:test'
-import { PatrolPlan, type CreatePatrolPlanRequest } from '@safe-edge/contracts'
+import { PatrolPlan, type CreatePatrolPlanRequest, type ReportedThirdParty } from '@safe-edge/contracts'
 import { S1, seed, startApi } from './support.ts'
 
 const NOT_BEFORE = '2026-10-24T23:30:00.000Z'
 /** S1's path segment, beside the footway the crowd is on, and the bank across the lake from it. */
 const PATH_SEGMENT = 'seg_866518980_9'
 const FAR_BANK = 'seg_866518980_7'
-/** A third party as a request reports it: core stamps its source from the caller. */
-type Reported = NonNullable<CreatePatrolPlanRequest['thirdParties']>[number]
-const request = (segmentIds: string[], thirdParties?: Reported[]): CreatePatrolPlanRequest => ({
+const request = (segmentIds: string[], thirdParties?: ReportedThirdParty[]): CreatePatrolPlanRequest => ({
   dockId: 'dock_elmina_roof',
   droneProfileId: 'drn_assumed',
   segmentIds,
@@ -24,7 +22,7 @@ describe('separation holds on API-served plans', () => {
   test('a create-plan request carrying a person on the edge gets a separation hold on that segment', async () => {
     const api = startApi()
     // Someone standing on S1's water edge (a vertex of its seed geometry), reported with the request: a labelled fixture.
-    const onTheEdge: Reported = {
+    const onTheEdge: ReportedThirdParty = {
       id: 'obs_person_s1',
       kind: 'person',
       label: 'person on the S1 edge',
@@ -96,7 +94,7 @@ describe('the take-off and landing hold on the dock', () => {
     const api = startApi()
     const [dock] = seed.docks
     // Someone 20 m south of the dock on its roof's building, reported with the request: a labelled fixture.
-    const byTheDock: Reported = {
+    const byTheDock: ReportedThirdParty = {
       id: 'obs_person_dock',
       kind: 'person',
       label: 'person by the dock building',

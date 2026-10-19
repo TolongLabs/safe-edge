@@ -25,6 +25,7 @@ import {
   RemedyId,
   RetestId,
   RouteId,
+  Source,
   SegmentId,
   TaskId,
   Timestamp,
@@ -244,21 +245,25 @@ export const ContextSnapshot = named(
 export type ContextSnapshot = z.infer<typeof ContextSnapshot>
 
 /**
- * A person, vessel, vehicle or structure not under the remote pilot's control. CAR 2016 regulation 143(1)(e)–(g): no
- * flight within 50 m of one, nor within 30 m of any person during take-off or landing, without the Director General's
- * authorisation.
+ * A person, vessel, vehicle or structure not under the remote pilot's control, as a create-plan request reports it
+ * (core stamps the source). CAR 2016 regulation 143(1)(e)–(g): no flight within 50 m of one, nor within 30 m of any
+ * person during take-off or landing, without the Director General's authorisation.
  */
-export const ThirdParty = named(
-  'ThirdParty',
+export const ReportedThirdParty = named(
+  'ReportedThirdParty',
   z.object({
     id: z.string().min(1),
     kind: z.enum(['person', 'vessel', 'vehicle', 'structure']),
     label: z.string().describe('As people should read it, e.g. "3 people on the lakeside footway"'),
     geometry: z.union([Point, LineString, Polygon]),
     observedAt: Timestamp.nullable().describe('When it was seen; null for a mapped structure'),
-    ...provenance
+    simulated: z.boolean()
   })
 )
+export type ReportedThirdParty = z.infer<typeof ReportedThirdParty>
+
+/** A third party with its provenance, as the seed records it and the planner port takes it. Not on the REST API. */
+export const ThirdParty = ReportedThirdParty.extend({ source: Source })
 export type ThirdParty = z.infer<typeof ThirdParty>
 
 /** Each part is 0–1, or null when its input is stale or missing ("unknown", never zero). */
