@@ -71,6 +71,7 @@ export function startApi({
     workOrders,
     agent,
     webhooks: { origins, allowLoopback, retryDelaysMs },
+    idempotencyRetentionMs: 24 * 60 * 60 * 1000,
     every,
     weather
   })

@@ -2,13 +2,13 @@
 // by Idempotency-Key and the webhook allowlist. The API runs as its own process and is killed with SIGKILL, as a crash
 // would, then started again on the same data directory.
 import { afterAll, expect, test } from 'bun:test'
-import { AuditEvent, Candidate, EdgeEvent, RegisteredWebhook, Webhook } from '@safe-edge/contracts'
+import { AuditEvent, Candidate, EdgeEvent, Notice, RegisteredWebhook, Webhook } from '@safe-edge/contracts'
 import { Database } from 'bun:sqlite'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { eventually } from '../../../test/spawn.ts'
-import { startApiProcess } from './process.ts'
+import { refusedStart, startApiProcess } from './process.ts'
 import { Webhook as StandardWebhook } from 'standardwebhooks'
 import { S1, tier2Candidate } from './support.ts'
 
@@ -191,4 +191,52 @@ test('a kill between the journal write and the idempotency write cannot make a s
   expect((await call(api, Candidate.array(), 'get', '/candidates', 'tok_manager')).map((c) => c.id)).toEqual([
     candidate.id
   ])
+}, 30_000)
+
+test('an answer is kept for its key for the stated retention, then pruned, and the key runs again as a new request', async () => {
+  const dir = await dataDir()
+  const api = await startApiProcess({
+    NODE_ENV: 'test',
+    SAFE_EDGE_DATA_DIR: dir,
+    SAFE_EDGE_IDEMPOTENCY_RETENTION_SECONDS: '1'
+  })
+  const key = { 'idempotency-key': 'escalate-overdue-repair' }
+  const draft = () =>
+    call(
+      api,
+      Notice,
+      'post',
+      '/notices',
+      'tok_manager',
+      { kind: 'escalation', subjectId: S1.segmentId, title: 'Overdue repair', body: 'The repair is overdue' },
+      key
+    )
+  const first = await draft()
+  expect(await draft()).toEqual(first)
+
+  await Bun.sleep(1_100)
+  const second = await draft()
+  expect(second.id).not.toBe(first.id)
+  expect((await call(api, Notice.array(), 'get', '/notices', 'tok_manager')).map((n) => n.id)).toEqual([
+    first.id,
+    second.id
+  ])
+  // The expired answer left the store; only the one the key now replays is kept.
+  const db = new Database(join(dir, 'api.sqlite'), { readonly: true })
+  const kept = db.query<{ body: string }, []>('select body from idempotency').all()
+  db.close()
+  expect(kept.map((row) => Notice.parse(JSON.parse(row.body)).id)).toEqual([second.id])
+}, 30_000)
+
+test('the entry refuses a retention or retry delays that are not whole numbers', async () => {
+  const retention = await refusedStart({ NODE_ENV: 'test', SAFE_EDGE_IDEMPOTENCY_RETENTION_SECONDS: 'a day' })
+  expect(retention.code).toBe(1)
+  expect(retention.stderr).toContain(
+    'SAFE_EDGE_IDEMPOTENCY_RETENTION_SECONDS is a whole number of seconds above 0, not "a day"'
+  )
+  const delays = await refusedStart({ NODE_ENV: 'test', SAFE_EDGE_WEBHOOK_RETRY_DELAYS_MS: '2s,4s' })
+  expect(delays.code).toBe(1)
+  expect(delays.stderr).toContain(
+    'SAFE_EDGE_WEBHOOK_RETRY_DELAYS_MS lists whole milliseconds such as 2000,4000, not "2s,4s"'
+  )
 }, 30_000)

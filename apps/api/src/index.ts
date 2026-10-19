@@ -13,6 +13,7 @@ import {
   SAFETY_HAZARD_OBSERVATION_TYPE
 } from '@safe-edge/providers'
 import { webhookOptions } from './events.ts'
+import { idempotencyRetentionMs } from './idempotency.ts'
 import { JournalWriteError } from './journal.ts'
 import { devTokens } from './tokens.ts'
 
@@ -76,6 +77,7 @@ const app = createApp({
   agent,
   workOrders,
   webhooks: webhookOptions(process.env),
+  idempotencyRetentionMs: idempotencyRetentionMs(process.env),
   // On the wall clock the automation (drone-sim, tick, missed patrols, weather) repeats on timers; a scenario clock runs
   // it when set.
   every: (ms, run) => void setInterval(() => void run(), ms),

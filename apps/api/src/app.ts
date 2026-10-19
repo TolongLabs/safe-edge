@@ -66,6 +66,8 @@ export interface ApiOptions {
   agent?: { claude: Anthropic; token: string }
   /** Where webhooks may point and how failed deliveries are retried. */
   webhooks: WebhookOptions
+  /** How long an answer stays kept for its Idempotency-Key, in milliseconds of wall-clock time (idempotency.ts). */
+  idempotencyRetentionMs: number
   /**
    * How the API repeats its automation on the wall clock (`setInterval`); required there. A scenario clock runs the
    * automation each time `setScenarioClock` moves it, so it ignores this.
@@ -115,6 +117,7 @@ export function createApp({
   workOrders,
   agent: agentOptions,
   webhooks,
+  idempotencyRetentionMs,
   every,
   weather
 }: ApiOptions) {
@@ -219,8 +222,9 @@ export function createApp({
   // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). The caller
   // is the whole actor, role and scopes included: a replay skips the access check, so another token of the same person
   // must not share it. Server errors are not kept, so a retry runs again. Answers are kept in the store
-  // (idempotency.ts), so they outlive a restart; requests still running are tracked in memory. `serve` keeps them.
-  const answers = openIdempotency(db)
+  // (idempotency.ts) for `idempotencyRetentionMs`, so they outlive a restart; requests still running are tracked in
+  // memory. `serve` keeps them.
+  const answers = openIdempotency(db, idempotencyRetentionMs)
   const keep = ({ scope, fingerprint }: Keyed, answer: Answer) => {
     if (answer.status < 500) answers.keep(scope, fingerprint, { ...answer, headers: JSON_HEADERS })
   }

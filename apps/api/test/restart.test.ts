@@ -304,7 +304,8 @@ test('a write the journal cannot keep throws out of the app, which takes no more
     store: join(dir, 'in-process.sqlite'),
     tokens,
     heartbeatMs: 5_000,
-    webhooks: { origins: [], allowLoopback: true, retryDelaysMs: [] }
+    webhooks: { origins: [], allowLoopback: true, retryDelaysMs: [] },
+    idempotencyRetentionMs: 24 * 60 * 60 * 1000
   })
   const raise = () =>
     app.fetch(
