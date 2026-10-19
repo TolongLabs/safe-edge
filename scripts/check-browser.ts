@@ -20,9 +20,10 @@ await Bun.build({
     'packages/core/src/index.ts',
     'packages/planner/src/index.ts',
     'packages/planner/src/export/index.ts',
+    'packages/providers/src/index.ts',
     'packages/sdk/src/index.ts'
   ],
   target: 'browser',
   plugins: [rejectBuiltins]
 })
-console.log('contracts, core, planner and sdk bundle for the browser')
+console.log('contracts, core, planner, providers and sdk bundle for the browser')
