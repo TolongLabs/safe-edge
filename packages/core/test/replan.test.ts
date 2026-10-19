@@ -27,11 +27,11 @@ const subscriberFor = (h: Harness) =>
   })
 
 /**
- * A plan for the morning of 1 Nov, approved and in flight. The drone provider reports that the first two stops are
- * flown or in progress.
+ * A plan for the next morning (1 Nov by default), approved and in flight. The drone provider reports that the first two
+ * stops are flown or in progress.
  */
-function inFlight(h: Harness, segmentIds = LAKE) {
-  h.setNow('2026-10-31T21:00:00.000Z')
+function inFlight(h: Harness, segmentIds = LAKE, planned = '2026-10-31T21:00:00.000Z') {
+  h.setNow(planned)
   const plan = h.call('createPatrolPlan', 'usr_manager', { body: request(h, segmentIds) }).data
   h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
   h.setNow(plan.window.start)
@@ -150,12 +150,14 @@ describe('PLAN-4: each trigger re-plans the uncommitted part of a route in fligh
 
   test('a pass entering its last 30 days: its segment joins the route', () => {
     const h = startCore()
-    const expiring = 'seg_866518980_12' // valid to 2026-12-01T02:00Z
+    const expiring = 'seg_866518980_12' // valid to 2026-12-01T02:00Z, so expiring from 2026-11-01T02:00Z
     const plan = inFlight(
       h,
-      LAKE.filter((id) => id !== expiring)
+      LAKE.filter((id) => id !== expiring),
+      '2026-11-01T21:00:00.000Z'
     )
-    const ticked = h.core.tick('2026-11-01T02:00:00.000Z')
+    // The tick that runs during the patrol on 2 Nov moves the pass to expiring.
+    const ticked = h.core.tick(h.now())
     expect(ticked.map((e) => e.type)).toEqual(['edge.pass.expiring.v1'])
     const [replanned] = planned(h, ticked.flatMap(subscriberFor(h).onEvent))
 

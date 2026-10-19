@@ -39,7 +39,7 @@ export function replan(
   const flown = plan.waypoints.findLastIndex((w) => w.segmentId === tasks.at(-1)!.segmentId) + 1
   return buildPlan(next, {
     window: plan.window,
-    // Launch holds are history now; separation holds of committed stops still apply.
+    // Launch holds stay as the record of why the launch waited; separation holds stay for committed stops only.
     holds: plan.holds.filter((h) => h.segmentId === null || ids.has(h.segmentId)),
     replan: record,
     committed: {
