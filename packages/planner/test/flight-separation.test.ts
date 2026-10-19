@@ -10,6 +10,7 @@ import {
   loadElmina,
   planPatrol,
   planStations,
+  replan,
   splitEdges,
   type PatrolPlanInput,
   type ThirdParty
@@ -302,5 +303,43 @@ describe('separation over the whole flight', async () => {
         reason: `the climb from ${dock.name} comes within 150 m of "concert crowd on the lakeside footway" (person, 1200 people, seen ${SEEN}), closest ${concertM.toFixed(0)} m, an assembly in the open air of more than 1,000 persons (CAR 2016 reg. 143(1)(c), (d)); no patrol can take off or land there`
       }))
     )
+  })
+
+  test('a re-plan in flight checks its new way home: one dock hold, for the landing only', () => {
+    // Someone 40 m south of the dock, away from the lake: a labelled fixture. They are clear of take-off and landing
+    // (30 m), not of the transits that start and end above the dock.
+    const byTheDock: ThirdParty = {
+      id: 'obs_person_dock_40m',
+      kind: 'person',
+      label: 'person 40 m south of the dock',
+      geometry: { type: 'Point', coordinates: [dock.position.lon, dock.position.lat - 40 / 111_320] },
+      observedAt: SEEN,
+      headcount: null,
+      simulated: true,
+      source: 'fixture'
+    }
+    const flying = planPatrol(input([EAST, WEST], [byTheDock]))
+    expect(flying.tasks.map((t) => t.segmentId)).toEqual([EAST, WEST])
+    expect(flying.holds.map((h) => [h.kind, h.segmentId])).toEqual([['separation', null]])
+
+    // The east bank is flown; a confirmed flag re-plans the rest from there.
+    const trigger = { kind: 'flag_confirmed' as const, segmentId: WEST, findingId: 'fnd_1' }
+    const next = replan(
+      flying,
+      { committedTasks: 1 },
+      { ...input([EAST, WEST], [byTheDock]), id: 'plan_next' },
+      trigger
+    )
+    expect(next.tasks.map((t) => t.segmentId)).toEqual([EAST, WEST])
+    expect(next.holds).toEqual([
+      {
+        kind: 'separation',
+        segmentId: null,
+        until: null,
+        releasedBy: null,
+        releasedAt: null,
+        reason: `the transit from ${WEST} to ${dock.name} passes within 50 m of "person 40 m south of the dock" (person, seen ${SEEN}), closest 40 m; take-off and landing wait for the pilot or observer to confirm the dock and the transits from and to it are clear (CAR 2016 reg. 143(1))`
+      }
+    ])
   })
 })
