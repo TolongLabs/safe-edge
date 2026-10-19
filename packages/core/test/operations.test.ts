@@ -112,6 +112,8 @@ describe('the operations table in core', () => {
     }).data
     h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
     h.setNow(plan.window.start)
+    // They are beside the transit from S1 back to the dock as well (#150), so take-off waits for the pilot.
+    h.call('releasePlanHold', 'usr_pilot', { params: { id: plan.id, segmentId: 'dock' } })
     const patrol = h.call('startPatrol', 'usr_pilot', {
       body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' }
     }).data

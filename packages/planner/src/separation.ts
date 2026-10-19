@@ -174,24 +174,54 @@ export function separationHold(
   }
 }
 
+/** A transit from or to the dock: where it starts and ends, named as people should read them. */
+export interface DockTransit {
+  from: string
+  to: string
+  leg: [Position, Position]
+}
+
 /**
- * The hold on the dock while a person is within 30 m of it: take-off and landing wait for the pilot or observer to
- * confirm the dock is clear. Null when no one is that close. Core's `releasePlanHold` (at `dock`) records the confirm.
+ * How close a third party may come to the climb from the dock and the descent onto it: 30 m for a person (rule (g)
+ * read as the moments 50 m gives way to 30 m), 50 m for a vessel, vehicle or structure (rule (e) has no take-off case).
  */
-export function takeoffLandingHold(dock: Dock, thirdParties: ThirdParty[]): PlanHold | null {
-  const close = thirdParties
-    .filter((p) => p.kind === 'person')
-    .map((party) => ({ party, m: distanceTo([dock.position.lon, dock.position.lat], party.geometry) }))
-    .filter((n) => n.m < TAKEOFF_LANDING_SEPARATION_M)
-  if (close.length === 0) return null
-  const closestM = Math.min(...close.map((n) => n.m))
+export function climbSeparationM(party: ThirdParty): number {
+  return party.kind === 'person' ? TAKEOFF_LANDING_SEPARATION_M : SEPARATION_M
+}
+
+/**
+ * The hold on the dock while a third party is too close to take-off and landing (see `climbSeparationM`) or within
+ * 50 m of the transits from and to the dock. The pilot or observer confirms the dock and its transits clear before
+ * take-off; core's `releasePlanHold` (at `dock`) records it. Null when nothing is that close.
+ */
+export function dockHold(dock: Dock, thirdParties: ThirdParty[], transits: DockTransit[]): PlanHold | null {
+  const at: Position = [dock.position.lon, dock.position.lat]
+  const byDock = thirdParties
+    .map((party) => ({ party, m: distanceTo(at, party.geometry), limitM: climbSeparationM(party) }))
+    .filter((n) => n.m < n.limitM)
+  const clauses = [TAKEOFF_LANDING_SEPARATION_M, SEPARATION_M].flatMap((limitM) => {
+    const close = byDock.filter((n) => n.limitM === limitM)
+    if (close.length === 0) return []
+    const closestM = Math.min(...close.map((n) => n.m))
+    return [
+      `${named(close.map((n) => n.party))} ${close.length === 1 ? 'is' : 'are'} within ${limitM} m of ${dock.name}, closest ${closestM.toFixed(0)} m`
+    ]
+  })
+  // Structures never come near a flown transit (it would be out of the route), and the ones named above are not repeated.
+  const others = thirdParties.filter((p) => p.kind !== 'structure' && !byDock.some((n) => n.party === p))
+  for (const { from, to, leg } of transits) {
+    const close = nearby(leg, others, SEPARATION_M)
+    if (close.length > 0)
+      clauses.push(`the transit from ${from} to ${to} passes within ${SEPARATION_M} m of ${closest(close)}`)
+  }
+  if (clauses.length === 0) return null
   return {
     kind: 'separation',
     segmentId: null,
     until: null,
     releasedBy: null,
     releasedAt: null,
-    reason: `${named(close.map((n) => n.party))} ${close.length === 1 ? 'is' : 'are'} within ${TAKEOFF_LANDING_SEPARATION_M} m of ${dock.name}, closest ${closestM.toFixed(0)} m; take-off and landing wait for the pilot or observer to confirm no one is within ${TAKEOFF_LANDING_SEPARATION_M} m of the dock (CAR 2016 reg. 143(1)(g))`
+    reason: `${clauses.join('; ')}; take-off and landing wait for the pilot or observer to confirm the dock and the transits from and to it are clear (CAR 2016 reg. 143(1))`
   }
 }
 

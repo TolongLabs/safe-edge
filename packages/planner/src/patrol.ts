@@ -18,12 +18,14 @@ import {
 import type { Feature, LineString, MultiPolygon, Point, Polygon, Position } from 'geojson'
 import { rankingPriority, scorePriority, type ScoreInputs } from './score.ts'
 import {
+  closest,
+  dockHold,
   keepSeparation,
   nearby,
   SEPARATION_M,
   separationHold,
   separationReason,
-  takeoffLandingHold,
+  type DockTransit,
   type Nearby,
   type Separation,
   type ThirdParty
@@ -214,6 +216,9 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   })
   // People, vessels and vehicles move away, so a leg near them waits for the pilot or observer to see it clear.
   const movable = input.thirdParties.filter((p) => p.kind !== 'structure')
+  // A structure stays put: one within 50 m of the dock keeps every patrol on the ground.
+  const structures = input.thirdParties.filter((p) => p.kind === 'structure')
+  const byDock = committed ? [] : nearby([dockAt], structures, SEPARATION_M)
   const legNear = memo((a: Position, b: Position) => nearby(samePosition(a, b) ? [a] : [a, b], movable, SEPARATION_M))
 
   const committedIds = new Set(committed?.tasks.map((t) => t.segmentId))
@@ -222,7 +227,11 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   const grounding = committed
     ? weatherBlockers(input.context, dock.rainLimitMmPerH, Math.max(startMs + departS * 1000, Date.parse(input.now)))
     : []
-  const stationPlan = planStations({ ...input, segments: grounding.length > 0 ? [] : open, camera: drone.camera })
+  const stationPlan = planStations({
+    ...input,
+    segments: grounding.length > 0 || byDock.length > 0 ? [] : open,
+    camera: drone.camera
+  })
   const waterOf = (segmentId: string) => {
     const { assetId } = input.segments.find((s) => s.id === segmentId)!
     return polygon([input.edges.find((e) => e.assetId === assetId)!.geometry.coordinates])
@@ -231,6 +240,10 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   if (grounding.length > 0) {
     const reason = `${groundingReason(grounding, dock.rainLimitMmPerH)}; the drone returns to the dock after its committed stops`
     rejected.push(...open.map((s) => ({ segmentId: s.id, code: 'weather_hold' as const, reason })))
+  }
+  if (byDock.length > 0) {
+    const reason = `the climb from ${dock.name} is within ${SEPARATION_M} m of ${closest(byDock)}, which waiting would not clear; no patrol can take off or land there`
+    rejected.push(...open.map((s) => ({ segmentId: s.id, code: 'separation_hold' as const, reason })))
   }
   const pending: Candidate[] = []
   for (const task of stationPlan.tasks) {
@@ -271,16 +284,17 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     const priority = scorePriority(segmentId, input)
     const flownWh = stations.slice(1).reduce((wh, s, i) => wh + flyWh(position(stations[i]!), position(s)), 0)
     const flownS = stations.slice(1).reduce((t, s, i) => t + flyS(position(stations[i]!), position(s)), 0)
-    const waitingIds = new Set(waiting.map((w) => w.station.id))
+    // Legs between stations that are clear themselves can still pass close; the parties waiting stations name already
+    // hold the segment.
+    const waitedFor = new Set(waiting.flatMap((w) => w.parties))
     pending.push({
       task,
       stations,
       waiting,
       flightLine: stations
         .slice(1)
-        .flatMap((s, i) =>
-          waitingIds.has(s.id) || waitingIds.has(stations[i]!.id) ? [] : legNear(position(stations[i]!), position(s))
-        ),
+        .flatMap((s, i) => legNear(position(stations[i]!), position(s)))
+        .filter((n) => !waitedFor.has(n.party)),
       priority,
       rank: rankingPriority(priority),
       energyWh: flownWh + stations.length * hoverWh,
@@ -374,9 +388,21 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     )
   }
 
-  // Every route that flies takes off from the dock or lands back on it.
-  const dockHold = committed || route.length > 0 ? takeoffLandingHold(dock, input.thirdParties) : null
-  if (dockHold) holds.push(dockHold)
+  // Every route that flies takes off from the dock (unless it is already flying) and lands back on it.
+  if (committed || route.length > 0) {
+    const segmentOf = (stop: Stop) => stop.candidate.task.segmentId
+    const last = route.at(-1)
+    const back: DockTransit = {
+      from: last ? segmentOf(last) : committed!.tasks.at(-1)!.segmentId,
+      to: dock.name,
+      leg: [last ? ends(last)[1] : from, dockAt]
+    }
+    const transits: DockTransit[] = committed
+      ? [back]
+      : [{ from: dock.name, to: segmentOf(route[0]!), leg: [dockAt, ends(route[0]!)[0]] }, back]
+    const hold = dockHold(dock, input.thirdParties, transits)
+    if (hold) holds.push(hold)
+  }
 
   // A held stop waits at the last waypoint before the first leg that is too close, where the drone is clear of them.
   const waitsBefore = new Set<string>()

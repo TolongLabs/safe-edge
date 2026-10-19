@@ -201,9 +201,14 @@ describe.each(['wall clock', 'scenario clock'] as const)('on the %s', (mode) => 
 
 test('a failed automation step is recorded on the audit chain, readable over the API, and the API carries on', async () => {
   const { api, moveTo } = startOn('wall clock')
-  // The seed's path crowd holds segment 9 until the pilot records its path clear.
+  // The seed's path crowd holds segment 9 until the pilot records its path clear, and the dock too: it is beside the
+  // transit from the dock to segment 9 (#150). The pilot records the dock clear, not the segment.
   const plan = await approvedPlan(api, [EXPIRING, 'seg_866518980_9'])
-  expect(plan.holds).toMatchObject([{ kind: 'separation', segmentId: 'seg_866518980_9', releasedBy: null }])
+  expect(plan.holds).toMatchObject([
+    { kind: 'separation', segmentId: null, releasedBy: null },
+    { kind: 'separation', segmentId: 'seg_866518980_9', releasedBy: null }
+  ])
+  await json(api.request('post', `/patrol-plans/${plan.id}/holds/dock/release`, { token: 'tok_pilot' }))
   await moveTo(plan.window.start)
   // Core lets the patrol start (the drone would wait at the held segment), but drone-sim does not model the wait.
   const patrol = await startPatrol(api, plan.id)

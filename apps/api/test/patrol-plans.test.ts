@@ -36,7 +36,18 @@ describe('separation holds on API-served plans', () => {
     })
     expect(created.status).toBe(201)
     const plan = PatrolPlan.parse(await created.json())
+    // The transit from S1 back to the dock passes them too, so take-off waits for the pilot as well (#150).
     expect(plan.holds).toEqual([
+      {
+        kind: 'separation',
+        segmentId: null,
+        until: null,
+        releasedBy: null,
+        releasedAt: null,
+        reason: expect.stringContaining(
+          `the transit from ${S1.segmentId} to ${seed.docks[0]!.name} passes within 50 m of "person on the S1 edge"`
+        )
+      },
       {
         kind: 'separation',
         segmentId: S1.segmentId,
@@ -116,7 +127,10 @@ describe('the take-off and landing hold on the dock', () => {
       )
     )
     expect(plan.holds.map((h) => [h.kind, h.segmentId, h.until])).toEqual([['separation', null, null]])
-    expect(plan.holds[0]!.reason).toEndWith('(CAR 2016 reg. 143(1)(g))')
+    expect(plan.holds[0]!.reason).toStartWith(
+      `"person by the dock building" (person, seen 2026-10-24T23:00:00.000Z) is within 30 m of ${dock!.name}`
+    )
+    expect(plan.holds[0]!.reason).toEndWith('(CAR 2016 reg. 143(1))')
     await json(await api.request('post', `/patrol-plans/${plan.id}/approve`, { token: 'tok_pilot' }), 200)
 
     api.setNow(plan.window.start)
@@ -145,7 +159,7 @@ test('a plan and a patrol are read by their IDs; an unknown one is 404', async (
   const api = startApi()
   const read = (path: string) => api.request('get', path, { token: 'tok_manager' })
   const plan = PatrolPlan.parse(
-    await (await api.request('post', '/patrol-plans', { token: 'tok_manager', body: request([FAR_BANK]) })).json()
+    await (await api.request('post', '/patrol-plans', { token: 'tok_manager', body: request([S1.segmentId]) })).json()
   )
   await api.request('post', `/patrol-plans/${plan.id}/approve`, { token: 'tok_pilot' })
   api.setNow(plan.window.start)

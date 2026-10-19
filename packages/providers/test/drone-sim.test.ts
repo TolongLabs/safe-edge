@@ -90,18 +90,23 @@ describe('drone-sim refuses to fly without a human approval', () => {
     }
     const h = await start({ thirdParties: [people] })
     const approved = h.approve(h.plan([...SEGMENT_IDS, 'seg_866518980_9']).id)
+    // The seed's path crowd is beside the transit between the dock and segment 9, so the dock waits too (#150).
     expect(approved.holds.map((x) => [x.kind, x.segmentId, x.releasedBy])).toEqual([
+      ['separation', null, null],
       ['separation', 'seg_866518980_9', null]
     ])
     const approval = { planId: approved.id, approvedBy: approved.approvedBy!, approvedAt: approved.approvedAt! }
+    const release = (segmentId: string) =>
+      h.call('releasePlanHold', 'usr_pilot', { params: { id: approved.id, segmentId } }).data
     const held = await h.sim.schedulePatrol(approved)
-    await expect(h.sim.dispatchPatrol(held.id, approval)).rejects.toThrow('confirm the path is clear')
+    await expect(h.sim.dispatchPatrol(held.id, approval)).rejects.toThrow('holds the dock, seg_866518980_9')
     await h.sim.cancelPatrol(held.id)
 
-    const released = h.call('releasePlanHold', 'usr_pilot', {
-      params: { id: approved.id, segmentId: 'seg_866518980_9' }
-    }).data
-    const run = await h.sim.schedulePatrol(released)
+    const segmentClear = await h.sim.schedulePatrol(release('seg_866518980_9'))
+    await expect(h.sim.dispatchPatrol(segmentClear.id, approval)).rejects.toThrow('holds the dock:')
+    await h.sim.cancelPatrol(segmentClear.id)
+
+    const run = await h.sim.schedulePatrol(release('dock'))
     await h.sim.dispatchPatrol(run.id, approval)
     h.sim.tick()
     expect(h.events.map((e) => e.type)).toEqual(['takeoff'])
@@ -113,8 +118,10 @@ describe('drone-sim honours the plan: its zoom and its window', () => {
     const h = await start()
     // Across the lake from the seed's S1 path crowd, the stations stand further off and zoom in to keep 50 m.
     const approved = h.approve(h.plan(['seg_866518980_7']).id)
-    expect(approved.holds).toEqual([])
-    const run = await h.sim.schedulePatrol(approved)
+    // The transit back to the dock passes the crowd (#150): the pilot records the dock and its transits clear.
+    expect(approved.holds.map((x) => [x.kind, x.segmentId])).toEqual([['separation', null]])
+    const released = h.call('releasePlanHold', 'usr_pilot', { params: { id: approved.id, segmentId: 'dock' } }).data
+    const run = await h.sim.schedulePatrol(released)
     h.setNow(approved.window.start)
     await h.sim.dispatchPatrol(run.id, {
       planId: approved.id,

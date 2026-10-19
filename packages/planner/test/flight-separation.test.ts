@@ -3,8 +3,10 @@
 import { describe, expect, test } from 'bun:test'
 import { distance } from '@turf/distance'
 import { lineString } from '@turf/helpers'
+import type { FeatureCollection, LineString } from 'geojson'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
 import {
+  elminaLayerPaths,
   loadElmina,
   planPatrol,
   planStations,
@@ -102,5 +104,58 @@ describe('separation over the whole flight', async () => {
     expect(at(held, k - 1)).toBe(at(clear, k - 1))
     expect(at(held, k) - at(clear, k)).toBe(120_000)
     expect(at(held, held.waypoints.length - 1) - at(clear, clear.waypoints.length - 1)).toBe(120_000)
+  })
+
+  test('a vehicle within 50 m of the dock holds take-off and landing; a structure there grounds every patrol', async () => {
+    // A van parked 40 m south of the dock, away from the lake: (e) keeps 50 m from vehicles, take-off included. A
+    // labelled fixture.
+    const van: ThirdParty = {
+      id: 'obs_van_dock',
+      kind: 'vehicle',
+      label: 'van parked by the dock building',
+      geometry: { type: 'Point', coordinates: [dock.position.lon, dock.position.lat - 40 / 111_320] },
+      observedAt: SEEN,
+      simulated: true,
+      source: 'fixture'
+    }
+    const waiting = planPatrol(input([WEST], [van]))
+    expect(waiting.holds).toEqual([
+      {
+        kind: 'separation',
+        segmentId: null,
+        until: null,
+        releasedBy: null,
+        releasedAt: null,
+        reason: `"van parked by the dock building" (vehicle, seen ${SEEN}) is within 50 m of ${dock.name}, closest 40 m; take-off and landing wait for the pilot or observer to confirm the dock and the transits from and to it are clear (CAR 2016 reg. 143(1))`
+      }
+    ])
+    expect(waiting.waypoints).toEqual(planPatrol(input([WEST])).waypoints)
+
+    // The OSM footbridge way/926280618 by the dock, treated as not under the pilot's control: it stays put.
+    const paths = (await readJson(elminaLayerPaths.paths)) as FeatureCollection<LineString, { osm_id: number }>
+    const bridge = paths.features.find((f) => f.properties.osm_id === 926280618)!.geometry
+    const footbridge: ThirdParty = {
+      id: 'way/926280618',
+      kind: 'structure',
+      label: 'footbridge way/926280618',
+      geometry: bridge,
+      observedAt: null,
+      simulated: false,
+      source: 'osm'
+    }
+    const dockAt = [dock.position.lon, dock.position.lat]
+    const bridgeM = nearestPointOnLine(bridge, dockAt, m).properties.pointDistance
+    expect(bridgeM).toBeLessThan(50)
+    const grounded = planPatrol(input([EAST, WEST], [footbridge]))
+    expect(grounded.tasks).toEqual([])
+    expect(grounded.waypoints).toEqual([])
+    expect(grounded.holds).toEqual([])
+    expect(grounded.rejected).toEqual(
+      [EAST, WEST].map((segmentId) => ({
+        segmentId,
+        code: 'separation_hold',
+        reason: `the climb from ${dock.name} is within 50 m of "footbridge way/926280618" (structure), closest ${bridgeM.toFixed(0)} m, which waiting would not clear; no patrol can take off or land there`
+      }))
+    )
   })
 })
