@@ -23,7 +23,7 @@ const core = createCore({ seed, clock, ids, planner })
 
 // The agent acts with its own API token (an agent actor). Claude reads ANTHROPIC_API_KEY; without it, agent calls fail.
 const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
-if (!agentToken) throw new Error('Set SAFE_EDGE_AGENT_TOKEN to the API token the agent acts with (dev_agent in dev)')
+if (!agentToken) throw new Error('Set SAFE_EDGE_AGENT_TOKEN to the API token the agent acts with (bun run dev sets it)')
 const agent = { claude: new Anthropic(), token: agentToken }
 
 // Accepted findings go to the Procore Developer Sandbox when the PROCORE_* variables are set (the sandbox wizard,

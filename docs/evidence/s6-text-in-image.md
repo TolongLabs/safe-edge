@@ -13,7 +13,7 @@ Contents:
 
 ## Setup
 
-- The dev API on port 3877 with the seeded dev tokens: `cd apps/api && PORT=3877 SAFE_EDGE_DEV_TOKENS_FILE=../../data/elmina/fixtures/dev-tokens.json SAFE_EDGE_AGENT_TOKEN=dev_agent bun run src/index.ts`. Its clock is the wall clock.
+- The dev API on port 3877 with the dev tokens then committed in `data/elmina/fixtures/dev-tokens.json` (`dev_<name>` for `usr_<name>`): `cd apps/api && PORT=3877 SAFE_EDGE_DEV_TOKENS_FILE=../../data/elmina/fixtures/dev-tokens.json SAFE_EDGE_AGENT_TOKEN=dev_agent bun run src/index.ts`. Its clock is the wall clock. #129 removed that file and the API refuses those tokens: to replay, start the API with `PORT=3877 bun run src/dev.ts` and pass `$(bun run --silent dev:token usr_<name>)` where the commands below pass `dev_<name>`.
 - The fixture [`data/elmina/scenarios/s6-text-in-image.json`](/data/elmina/scenarios/s6-text-in-image.json), played by hand from the repo root. The two `setup` events replay S1 up to the manager's confirmation, which leaves `pass_866518980_11` suspended, `fnd_1` open and `wo_1` a draft. The three `events` are the drone's frame of the sign ([`s6-vandalised-sign.png`](/data/elmina/scenarios/s6-vandalised-sign.png)), the `text_in_image` candidate, and an attempt to accept a re-test with the agent's token.
 
 ```sh

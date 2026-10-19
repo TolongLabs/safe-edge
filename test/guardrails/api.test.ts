@@ -1,5 +1,5 @@
 // #57: the guardrails, met the way an integrator meets them: the real v1 API on a free port, over HTTP, with the
-// committed dev tokens. One test per "Done when" bullet (TRD "Testing" item 2, PRD MCP-3); the MCP side is in
+// stage's own dev tokens. One test per "Done when" bullet (TRD "Testing" item 2, PRD MCP-3); the MCP side is in
 // mcp.test.ts. The same rules at core level: packages/core/test/guardrails.test.ts.
 import { afterAll, expect, test } from 'bun:test'
 import { Role, type Denial, type OperationId } from '@safe-edge/contracts'
