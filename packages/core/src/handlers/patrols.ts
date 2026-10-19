@@ -197,6 +197,11 @@ export const patrolHandlers = (
     for (const c of coverage.filter((c) => c.inspectedM > 0)) {
       tx.put('segments', { ...tx.must('segments', c.segmentId), lastPatrolledAt: tx.now })
     }
+    // A whole-segment recapture asked for before take-off is done once the patrol inspects some of the segment.
+    for (const c of coverage.filter((c) => c.inspectedM > 0)) {
+      const tookOff = Date.parse(patrol.startedAt)
+      closeRecaptures(tx, c.segmentId, (t) => t.viewpointId === null && Date.parse(t.createdAt) <= tookOff)
+    }
     for (const c of coverage.filter((c) => c.unknownM > 0)) {
       const segment = tx.must('segments', c.segmentId)
       const task: Task = {
@@ -229,9 +234,28 @@ export const patrolHandlers = (
     if (body.patrolId !== null && !tx.get('patrols', body.patrolId)) return tx.notFound(`No patrol ${body.patrolId}`)
     const observation = { id: tx.id('obs'), ...body, source: tx.source }
     tx.put('observations', observation)
+    // A frame taken since a recapture was asked for is the re-shoot, unless the privacy gate discarded it.
+    if (observation.privacyAction !== 'discarded') {
+      const takenAt = Date.parse(observation.capturedAt)
+      closeRecaptures(
+        tx,
+        segment.id,
+        (t) =>
+          (t.viewpointId ?? observation.viewpointId) === observation.viewpointId && takenAt >= Date.parse(t.createdAt)
+      )
+    }
     return ok(observation)
   }
 })
+
+/** Marks done the open recapture tasks on a segment that a new capture covers: its viewpoint's, or the segment's. */
+function closeRecaptures(tx: Tx, segmentId: string, covers: (task: Task) => boolean): void {
+  for (const task of tx.all('tasks')) {
+    if (task.kind === 'recapture' && task.status === 'open' && task.segmentId === segmentId && covers(task)) {
+      tx.put('tasks', { ...task, status: 'done' })
+    }
+  }
+}
 
 /** The re-plan that replaced `plan`, if any. A superseded plan is never approved or flown. */
 const supersededBy = (tx: Tx, plan: PatrolPlan) =>
