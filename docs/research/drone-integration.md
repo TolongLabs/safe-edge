@@ -1,6 +1,6 @@
 # Drone integration research
 
-Fact-checked research behind Safe Edge's drone patrol, AI layer, SDK and Three.js simulation, gathered on 17 October 2026. Ten Codex workers (gpt-6-luna, max effort) each researched one topic, and a second worker per topic checked every claim against its source. The product decisions that rest on it are in [`PRODUCT.md`](/PRODUCT.md), the [PRD](/docs/PRD.md) and the [TRD](/docs/TRD.md).
+Fact-checked research behind Safe Edge's drone patrol, AI layer, SDK and Three.js simulation, gathered on 17 October 2026. Ten Codex workers (gpt-6-luna, max effort) each researched one topic, and a second worker per topic checked every claim against its source. The product decisions that rest on it are in [`PRODUCT.md`](/docs/PRODUCT.md), the [PRD](/docs/PRD.md) and the [TRD](/docs/TRD.md).
 
 Contents:
 

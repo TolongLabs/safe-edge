@@ -18,27 +18,27 @@ Contents:
 
 ## Problem
 
-[`PRODUCT.md`](/PRODUCT.md#problem) states the problem. The [pitch](/docs/research/shortlist/safe-edge.md#problem) holds the incidents and sources behind it.
+[`PRODUCT.md`](/docs/PRODUCT.md#problem) states the problem. The [pitch](/docs/research/shortlist/safe-edge.md#problem) holds the incidents and sources behind it.
 
 ## Target user
 
-[`PRODUCT.md`](/PRODUCT.md#users-and-jobs) names each user and their job. The [pitch](/docs/research/shortlist/safe-edge.md#target-user) holds the owner we propose to SDP.
+[`PRODUCT.md`](/docs/PRODUCT.md#users-and-jobs) names each user and their job. The [pitch](/docs/research/shortlist/safe-edge.md#target-user) holds the owner we propose to SDP.
 
 ## Solution
 
-- The loop from patrol to proven fix: [the Edge Loop](/PRODUCT.md#how-it-works-the-edge-loop).
-- Each part, from the patrol planner to the SDK and MCP server: [capabilities](/PRODUCT.md#capabilities).
-- What the AI may and may not do: [AI layer at a glance](/PRODUCT.md#ai-layer-at-a-glance).
-- How drones come in, phase by phase: [drone integration phases](/PRODUCT.md#drone-integration-phases).
+- The loop from patrol to proven fix: [the Edge Loop](/docs/PRODUCT.md#how-it-works-the-edge-loop).
+- Each part, from the patrol planner to the SDK and MCP server: [capabilities](/docs/PRODUCT.md#capabilities).
+- What the AI may and may not do: [AI layer at a glance](/docs/PRODUCT.md#ai-layer-at-a-glance).
+- How drones come in, phase by phase: [drone integration phases](/docs/PRODUCT.md#drone-integration-phases).
 - Fix Lens in detail: [the pitch's solution](/docs/research/shortlist/safe-edge.md#solution-and-how-it-works).
 
 ## Why it's new
 
-[`PRODUCT.md`](/PRODUCT.md#what-makes-it-different) says what makes Safe Edge different. The prior art is in the [pitch](/docs/research/shortlist/safe-edge.md#why-its-new) and the [drone research](/docs/research/drone-integration.md#prior-art).
+[`PRODUCT.md`](/docs/PRODUCT.md#what-makes-it-different) says what makes Safe Edge different. The prior art is in the [pitch](/docs/research/shortlist/safe-edge.md#why-its-new) and the [drone research](/docs/research/drone-integration.md#prior-art).
 
 ## Impact and how we measure it
 
-[`PRODUCT.md`](/PRODUCT.md#success-measures) sets the success measures for the pilot and the demo. The [pitch](/docs/research/shortlist/safe-edge.md#impact-and-how-we-measure-it) explains how we measure each one, and its [limits section](/docs/research/shortlist/safe-edge.md#precedents-and-measurement-limits) says what they can't show.
+[`PRODUCT.md`](/docs/PRODUCT.md#success-measures) sets the success measures for the pilot and the demo. The [pitch](/docs/research/shortlist/safe-edge.md#impact-and-how-we-measure-it) explains how we measure each one, and its [limits section](/docs/research/shortlist/safe-edge.md#precedents-and-measurement-limits) says what they can't show.
 
 ## Fit with Sime Darby Property
 
@@ -46,7 +46,7 @@ The [pitch](/docs/research/shortlist/safe-edge.md#fit-with-sime-darby-property) 
 
 ## Pilot
 
-The [pitch](/docs/research/shortlist/safe-edge.md#pilot) sets out the pilot and its [cost and buying decision](/docs/research/shortlist/safe-edge.md#cost-and-buying-decision). [`PRODUCT.md`](/PRODUCT.md#drone-integration-phases) lists the approvals for each phase, and its [constraints](/PRODUCT.md#constraints) cover rules, weather and data.
+The [pitch](/docs/research/shortlist/safe-edge.md#pilot) sets out the pilot and its [cost and buying decision](/docs/research/shortlist/safe-edge.md#cost-and-buying-decision). [`PRODUCT.md`](/docs/PRODUCT.md#drone-integration-phases) lists the approvals for each phase, and its [constraints](/docs/PRODUCT.md#constraints) cover rules, weather and data.
 
 ## Prototype
 
@@ -60,7 +60,7 @@ The [PRD's evidence plan](/docs/PRD.md#evidence-plan) and the [pitch's evidence 
 
 - Build and demo risks: [PRD risks](/docs/PRD.md#risks).
 - Open questions: [PRD open questions](/docs/PRD.md#open-questions).
-- Product decisions still open: [`PRODUCT.md` open decisions](/PRODUCT.md#open-decisions).
+- Product decisions still open: [`PRODUCT.md` open decisions](/docs/PRODUCT.md#open-decisions).
 - Pitch risks: [the pitch's risks](/docs/research/shortlist/safe-edge.md#risks-and-open-questions).
 
 ## See also

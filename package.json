@@ -18,7 +18,7 @@
     "generate:contracts": "bun packages/contracts/scripts/generate.ts",
     "generate:seed": "bun packages/core/scripts/generate-seed.ts",
     "graph": "graphify update .",
-    "lint": "prettier --check .",
+    "lint": "prettier --check . && bun scripts/check-context-files.ts",
     "lint:fix": "prettier --write .",
     "prepare": "husky",
     "procore:e2e": "bun packages/providers/scripts/procore-e2e.ts",
