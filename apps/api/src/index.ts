@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { counterIds, createCore, Seed } from '@safe-edge/core'
+import { Seed } from '@safe-edge/core'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
@@ -17,10 +18,14 @@ const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
 
 const seed = Seed.parse(await readJson('data/elmina/fixtures/seed.json'))
 const clock = { now: () => new Date().toISOString() }
-const ids = counterIds()
 // The seed maps no third parties and no observation feeds them yet (DECISIONS #79), so plans see none.
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
-const core = createCore({ seed, clock, ids, planner })
+
+// The API keeps its state in SAFE_EDGE_DATA_DIR/api.sqlite and picks it up again on restart (journal.ts). The file
+// holds webhook secrets and evidence, so the directory is the OS user's alone. bun run dev uses apps/api/.data.
+const dataDir = process.env.SAFE_EDGE_DATA_DIR
+if (!dataDir) throw new Error('Set SAFE_EDGE_DATA_DIR to the directory the API keeps its state in')
+mkdirSync(dataDir, { recursive: true, mode: 0o700 })
 
 // The agent acts with its own API token (an agent actor). Claude reads ANTHROPIC_API_KEY; without it, agent calls fail.
 const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
@@ -44,9 +49,10 @@ const workOrders: ApiOptions['workOrders'] =
 // Bun serves the default export on PORT (3000 by default). Its idle timeout is 10 s, so the event stream's heartbeat
 // comes every 5 s.
 export default createApp({
-  core,
+  seed,
+  planner,
   clock,
-  ids,
+  store: join(dataDir, 'api.sqlite'),
   tokens: await devTokens(process.env, seed.users),
   heartbeatMs: 5_000,
   agent,

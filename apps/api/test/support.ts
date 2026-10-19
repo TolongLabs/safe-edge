@@ -2,7 +2,7 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
 import type { Actor, RaiseCandidateRequest, Role } from '@safe-edge/contracts'
-import { counterIds, createCore, Seed } from '@safe-edge/core'
+import { Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from '../src/app.ts'
 import type { WebhookOptions } from '../src/events.ts'
@@ -50,13 +50,12 @@ export function startApi({
 } = {}) {
   let now = seed.asOf
   const clock = { now: () => now }
-  const ids = counterIds()
-  const core = createCore({ seed, clock, ids, planner })
   const agent = claude && { claude, token: 'tok_agent' }
   const app = createApp({
-    core,
+    seed,
+    planner,
     clock,
-    ids,
+    store: ':memory:',
     tokens: tokenTable,
     heartbeatMs,
     workOrders,

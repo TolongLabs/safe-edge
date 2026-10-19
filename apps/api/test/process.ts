@@ -2,6 +2,8 @@
 // a .env file (`--no-env-file`) and gets no PROCORE_* variable, so no test run can file real sandbox Observations.
 import type { Subprocess } from 'bun'
 import { afterAll } from 'bun:test'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { seed } from './support.ts'
 
@@ -26,12 +28,17 @@ function baseEnv(): Record<string, string | undefined> {
 }
 
 const running = new Set<Subprocess>()
+const dataDirs: string[] = []
 afterAll(async () => {
   for (const api of running) api.kill('SIGKILL')
   await Promise.all([...running].map((api) => api.exited))
+  for (const dir of dataDirs) rmSync(dir, { recursive: true })
 })
 
+/** Spawns the entry; a start without SAFE_EDGE_DATA_DIR gets a fresh, empty one. */
 function spawnApi(port: number, env: Record<string, string>) {
+  const dataDir = mkdtempSync(join(tmpdir(), 'safe-edge-api-'))
+  dataDirs.push(dataDir)
   return Bun.spawn(['bun', '--no-env-file', 'apps/api/src/index.ts'], {
     cwd: repoRoot,
     env: {
@@ -39,6 +46,7 @@ function spawnApi(port: number, env: Record<string, string>) {
       PORT: String(port),
       SAFE_EDGE_DEV_TOKENS: JSON.stringify(processTokens),
       SAFE_EDGE_AGENT_TOKEN: 'tok_agent',
+      SAFE_EDGE_DATA_DIR: dataDir,
       ...env
     },
     stdout: 'ignore',

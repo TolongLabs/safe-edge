@@ -1,6 +1,7 @@
-import type { EdgeEvent, Webhook, WebhookFailure } from '@safe-edge/contracts'
-import type { Clock } from '@safe-edge/core'
+import type { Actor, EdgeEvent, RegisterWebhookRequest, Webhook, WebhookFailure } from '@safe-edge/contracts'
+import type { Clock, Core, IdGenerator } from '@safe-edge/core'
 import { createHmac, randomBytes } from 'node:crypto'
+import type { Journal } from './journal.ts'
 
 const SECRET_PREFIX = 'whsec_'
 /** Standard Webhooks recommends a 15 to 30 s request timeout. */
@@ -93,32 +94,50 @@ async function tryDelivery(url: string, secret: string, event: EdgeEvent, body: 
   return { error: `HTTP ${status}: ${text}`, retry: status >= 500 || status === 408 || status === 429 }
 }
 
+/** Who delivers webhooks and records their failures: the API itself. */
+const WEBHOOKS: Actor = { type: 'system', id: 'api.webhooks', role: 'system', scopes: [] }
+
 /**
  * Fans core's CloudEvents out to SSE subscribers and registered webhooks, in process. A webhook gets one structured
  * CloudEvents POST per matching event, signed with its secret, and retried after each wait in `retryDelaysMs` while
- * the failure is one waiting could fix. Each failed attempt is added to the webhook's `failures` and handed to
- * `onFailure` with the record before and after, so the API can audit it. The secrets stay here: no record or
- * response but the registration's carries one.
+ * the failure is one waiting could fix. Registering and each failed attempt are journaled commands (journal.ts), and
+ * both go on the audit chain through `recordStored`. The secrets stay here: no record or response but the
+ * registration's carries one.
  */
 export function createEventHub({
   clock,
+  ids,
   options,
-  onFailure
+  command,
+  recordStored
 }: {
   clock: Clock
+  ids: IdGenerator
   options: WebhookOptions
-  onFailure: (before: Webhook, after: Webhook) => void
+  command: Journal['command']
+  recordStored: Core['recordStored']
 }) {
   const subscribers = new Set<(event: EdgeEvent) => void>()
   const webhooks = new Map<string, { webhook: Webhook; secret: string }>()
 
-  function fail(id: string, { eventId, attempt, error, final }: Omit<WebhookFailure, 'at'>): void {
-    const entry = webhooks.get(id)!
-    const before = entry.webhook
-    const failures = [...before.failures, { eventId, at: clock.now(), attempt, error, final }]
-    entry.webhook = { ...before, failures: failures.slice(-KEPT_FAILURES) }
-    onFailure(before, entry.webhook)
-  }
+  const register = command('registerWebhook', (actor: Actor, body: RegisterWebhookRequest, secret: string): Webhook => {
+    const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: actor.id, createdAt: clock.now(), failures: [] }
+    webhooks.set(webhook.id, { webhook, secret })
+    recordStored('registerWebhook', actor, webhook)
+    return webhook
+  })
+
+  const fail = command(
+    'deliverWebhook',
+    (id: string, { eventId, attempt, error, final }: Omit<WebhookFailure, 'at'>) => {
+      const entry = webhooks.get(id)
+      if (entry === undefined) throw new Error(`No webhook ${id}`)
+      const before = entry.webhook
+      const failures = [...before.failures, { eventId, at: clock.now(), attempt, error, final }]
+      entry.webhook = { ...before, failures: failures.slice(-KEPT_FAILURES) }
+      recordStored('deliverWebhook', WEBHOOKS, entry.webhook, before)
+    }
+  )
 
   async function deliver(id: string, event: EdgeEvent): Promise<void> {
     const body = JSON.stringify(event)
@@ -146,9 +165,8 @@ export function createEventHub({
       subscribers.add(listener)
       return () => subscribers.delete(listener)
     },
-    register(webhook: Webhook, secret: string): void {
-      webhooks.set(webhook.id, { webhook, secret })
-    },
+    /** Stores a webhook for `body`, signed with `secret`, as `actor` registered it. */
+    register,
     list(): Webhook[] {
       return [...webhooks.values()].map((entry) => entry.webhook)
     },
