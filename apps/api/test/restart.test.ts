@@ -12,9 +12,12 @@ import {
   EvidenceUrl,
   Observation,
   Opening,
+  Patrol,
+  PatrolPlan,
   RegisteredWebhook,
   Remedy,
   RetestOutcome,
+  ScenarioClock,
   Task,
   Webhook,
   WorkOrder
@@ -282,6 +285,74 @@ test("the automation's writes are journaled like a request's: a restart replays 
   const api = await startApiProcess(env)
   expect(await audit(api)).toEqual(written)
 }, 30_000)
+
+test('a sim patrol in flight when the API is killed is completed as interrupted on restart, every segment unknown', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
+  afterAll(() => rm(dir, { recursive: true }))
+  const env = { NODE_ENV: 'test', SAFE_EDGE_CLOCK: 'scenario', SAFE_EDGE_DATA_DIR: dir }
+  const first = await startApiProcess(env)
+  const proposed = await call(first, PatrolPlan, 'post', '/patrol-plans', 'tok_manager', {
+    dockId: 'dock_elmina_roof',
+    droneProfileId: 'drn_assumed',
+    segmentIds: ['seg_866518980_5', 'seg_866518980_6'],
+    context: [],
+    notBefore: seed.asOf,
+    altitudeCapM: 60
+  })
+  const plan = await call(first, PatrolPlan, 'post', `/patrol-plans/${proposed.id}/approve`, 'tok_pilot')
+  await call(first, ScenarioClock, 'post', '/scenario/clock', 'tok_system', { now: plan.window.start })
+  const patrol = await call(first, Patrol, 'post', '/patrols', 'tok_pilot', {
+    planId: plan.id,
+    provider: 'sim',
+    droneId: 'sim-1'
+  })
+  // The drone is over the first stop when the process dies.
+  const firstStation = plan.waypoints.find((w) => w.kind === 'station')!
+  await call(first, ScenarioClock, 'post', '/scenario/clock', 'tok_system', { now: firstStation.eta })
+  const chainBefore = await audit(first)
+  await first.crash()
+
+  const api = await startApiProcess(env)
+  const after = await audit(api)
+  expect(after.slice(0, chainBefore.length)).toEqual(chainBefore)
+  const interruption = after.slice(chainBefore.length)
+  expect(interruption.map((e) => [e.action, e.actor.id])).toEqual([
+    ['runAutomation', 'core.automation'],
+    // The patrol, then a field check for each planned segment.
+    ['completePatrol', 'usr_drone_sim'],
+    ...plan.tasks.map(() => ['completePatrol', 'usr_drone_sim'])
+  ])
+  expect(interruption[0]!.after).toEqual({
+    id: 'automation',
+    step: 'drone',
+    error: `${patrol.id} was in flight on drone-sim when the API stopped; the simulated drone stopped with it, so the patrol is completed with every segment unknown`
+  })
+  const done = await call(api, Patrol, 'get', `/patrols/${patrol.id}`, 'tok_manager')
+  expect(done).toMatchObject({ status: 'completed', completedAt: firstStation.eta })
+  expect(done.coverage).toEqual(
+    plan.tasks.map((t) => ({
+      segmentId: t.segmentId,
+      inspectedM: 0,
+      unknownM: seed.segments.find((s) => s.id === t.segmentId)!.lengthM
+    }))
+  )
+  const checks = await call(api, Task.array(), 'get', '/tasks?status=open', 'tok_manager')
+  expect(
+    checks
+      .filter((t) => t.kind === 'field_check')
+      .map((t) => t.segmentId)
+      .toSorted()
+  ).toEqual(plan.tasks.map((t) => t.segmentId).toSorted())
+  expect(verifyAuditChain(after)).toMatchObject({ ok: true })
+
+  // Nothing is flying any more: time passing writes nothing for it, and a second restart records no second interruption.
+  await call(api, ScenarioClock, 'post', '/scenario/clock', 'tok_system', { now: plan.window.end })
+  const settled = await audit(api)
+  expect(settled.slice(after.length).map((e) => e.action)).toEqual(['setScenarioClock'])
+  await api.crash()
+  const again = await startApiProcess(env)
+  expect(await audit(again)).toEqual(settled)
+}, 60_000)
 
 test('a write the journal cannot keep throws out of the app, which takes no more writes, and the entrypoint exits', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
