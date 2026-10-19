@@ -7,7 +7,8 @@ import {
   type Actor,
   type CreatePatrolPlanRequest,
   type OperationId,
-  type OperationSpec
+  type OperationSpec,
+  type Role
 } from '@safe-edge/contracts'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { expect } from 'bun:test'
@@ -15,12 +16,26 @@ import { S1, fixtureDevTokens, startApi } from '../../apps/api/test/support.ts'
 import type { Stage } from '../../packages/sdk/test/story.ts'
 
 export { S1, raiseTier2, tier2Candidate } from '../../apps/api/test/support.ts'
-export { playS1toRepair } from '../../packages/sdk/test/story.ts'
+export { playS1toRepair, playS1toS3 } from '../../packages/sdk/test/story.ts'
 
 /** Every row of the operations table the HTTP API serves (all but the demo-only reset). */
 export const httpOperations = (Object.entries(operations) as [OperationId, OperationSpec][]).filter(
   ([, op]) => op.handledBy !== 'memory'
 )
+
+/** The operation a request reached, by method and path; undefined for the one route outside the table. */
+export function operationFor(method: string, path: string): OperationId | undefined {
+  const matches = ([, op]: [OperationId, OperationSpec]) =>
+    op.method.toUpperCase() === method && new RegExp(`^/v1${op.path.replaceAll(/\{\w+\}/g, '[^/]+')}$`).test(path)
+  return httpOperations.find(matches)?.[0]
+}
+
+/** The committed dev token of the seeded user holding a role. */
+export function devTokenForRole(role: Role): string {
+  const entry = [...fixtureDevTokens].find(([, actor]) => actor.role === role)
+  if (entry === undefined) throw new Error(`No dev token acts as a ${role}`)
+  return entry[0]
+}
 
 /** The committed dev token of a seeded user (`dev_<name>` for `usr_<name>`). */
 export function devTokenFor(userId: string): string {

@@ -1,16 +1,19 @@
 // #57: the guardrails, met the way an integrator meets them: the real v1 API on a free port, over HTTP, with the
 // committed dev tokens. One test per "Done when" bullet (TRD "Testing" item 2, PRD MCP-3); the MCP side is in
 // mcp.test.ts. The same rules at core level: packages/core/test/guardrails.test.ts.
-import { expect, test } from 'bun:test'
-import type { OperationId } from '@safe-edge/contracts'
+import { afterAll, expect, test } from 'bun:test'
+import { Role, type Denial, type OperationId } from '@safe-edge/contracts'
 import {
   answer,
   denied,
+  devTokenForRole,
   httpOperations,
   json,
+  operationFor,
   pathFor,
   patrolRequest,
   playS1toRepair,
+  playS1toS3,
   raiseTier2,
   S1,
   startGuardedApi,
@@ -250,3 +253,145 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     ['pass_866518980_11', { type: 'user', id: 'usr_reviewer', role: 'reviewer' }]
   ])
 })
+
+test('every write, refused or allowed, is on the audit chain, and GET /v1/audit verifies when re-hashed independently', async () => {
+  const receiver = Bun.serve({ port: 0, fetch: () => new Response(null, { status: 204 }) })
+  afterAll(() => receiver.stop(true))
+  const api = startGuardedApi()
+  const as = (token: string, method: string, path: string, body?: unknown) =>
+    json(api.request(method, path, { token, body }))
+
+  // A working day over HTTP: S1 to S3 through the SDK story, then every other write the API serves.
+  const played = await playS1toS3(api.stage)
+  const findingId = played.decision.finding!.id
+  const draft = await as('dev_agent', 'post', '/work-orders', { findingId, remedyId: null, notes: 'Agent draft' })
+  await as('dev_agent', 'patch', `/work-orders/${draft.id}`, { notes: 'Revised agent draft' })
+  const notice = await as('dev_agent', 'post', '/notices', {
+    kind: 'escalation',
+    subjectId: findingId,
+    title: 'Fence repaired',
+    body: 'Draft'
+  })
+  await as('dev_manager', 'post', `/notices/${notice.id}/send`)
+  const plan = await as('dev_manager', 'post', '/patrol-plans', patrolRequest)
+  await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
+  const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
+  await as('dev_drone_sim', 'post', `/patrols/${patrol.id}/complete`, {
+    coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }]
+  })
+  await as('dev_drone_sim', 'post', '/evidence', {
+    mediaType: 'image/jpeg',
+    dataBase64: '/9j/4AAQ',
+    capturedAt: '2026-10-23T01:00:00.000Z',
+    simulated: true
+  })
+  await as('dev_integrator', 'post', '/webhooks', {
+    url: new URL('/hooks', receiver.url).href,
+    eventTypes: ['edge.pass.issued.v1']
+  })
+  await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
+
+  // And one refused attempt at every write: the agent at a people-only row, otherwise a role the row leaves out.
+  const ids = {
+    candidates: played.candidate.id,
+    'work-orders': played.workOrderId,
+    remedies: played.remedy.id,
+    notices: notice.id,
+    tasks: played.decision.tasks[0]!.id,
+    'patrol-plans': plan.id,
+    patrols: patrol.id,
+    segments: S1.segmentId
+  }
+  const writes = httpOperations.filter(([, op]) => op.method !== 'get')
+  for (const [, op] of writes) {
+    if (op.roles === 'any') continue // read-only POSTs (route closure) refuse no dev token
+    const token =
+      op.agentScope === null
+        ? 'dev_agent'
+        : devTokenForRole(Role.options.find((r) => r !== 'agent' && !op.roles.includes(r))!)
+    expect((await api.request(op.method, pathFor(op, ids), { token, body: {} })).status).toBe(403)
+  }
+
+  const chain = await api.audit()
+  const exchanges = api.log.map((r) => ({
+    ...r,
+    operationId: operationFor(r.method, r.path),
+    actor: r.token === null ? null : api.actorOf(r.token)
+  }))
+
+  // Every refusal, read or write, is on the chain in the order the API answered it, naming the rule.
+  expect(chain.filter((e) => e.decision === 'denied').map((e) => `${e.action} ${e.actor.id} ${e.rule}`)).toEqual(
+    exchanges.filter((r) => r.status === 403).map((r) => `${r.operationId} ${r.actor!.id} ${(r.body as Denial).rule}`)
+  )
+  // Every allowed write is on the chain with the record it answered with. The route-closure preview is the one POST
+  // that changes nothing, so it has nothing to audit.
+  const allowed = exchanges.filter((r) => r.method !== 'GET' && r.status < 300)
+  const audited = (r: (typeof allowed)[number]) => {
+    const record = answeredRecord(r.body)
+    return chain.some(
+      (e) =>
+        e.decision === 'allowed' &&
+        e.action === r.operationId &&
+        e.actor.id === r.actor!.id &&
+        e.subjectId === record.id &&
+        Bun.deepEquals(e.after, record)
+    )
+  }
+  expect(
+    allowed.filter((r) => r.operationId !== 'previewRouteClosure' && !audited(r)).map((r) => r.operationId)
+  ).toEqual([])
+  expect(chain.filter((e) => e.action === 'previewRouteClosure')).toEqual([])
+  // Every write the API serves today was exercised.
+  const notReachable = {
+    releasePlanHold: 'needs a separation hold, which the API planner never makes: it sees no third parties (#79)',
+    triageImages: 'answers 501 until #74',
+    askAgent: 'answers 501 until #75'
+  }
+  expect(new Set(allowed.map((r) => r.operationId))).toEqual(
+    new Set(writes.map(([id]) => id).filter((id) => !(id in notReachable)))
+  )
+
+  // An integrator re-hashes the chain from the contract alone, and catches an edited or a missing event.
+  const raw: Record<string, unknown>[] = await as('dev_manager', 'get', '/audit')
+  expect(raw.length).toBe(chain.length)
+  expect(brokenLinks(raw)).toEqual([])
+  const firstRefusal = chain.findIndex((e) => e.decision === 'denied')
+  expect(brokenLinks(raw.with(firstRefusal, { ...raw[firstRefusal], rule: null }))).toEqual([firstRefusal])
+  expect(brokenLinks(raw.toSpliced(firstRefusal, 1))).toEqual([firstRefusal])
+})
+
+/** A write's main record: the body itself, or its first record (decideCandidate's candidate, recordRetest's re-test). */
+function answeredRecord(body: unknown): { id: string } {
+  const isRecord = (value: unknown): value is { id: string } =>
+    typeof value === 'object' && value !== null && typeof (value as { id?: unknown }).id === 'string'
+  const record = isRecord(body) ? body : Object.values(body as object).find(isRecord)
+  if (record === undefined) throw new Error(`No record in ${JSON.stringify(body)}`)
+  return record
+}
+
+/**
+ * The chain check an integrator writes from the contract (`AuditEvent` in packages/contracts/generated/openapi.yaml),
+ * sharing no code with core: each event's prevHash is the previous event's hash (64 zeros for the first), and its hash
+ * is the hex SHA-256 of prevHash followed by the event's canonical JSON without `hash`. Returns the broken indexes.
+ */
+function brokenLinks(chain: Record<string, unknown>[]): number[] {
+  const broken: number[] = []
+  let prevHash = '0'.repeat(64)
+  for (const [index, { hash, ...event }] of chain.entries()) {
+    const expected = new Bun.CryptoHasher('sha256').update(prevHash + canonicalJson(event)).digest('hex')
+    if (event.prevHash !== prevHash || hash !== expected) broken.push(index)
+    prevHash = hash as string
+  }
+  return broken
+}
+
+/** Canonical JSON: object keys sorted, no whitespace, every value as JSON writes it. */
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`
+  if (typeof value !== 'object' || value === null) return JSON.stringify(value)
+  const record = value as Record<string, unknown>
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+    .join(',')}}`
+}

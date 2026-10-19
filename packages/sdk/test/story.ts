@@ -120,9 +120,9 @@ export async function playS1toRepair({ as, setNow }: Stage) {
 }
 
 export async function playS1toS3(stage: Stage) {
-  const { candidate, decision, workOrderId, retest: accepting } = await playS1toRepair(stage)
+  const { candidate, decision, remedy, workOrderId, retest: accepting } = await playS1toRepair(stage)
   // A different person re-tests it on a phone and accepts.
   stage.setNow('2026-10-23T01:00:00.000Z')
   const retest = await stage.as('usr_reviewer').recordRetest({ body: accepting })
-  return { candidate, decision, workOrderId, retest }
+  return { candidate, decision, remedy, workOrderId, retest }
 }

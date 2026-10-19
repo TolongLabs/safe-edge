@@ -95,7 +95,11 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions)
   })
 
   const apiHandlers: ApiHandlers = {
-    uploadEvidence: (c, { body }) => c.json(evidence.put(body, c.get('actor')), 201),
+    uploadEvidence: (c, { body }) => {
+      const ref = evidence.put(body, c.get('actor'))
+      core.recordStored('uploadEvidence', c.get('actor'), ref)
+      return c.json(ref, 201)
+    },
     getEvidenceUrl: (c, { params }) => {
       const url = evidence.url(params.id, c.req.url)
       return url ? c.json(url, 200) : fail(c, 404, 'not_found', `No evidence ${params.id}`)
@@ -119,6 +123,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions)
     registerWebhook: (c, { body }) => {
       const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: c.get('actor').id, createdAt: clock.now() }
       hub.register(webhook)
+      core.recordStored('registerWebhook', c.get('actor'), webhook)
       return c.json(webhook, 201)
     }
   }
