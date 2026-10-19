@@ -1,2 +1,5 @@
 .agents/
 .claude/
+dist/
+packages/contracts/generated/
+data/**/*.geojson

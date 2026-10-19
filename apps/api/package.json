@@ -1,0 +1,12 @@
+{
+  "name": "@safe-edge/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "hono": "^4.13.13"
+  }
+}
