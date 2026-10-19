@@ -174,7 +174,7 @@ test('a Tier 2 candidate suspends the pass in the same request', async () => {
 })
 
 // Over HTTP, automation reaches core only through these rows. Core's own time path, tick(), only expires passes
-// (packages/core/test/tick.test.ts), and the API exposes no tick.
+// (packages/core/test/tick.test.ts); the API runs it on its timer or clock moves, never on a request.
 test('no system or provider call makes a pass valid, whichever operation it tries', async () => {
   const api = startGuardedApi({
     // Automation tokens mis-issued with the reviewer role: the one-way rule still holds.
@@ -186,10 +186,12 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   const flying = await json(api.request('post', '/patrol-plans', { token: 'dev_manager', body: patrolRequest }))
   await json(api.request('post', `/patrol-plans/${flying.id}/approve`, { token: 'dev_pilot' }))
   api.setNow(flying.window.start)
+  // A MAVLink patrol: the API flies only drone-sim (which the sweep's clock move would land), so this one stays in
+  // flight for the sweep to complete.
   const patrol = await json(
     api.request('post', '/patrols', {
       token: 'dev_pilot',
-      body: { planId: flying.id, provider: 'sim', droneId: 'drn_assumed' }
+      body: { planId: flying.id, provider: 'mavlink', droneId: 'drn_assumed' }
     })
   )
   const notice = await json(

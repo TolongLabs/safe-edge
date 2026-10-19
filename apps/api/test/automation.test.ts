@@ -1,7 +1,7 @@
 // #124: the automation core supports, running inside the API. On the wall clock an injected timer drives it (each test
 // fires it by hand, no sleeps); on the scenario clock each setScenarioClock call runs the same pass.
-import { expect, test } from 'bun:test'
-import { AuditEvent, PatrolPlan, type CreatePatrolPlanRequest, type EdgeEvent } from '@safe-edge/contracts'
+import { describe, expect, test } from 'bun:test'
+import { AuditEvent, Patrol, PatrolPlan, type CreatePatrolPlanRequest, type EdgeEvent } from '@safe-edge/contracts'
 import { S1, manualTimer, nextEvents, raiseTier2, seed, sseFrames, startApi, type Api } from './support.ts'
 
 /** The seeded passes: S1's is valid to 2027-04-15, `_12` valid to 2026-12-01, `_5` expiring to 2026-11-12. */
@@ -129,4 +129,112 @@ test("a confirmed flag re-plans the open plan as the system, streamed right afte
     action: 'createPatrolPlan',
     actor: { type: 'system', id: 'core.replan' }
   })
+})
+
+/** A clock the test moves, as the wall clock (no `set`) with the timer fired by hand, or the API's scenario clock. */
+function startOn(mode: 'wall clock' | 'scenario clock') {
+  if (mode === 'scenario clock') {
+    const api = startApi()
+    const moveTo = (now: string) =>
+      json(api.request('post', '/scenario/clock', { token: 'tok_system', body: { now } })).then(() => undefined)
+    return { api, moveTo }
+  }
+  let now = seed.asOf
+  const timer = manualTimer()
+  const api = startApi({ clock: { now: () => now }, every: timer.every })
+  const moveTo = (iso: string) => {
+    now = iso
+    return timer.fire()
+  }
+  return { api, moveTo }
+}
+
+/** Plans the segments as the manager and approves the plan as the pilot. */
+async function approvedPlan(api: Api, segmentIds: string[]) {
+  const proposed = await json(
+    api.request('post', '/patrol-plans', { token: 'tok_manager', body: planRequest(segmentIds) })
+  )
+  return PatrolPlan.parse(
+    await json(api.request('post', `/patrol-plans/${proposed.id}/approve`, { token: 'tok_pilot' }))
+  )
+}
+
+const startPatrol = async (api: Api, planId: string) =>
+  Patrol.parse(
+    await json(
+      api.request('post', '/patrols', { token: 'tok_pilot', body: { planId, provider: 'sim', droneId: 'sim-1' } })
+    )
+  )
+
+describe.each(['wall clock', 'scenario clock'] as const)('on the %s', (mode) => {
+  test('a patrol the pilot starts through the API flies on drone-sim, and its frames and landing reach core', async () => {
+    const { api, moveTo } = startOn(mode)
+    const plan = await approvedPlan(api, [S1.segmentId, EXPIRING, 'seg_866518980_6'])
+    await moveTo(plan.window.start)
+    const patrol = await startPatrol(api, plan.id)
+    const frames = await subscribe(api)
+
+    // A second after the planned landing, the drone is back and core has completed the patrol.
+    const landing = plan.waypoints.at(-1)!.eta
+    await moveTo(new Date(Date.parse(landing) + 1000).toISOString())
+    expect((await nextEvents(frames, 1)).map((e) => [e.type, e.data])).toEqual([
+      ['edge.patrol.completed.v1', { patrolId: patrol.id, planId: plan.id, simulated: true }]
+    ])
+    const [done] = Patrol.array().parse(await json(api.request('get', '/patrols', { token: 'tok_manager' })))
+    expect(done).toMatchObject({ id: patrol.id, status: 'completed' })
+    const segments = new Map(seed.segments.map((s) => [s.id, s]))
+    expect(done!.coverage).toEqual(
+      plan.tasks.map((t) => ({ segmentId: t.segmentId, inspectedM: segments.get(t.segmentId)!.lengthM, unknownM: 0 }))
+    )
+
+    // S1's two fixed-viewpoint frames became observations, matched by the viewpoint IDs on the plan's stations.
+    const audit = await auditOf(api)
+    const observed = audit.filter((e) => e.action === 'recordObservation')
+    expect(observed.map((e) => [e.actor.id, (e.after as { viewpointId: string }).viewpointId]).toSorted()).toEqual([
+      ['usr_drone_sim', 'vp_866518980_11_1'],
+      ['usr_drone_sim', 'vp_866518980_11_2']
+    ])
+    expect(observed.map((e) => (e.after as { patrolId: string }).patrolId)).toEqual([patrol.id, patrol.id])
+    expect(audit.find((e) => e.action === 'completePatrol')).toMatchObject({ actor: { id: 'usr_drone_sim' } })
+    expect(audit.filter((e) => e.action === 'runAutomation')).toEqual([])
+  })
+})
+
+test('a failed automation step is recorded on the audit chain, readable over the API, and the API carries on', async () => {
+  const { api, moveTo } = startOn('wall clock')
+  // The seed's path crowd holds segment 9 until the pilot records its path clear.
+  const plan = await approvedPlan(api, [EXPIRING, 'seg_866518980_9'])
+  expect(plan.holds).toMatchObject([{ kind: 'separation', segmentId: 'seg_866518980_9', releasedBy: null }])
+  await moveTo(plan.window.start)
+  // Core lets the patrol start (the drone would wait at the held segment), but drone-sim does not model the wait.
+  const patrol = await startPatrol(api, plan.id)
+  // A confirmed flag re-plans the plan in flight, but no drone reports how far it got.
+  const candidate = await json(raiseTier2(api))
+  const decided = await api.request('post', `/candidates/${candidate.id}/decision`, {
+    token: 'tok_manager',
+    body: { decision: 'confirm', severity: 'high' }
+  })
+  expect(decided.status).toBe(200)
+
+  const failures = AuditEvent.array().parse(
+    await json(api.request('get', '/audit?subject=automation', { token: 'tok_manager' }))
+  )
+  expect(failures.map((e) => [e.action, e.actor.id, e.decision, e.after])).toEqual([
+    [
+      'runAutomation',
+      'core.automation',
+      'allowed',
+      {
+        id: 'automation',
+        step: 'drone',
+        error: `${plan.id} holds seg_866518980_9: the pilot must confirm the path is clear, then schedule the released plan`
+      }
+    ],
+    [
+      'runAutomation',
+      'core.automation',
+      'allowed',
+      { id: 'automation', step: 'replan', error: `No drone this bridge flies reports ${patrol.id}'s progress` }
+    ]
+  ])
 })
