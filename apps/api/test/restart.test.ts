@@ -213,3 +213,31 @@ test("a dev API on the scenario clock starts again at the scenario's time, not t
   const raised = await call(api, Candidate, 'post', '/candidates', 'tok_provider', tier2Candidate)
   expect(raised.raisedAt).toBe(scenarioTime)
 }, 30_000)
+
+test("the automation's writes are journaled like a request's: a restart replays them onto the same chain", async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
+  afterAll(() => rm(dir, { recursive: true }))
+  const env = { NODE_ENV: 'test', SAFE_EDGE_CLOCK: 'scenario', SAFE_EDGE_DATA_DIR: dir }
+  const first = await startApiProcess(env)
+  const plan = {
+    dockId: 'dock_elmina_roof',
+    droneProfileId: 'drn_assumed',
+    segmentIds: ['seg_866518980_5'],
+    context: [],
+    notBefore: seed.asOf,
+    altitudeCapM: 60
+  }
+  expect((await first.request('post', '/patrol-plans', 'tok_manager', plan)).status).toBe(201)
+  // Moving the clock runs the scheduled pass (tick, missed patrols), and `_12` starting to expire re-plans the plan.
+  expect(
+    (await first.request('post', '/scenario/clock', 'tok_system', { now: '2026-11-12T02:00:00.000Z' })).status
+  ).toBe(200)
+  const written = await audit(first)
+  expect(new Set(written.map((e) => e.actor.id))).toEqual(
+    new Set(['usr_manager', 'usr_system', 'core.tick', 'core.automation', 'core.replan'])
+  )
+  await first.crash()
+
+  const api = await startApiProcess(env)
+  expect(await audit(api)).toEqual(written)
+}, 30_000)
