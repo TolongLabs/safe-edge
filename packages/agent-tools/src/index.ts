@@ -338,7 +338,19 @@ const proposePatrol = tool({
         altitudeCapM: input.altitudeCapM
       }
     })
-    return { plan: { ...plan, tasks: plan.tasks.map((task) => ({ ...task, stationCount: task.stations.length })) } }
+    // The model gets a summary, coarse enough to read the same on every platform: the planner's trigonometry differs in
+    // the last bit between macOS and Linux libm, which the full-precision energies and window carried into the prompt.
+    const wh = (value: number) => Math.round(value * 10) / 10
+    const second = (at: string) => new Date(Math.round(Date.parse(at) / 1000) * 1000).toISOString()
+    return {
+      plan: {
+        ...plan,
+        window: { ...plan.window, start: second(plan.window.start), end: second(plan.window.end) },
+        energyWh: wh(plan.energyWh),
+        reserveWh: wh(plan.reserveWh),
+        tasks: plan.tasks.map((task) => ({ ...task, energyWh: wh(task.energyWh), stationCount: task.stations.length }))
+      }
+    }
   }
 })
 

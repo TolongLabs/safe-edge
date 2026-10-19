@@ -1174,7 +1174,7 @@ paths:
   /work-orders/{id}/external-error:
     post:
       operationId: recordWorkOrderExternalError
-      summary: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+      summary: Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)
       description: "Roles: system. Agents are refused."
       tags:
         - work-orders
@@ -1194,7 +1194,7 @@ paths:
               $ref: "#/components/schemas/RecordWorkOrderExternalErrorRequest"
       responses:
         "200":
-          description: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+          description: Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)
           content:
             application/json:
               schema:
@@ -1209,6 +1209,38 @@ paths:
           $ref: "#/components/responses/NotFound"
       x-safe-edge-roles:
         - system
+      x-safe-edge-events: []
+  /work-orders/{id}/external-retry:
+    post:
+      operationId: retryWorkOrderHandOff
+      summary: Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)
+      description: "Roles: manager, engineer. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HandOffRetry"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - manager
+        - engineer
       x-safe-edge-events: []
   /work-orders/{id}/submit:
     post:
@@ -1846,7 +1878,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: registerWebhook
-      summary: Register a webhook endpoint for CloudEvents
+      summary: Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
       description: "Roles: integrator. Agents are refused."
       tags:
         - webhooks
@@ -1860,11 +1892,11 @@ paths:
               $ref: "#/components/schemas/RegisterWebhookRequest"
       responses:
         "201":
-          description: Register a webhook endpoint for CloudEvents
+          description: Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Webhook"
+                $ref: "#/components/schemas/RegisteredWebhook"
         "400":
           $ref: "#/components/responses/InvalidInput"
         "401":
@@ -3766,6 +3798,27 @@ components:
         - completed
         - accepted
         - rejected
+    WorkOrderExternalError:
+      type: object
+      properties:
+        step:
+          type: string
+          enum:
+            - createFinding
+            - addEvidence
+            - updateStatus
+          description: "The call that failed: filing the finding, attaching its photos, or moving the record’s status"
+        message:
+          type: string
+          minLength: 1
+        at:
+          type: string
+          format: date-time
+      required:
+        - step
+        - message
+        - at
+      additionalProperties: false
     WorkOrder:
       type: object
       properties:
@@ -3817,20 +3870,9 @@ components:
             - "null"
         externalError:
           anyOf:
-            - type: object
-              properties:
-                message:
-                  type: string
-                  minLength: 1
-                at:
-                  type: string
-                  format: date-time
-              required:
-                - message
-                - at
-              additionalProperties: false
+            - $ref: "#/components/schemas/WorkOrderExternalError"
             - type: "null"
-          description: Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried
+          description: Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it
         createdAt:
           type: string
           format: date-time
@@ -4176,14 +4218,23 @@ components:
         at:
           type: string
           format: date-time
+        attempt:
+          type: integer
+          exclusiveMinimum: 0
+          description: 1 for the first attempt at this event, 2 for the first retry, ...
         error:
           type: string
           minLength: 1
-          description: "HTTP <status>: <body>, or the network error"
+          description: "HTTP <status>: <body, cut at 500 characters>, or the network error"
+        final:
+          type: boolean
+          description: "True when the API gave up on this event for this endpoint: no retry follows"
       required:
         - eventId
         - at
+        - attempt
         - error
+        - final
       additionalProperties: false
     Webhook:
       type: object
@@ -4204,10 +4255,11 @@ components:
           type: string
           format: date-time
         failures:
+          maxItems: 20
           type: array
           items:
             $ref: "#/components/schemas/WebhookFailure"
-          description: Failed deliveries, oldest first; each is also on the audit chain
+          description: The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain
       required:
         - id
         - url
@@ -4698,12 +4750,31 @@ components:
     RecordWorkOrderExternalErrorRequest:
       type: object
       properties:
+        step:
+          type: string
+          enum:
+            - createFinding
+            - addEvidence
+            - updateStatus
+          description: "The call that failed: filing the finding, attaching its photos, or moving the record’s status"
         message:
           type: string
           minLength: 1
           description: The work-order system's error
       required:
+        - step
         - message
+      additionalProperties: false
+    HandOffRetry:
+      type: object
+      properties:
+        workOrder:
+          $ref: "#/components/schemas/WorkOrder"
+        retried:
+          $ref: "#/components/schemas/WorkOrderExternalError"
+      required:
+        - workOrder
+        - retried
       additionalProperties: false
     SubmitWorkOrderRequest:
       type: object
@@ -5309,6 +5380,43 @@ components:
       required:
         - url
         - eventTypes
+      additionalProperties: false
+    RegisteredWebhook:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^whk_
+        url:
+          type: string
+          format: uri
+        eventTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventType"
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        failures:
+          maxItems: 20
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookFailure"
+          description: The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain
+        secret:
+          type: string
+          pattern: ^whsec_[A-Za-z0-9+/]+={0,2}$
+          description: 'Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>">'
+      required:
+        - id
+        - url
+        - eventTypes
+        - createdBy
+        - createdAt
+        - failures
+        - secret
       additionalProperties: false
     SetScenarioClockRequest:
       type: object

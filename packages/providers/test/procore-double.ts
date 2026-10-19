@@ -65,13 +65,20 @@ export function startProcoreDouble(options: {
   const observations: ProcoreDoubleObservation[] = []
   let tokenRequests = 0
   let counter = 0
+  /** REST path prefixes whose next request answers 503, as in a Procore outage; each is used once. */
+  const outages: string[] = []
   const next = () => ++counter
 
   const json = (body: unknown, status = 200) => Response.json(body, { status })
   const reject = (status: number, message: string) => json({ code: status, message, error: message }, status)
 
-  /** The documented headers on every REST call: a live bearer token and the company ID. */
+  /** An injected outage, then the documented headers on every REST call: a live bearer token and the company ID. */
   function refuseHeaders(request: Request): Response | undefined {
+    const outage = outages.findIndex((prefix) => new URL(request.url).pathname.startsWith(prefix))
+    if (outage !== -1) {
+      outages.splice(outage, 1)
+      return reject(503, 'Service Unavailable')
+    }
     const token = /^Bearer (\S+)$/.exec(request.headers.get('authorization') ?? '')?.[1]
     if (token === undefined || !tokens.has(token)) return reject(401, 'Invalid Token')
     if (request.headers.get('procore-company-id') !== String(companyId)) {
@@ -242,6 +249,8 @@ export function startProcoreDouble(options: {
     /** The stored bytes of an attachment, as Procore would serve them from its `url`. */
     file: (attachmentId: number) => files.get(attachmentId),
     tokenRequests: () => tokenRequests,
+    /** The next REST request whose path starts with `pathPrefix` answers 503 Service Unavailable. */
+    failNext: (pathPrefix: string) => void outages.push(pathPrefix),
     stop: () => server.stop(true)
   }
 }

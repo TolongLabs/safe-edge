@@ -38,7 +38,13 @@ async function waitFor(url: string): Promise<Response> {
 beforeAll(() => {
   dev = Bun.spawn(['bun', 'run', 'dev'], {
     cwd: root,
-    env: { ...process.env, PORT: String(apiPort), WEB_PORT: String(webPort), XDG_STATE_HOME: stateHome },
+    env: {
+      ...process.env,
+      PORT: String(apiPort),
+      WEB_PORT: String(webPort),
+      XDG_STATE_HOME: stateHome,
+      SAFE_EDGE_DATA_DIR: join(stateHome, 'api')
+    },
     stdout: 'ignore',
     stderr: 'inherit',
     detached: true
@@ -120,7 +126,8 @@ test('the API refuses the generated dev token file in production', async () => {
       NODE_ENV: 'production',
       PORT: String(freePort()),
       SAFE_EDGE_DEV_TOKENS_FILE: tokenFile,
-      SAFE_EDGE_AGENT_TOKEN: agentToken.stdout.toString().trim()
+      SAFE_EDGE_AGENT_TOKEN: agentToken.stdout.toString().trim(),
+      SAFE_EDGE_DATA_DIR: join(stateHome, 'api')
     },
     stdout: 'ignore',
     stderr: 'pipe'

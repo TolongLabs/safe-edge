@@ -38,6 +38,7 @@ import {
   Uncertainty,
   User,
   WorkOrder,
+  WorkOrderExternalError,
   WorkOrderStatus
 } from './entities.ts'
 import { EventType, Webhook } from './events.ts'
@@ -247,9 +248,16 @@ export type SetWorkOrderExternalRefRequest = z.infer<typeof SetWorkOrderExternal
 
 export const RecordWorkOrderExternalErrorRequest = named(
   'RecordWorkOrderExternalErrorRequest',
-  z.object({ message: z.string().min(1).describe("The work-order system's error") })
+  z.object({
+    step: WorkOrderExternalError.shape.step,
+    message: z.string().min(1).describe("The work-order system's error")
+  })
 )
 export type RecordWorkOrderExternalErrorRequest = z.infer<typeof RecordWorkOrderExternalErrorRequest>
+
+/** A retried hand-off: the work order with its error cleared, and the failure the API now resumes from. */
+export const HandOffRetry = named('HandOffRetry', z.object({ workOrder: WorkOrder, retried: WorkOrderExternalError }))
+export type HandOffRetry = z.infer<typeof HandOffRetry>
 
 export const SubmitWorkOrderRequest = named(
   'SubmitWorkOrderRequest',
@@ -480,6 +488,21 @@ export const RegisterWebhookRequest = named(
   z.object({ url: z.url(), eventTypes: z.array(EventType).min(1) })
 )
 export type RegisterWebhookRequest = z.infer<typeof RegisterWebhookRequest>
+
+/** A new registration, with the secret its deliveries are signed with. Only this response ever shows the secret. */
+export const RegisteredWebhook = named(
+  'RegisteredWebhook',
+  Webhook.extend({
+    secret: z
+      .string()
+      .regex(/^whsec_[A-Za-z0-9+/]+={0,2}$/)
+      .describe(
+        'Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, ' +
+          'webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>">'
+      )
+  })
+)
+export type RegisteredWebhook = z.infer<typeof RegisteredWebhook>
 
 export const SetScenarioClockRequest = named('SetScenarioClockRequest', z.object({ now: Timestamp }))
 export type SetScenarioClockRequest = z.infer<typeof SetScenarioClockRequest>

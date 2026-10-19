@@ -6,10 +6,11 @@
     "packages/*"
   ],
   "scripts": {
-    "agent:live": "SAFE_EDGE_CLAUDE=live bun test apps/api/test/agent.test.ts --timeout 600000",
-    "agent:record": "SAFE_EDGE_CLAUDE=record bun test apps/api/test/agent.test.ts --timeout 600000",
+    "agent:live": "SAFE_EDGE_CLAUDE=live bun test apps/api/test/agent.test.ts test/guardrails/api.test.ts --timeout 600000",
+    "agent:record": "SAFE_EDGE_CLAUDE=record bun test apps/api/test/agent.test.ts test/guardrails/api.test.ts --timeout 600000",
     "build": "bun --filter '@safe-edge/web' build",
     "check:browser": "bun scripts/check-browser.ts",
+    "check:qgc-plan": "out=$(mktemp -d) && bun run export:mission \"$out\" && uv run --script packages/planner/scripts/check-qgc-plan.py \"$out\"/*.plan",
     "dev": "bun --filter '@safe-edge/*' dev",
     "dev:token": "bun apps/api/src/dev-tokens.ts",
     "export:mission": "bun packages/planner/scripts/export-mission.ts",

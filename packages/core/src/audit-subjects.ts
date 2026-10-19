@@ -42,6 +42,7 @@ const AUDIT_SUBJECT: { readonly [K in OperationId]: SubjectField } = {
   updateWorkOrder: 'params.id',
   setWorkOrderExternalRef: 'params.id',
   recordWorkOrderExternalError: 'params.id',
+  retryWorkOrderHandOff: 'params.id',
   submitWorkOrder: 'params.id',
   startWorkOrder: 'params.id',
   completeWorkOrder: 'params.id',
