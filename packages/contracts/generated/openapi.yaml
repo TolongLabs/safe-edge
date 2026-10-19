@@ -103,6 +103,27 @@ paths:
       x-safe-edge-roles: any
       x-safe-edge-agent-scope: edge.read
       x-safe-edge-events: []
+  /me:
+    get:
+      operationId: getMe
+      summary: "Who the bearer token acts as: type, ID, role and scopes"
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - me
+      responses:
+        "200":
+          description: "Who the bearer token acts as: type, ID, role and scopes"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Actor"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /docks:
     get:
       operationId: listDocks
@@ -1728,6 +1749,33 @@ components:
         - agent
         - system
         - provider
+    Actor:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/ActorType"
+        id:
+          type: string
+          minLength: 1
+        role:
+          $ref: "#/components/schemas/Role"
+        scopes:
+          type: array
+          items:
+            type: string
+            enum:
+              - edge.read
+              - inspection.read
+              - finding.propose
+              - workorder.draft
+              - notice.draft
+              - patrol.propose
+      required:
+        - type
+        - id
+        - role
+        - scopes
+      additionalProperties: false
     ActorRef:
       type: object
       properties:

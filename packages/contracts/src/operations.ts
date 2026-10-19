@@ -1,5 +1,5 @@
 import type * as z from 'zod'
-import type { Role, Scope } from './actors.ts'
+import { Actor, type Role, type Scope } from './actors.ts'
 import {
   AgentAnswer,
   AskAgentRequest,
@@ -142,6 +142,17 @@ export const operations = {
     roles: 'any',
     agentScope: 'edge.read',
     response: UserList,
+    status: 200,
+    events: []
+  },
+  getMe: {
+    method: 'get',
+    path: '/me',
+    summary: 'Who the bearer token acts as: type, ID, role and scopes',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    response: Actor,
     status: 200,
     events: []
   },

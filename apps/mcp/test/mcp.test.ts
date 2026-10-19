@@ -92,9 +92,23 @@ test('draft_work_order creates a draft, and the same agent token is refused an a
   })
 })
 
-test('the API, not the MCP server, enforces scope: a token without edge.read gets a tool error naming the rule', async () => {
-  const client = await connect(startApi(), 'tok_agent_unscoped')
-  const result = await client.callTool({ name: 'list_expiring_passes', arguments: { days: 30 } })
+test('the API, not the MCP server, enforces scope: a token without finding.propose gets a tool error naming the rule', async () => {
+  const client = await connect(startApi(), 'tok_agent_read_only')
+  const result = await client.callTool({
+    name: 'propose_finding',
+    arguments: {
+      segmentId: S1.segmentId,
+      observationIds: [],
+      inventoryItemId: null,
+      itemStatus: null,
+      class: 'worn_path',
+      score: 0.5,
+      uncertainty: 'high',
+      gridCell: null,
+      rationale: 'A worn path leads to the bank',
+      model: 'claude-opus-5-5'
+    }
+  })
 
   expect(result.isError).toBe(true)
   expect(result.content).toEqual([{ type: 'text', text: expect.stringContaining('403, rule scope_missing') }])

@@ -12,13 +12,14 @@ export const seed = Seed.parse(await Bun.file(join(repoRoot, 'data/elmina/fixtur
 export const S1 = seed.story.s1
 const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
 
-/** `tok_<role>` for the seeded user holding each role, loaded as dev tokens are, plus an agent token with no scope. */
+/** `tok_<role>` for the seeded user holding each role, loaded as dev tokens are, plus two narrower agent tokens. */
 const tokens = await devTokens(
   { SAFE_EDGE_DEV_TOKENS: JSON.stringify(Object.fromEntries(seed.users.map((user) => [`tok_${user.role}`, user.id]))) },
   seed.users
 )
 tokens.set('tok_agent_unscoped', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: [] })
-export type Token = `tok_${Role}` | 'tok_agent_unscoped'
+tokens.set('tok_agent_read_only', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: ['edge.read'] })
+export type Token = `tok_${Role}` | 'tok_agent_unscoped' | 'tok_agent_read_only'
 
 /** The committed dev tokens (`dev_manager`, `dev_agent`, …), loaded from their file as `bun run dev` loads them. */
 export const fixtureDevTokens = await devTokens(

@@ -2,7 +2,7 @@
 // with the committed agent dev token, driven by the official MCP client, against the real API on a free port.
 // TRD "Testing" item 3, PRD MCP-3. The HTTP side is in api.test.ts.
 import { expect, test } from 'bun:test'
-import { connectMcp } from '../../apps/mcp/test/support.ts'
+import { connectMcp, runMcpToExit } from '../../apps/mcp/test/support.ts'
 import { answer, denied, json, raiseTier2, startGuardedApi } from './support.ts'
 
 // Spawning the server is the slow part under load; every wait below is on an event, never a sleep.
@@ -73,6 +73,30 @@ test(
         rule: 'agents_draft_only'
       }
     ])
+  },
+  SPAWN_TIMEOUT_MS
+)
+
+// A path around the guardrails, found while writing this suite: it failed before its fix.
+
+test(
+  'the MCP server refuses to start on a token that does not act as an agent',
+  async () => {
+    const api = startGuardedApi()
+    // A person's token would run the model's drafts as that person, and a provider's would raise its candidates
+    // as the drone: either way the agent's output stops being labelled as the agent's.
+    for (const [token, role] of [
+      ['dev_manager', 'manager'],
+      ['dev_reviewer', 'reviewer'],
+      ['dev_drone_sim', 'provider']
+    ] as const) {
+      // A real client cannot connect...
+      await expect(connectMcp(api.url, token)).rejects.toThrow()
+      // ...because the server exits as it starts, naming who the token acts as.
+      const { exitCode, stderr } = await runMcpToExit(api.url, token)
+      expect({ token, exitCode }).toEqual({ token, exitCode: 1 })
+      expect(stderr).toContain(`acts as usr_${token.slice(4)} (${role}), not as an agent`)
+    }
   },
   SPAWN_TIMEOUT_MS
 )

@@ -96,6 +96,7 @@ describe('the operations table in core', () => {
     h.call('listSegments', reader, {})
     h.call('getSegment', reader, { params: { id: S1.segmentId } })
     h.call('listUsers', reader, {})
+    h.call('getMe', reader, {})
     h.call('listDocks', reader, {})
     h.call('listDroneProfiles', reader, {})
     h.call('listPatrolPlans', reader, {})

@@ -4,11 +4,14 @@ import { Client } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
 import { join } from 'node:path'
 
-/**
- * Spawns `bun apps/mcp/src/index.ts` with the API URL and a bearer token, and connects the official client to it.
- * `stderr()` is what the server has logged so far, for checking why it refused to start.
- */
-export function startMcp(
+const entry = join(import.meta.dir, '../src/index.ts')
+const serverEnv = (apiUrl: URL | string, token: string) => ({
+  SAFE_EDGE_API_URL: new URL('/v1', apiUrl).href,
+  SAFE_EDGE_AGENT_TOKEN: token
+})
+
+/** Spawns `bun apps/mcp/src/index.ts` with the API URL and a bearer token, and connects the official client to it. */
+export async function connectMcp(
   apiUrl: URL | string,
   token: string,
   mode: 'legacy' | { pin: string } = { pin: '2026-07-28' }
@@ -17,15 +20,25 @@ export function startMcp(
   afterAll(() => client.close())
   const transport = new StdioClientTransport({
     command: process.execPath,
-    args: [join(import.meta.dir, '../src/index.ts')],
-    env: { SAFE_EDGE_API_URL: new URL('/v1', apiUrl).href, SAFE_EDGE_AGENT_TOKEN: token },
+    args: [entry],
+    env: serverEnv(apiUrl, token),
     stderr: 'pipe'
   })
-  let stderr = ''
-  transport.stderr!.on('data', (chunk: Buffer) => (stderr += chunk.toString()))
-  return { client, connected: client.connect(transport).then(() => client), stderr: () => stderr }
+  await client.connect(transport)
+  return client
 }
 
-/** A connected client, or the connection error. */
-export const connectMcp = (apiUrl: URL | string, token: string, mode?: 'legacy' | { pin: string }) =>
-  startMcp(apiUrl, token, mode).connected
+/**
+ * Runs the server with no client, for one that exits as it starts: its exit code and everything it logged. (The
+ * client's pinned negotiation probes on a sibling process, so its transport never sees that process's stderr.)
+ */
+export async function runMcpToExit(apiUrl: URL | string, token: string) {
+  const server = Bun.spawn([process.execPath, entry], {
+    env: serverEnv(apiUrl, token),
+    stdin: 'pipe',
+    stdout: 'ignore',
+    stderr: 'pipe'
+  })
+  const [exitCode, stderr] = await Promise.all([server.exited, new Response(server.stderr).text()])
+  return { exitCode, stderr }
+}
