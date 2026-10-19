@@ -83,9 +83,9 @@ export function startCore({ planner = elminaPlanner }: { planner?: PatrolPlanner
   const attempt = <K extends CoreOperationId>(op: K, who: Who, input: OperationInput<K>): DispatchResult<K> =>
     core.dispatch(op, actor(who), input)
 
-  /** A dispatch that must succeed; its data and events must match the contract. */
   /** Operations that have succeeded on this core. */
   const succeeded = new Set<CoreOperationId>()
+  /** A dispatch that must succeed; its data and events must match the contract. */
   const call = <K extends CoreOperationId>(op: K, who: Who, input: OperationInput<K>): DispatchSuccess<K> => {
     const result = attempt(op, who, input)
     if (!result.ok) throw new Error(`${op} as ${actor(who).id} failed: ${JSON.stringify(result)}`)
