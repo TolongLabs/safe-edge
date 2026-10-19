@@ -20,6 +20,7 @@
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
     "prepare": "husky",
+    "procore:e2e": "bun packages/providers/scripts/procore-e2e.ts",
     "procore:smoke": "bun packages/providers/scripts/procore-smoke.ts",
     "test": "bun test --pass-with-no-tests",
     "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck"
