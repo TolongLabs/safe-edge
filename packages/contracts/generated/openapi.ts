@@ -960,7 +960,7 @@ export interface paths {
         get: operations["listWebhooks"];
         put?: never;
         /**
-         * Register a webhook endpoint for CloudEvents
+         * Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
          * @description Roles: integrator. Agents are refused.
          */
         post: operations["registerWebhook"];
@@ -1580,8 +1580,12 @@ export interface components {
             eventId: string;
             /** Format: date-time */
             at: string;
-            /** @description HTTP <status>: <body>, or the network error */
+            /** @description 1 for the first attempt at this event, 2 for the first retry, ... */
+            attempt: number;
+            /** @description HTTP <status>: <body, cut at 500 characters>, or the network error */
             error: string;
+            /** @description True when the API gave up on this event for this endpoint: no retry follows */
+            final: boolean;
         };
         Webhook: {
             id: string;
@@ -1591,7 +1595,7 @@ export interface components {
             createdBy: string;
             /** Format: date-time */
             createdAt: string;
-            /** @description Failed deliveries, oldest first; each is also on the audit chain */
+            /** @description The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain */
             failures: components["schemas"]["WebhookFailure"][];
         };
         TriageResult: {
@@ -1895,6 +1899,19 @@ export interface components {
             /** Format: uri */
             url: string;
             eventTypes: components["schemas"]["EventType"][];
+        };
+        RegisteredWebhook: {
+            id: string;
+            /** Format: uri */
+            url: string;
+            eventTypes: components["schemas"]["EventType"][];
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain */
+            failures: components["schemas"]["WebhookFailure"][];
+            /** @description Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>"> */
+            secret: string;
         };
     };
     responses: {
@@ -3427,13 +3444,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Register a webhook endpoint for CloudEvents */
+            /** @description Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS) */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Webhook"];
+                    "application/json": components["schemas"]["RegisteredWebhook"];
                 };
             };
             400: components["responses"]["InvalidInput"];

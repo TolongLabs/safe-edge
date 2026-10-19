@@ -9,6 +9,7 @@ import {
   type OperationInput,
   type OperationSpec,
   type Operations,
+  type RegisteredWebhook,
   type Webhook,
   type WorkOrderProvider
 } from '@safe-edge/contracts'
@@ -22,7 +23,7 @@ import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
 import { createAgent } from './agent.ts'
-import { createEventHub } from './events.ts'
+import { createEventHub, newWebhookSecret, type WebhookOptions } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
 import { forwardWorkOrders } from './work-orders.ts'
@@ -46,6 +47,8 @@ export interface ApiOptions {
    * Without it, those routes answer 501.
    */
   agent?: { claude: Anthropic; token: string }
+  /** Where webhooks may point and how failed deliveries are retried. */
+  webhooks: WebhookOptions
 }
 
 type Env = { Variables: { actor: Actor } }
@@ -61,11 +64,21 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
   c.json({ ok: false, error, message } satisfies ApiError, status)
 
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
-export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, agent: agentOptions }: ApiOptions) {
+export function createApp({
+  core,
+  clock,
+  ids,
+  tokens,
+  heartbeatMs,
+  workOrders,
+  agent: agentOptions,
+  webhooks
+}: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   // A failed webhook delivery is the API's own write to the webhook, on the audit chain like any other.
   const hub = createEventHub({
     clock,
+    options: webhooks,
     onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
   })
   const evidence = createEvidenceStore({ clock, ids })
@@ -209,6 +222,10 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
       }),
     listWebhooks: (c) => c.json(hub.list(), 200),
     registerWebhook: (c, { body }) => {
+      if (!hub.allows(body.url)) {
+        const message = `url: ${new URL(body.url).origin} is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)`
+        return fail(c, 400, 'invalid_input', message)
+      }
       const webhook: Webhook = {
         id: ids.next('whk'),
         ...body,
@@ -216,9 +233,10 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
         createdAt: clock.now(),
         failures: []
       }
-      hub.register(webhook)
+      const secret = newWebhookSecret()
+      hub.register(webhook, secret)
       core.recordStored('registerWebhook', c.get('actor'), webhook)
-      return c.json(webhook, 201)
+      return c.json({ ...webhook, secret } satisfies RegisteredWebhook, 201)
     }
   }
 

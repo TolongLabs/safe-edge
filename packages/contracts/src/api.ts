@@ -444,6 +444,21 @@ export const RegisterWebhookRequest = named(
 )
 export type RegisterWebhookRequest = z.infer<typeof RegisterWebhookRequest>
 
+/** A new registration, with the secret its deliveries are signed with. Only this response ever shows the secret. */
+export const RegisteredWebhook = named(
+  'RegisteredWebhook',
+  Webhook.extend({
+    secret: z
+      .string()
+      .regex(/^whsec_[A-Za-z0-9+/]+={0,2}$/)
+      .describe(
+        'Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, ' +
+          'webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>">'
+      )
+  })
+)
+export type RegisteredWebhook = z.infer<typeof RegisteredWebhook>
+
 export const DemoResetResult = z.object({ reset: z.literal(true) })
 export type DemoResetResult = z.infer<typeof DemoResetResult>
 

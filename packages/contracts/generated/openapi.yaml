@@ -1718,7 +1718,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: registerWebhook
-      summary: Register a webhook endpoint for CloudEvents
+      summary: Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
       description: "Roles: integrator. Agents are refused."
       tags:
         - webhooks
@@ -1732,11 +1732,11 @@ paths:
               $ref: "#/components/schemas/RegisterWebhookRequest"
       responses:
         "201":
-          description: Register a webhook endpoint for CloudEvents
+          description: Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Webhook"
+                $ref: "#/components/schemas/RegisteredWebhook"
         "400":
           $ref: "#/components/responses/InvalidInput"
         "401":
@@ -3878,14 +3878,23 @@ components:
         at:
           type: string
           format: date-time
+        attempt:
+          type: integer
+          exclusiveMinimum: 0
+          description: 1 for the first attempt at this event, 2 for the first retry, ...
         error:
           type: string
           minLength: 1
-          description: "HTTP <status>: <body>, or the network error"
+          description: "HTTP <status>: <body, cut at 500 characters>, or the network error"
+        final:
+          type: boolean
+          description: "True when the API gave up on this event for this endpoint: no retry follows"
       required:
         - eventId
         - at
+        - attempt
         - error
+        - final
       additionalProperties: false
     Webhook:
       type: object
@@ -3906,10 +3915,11 @@ components:
           type: string
           format: date-time
         failures:
+          maxItems: 20
           type: array
           items:
             $ref: "#/components/schemas/WebhookFailure"
-          description: Failed deliveries, oldest first; each is also on the audit chain
+          description: The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain
       required:
         - id
         - url
@@ -4915,4 +4925,41 @@ components:
       required:
         - url
         - eventTypes
+      additionalProperties: false
+    RegisteredWebhook:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^whk_
+        url:
+          type: string
+          format: uri
+        eventTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventType"
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        failures:
+          maxItems: 20
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookFailure"
+          description: The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain
+        secret:
+          type: string
+          pattern: ^whsec_[A-Za-z0-9+/]+={0,2}$
+          description: 'Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>">'
+      required:
+        - id
+        - url
+        - eventTypes
+        - createdBy
+        - createdAt
+        - failures
+        - secret
       additionalProperties: false

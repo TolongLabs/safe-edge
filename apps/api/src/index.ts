@@ -9,6 +9,7 @@ import {
   readProcoreEnv,
   SAFETY_HAZARD_OBSERVATION_TYPE
 } from '@safe-edge/providers'
+import { webhookOptions } from './events.ts'
 import { devTokens } from './tokens.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -49,5 +50,6 @@ export default createApp({
   tokens: await devTokens(process.env, seed.users),
   heartbeatMs: 5_000,
   agent,
-  workOrders
+  workOrders,
+  webhooks: webhookOptions(process.env)
 })

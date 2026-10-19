@@ -45,6 +45,7 @@ import {
   RecordRetestRequest,
   RecordWorkOrderExternalErrorRequest,
   RegisterWebhookRequest,
+  RegisteredWebhook,
   RetestOutcome,
   RouteClosure,
   RouteClosureRequest,
@@ -769,12 +770,13 @@ export const operations = {
   registerWebhook: {
     method: 'post',
     path: '/webhooks',
-    summary: 'Register a webhook endpoint for CloudEvents',
+    summary:
+      'Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)',
     handledBy: 'api',
     roles: ['integrator'],
     agentScope: null,
     body: RegisterWebhookRequest,
-    response: Webhook,
+    response: RegisteredWebhook,
     status: 201,
     events: []
   },

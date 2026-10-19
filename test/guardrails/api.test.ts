@@ -426,6 +426,11 @@ function answeredRecord(body: unknown): { id: string } {
     typeof value === 'object' && value !== null && typeof (value as { id?: unknown }).id === 'string'
   const record = isRecord(body) ? body : Object.values(body as object).find(isRecord)
   if (record === undefined) throw new Error(`No record in ${JSON.stringify(body)}`)
+  // A webhook registration answers with its signing secret once; the audited record never carries it.
+  if ('secret' in record) {
+    const { secret: _, ...stored } = record
+    return stored
+  }
   return record
 }
 

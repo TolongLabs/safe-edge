@@ -125,13 +125,15 @@ export const EdgeEvent = z.discriminatedUnion(
 )
 export type EdgeEvent = { [T in EventType]: z.infer<(typeof EVENT_SCHEMAS)[T]> }[EventType]
 
-/** A delivery that did not reach the endpoint. Nothing retries it. */
+/** One delivery attempt that did not reach the endpoint. Network errors, timeouts, 408, 429 and 5xx are retried. */
 export const WebhookFailure = named(
   'WebhookFailure',
   z.object({
     eventId: EventId,
     at: Timestamp,
-    error: z.string().min(1).describe('HTTP <status>: <body>, or the network error')
+    attempt: z.number().int().positive().describe('1 for the first attempt at this event, 2 for the first retry, ...'),
+    error: z.string().min(1).describe('HTTP <status>: <body, cut at 500 characters>, or the network error'),
+    final: z.boolean().describe('True when the API gave up on this event for this endpoint: no retry follows')
   })
 )
 export type WebhookFailure = z.infer<typeof WebhookFailure>
@@ -144,7 +146,10 @@ export const Webhook = named(
     eventTypes: z.array(EventType),
     createdBy: z.string(),
     createdAt: Timestamp,
-    failures: z.array(WebhookFailure).describe('Failed deliveries, oldest first; each is also on the audit chain')
+    failures: z
+      .array(WebhookFailure)
+      .max(20)
+      .describe('The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain')
   })
 )
 export type Webhook = z.infer<typeof Webhook>
