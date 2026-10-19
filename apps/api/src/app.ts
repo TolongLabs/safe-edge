@@ -16,7 +16,7 @@ import {
 import type Anthropic from '@anthropic-ai/sdk'
 import { APIUserAbortError } from '@anthropic-ai/sdk'
 import type { Core, IdGenerator } from '@safe-edge/core'
-import type { EvidenceReader } from '@safe-edge/providers'
+import type { DataGovMyClient, EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
@@ -56,6 +56,8 @@ export interface ApiOptions {
    * automation each time `setScenarioClock` moves it, so it ignores this.
    */
   every?: Every
+  /** data.gov.my, polled for warnings that re-plan open plans (wall clock only). Without it, nothing is polled. */
+  weather?: DataGovMyClient
 }
 
 type Env = { Variables: { actor: Actor } }
@@ -79,7 +81,8 @@ export function createApp({
   heartbeatMs,
   workOrders,
   agent: agentOptions,
-  every
+  every,
+  weather
 }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   // A failed webhook delivery is the API's own write to the webhook, on the audit chain like any other.
@@ -88,7 +91,7 @@ export function createApp({
     onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
   })
   const evidence = createEvidenceStore({ clock, ids })
-  const automation = startAutomation({ core, clock, every, subscribe: hub.subscribe, publish: hub.publish })
+  const automation = startAutomation({ core, clock, every, weather, subscribe: hub.subscribe, publish: hub.publish })
   if (workOrders) {
     const provider = workOrders(async (ref) => evidence.bytes(ref))
     forwardWorkOrders({ core, subscribe: hub.subscribe, provider })

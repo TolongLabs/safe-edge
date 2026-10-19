@@ -2,6 +2,7 @@
 // fires it by hand, no sleeps); on the scenario clock each setScenarioClock call runs the same pass.
 import { describe, expect, test } from 'bun:test'
 import { AuditEvent, Patrol, PatrolPlan, type CreatePatrolPlanRequest, type EdgeEvent } from '@safe-edge/contracts'
+import { createDataGovMyClient, type WarningRow } from '@safe-edge/providers'
 import { S1, manualTimer, nextEvents, raiseTier2, seed, sseFrames, startApi, type Api } from './support.ts'
 
 /** The seeded passes: S1's is valid to 2027-04-15, `_12` valid to 2026-12-01, `_5` expiring to 2026-11-12. */
@@ -237,4 +238,114 @@ test('a failed automation step is recorded on the audit chain, readable over the
       { id: 'automation', step: 'replan', error: `No drone this bridge flies reports ${patrol.id}'s progress` }
     ]
   ])
+})
+
+describe('the data.gov.my poll', () => {
+  const START_MS = Date.parse('2026-10-20T21:10:00.000Z')
+  /**
+   * A labelled test fixture in the feed's own format: a thunderstorm warning for Petaling from 05:00 to 09:00 MYT on
+   * 21 Oct, in force at 21:10Z on 20 Oct.
+   */
+  const petalingStorm: WarningRow = {
+    warning_issue: { issued: '2026-10-21T04:35:00', title_bm: 'Amaran Ribut Petir', title_en: 'Thunderstorms Warning' },
+    valid_from: '2026-10-21T05:00:00',
+    valid_to: '2026-10-21T09:00:00',
+    heading_en: 'THUNDERSTORMS WARNING',
+    text_en:
+      'Thunderstorms, heavy rain and strong winds are expected over the states of Selangor: Gombak, Petaling and Klang until 9:00 AM; Wednesday, 21 October 2026.',
+    instruction_en: null,
+    heading_bm: 'AMARAN RIBUT PETIR',
+    text_bm: null,
+    instruction_bm: null
+  }
+
+  /**
+   * The wall-clock API with #72's data.gov.my client behind a fetch the test answers. The client's own clock stands
+   * still until the test wakes the request it put to sleep for the rate limit.
+   */
+  function weatherApi(respond: () => Response) {
+    let limiterMs = START_MS
+    const requests: number[] = []
+    let fellAsleep: (ms: number) => void = () => {}
+    const asleep = new Promise<number>((resolve) => (fellAsleep = resolve))
+    let wake = () => {}
+    const weather = createDataGovMyClient({
+      fetch: async () => {
+        requests.push(limiterMs - START_MS)
+        return respond()
+      },
+      clock: {
+        now: () => limiterMs,
+        sleep: (ms) => {
+          fellAsleep(ms)
+          return new Promise((resolve) => {
+            wake = () => {
+              limiterMs += ms
+              resolve()
+            }
+          })
+        }
+      }
+    })
+    const timer = manualTimer()
+    const api = startApi({ clock: { now: () => new Date(START_MS).toISOString() }, every: timer.every, weather })
+    return { api, timer, requests, asleep, wake: () => wake() }
+  }
+
+  test('polls go through the rate-limited client: at most 4 requests in any minute', async () => {
+    const { timer, requests, asleep, wake } = weatherApi(() => Response.json([]))
+    // Six polls at once, faster than the API's 5-minute interval ever fires: the fifth request waits a minute.
+    const polls = Array.from({ length: 6 }, () => timer.fire())
+    expect(await asleep).toBe(60_000)
+    expect(requests).toEqual([0, 0, 0, 0])
+    wake()
+    await Promise.all(polls)
+    expect(requests).toEqual([0, 0, 0, 0, 60_000, 60_000])
+  })
+
+  test('a warning in force for Petaling re-plans the open plan as the system, once', async () => {
+    const { api, timer } = weatherApi(() => Response.json([petalingStorm]))
+    const open = PatrolPlan.parse(
+      await json(api.request('post', '/patrol-plans', { token: 'tok_manager', body: planRequest([EXPIRING]) }))
+    )
+    const frames = await subscribe(api)
+    await timer.fire()
+    expect((await nextEvents(frames, 1)).map((e) => e.type)).toEqual(['edge.patrol.planned.v1'])
+
+    const [, replanned] = await plansOf(api)
+    expect(replanned!.replan).toMatchObject({
+      trigger: {
+        kind: 'weather_warning',
+        warning: {
+          kind: 'lightning_warning',
+          observedAt: '2026-10-20T21:00:00.000Z',
+          validTo: '2026-10-21T01:00:00.000Z',
+          url: 'https://api.data.gov.my/weather/warning/',
+          simulated: false,
+          source: 'provider'
+        }
+      },
+      supersedes: { planId: open.id, committedTasks: 0 }
+    })
+    expect(replanned!.holds.map((h) => [h.kind, h.until])).toContainEqual(['lightning', '2026-10-21T01:00:00.000Z'])
+
+    // The re-plan already holds that warning, so the next poll changes nothing.
+    await timer.fire()
+    expect(await plansOf(api)).toHaveLength(2)
+  })
+
+  test('a failed poll is recorded on the audit chain', async () => {
+    const { api, timer } = weatherApi(() => new Response('Service Unavailable', { status: 503 }))
+    await timer.fire()
+    const failures = AuditEvent.array().parse(
+      await json(api.request('get', '/audit?subject=automation', { token: 'tok_manager' }))
+    )
+    expect(failures.map((e) => e.after)).toEqual([
+      {
+        id: 'automation',
+        step: 'weather',
+        error: 'https://api.data.gov.my/weather/warning/ answered 503: Service Unavailable'
+      }
+    ])
+  })
 })

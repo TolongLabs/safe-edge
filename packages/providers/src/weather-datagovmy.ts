@@ -191,7 +191,10 @@ export const ELMINA_AREA: WarningArea = { state: 'Selangor', district: 'Petaling
  * `lightning_warning`, which holds the launch; any other is a `weather_warning`. Each is in force from `valid_from` to
  * `valid_to`, read as Malaysia time.
  */
-export function warningSnapshots(snapshot: DataGovMySnapshot, area: WarningArea): ContextSnapshot[] {
+export function warningSnapshots(
+  snapshot: Pick<DataGovMySnapshot, 'publisher' | 'warnings' | 'simulated' | 'source'>,
+  area: WarningArea
+): ContextSnapshot[] {
   const { url, rows } = snapshot.warnings
   return rows
     .filter((w) => namesArea(w.text_en ?? '', area))

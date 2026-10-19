@@ -11,6 +11,7 @@
     "@safe-edge/agent-tools": "workspace:*",
     "@safe-edge/contracts": "workspace:*",
     "@safe-edge/core": "workspace:*",
+    "@safe-edge/planner": "workspace:*",
     "@safe-edge/providers": "workspace:*",
     "@safe-edge/sdk": "workspace:*",
     "hono": "^4.13.13",

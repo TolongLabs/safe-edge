@@ -45,7 +45,8 @@ export function startApi({
   workOrders,
   claude,
   clock = scenarioClock(seed.asOf),
-  every
+  every,
+  weather
 }: {
   heartbeatMs?: number
   tokens?: ReadonlyMap<string, Actor>
@@ -53,11 +54,12 @@ export function startApi({
   claude?: Anthropic
   clock?: ApiClock
   every?: Every
+  weather?: ApiOptions['weather']
 } = {}) {
   const ids = counterIds()
   const core = createCore({ seed, clock, ids, planner })
   const agent = claude && { claude, token: 'tok_agent' }
-  const app = createApp({ core, clock, ids, tokens: tokenTable, heartbeatMs, workOrders, agent, every })
+  const app = createApp({ core, clock, ids, tokens: tokenTable, heartbeatMs, workOrders, agent, every, weather })
   const log: Exchange[] = []
   const server = Bun.serve({
     port: 0,
