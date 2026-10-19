@@ -118,7 +118,8 @@ export function createApp({
     clock,
     ids,
     options: webhooks,
-    command: journal.command,
+    journal,
+    db,
     recordStored: core.recordStored
   })
   const evidence = createEvidenceStore({ clock, ids })
@@ -396,6 +397,7 @@ export function createApp({
         'SAFE_EDGE_CLOCK=wall, or move it away to start again from the seed'
     )
   }
+  hub.resume()
   return app
 }
 

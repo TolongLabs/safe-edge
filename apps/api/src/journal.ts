@@ -22,6 +22,15 @@ export interface Journal {
    * the last clock reading the journal holds, or null when none.
    */
   replay(): string | null
+  /**
+   * Runs `run`, then `alongside` with its result, in one SQLite transaction on the journal's database (#149): the
+   * entries `run`'s commands append and the rows `alongside` writes to the same database commit together or not at
+   * all, so a kill cannot keep one without the other. If `run` throws, the entries it appended still commit (memory
+   * holds their writes) and the error goes on. If `alongside` or the commit fails after `run` appended, nothing commits
+   * and the journal breaks, as after a failed append. Both must be synchronous, which keeps every other caller's
+   * entries out of the transaction. A section cannot run inside a command, a replay or another section.
+   */
+  atomic<R>(run: () => R, alongside: (result: R) => void): R
 }
 
 /**
@@ -61,6 +70,8 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
   let replaying: { seq: number; clock: string[] } | null = null
   /** The append that failed, after which memory holds a write the journal lacks. */
   let broken: JournalWriteError | null = null
+  /** Entries appended by this process, so an atomic section knows whether it appended any. */
+  let appended = 0
 
   const journal: Journal = {
     clock: {
@@ -102,6 +113,7 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
           if (drawn > 0) {
             try {
               append.run(kind, recordedArgs, JSON.stringify(readings), outcome)
+              appended++
             } catch (error) {
               broken = new JournalWriteError(`The API could not journal a ${kind} to ${db.filename}`, { cause: error })
               throw broken
@@ -139,6 +151,43 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
         }
       }
       return last
+    },
+
+    atomic<R>(run: () => R, alongside: (result: R) => void): R {
+      if (broken) throw broken
+      if (live || replaying || db.inTransaction) {
+        throw new Error('An atomic section runs on its own, not inside a command, a replay or another section')
+      }
+      const before = appended
+      db.run('begin')
+      /** Rolls the section back; once it appended, memory holds writes the journal now lacks, so the journal breaks. */
+      const abort = (cause: unknown): never => {
+        if (db.inTransaction) db.run('rollback')
+        if (broken || appended === before) throw cause
+        broken = new JournalWriteError(`The API could not commit an atomic section to ${db.filename}`, { cause })
+        throw broken
+      }
+      let result: R
+      try {
+        result = run()
+        if (result instanceof Promise) throw new Error('An atomic section must be synchronous')
+      } catch (error) {
+        // A failed append broke the journal, and nothing of the section may commit; otherwise the entries stay.
+        if (broken) abort(error)
+        try {
+          db.run('commit')
+        } catch (cause) {
+          abort(cause)
+        }
+        throw error
+      }
+      try {
+        alongside(result)
+        db.run('commit')
+      } catch (cause) {
+        abort(cause)
+      }
+      return result
     }
   }
   return journal
