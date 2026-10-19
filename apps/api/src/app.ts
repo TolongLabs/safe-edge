@@ -1,6 +1,7 @@
 import {
   operations,
   type Actor,
+  type AgentDelta,
   type ApiError,
   type CoreOperationId,
   type OperationId,
@@ -9,12 +10,15 @@ import {
   type Operations,
   type Webhook
 } from '@safe-edge/contracts'
+import type Anthropic from '@anthropic-ai/sdk'
 import type { Clock, Core, IdGenerator } from '@safe-edge/core'
+import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
 import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
+import { createAgent } from './agent.ts'
 import { createEventHub } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
@@ -28,6 +32,11 @@ export interface ApiOptions {
   tokens: ReadonlyMap<string, Actor>
   /** Interval of the SSE heartbeat comment. Keep it under Bun.serve's `idleTimeout` (10 s by default). */
   heartbeatMs: number
+  /**
+   * The agent behind `/agent/*`: a Claude client and the API token it acts with, which must map to an agent actor.
+   * Without it, those routes answer 501.
+   */
+  agent?: { claude: Anthropic; token: string }
 }
 
 type Env = { Variables: { actor: Actor } }
@@ -40,7 +49,7 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
   c.json({ ok: false, error, message } satisfies ApiError, status)
 
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
-export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions) {
+export function createApp({ core, clock, ids, tokens, heartbeatMs, agent: agentOptions }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   const hub = createEventHub()
   const evidence = createEvidenceStore({ clock, ids })
@@ -94,6 +103,21 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions)
     }
   })
 
+  // The agent calls this same app in process with its own token, so every call passes auth, policy, validation,
+  // idempotency and the event hub like any other client's.
+  const agent = agentOptions && createAgentFor(agentOptions)
+  function createAgentFor({ claude, token }: { claude: Anthropic; token: string }) {
+    if (tokens.get(token)?.type !== 'agent') throw new Error('The agent token must map to an agent actor')
+    const client = createSafeEdgeClient({
+      transport: 'http',
+      baseUrl: 'http://safe-edge.internal/v1',
+      token,
+      fetch: async (url, init) => app.fetch(new Request(url, init))
+    })
+    return createAgent({ claude, context: { client, now: clock.now } })
+  }
+  const noAgent = (c: Context) => fail(c, 501, 'not_implemented', 'This API instance runs without the agent')
+
   const apiHandlers: ApiHandlers = {
     uploadEvidence: (c, { body }) => c.json(evidence.put(body, c.get('actor')), 201),
     getEvidenceUrl: (c, { params }) => {
@@ -101,7 +125,49 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions)
       return url ? c.json(url, 200) : fail(c, 404, 'not_found', `No evidence ${params.id}`)
     },
     triageImages: (c) => fail(c, 501, 'not_implemented', 'Claude vision triage arrives with #74'),
-    askAgent: (c) => fail(c, 501, 'not_implemented', 'The scoped agent arrives with #75'),
+    askAgent: (c, { body }) => {
+      if (agent === undefined) return noAgent(c)
+      return streamSSE(
+        c,
+        async (stream) => {
+          // Claude can think and call tools for longer than Bun's idle timeout before it writes text, so the stream
+          // opens with a comment and keeps a heartbeat, as /events does.
+          await stream.write(': connected\n\n')
+          const heartbeat = setInterval(() => void stream.write(': heartbeat\n\n'), heartbeatMs)
+          try {
+            const result = await agent.ask(body.question, (text) =>
+              stream.writeSSE({ event: 'delta', data: JSON.stringify({ text } satisfies AgentDelta) })
+            )
+            if (result.ok) await stream.writeSSE({ event: 'answer', data: JSON.stringify(result.answer) })
+            else await stream.writeSSE({ event: 'stopped', data: JSON.stringify(result) })
+          } finally {
+            clearInterval(heartbeat)
+          }
+        },
+        async (error, stream) => {
+          console.error('safe-edge agent: ask failed', error)
+          await stream.writeSSE({ event: 'error', data: JSON.stringify({ message: error.message }) })
+        }
+      )
+    },
+    draftInbox: async (c, { body }) => {
+      if (agent === undefined) return noAgent(c)
+      // Looked up as the person asking, so an unknown candidate is their 404, and only stored IDs reach the prompt.
+      const actor = c.get('actor')
+      const found = core.dispatch('getCandidate', actor, { params: { id: body.candidateId } })
+      if (!found.ok) return 'rule' in found ? c.json(found, 403) : c.json(found, 404)
+      const { candidate } = found.data
+      const findings = core.dispatch('listFindings', actor, { query: { segmentId: candidate.segmentId } })
+      if (!findings.ok) throw new Error(`listFindings refused ${actor.id}: ${findings.message}`)
+      const finding = findings.data.find((f) => f.candidateId === candidate.id) ?? null
+      const result = await agent.draftInbox(candidate, finding)
+      return result.ok ? c.json(result.draft, 200) : c.json(result, 502)
+    },
+    draftMonthlyReport: async (c, { body }) => {
+      if (agent === undefined) return noAgent(c)
+      const result = await agent.draftMonthlyReport(body.month)
+      return result.ok ? c.json(result.report, 200) : c.json(result, 502)
+    },
     streamEvents: (c) =>
       streamSSE(c, async (stream) => {
         stream.onAbort(

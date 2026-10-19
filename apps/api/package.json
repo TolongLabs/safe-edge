@@ -3,10 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "SAFE_EDGE_DEV_TOKENS_FILE=../../data/elmina/fixtures/dev-tokens.json bun run --hot src/index.ts",
+    "dev": "SAFE_EDGE_DEV_TOKENS_FILE=../../data/elmina/fixtures/dev-tokens.json SAFE_EDGE_AGENT_TOKEN=dev_agent bun run --hot src/index.ts",
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.135.0",
+    "@safe-edge/agent-tools": "workspace:*",
     "@safe-edge/contracts": "workspace:*",
     "@safe-edge/core": "workspace:*",
     "@safe-edge/sdk": "workspace:*",

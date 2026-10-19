@@ -326,13 +326,78 @@ export type TriageImagesResponse = z.infer<typeof TriageImagesResponse>
 export const AskAgentRequest = named('AskAgentRequest', z.object({ question: z.string().min(1) }))
 export type AskAgentRequest = z.infer<typeof AskAgentRequest>
 
-/** The final `answer` server-sent event of `askAgent`; earlier `delta` events carry text chunks. */
-export const AgentAnswer = z.object({
-  answer: z.string(),
-  citations: z.array(z.string()).describe('Record IDs'),
+/** A switch to a fallback model after the requested model declined (server-side fallback). */
+export const AgentFallback = z.object({ from: z.string(), to: z.string() })
+export type AgentFallback = z.infer<typeof AgentFallback>
+
+/** Which records an agent's text rests on, and which model wrote it. Shared by every agent result. */
+const agentProvenance = {
+  citations: z
+    .array(z.string())
+    .describe('Record IDs that tool results returned and the text names, in order of first mention'),
+  uncited: z.boolean().describe('True when the text names no record ID from a tool result; show it as uncited'),
+  model: z.string().describe('The model that wrote the final turn, after any server-side fallback'),
+  fallbacks: z.array(AgentFallback).describe('Every switch to a fallback model during the run; empty when none')
+}
+
+/** A `delta` server-sent event of `askAgent`: text as the agent writes it. The `answer` event replaces it. */
+export const AgentDelta = z.object({ text: z.string() })
+export type AgentDelta = z.infer<typeof AgentDelta>
+
+/** The final `answer` server-sent event of `askAgent`. */
+export const AgentAnswer = z.object({ answer: z.string(), ...agentProvenance })
+export type AgentAnswer = z.infer<typeof AgentAnswer>
+
+/**
+ * The agent stopped without a usable result: Claude refused (`stopReason: 'refusal'`, with its category), ran out
+ * of tokens or turns, or skipped the draft it was asked for. `askAgent` sends it as a `stopped` event instead of
+ * `answer`; the draft operations return it with status 502.
+ */
+export const AgentStopped = z.object({
+  ok: z.literal(false),
+  error: z.literal('agent_stopped'),
+  message: z.string(),
+  stopReason: z.string().describe("Claude's stop_reason for the last turn"),
+  category: z.string().nullable().describe('The refusal category, when Claude refused'),
   model: z.string()
 })
-export type AgentAnswer = z.infer<typeof AgentAnswer>
+export type AgentStopped = z.infer<typeof AgentStopped>
+
+/** The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order. */
+export const DraftInboxRequest = named('DraftInboxRequest', z.object({ candidateId: CandidateId }))
+export type DraftInboxRequest = z.infer<typeof DraftInboxRequest>
+
+export const InboxDraft = named(
+  'InboxDraft',
+  z.object({
+    candidateId: CandidateId,
+    findingId: FindingId.nullable().describe('Null while the candidate is not confirmed; no work order then'),
+    summary: z.string().describe("The agent's summary for the Inbox card"),
+    workOrder: WorkOrder.nullable().describe("The agent's draft; a person edits and submits it"),
+    ...agentProvenance
+  })
+)
+export type InboxDraft = z.infer<typeof InboxDraft>
+
+export const DraftMonthlyReportRequest = named(
+  'DraftMonthlyReportRequest',
+  z.object({
+    month: z
+      .string()
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+      .describe('YYYY-MM')
+  })
+)
+export type DraftMonthlyReportRequest = z.infer<typeof DraftMonthlyReportRequest>
+
+/** The agent's monthly governance report, saved as a notice draft that people review, export and send. */
+export const MonthlyReportDraft = named(
+  'MonthlyReportDraft',
+  z
+    .object({ month: z.string(), notice: Notice, ...agentProvenance })
+    .describe('Citations are checked in the notice body')
+)
+export type MonthlyReportDraft = z.infer<typeof MonthlyReportDraft>
 
 export const RegisterWebhookRequest = named(
   'RegisterWebhookRequest',

@@ -1,4 +1,5 @@
 // Starts the API the way index.ts does, but on a free port with an injected clock, and calls it over real HTTP.
+import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
 import type { Role } from '@safe-edge/contracts'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
@@ -20,12 +21,14 @@ const tokens = await devTokens(
 tokens.set('tok_agent_unscoped', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: [] })
 export type Token = `tok_${Role}` | 'tok_agent_unscoped'
 
-export function startApi({ heartbeatMs = 5_000 }: { heartbeatMs?: number } = {}) {
+/** With `claude`, the API runs its agent with that client and the `tok_agent` token; without it, it has no agent. */
+export function startApi({ heartbeatMs = 5_000, claude }: { heartbeatMs?: number; claude?: Anthropic } = {}) {
   let now = seed.asOf
   const clock = { now: () => now }
   const ids = counterIds()
   const core = createCore({ seed, clock, ids, planner })
-  const app = createApp({ core, clock, ids, tokens, heartbeatMs })
+  const agent = claude && { claude, token: 'tok_agent' }
+  const app = createApp({ core, clock, ids, tokens, heartbeatMs, agent })
   const server = Bun.serve({ port: 0, fetch: app.fetch })
   afterAll(() => server.stop(true))
 

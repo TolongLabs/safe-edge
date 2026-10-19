@@ -3,3 +3,4 @@
 dist/
 packages/contracts/generated/
 data/**/*.geojson
+apps/api/test/fixtures/claude/
