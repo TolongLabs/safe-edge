@@ -256,6 +256,10 @@ export const CameraStation = named(
     altM: z.number().describe('Metres above ground level'),
     headingDeg: z.number(),
     gimbalPitchDeg: z.number(),
+    zoom: z
+      .number()
+      .min(1)
+      .describe('Camera zoom; above 1 where the station stands further off to keep 50 m separation'),
     viewpointId: ViewpointId.nullable()
   })
 )
@@ -291,7 +295,9 @@ export const PlanHold = named(
     kind: z.enum(['weather', 'lightning', 'separation']),
     segmentId: SegmentId.nullable().describe('null holds the whole launch'),
     until: Timestamp.nullable().describe('null waits for a person to confirm the path is clear'),
-    reason: z.string()
+    reason: z.string(),
+    releasedBy: UserId.nullable().describe('The pilot who recorded the path clear; never set by the planner'),
+    releasedAt: Timestamp.nullable()
   })
 )
 export type PlanHold = z.infer<typeof PlanHold>

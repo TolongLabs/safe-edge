@@ -1077,6 +1077,8 @@ export interface components {
             altM: number;
             headingDeg: number;
             gimbalPitchDeg: number;
+            /** @description Camera zoom; above 1 where the station stands further off to keep 50 m separation */
+            zoom: number;
             viewpointId: string | null;
         };
         PatrolTask: {
@@ -1094,6 +1096,8 @@ export interface components {
             altM: number;
             headingDeg: number;
             gimbalPitchDeg: number;
+            /** @description Camera zoom; above 1 where the station stands further off to keep 50 m separation */
+            zoom: number;
             viewpointId: string | null;
             /** @enum {string} */
             kind: "takeoff" | "transit" | "station" | "landing";
@@ -1111,6 +1115,9 @@ export interface components {
             /** @description null waits for a person to confirm the path is clear */
             until: string | null;
             reason: string;
+            /** @description The pilot who recorded the path clear; never set by the planner */
+            releasedBy: string | null;
+            releasedAt: string | null;
         };
         /** @enum {string} */
         RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";

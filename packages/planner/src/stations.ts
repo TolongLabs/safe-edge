@@ -188,7 +188,8 @@ function stationsAlong(segment: Segment, flightLine: LineString, spacingM: numbe
         lat,
         altM: altitudeM,
         headingDeg: bearing([lon, lat], aim),
-        gimbalPitchDeg: -Math.atan2(altitudeM, distance([lon, lat], aim, meters)) / DEG
+        gimbalPitchDeg: -Math.atan2(altitudeM, distance([lon, lat], aim, meters)) / DEG,
+        zoom: 1
       }
     }
   })
