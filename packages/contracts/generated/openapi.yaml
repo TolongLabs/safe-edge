@@ -230,6 +230,43 @@ paths:
       x-safe-edge-roles:
         - pilot
       x-safe-edge-events: []
+  /patrol-plans/{id}/holds/{segmentId}/release:
+    post:
+      operationId: releasePlanHold
+      summary: Record that the pilot or observer saw a waiting segment's path clear
+      description: "Roles: pilot. Agents are refused."
+      tags:
+        - patrol-plans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^plan_
+        - name: segmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^seg_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Record that the pilot or observer saw a waiting segment's path clear
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatrolPlan"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - pilot
+      x-safe-edge-events: []
   /patrols:
     get:
       operationId: listPatrols
@@ -1713,6 +1750,7 @@ components:
         - invalid_transition
         - remedy_not_approved
         - plan_not_approved
+        - weather_hold
     Denial:
       type: object
       properties:
@@ -2380,6 +2418,10 @@ components:
           type: number
         gimbalPitchDeg:
           type: number
+        zoom:
+          type: number
+          minimum: 1
+          description: Camera zoom; above 1 where the station stands further off to keep 50 m separation
         viewpointId:
           anyOf:
             - type: string
@@ -2391,6 +2433,7 @@ components:
         - altM
         - headingDeg
         - gimbalPitchDeg
+        - zoom
         - viewpointId
       additionalProperties: false
     PatrolTask:
@@ -2432,6 +2475,10 @@ components:
           type: number
         gimbalPitchDeg:
           type: number
+        zoom:
+          type: number
+          minimum: 1
+          description: Camera zoom; above 1 where the station stands further off to keep 50 m separation
         viewpointId:
           anyOf:
             - type: string
@@ -2462,6 +2509,7 @@ components:
         - altM
         - headingDeg
         - gimbalPitchDeg
+        - zoom
         - viewpointId
         - kind
         - segmentId
@@ -2491,11 +2539,24 @@ components:
           description: null waits for a person to confirm the path is clear
         reason:
           type: string
+        releasedBy:
+          anyOf:
+            - type: string
+              pattern: ^usr_
+            - type: "null"
+          description: The pilot who recorded the path clear; never set by the planner
+        releasedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
       required:
         - kind
         - segmentId
         - until
         - reason
+        - releasedBy
+        - releasedAt
       additionalProperties: false
     RejectionCode:
       type: string
@@ -4158,10 +4219,13 @@ components:
             - type: string
               format: date-time
             - type: "null"
+        simulated:
+          type: boolean
       required:
         - mediaType
         - dataBase64
         - capturedAt
+        - simulated
       additionalProperties: false
     EvidenceUrl:
       type: object

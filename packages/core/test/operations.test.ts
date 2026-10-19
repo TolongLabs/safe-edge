@@ -9,8 +9,9 @@ import {
   type OperationSpec,
   type PolicyRule
 } from '@safe-edge/contracts'
+import type { ThirdParty } from '@safe-edge/planner'
 import { verifyAuditChain } from '../src/index.ts'
-import { S1, playS1toRepair, startCore } from './support.ts'
+import { S1, playS1toRepair, plannerWith, startCore } from './support.ts'
 
 const coreOperations = (Object.keys(operations) as (keyof typeof operations)[]).filter(
   (id): id is CoreOperationId => operations[id].handledBy === 'core'
@@ -49,7 +50,17 @@ describe('the operations table in core', () => {
   })
 
   test('every core operation runs a real command for a caller the table allows', () => {
-    const h = startCore()
+    // Someone on S1's water edge (a vertex of its seed geometry), so its patrol plan has a separation hold to release.
+    const onTheEdge: ThirdParty = {
+      id: 'obs_person_s1',
+      kind: 'person',
+      label: 'person on the S1 edge',
+      geometry: { type: 'Point', coordinates: [101.5124058, 3.1786474] },
+      observedAt: '2026-10-24T23:00:00.000Z',
+      simulated: true,
+      source: 'fixture'
+    }
+    const h = startCore({ planner: plannerWith({ thirdParties: [onTheEdge] }) })
     const played = playS1toRepair(h)
     h.call('recordRetest', 'usr_reviewer', { body: played.retest })
 
@@ -76,6 +87,7 @@ describe('the operations table in core', () => {
     const patrol = h.call('startPatrol', 'usr_pilot', {
       body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' }
     }).data
+    h.call('releasePlanHold', 'usr_pilot', { params: { id: plan.id, segmentId: S1.segmentId } })
     h.call('completePatrol', 'usr_pilot', { params: { id: patrol.id }, body: { coverage: [] } })
 
     // Reads, each checked against its response schema by `call`.

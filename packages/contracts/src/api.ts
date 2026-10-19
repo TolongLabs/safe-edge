@@ -295,7 +295,8 @@ export const UploadEvidenceRequest = named(
   z.object({
     mediaType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
     dataBase64: z.string().min(1),
-    capturedAt: Timestamp.nullable()
+    capturedAt: Timestamp.nullable(),
+    simulated: z.boolean()
   })
 )
 export type UploadEvidenceRequest = z.infer<typeof UploadEvidenceRequest>
@@ -347,6 +348,7 @@ export type DemoResetResult = z.infer<typeof DemoResetResult>
 export const IdParam = {
   segment: z.object({ id: SegmentId }),
   patrolPlan: z.object({ id: PatrolPlanId }),
+  planHold: z.object({ id: PatrolPlanId, segmentId: SegmentId }),
   patrol: z.object({ id: PatrolId }),
   candidate: z.object({ id: CandidateId }),
   finding: z.object({ id: FindingId }),

@@ -29,7 +29,8 @@ export type PatrolPlanner = (input: {
   findings: Finding[]
 }) => PatrolPlan
 
-type PatrolOperation = 'createPatrolPlan' | 'approvePatrolPlan' | 'startPatrol' | 'completePatrol' | 'recordObservation'
+type PatrolOperation =
+  'createPatrolPlan' | 'approvePatrolPlan' | 'releasePlanHold' | 'startPatrol' | 'completePatrol' | 'recordObservation'
 
 export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<PatrolOperation> => ({
   createPatrolPlan: (tx, { body }) => {
@@ -81,11 +82,38 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     return ok(approved)
   },
 
+  // The planner never releases a hold; the pilot records what they or their observer saw. Audited like any write.
+  releasePlanHold: (tx, { params }) => {
+    const plan = tx.get('patrolPlans', params.id)
+    if (!plan) return tx.notFound(`No patrol plan ${params.id}`)
+    const index = plan.holds.findIndex((h) => h.kind === 'separation' && h.segmentId === params.segmentId)
+    if (index < 0) return tx.notFound(`${plan.id} has no separation hold on ${params.segmentId}`)
+    const hold = plan.holds[index]!
+    if (hold.releasedBy !== null) {
+      const message = `${plan.id}'s hold on ${params.segmentId} was released by ${hold.releasedBy} at ${hold.releasedAt}`
+      return tx.deny('invalid_transition', message, plan.id)
+    }
+    const released = {
+      ...plan,
+      holds: plan.holds.with(index, { ...hold, releasedBy: tx.actor.id, releasedAt: tx.now })
+    }
+    tx.put('patrolPlans', released)
+    return ok(released)
+  },
+
   startPatrol: (tx, { body }) => {
     const plan = tx.get('patrolPlans', body.planId)
     if (!plan) return tx.notFound(`No patrol plan ${body.planId}`)
     if (plan.status !== 'approved') {
       return tx.deny('plan_not_approved', `${plan.id} needs a pilot's approval before it can fly`, plan.id)
+    }
+    // Weather and lightning holds stop the launch until they end; separation holds wait at their segment in flight.
+    const launchHolds = plan.holds.filter(
+      (h) => h.segmentId === null && h.until !== null && Date.parse(tx.now) < Date.parse(h.until)
+    )
+    if (launchHolds.length > 0) {
+      const holds = launchHolds.map((h) => `${h.kind} hold until ${h.until}: ${h.reason}`).join('; ')
+      return tx.deny('weather_hold', `${plan.id} cannot launch yet: ${holds}`, plan.id)
     }
     const patrol: Patrol = {
       id: tx.id('ptl'),

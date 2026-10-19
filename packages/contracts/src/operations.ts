@@ -204,6 +204,18 @@ export const operations = {
     status: 200,
     events: []
   },
+  releasePlanHold: {
+    method: 'post',
+    path: '/patrol-plans/{id}/holds/{segmentId}/release',
+    summary: "Record that the pilot or observer saw a waiting segment's path clear",
+    handledBy: 'core',
+    roles: ['pilot'],
+    agentScope: null,
+    params: IdParam.planHold,
+    response: PatrolPlan,
+    status: 200,
+    events: []
+  },
   listPatrols: {
     method: 'get',
     path: '/patrols',

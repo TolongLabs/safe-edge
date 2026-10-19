@@ -46,10 +46,17 @@ afterAll(async () => {
   await dev.exited
 })
 
-test('bun run dev serves the API health check and the web app', async () => {
+test('bun run dev serves the API, with the seeded core behind the dev tokens, and the web app', async () => {
   const health = await waitFor(`http://localhost:${apiPort}/v1/health`)
   expect(health.status).toBe(200)
   expect(await health.json()).toEqual({ status: 'ok' })
+
+  // The API serves the seeded core to the dev tokens in data/elmina/fixtures/dev-tokens.json.
+  const segments = await fetch(`http://localhost:${apiPort}/v1/segments`, {
+    headers: { authorization: 'Bearer dev_manager' }
+  })
+  expect(segments.status).toBe(200)
+  expect(((await segments.json()) as unknown[]).length).toBe(47)
 
   const page = await waitFor(`http://localhost:${webPort}/`)
   expect(page.status).toBe(200)

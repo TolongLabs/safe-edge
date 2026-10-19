@@ -1,9 +1,8 @@
-// A minimal stand-in for the v1 API (#54), built only from core and the contracts, so the http transport is tested
-// over real HTTP: bearer tokens map to seeded users, routes come from the operations table, a denial is a 403 Denial.
-// It records each request's Idempotency-Key and does nothing else with it; #54 owns replay.
-import { operations, type CoreOperationId, type OperationSpec } from '@safe-edge/contracts'
+// Starts the real v1 API (apps/api, #54) on a free port with an injectable clock, so the http transport is proven
+// against the server it will meet. Bearer tokens `tok_<userId>` map to the seeded users. Each request's token and
+// Idempotency-Key are recorded so the tests can check what the transport sends.
 import { actorFor, counterIds, createCore } from '@safe-edge/core'
-import * as z from 'zod'
+import { createApp } from '../../../apps/api/src/app.ts'
 import { elminaSeed } from '../src/index.ts'
 
 export interface Received {
@@ -13,51 +12,25 @@ export interface Received {
   idempotencyKey: string | null
 }
 
-export function startTestApi() {
+export function startApi() {
   let now = elminaSeed.asOf
-  const core = createCore({ seed: elminaSeed, clock: { now: () => now }, ids: counterIds() })
-  const actors = new Map(elminaSeed.users.map((u) => [`tok_${u.id}`, actorFor(u)]))
-  const routes = (Object.keys(operations) as (keyof typeof operations)[])
-    .filter((id): id is CoreOperationId => operations[id].handledBy === 'core')
-    .map((id) => {
-      const op: OperationSpec = operations[id]
-      return { id, op, pattern: new RegExp(`^/v1${op.path.replace(/\{(\w+)\}/g, '(?<$1>[^/]+)')}$`) }
-    })
+  const clock = { now: () => now }
+  const ids = counterIds()
+  const core = createCore({ seed: elminaSeed, clock, ids })
+  const tokens = new Map(elminaSeed.users.map((u) => [`tok_${u.id}`, actorFor(u)]))
+  const app = createApp({ core, clock, ids, tokens, heartbeatMs: 5_000 })
   const received: Received[] = []
-  const fail = (status: number, error: string, message: string) =>
-    Response.json({ ok: false, error, message }, { status })
 
   const server = Bun.serve({
     port: 0,
-    async fetch(request) {
-      const url = new URL(request.url)
-      const authorization = request.headers.get('authorization')
+    fetch(request) {
       received.push({
         method: request.method,
-        path: url.pathname,
-        authorization,
+        path: new URL(request.url).pathname,
+        authorization: request.headers.get('authorization'),
         idempotencyKey: request.headers.get('idempotency-key')
       })
-      const actor = actors.get(authorization?.replace(/^Bearer /, '') ?? '')
-      if (!actor) return fail(401, 'unauthenticated', 'Unknown bearer token')
-
-      for (const { id, op, pattern } of routes) {
-        const match = op.method.toUpperCase() === request.method ? pattern.exec(url.pathname) : null
-        if (!match) continue
-        const input = {
-          params: { ...match.groups },
-          query: Object.fromEntries(url.searchParams),
-          body: op.body ? await request.json() : undefined
-        }
-        for (const part of ['params', 'query', 'body'] as const) {
-          const parsed = op[part]?.safeParse(input[part])
-          if (parsed && !parsed.success) return fail(400, 'invalid_input', z.prettifyError(parsed.error))
-        }
-        const result = core.dispatch(id, actor, input as never)
-        if (!result.ok) return Response.json(result, { status: 'rule' in result ? 403 : 404 })
-        return Response.json(result.data, { status: result.status })
-      }
-      return fail(404, 'not_found', `No route ${request.method} ${url.pathname}`)
+      return app.fetch(request)
     }
   })
 

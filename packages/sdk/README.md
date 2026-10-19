@@ -62,7 +62,8 @@ await demo.resetDemo() // the seed again, an empty audit chain, ID counters from
 import { createElminaPlanner, createSafeEdgeClient } from '@safe-edge/sdk'
 
 // Paths are repo-relative (`elminaLayerPaths` in @safe-edge/planner); serve those GeoJSON files from the app.
-const planner = await createElminaPlanner((path) => fetch(`/${path}`).then((r) => r.json()))
+// Third parties are what plans keep 50 m from, such as S1's people on the path (`ThirdParty` in @safe-edge/planner).
+const planner = await createElminaPlanner((path) => fetch(`/${path}`).then((r) => r.json()), { thirdParties: [] })
 const demo = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager', planner })
 ```
 

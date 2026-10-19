@@ -48,12 +48,14 @@ export async function demoPlan(readJson: (path: string) => Promise<unknown>) {
     forwardOverlap: 0.6,
     altitudeM: 9,
     altitudeCapM: 60,
-    window: { start: NOW, end: at(2), reason: 'requested' },
+    notBefore: NOW,
+    windowMinutes: 120,
     context: [reading('rainfall', 0), reading('water_level', 1)],
     waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 },
     passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: NOW })),
     flags: segments.map((s) => ({ segmentId: s.id, severity: null, readAt: NOW })),
-    geofences: []
+    geofences: [],
+    thirdParties: []
   })
   return { plan, dock, drone, groundAmslM }
 }

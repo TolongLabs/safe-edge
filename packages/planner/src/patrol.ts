@@ -6,8 +6,10 @@ import { lineString, point, polygon } from '@turf/helpers'
 import { PatrolPlan, type Dock, type DroneProfile, type PriorityScore, type Waypoint } from '@safe-edge/contracts'
 import type { MultiPolygon, Polygon, Position } from 'geojson'
 import { rankingPriority, scorePriority, type ScoreInputs } from './score.ts'
+import { keepSeparation, separationHold, separationReason, type Separation, type ThirdParty } from './separation.ts'
 import type { Edge, Segment } from './segments.ts'
 import { planStations, type Rejection, type SegmentTask, type Station } from './stations.ts'
+import { flightWindow } from './window.ts'
 
 const meters = { units: 'meters' } as const
 
@@ -52,19 +54,26 @@ export interface PatrolPlanInput extends ScoreInputs {
   altitudeM: number
   /** The cap agreed with air traffic control. */
   altitudeCapM: number
-  /** Waypoint times start at `window.start`. */
-  window: PatrolPlan['window']
+  /** The launch is no earlier than this. The window opens at the next first light at the dock, or later for weather. */
+  notBefore: string
+  /** How long the agreed window stays open after first light. The route must land before it closes. */
+  windowMinutes: number
   geofences: Geofence[]
+  /** People, vessels, vehicles and structures not under the pilot's control, from observations or the map. */
+  thirdParties: ThirdParty[]
 }
 
 interface Candidate {
   task: SegmentTask
-  /** The stations left after no-capture zones, in flight-line order. */
+  /** The stations left after no-capture zones and separation, in flight-line order. */
   stations: Station[]
+  /** Stations that wait for a clear pass. */
+  waiting: Separation['waiting']
   priority: PriorityScore
   rank: number
   /** Flying from the first station to the last and hovering at each. */
   energyWh: number
+  durationS: number
 }
 
 interface Stop {
@@ -77,14 +86,18 @@ interface Insertion extends Stop {
   /** Route position: 0 is straight after take-off. */
   index: number
   addedWh: number
+  addedS: number
   blockedBy: Geofence[]
 }
 
 /**
- * Scores the selected segments and builds a battery-aware route from the dock and back (TRD "Patrol planner" steps 2
- * and 3). Greedy insertion adds, at its cheapest place in the route, the task with the highest priority per added
- * watt-hour, while the whole route, return included, stays within the usable battery minus the reserve. Geofences
- * are hard limits. The plan comes back `proposed`: only a pilot's approval lets it fly.
+ * Scores the selected segments and builds a battery-aware route from the dock and back inside a flight window (TRD
+ * "Patrol planner" steps 2 to 4). The window opens at first light, or later when the weather gate holds the launch
+ * (see `flightWindow`). Greedy insertion adds, at its cheapest place in the route, the task with the highest priority
+ * per added watt-hour, while the whole route, return included, stays within the usable battery minus the reserve and
+ * lands before the window closes. Geofences are hard limits. Stations keep 50 m from third parties, standing further
+ * off with zoom or waiting for a clear pass (see `keepSeparation`). The plan comes back `proposed`: only a pilot's
+ * approval lets it fly.
  */
 export function planPatrol(input: PatrolPlanInput): PatrolPlan {
   const { dock, drone, altitudeM, altitudeCapM, geofences } = input
@@ -105,7 +118,19 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
     return noFly.filter((zone) => booleanIntersects(path, zone.geometry))
   })
 
+  const { window, holds } = flightWindow({
+    at: dockAt,
+    notBefore: input.notBefore,
+    windowMinutes: input.windowMinutes,
+    rainLimitMmPerH: dock.rainLimitMmPerH,
+    context: input.context
+  })
+
   const stationPlan = planStations({ ...input, camera: drone.camera })
+  const waterOf = (segmentId: string) => {
+    const { assetId } = input.segments.find((s) => s.id === segmentId)!
+    return polygon([input.edges.find((e) => e.assetId === assetId)!.geometry.coordinates])
+  }
   const rejected: Rejection[] = [...stationPlan.rejected]
   const pending: Candidate[] = []
   for (const task of stationPlan.tasks) {
@@ -114,15 +139,26 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
       station,
       zones: noCapture.filter((zone) => booleanIntersects(frame(station, task.footprint), zone.geometry))
     }))
-    const stations = framed.filter((f) => f.zones.length === 0).map((f) => f.station)
+    const framedIn = framed.filter((f) => f.zones.length === 0).map((f) => f.station)
     const excluded = framed.filter((f) => f.zones.length > 0)
     if (excluded.length > 0) {
       const zones = labels(excluded.flatMap((f) => f.zones))
       const reason =
-        stations.length === 0
+        framedIn.length === 0
           ? `every station's frame would cover no-capture zone ${zones}`
           : `stations ${excluded.map((f) => f.station.id).join(', ')} left out: their frames would cover no-capture zone ${zones}; the rest of the segment is planned`
       rejected.push({ segmentId, code: 'geofence', reason })
+      if (framedIn.length === 0) continue
+    }
+    const { stations, waiting, dropped } = keepSeparation(framedIn, input.thirdParties, {
+      water: waterOf(task.segmentId),
+      altitudeM,
+      rangeM: input.rangeM,
+      maxZoom: drone.camera.maxZoom
+    })
+    if (dropped.length > 0) {
+      const reason = separationReason(dropped, stations.length === 0, drone.camera.maxZoom)
+      rejected.push({ segmentId, code: 'separation_hold', reason })
       if (stations.length === 0) continue
     }
     const crossed = stations.slice(1).flatMap((s, i) => legBlockers(position(stations[i]!), position(s)))
@@ -132,18 +168,24 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
     }
     const priority = scorePriority(segmentId, input)
     const flownWh = stations.slice(1).reduce((wh, s, i) => wh + flyWh(position(stations[i]!), position(s)), 0)
+    const flownS = stations.slice(1).reduce((t, s, i) => t + flyS(position(stations[i]!), position(s)), 0)
     pending.push({
       task,
       stations,
+      waiting,
       priority,
       rank: rankingPriority(priority),
-      energyWh: flownWh + stations.length * hoverWh
+      energyWh: flownWh + stations.length * hoverWh,
+      durationS: flownS + stations.length * assumedEnergyModel.stationHoverS
     })
   }
 
   const route: Stop[] = []
   const budgetWh = drone.usableBatteryWh - drone.reserveWh
   let usedWh = 2 * climbWh
+  // The route must land before the window closes.
+  const windowS = (Date.parse(window.end) - Date.parse(window.start)) / 1000
+  let usedS = 2 * climbS
   const insertions = (candidate: Candidate): Insertion[] =>
     Array.from({ length: route.length + 1 }, (_, index) => {
       const before = index === 0 ? dockAt : ends(route[index - 1]!)[1]
@@ -155,6 +197,7 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
           reversed,
           index,
           addedWh: flyWh(before, entry) + candidate.energyWh + flyWh(exit, after) - flyWh(before, after),
+          addedS: flyS(before, entry) + candidate.durationS + flyS(exit, after) - flyS(before, after),
           blockedBy: [...legBlockers(before, entry), ...legBlockers(exit, after)]
         }
       })
@@ -163,30 +206,44 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
   for (;;) {
     const best = pending
       .flatMap(insertions)
-      .filter((ins) => ins.blockedBy.length === 0 && usedWh + ins.addedWh <= budgetWh)
+      .filter((ins) => ins.blockedBy.length === 0 && usedWh + ins.addedWh <= budgetWh && usedS + ins.addedS <= windowS)
       .reduce<Insertion | null>((a, b) => (a && !betterInsertion(b, a) ? a : b), null)
     if (!best) break
     route.splice(best.index, 0, { candidate: best.candidate, reversed: best.reversed })
     usedWh += best.addedWh
+    usedS += best.addedS
     pending.splice(pending.indexOf(best.candidate), 1)
   }
 
   for (const candidate of pending) {
+    const { segmentId } = candidate.task
     const options = insertions(candidate)
     const clear = options.filter((o) => o.blockedBy.length === 0)
+    // An insertion the battery could take was left out because the window closes first.
+    const charged = clear.filter((o) => usedWh + o.addedWh <= budgetWh)
     rejected.push(
       clear.length === 0
         ? {
-            segmentId: candidate.task.segmentId,
+            segmentId,
             code: 'geofence',
             reason: `every straight transit to it crosses no-fly zone ${labels(options.flatMap((o) => o.blockedBy))}`
           }
-        : {
-            segmentId: candidate.task.segmentId,
-            code: 'battery',
-            reason: `needs ${Math.min(...clear.map((o) => o.addedWh)).toFixed(1)} Wh more; ${(budgetWh - usedWh).toFixed(1)} Wh is left above the ${drone.reserveWh} Wh reserve`
-          }
+        : charged.length > 0
+          ? {
+              segmentId,
+              code: 'outside_window',
+              reason: `needs ${(Math.min(...charged.map((o) => o.addedS)) / 60).toFixed(1)} min more; ${((windowS - usedS) / 60).toFixed(1)} min left before the window closes at ${window.end}`
+            }
+          : {
+              segmentId,
+              code: 'battery',
+              reason: `needs ${Math.min(...clear.map((o) => o.addedWh)).toFixed(1)} Wh more; ${(budgetWh - usedWh).toFixed(1)} Wh is left above the ${drone.reserveWh} Wh reserve`
+            }
     )
+  }
+
+  for (const { candidate } of route) {
+    if (candidate.waiting.length > 0) holds.push(separationHold(candidate.task.segmentId, candidate.waiting))
   }
 
   const flown = route.flatMap((stop) =>
@@ -195,7 +252,7 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
   const waypoints: Waypoint[] = []
   let clockS = 0
   let energyWh = 0
-  const startMs = Date.parse(input.window.start)
+  const startMs = Date.parse(window.start)
   const arrive = (
     kind: Waypoint['kind'],
     at: Position,
@@ -213,7 +270,7 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
     const out = bearing(dockAt, position(flown[0]!.station))
     const home = bearing(position(flown.at(-1)!.station), dockAt)
     const atDock = (altM: number, headingDeg: number) =>
-      ({ altM, headingDeg, gimbalPitchDeg: 0, viewpointId: null, segmentId: null }) as const
+      ({ altM, headingDeg, gimbalPitchDeg: 0, zoom: 1, viewpointId: null, segmentId: null }) as const
     let from = dockAt
     const fly = (to: Position) => {
       clockS += flyS(from, to)
@@ -246,9 +303,9 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
     returnDockId: dock.id,
     droneProfileId: drone.id,
     context: input.context,
-    window: input.window,
+    window,
     altitudeCapM,
-    holds: [],
+    holds,
     tasks: route.map((stop) => ({
       segmentId: stop.candidate.task.segmentId,
       flightLine: { type: 'LineString', coordinates: ordered(stop, stop.candidate.task.flightLine.coordinates) },

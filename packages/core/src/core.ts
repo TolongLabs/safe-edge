@@ -2,9 +2,11 @@ import {
   Actor,
   operations,
   type CoreOperationId,
+  type Denial,
   type Dispatch,
   type DispatchResult,
   type EdgeEvent,
+  type OperationId,
   type OperationInput,
   type OperationSpec
 } from '@safe-edge/contracts'
@@ -40,6 +42,12 @@ export interface Core {
   /** The single entry point both transports call: access check, command, events, audit. */
   dispatch: Dispatch
   /**
+   * The operations-table access check (`authorize`) alone, with a refusal appended to the audit chain as `dispatch` does.
+   * For a transport that refuses before it validates input, or that serves the operation itself (`handledBy: 'api'`).
+   * `input` only names the refused record.
+   */
+  checkAccess(operationId: OperationId, actor: Actor, input?: { params?: unknown; body?: unknown }): Denial | null
+  /**
    * Time-driven pass moves: valid → expiring 30 days before `validTo`, and → expired at `validTo`. Acts as the system,
    * which the one-way rule never lets make a pass valid. Returns the events to publish.
    */
@@ -67,6 +75,13 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   const handlers: Handlers = { ...reads, ...patrolHandlers(planner), ...inbox, ...fixLens, ...work, ...notices }
   const openTx = (actor: Actor, now: string) => new Tx(state, actor, now, (prefix) => ids.next(prefix), seed.townshipId)
 
+  const checkAccess = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {
+    const who = Actor.parse(actor)
+    const refused = authorize(operationId, operations[operationId], who)
+    if (refused) openTx(who, clock.now()).commitDenial(operationId, refused.rule, defaultSubject(operationId, input))
+    return refused
+  }
+
   const dispatch = <K extends CoreOperationId>(
     operationId: K,
     actor: Actor,
@@ -78,11 +93,8 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     const tx = openTx(who, clock.now())
     const raw = (input ?? {}) as { params?: unknown; query?: unknown; body?: unknown }
 
-    const refused = authorize(operationId, op, who)
-    if (refused) {
-      tx.commitDenial(operationId, refused.rule, defaultSubject(operationId, raw))
-      return refused
-    }
+    const refused = checkAccess(operationId, who, raw)
+    if (refused) return refused
 
     const parsed = {
       ...(op.params && { params: op.params.parse(raw.params) }),
@@ -136,7 +148,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     return structuredClone(tx.events)
   }
 
-  return { dispatch: dispatch as Dispatch, tick }
+  return { dispatch: dispatch as Dispatch, checkAccess, tick }
 }
 
 /** The record a refused call was about, from its input; the operation itself when there is none. */
