@@ -7,6 +7,10 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "hono": "^4.13.13"
+    "@safe-edge/contracts": "workspace:*",
+    "@safe-edge/core": "workspace:*",
+    "@safe-edge/planner": "workspace:*",
+    "hono": "^4.13.13",
+    "zod": "^4.6.7"
   }
 }
