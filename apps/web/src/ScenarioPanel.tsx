@@ -3,7 +3,8 @@ import {
   type ElminaScene,
   type FlightPoint,
   type FlightState,
-  type PassState
+  type PassState,
+  type SceneMarkers
 } from '@safe-edge/scene'
 import {
   createScenarioPlayer,
@@ -57,6 +58,52 @@ function latestPlan(played: readonly Played[]): PlanResult | null {
   return null
 }
 
+const itemLabels = new Map(elminaSeed.segments.flatMap((s) => s.expectedInventory.map((i) => [i.id, i.label] as const)))
+const statusWords = { missing: 'missing', changed: 'changed', not_visible: 'not visible', present: 'present' } as const
+
+/** What the scene marks for the demo's state: every candidate as a pin, dropped frames and unseen stretches. */
+async function markersOf(client: ScenarioPlayer['client']): Promise<SceneMarkers> {
+  const [candidates, audit, patrols] = await Promise.all([
+    client.listCandidates({}),
+    client.listAudit({}),
+    client.listPatrols()
+  ])
+  const live = candidates.filter((c) => c.status !== 'rejected')
+  const what = (c: (typeof candidates)[number]) =>
+    c.inventoryItemId
+      ? `${itemLabels.get(c.inventoryItemId) ?? c.inventoryItemId} ${statusWords[c.itemStatus ?? 'changed']}`
+      : c.rationale
+  return {
+    pins: live.map((c) => ({
+      id: c.id,
+      segmentId: c.segmentId,
+      itemId: c.inventoryItemId,
+      tier: c.tier,
+      label: what(c)
+    })),
+    dropped: audit
+      .filter((e) => e.action === 'recordObservation')
+      .map((e) => e.after as { id: string; privacyAction: string; pose: { lon: number; lat: number; altM: number } })
+      .filter((o) => o.privacyAction === 'discarded')
+      .map((o) => ({ id: o.id, pose: o.pose, label: 'frame dropped: person' })),
+    unknowns: [
+      ...live
+        .filter((c) => c.itemStatus === 'not_visible')
+        .map((c) => ({ id: c.id, segmentId: c.segmentId, itemId: c.inventoryItemId, label: 'Unknown: field check' })),
+      ...patrols.flatMap((p) =>
+        p.coverage
+          .filter((c) => c.unknownM > 0)
+          .map((c) => ({
+            id: `${p.id}-${c.segmentId}`,
+            segmentId: c.segmentId,
+            itemId: null,
+            label: 'Unknown: not inspected'
+          }))
+      )
+    ]
+  }
+}
+
 function flightView(plan: PlanResult) {
   const dock = elminaSeed.docks.find((d) => d.id === plan.dockId)
   const drone = elminaSeed.droneProfiles.find((d) => d.id === plan.droneProfileId)
@@ -74,7 +121,14 @@ function flightView(plan: PlanResult) {
  * fixed-step clock. The scene draws the planned patrol and the drone where drone-sim has it, and recolours segments
  * as their passes change.
  */
-export function ScenarioPanel({ scene }: { scene: ElminaScene }) {
+export function ScenarioPanel({
+  scene,
+  onPasses
+}: {
+  scene: ElminaScene
+  /** The demo's passes after every step, for the screens beside the scene. */
+  onPasses: (passes: Array<{ segmentId: string; state: PassState; validTo: string | null }>) => void
+}) {
   const [id, setId] = useState<Scenario['id']>(() => {
     const asked = new URLSearchParams(location.search).get('scenario')
     return elminaScenarios.some((s) => s.id === asked) ? (asked as Scenario['id']) : 's1'
@@ -109,11 +163,13 @@ export function ScenarioPanel({ scene }: { scene: ElminaScene }) {
           if (plan && (plan.id !== shown.current.planId || rewound)) scene.showFlight(flightView(plan))
           if (!plan && shown.current.planId !== null) scene.showFlight(null)
           shown.current = { ...shown.current, planId: plan?.id ?? null, now: created.now }
-          const [status, passes] = await Promise.all([
+          const [status, passes, markers] = await Promise.all([
             plan ? created.client.droneStatus(DRONE) : null,
-            created.client.listPasses({})
+            created.client.listPasses({}),
+            markersOf(created.client)
           ])
           if (mine !== latest) return
+          scene.setMarkers(markers)
           const placed = status ? scene.placeDrone(status) : null
           // The camera picks up the drone when it leaves the dock during playback.
           const flying = status?.state === 'in_flight'
@@ -123,6 +179,7 @@ export function ScenarioPanel({ scene }: { scene: ElminaScene }) {
           scene.setPassStates(
             Object.fromEntries(passes.map((p) => [p.segmentId, p.state as PassState])) as Record<string, PassState>
           )
+          onPasses(passes.map((p) => ({ segmentId: p.segmentId, state: p.state as PassState, validTo: p.validTo })))
           setVersion((v) => v + 1)
         }
         unsubscribe = created.subscribe(() => void sync())
@@ -134,11 +191,11 @@ export function ScenarioPanel({ scene }: { scene: ElminaScene }) {
       cancelled = true
       unsubscribe()
     }
-  }, [id, scene])
+  }, [id, scene, onPasses])
 
   const card: React.CSSProperties = {
     position: 'absolute',
-    left: 12,
+    right: 12,
     bottom: 12,
     width: 'min(380px, calc(100% - 24px))',
     padding: 16,

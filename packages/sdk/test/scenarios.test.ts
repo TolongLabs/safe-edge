@@ -55,6 +55,29 @@ describe('SIM-5: the scenario player plays S1 to S6 on the memory transport', ()
     expect(await player.client.listFindings({})).toMatchObject([{ id: 'fnd_1', segmentId: S1_SEGMENT }])
   })
 
+  test('S1 shows each simulated event the scene marks: a dropped frame, an unknown and a flag', async () => {
+    const player = await playerFor('s1')
+    await player.seek(scenario('s1').end)
+    const observations = (await player.client.listAudit({}))
+      .filter((e) => e.action === 'recordObservation')
+      .map((e) => e.after as { id: string; privacyAction: string; image: unknown; simulated: boolean })
+    expect(observations.map((o) => [o.id, o.privacyAction, o.image, o.simulated])).toEqual([
+      ['obs_1', 'discarded', null, true],
+      ['obs_2', 'none', null, true],
+      ['obs_3', 'none', null, true]
+    ])
+    const candidates = await player.client.listCandidates({})
+    expect(candidates.map((c) => [c.id, c.tier, c.itemStatus, c.simulated])).toEqual([
+      ['cand_1', 3, 'not_visible', true],
+      ['cand_2', 2, 'missing', true]
+    ])
+    // Unknown stays unknown: the hidden ring buoy waits for a field check on foot.
+    expect((await player.client.listTasks({})).map((t) => [t.id, t.kind, t.status])).toEqual([
+      ['task_1', 'field_check', 'open'],
+      ['task_2', 'interim_protection', 'done']
+    ])
+  })
+
   test('S2: Fix Lens shows fix A leaves the way around the fence end open and fix B closes both routes', async () => {
     const player = await playerFor('s2')
     await player.seek(scenario('s2').end)

@@ -1,7 +1,7 @@
 {
   "id": "s1",
   "title": "S1, after-rain patrol",
-  "summary": "Simulated. A heavy-rain reading at JPS station 27880 queues a patrol of three lake segments. The dock holds through the rain and the thunderstorm warning, then launches in the next dry window once the pilot records the footway and segment 10's path clear. Edge Watch reports fence panel 4 missing by the playground path, a Tier 2 candidate, and the segment's pass is suspended. The manager confirms it in the Inbox and the crew puts up interim protection.",
+  "summary": "Simulated. A heavy-rain reading at JPS station 27880 queues a patrol of three lake segments. The dock holds through the rain and the thunderstorm warning, then launches in the next dry window once the pilot records the footway and segment 10's path clear. The privacy gate drops a frame with a jogger in it. Glare hides a ring buoy, so it stays unknown and opens a field check. Edge Watch reports fence panel 4 missing by the playground path, a Tier 2 candidate, and the segment's pass is suspended. The manager confirms it in the Inbox and the crew puts up interim protection.",
   "simulated": true,
   "source": "scenario",
   "after": null,
@@ -113,7 +113,60 @@
           "droneId": "sim-1"
         }
       },
-      "note": "The pilot starts patrol ptl_1: the simulated drone takes off from the roof dock. It photographs each segment's fixed viewpoints (obs_1, obs_2 on segment 12) and lands at 06:41:51."
+      "note": "The pilot starts patrol ptl_1: the simulated drone takes off from the roof dock. It photographs each segment's fixed viewpoints (obs_2, obs_3 on segment 12) and lands at 06:41:51."
+    },
+    {
+      "at": "2026-10-21T22:38:40.000Z",
+      "type": "observation",
+      "as": "usr_drone_sim",
+      "operationId": "recordObservation",
+      "input": {
+        "body": {
+          "patrolId": "ptl_1",
+          "segmentId": "seg_866518980_11",
+          "viewpointId": "vp_866518980_11_1",
+          "captureSource": "drone",
+          "image": null,
+          "pose": {
+            "lon": 101.51341060073783,
+            "lat": 3.178947621992866,
+            "altM": 9,
+            "headingDeg": -30.880438987853314,
+            "pitchDeg": -36.88106782942296
+          },
+          "capturedAt": "2026-10-21T22:38:40.000Z",
+          "quality": {
+            "sharpness": 0.9,
+            "alignmentResidualPx": 1.6,
+            "occlusion": 0.2
+          },
+          "privacyAction": "discarded",
+          "simulated": true
+        }
+      },
+      "note": "06:38: a jogger runs through the first frame at viewpoint 1. The privacy gate drops it before storage (obs_1 keeps no image) and the drone takes the view again."
+    },
+    {
+      "at": "2026-10-21T22:41:00.000Z",
+      "type": "candidate",
+      "as": "usr_drone_sim",
+      "operationId": "raiseCandidate",
+      "input": {
+        "body": {
+          "segmentId": "seg_866518980_11",
+          "observationIds": ["obs_3"],
+          "inventoryItemId": "item_866518980_11_ring_buoy",
+          "itemStatus": "not_visible",
+          "class": "inventory_item",
+          "score": 0.5,
+          "uncertainty": "high",
+          "gridCell": "D2",
+          "rationale": "Low sun glare on the water hides the ring buoy by the playground path",
+          "model": null,
+          "simulated": true
+        }
+      },
+      "note": "06:41: low sun glare on the water hides the ring buoy at viewpoint 2. Unknown stays unknown: cand_1 is a Tier 3 candidate and opens a field check for someone on foot."
     },
     {
       "at": "2026-10-21T22:42:00.000Z",
@@ -123,7 +176,7 @@
       "input": {
         "body": {
           "segmentId": "seg_866518980_11",
-          "observationIds": ["obs_2"],
+          "observationIds": ["obs_3"],
           "inventoryItemId": "item_866518980_11_fence_panel_4",
           "itemStatus": "missing",
           "class": "inventory_item",
@@ -135,7 +188,7 @@
           "simulated": true
         }
       },
-      "note": "06:42: Edge Watch compares viewpoint 2 with its baseline and reports fence panel 4 missing, a Tier 2 candidate (cand_1). A missing safety item suspends pass_866518980_11 at once."
+      "note": "06:42: Edge Watch compares viewpoint 2 with its baseline and reports fence panel 4 missing, a Tier 2 candidate (cand_2). A missing safety item suspends pass_866518980_11 at once."
     },
     {
       "at": "2026-10-21T23:05:00.000Z",
@@ -144,14 +197,14 @@
       "operationId": "decideCandidate",
       "input": {
         "params": {
-          "id": "cand_1"
+          "id": "cand_2"
         },
         "body": {
           "decision": "confirm",
           "severity": "high"
         }
       },
-      "note": "07:05: the manager compares the photos in the Inbox and confirms it. Core opens finding fnd_1, interim protection task task_1 and draft work order wo_1."
+      "note": "07:05: the manager compares the photos in the Inbox and confirms it. Core opens finding fnd_1, interim protection task task_2 and draft work order wo_1."
     },
     {
       "at": "2026-10-21T23:40:00.000Z",
@@ -160,10 +213,10 @@
       "operationId": "completeTask",
       "input": {
         "params": {
-          "id": "task_1"
+          "id": "task_2"
         }
       },
-      "note": "07:40: the crew puts up a temporary barrier at the gap and closes task_1. The pass stays suspended until a repair is proven."
+      "note": "07:40: the crew puts up a temporary barrier at the gap and closes task_2. The pass stays suspended until a repair is proven."
     }
   ]
 }
