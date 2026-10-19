@@ -283,7 +283,7 @@ export interface paths {
         };
         /**
          * A candidate with its observations and baseline
-         * @description Roles: manager, engineer, reviewer. Agents need scope `inspection.read`.
+         * @description Roles: manager, engineer, reviewer, system. Agents need scope `inspection.read`.
          */
         get: operations["getCandidate"];
         put?: never;
@@ -540,6 +540,26 @@ export interface paths {
          * @description Roles: manager. Agents need scope `workorder.draft`.
          */
         patch: operations["updateWorkOrder"];
+        trace?: never;
+    };
+    "/work-orders/{id}/external-ref": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record the external work-order system's record for a work order, once (system only)
+         * @description Roles: system. Agents are refused.
+         */
+        post: operations["setWorkOrderExternalRef"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/work-orders/{id}/submit": {
@@ -1564,6 +1584,9 @@ export interface components {
             remedyId?: string | null;
             notes?: string;
         };
+        SetWorkOrderExternalRefRequest: {
+            externalRef: string;
+        };
         SubmitWorkOrderRequest: {
             installerUserId: string;
             /** Format: date-time */
@@ -2565,6 +2588,39 @@ export interface operations {
         };
         responses: {
             /** @description Edit a draft work order (remedy, notes) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    setWorkOrderExternalRef: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetWorkOrderExternalRefRequest"];
+            };
+        };
+        responses: {
+            /** @description Record the external work-order system's record for a work order, once (system only) */
             200: {
                 headers: {
                     [name: string]: unknown;

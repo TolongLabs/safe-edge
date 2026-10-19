@@ -7,9 +7,11 @@ import {
   type OperationInput,
   type OperationSpec,
   type Operations,
-  type Webhook
+  type Webhook,
+  type WorkOrderProvider
 } from '@safe-edge/contracts'
 import type { Clock, Core, IdGenerator } from '@safe-edge/core'
+import type { EvidenceReader } from '@safe-edge/providers'
 import { Hono, type Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
 import { streamSSE } from 'hono/streaming'
@@ -18,6 +20,7 @@ import * as z from 'zod'
 import { createEventHub } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
+import { forwardWorkOrders } from './work-orders.ts'
 
 export interface ApiOptions {
   core: Core
@@ -28,6 +31,11 @@ export interface ApiOptions {
   tokens: ReadonlyMap<string, Actor>
   /** Interval of the SSE heartbeat comment. Keep it under Bun.serve's `idleTimeout` (10 s by default). */
   heartbeatMs: number
+  /**
+   * The work-order system that accepted findings go to (Procore), built with a reader for uploaded evidence. Without
+   * it, work orders stay in Safe Edge.
+   */
+  workOrders?: (readEvidence: EvidenceReader) => WorkOrderProvider
 }
 
 type Env = { Variables: { actor: Actor } }
@@ -40,10 +48,14 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
   c.json({ ok: false, error, message } satisfies ApiError, status)
 
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
-export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions) {
+export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   const hub = createEventHub()
   const evidence = createEvidenceStore({ clock, ids })
+  if (workOrders) {
+    const provider = workOrders(async (ref) => evidence.bytes(ref))
+    forwardWorkOrders({ core, subscribe: hub.subscribe, provider })
+  }
   app.get('/health', (c) => c.json({ status: 'ok' }))
   // Where getEvidenceUrl points. The signed query is the credential, so it takes no bearer token.
   app.get('/evidence/:id/content', (c) => {

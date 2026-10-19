@@ -41,6 +41,15 @@ export function createEvidenceStore({ clock, ids }: { clock: Clock; ids: IdGener
       return { url: url.href, expiresAt }
     },
 
+    /** The uploaded image behind an evidence reference, for the server's own use. Fixture paths are not stored here. */
+    bytes(ref: EvidenceRef): Uint8Array<ArrayBuffer> {
+      const file = files.get(ref.id)
+      if (file === undefined || ref.uri !== `evidence://${ref.id}`) {
+        throw new Error(`No uploaded evidence at ${ref.uri}`)
+      }
+      return file.bytes
+    },
+
     /** The stored image, when the signature matches and the URL has not expired. */
     read(id: string, expires: string, signature: string) {
       const expected = Buffer.from(sign(id, expires))

@@ -203,6 +203,13 @@ export const UpdateWorkOrderRequest = named(
 )
 export type UpdateWorkOrderRequest = z.infer<typeof UpdateWorkOrderRequest>
 
+/** The record an external work-order system created for the work order's finding. */
+export const SetWorkOrderExternalRefRequest = named(
+  'SetWorkOrderExternalRefRequest',
+  z.object({ externalRef: z.string().min(1) })
+)
+export type SetWorkOrderExternalRefRequest = z.infer<typeof SetWorkOrderExternalRefRequest>
+
 export const SubmitWorkOrderRequest = named(
   'SubmitWorkOrderRequest',
   z.object({ installerUserId: UserId, dueAt: Timestamp })
