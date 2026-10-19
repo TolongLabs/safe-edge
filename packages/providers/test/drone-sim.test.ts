@@ -290,8 +290,8 @@ describe('drone-sim waits at a separation hold', () => {
     h.sim.tick()
     expect(h.events.some((e) => e.type === 'landed')).toBe(false)
     expect((await h.sim.getStatus('sim-1')).pose).toMatchObject({ lon: lastStation.lon, lat: lastStation.lat })
-    const frames = h.events.flatMap((e) => (e.type === 'observation' ? [[e.waypointIndex, e.segmentId]] : []))
-    expect(frames).toEqual(replanned.waypoints.flatMap((w, i) => (w.kind === 'station' ? [[i, w.segmentId]] : [])))
+    const frames = h.events.flatMap((e) => (e.type === 'observation' ? [`${e.waypointIndex} ${e.segmentId}`] : []))
+    expect(frames).toEqual(replanned.waypoints.flatMap((w, i) => (w.kind === 'station' ? [`${i} ${w.segmentId}`] : [])))
 
     const released = h.call('releasePlanHold', 'usr_pilot', { params: { id: replanned.id, segmentId: 'dock' } }).data
     await h.sim.updatePatrol(run.id, released, approval(released))
