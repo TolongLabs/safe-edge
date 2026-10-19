@@ -181,6 +181,8 @@ export function openJournal(db: Database, { seed, clock, ids }: { seed: Seed; cl
         }
         throw error
       }
+      // An append that failed while something caught its error: nothing of the section may commit.
+      if (broken) abort(broken)
       try {
         alongside(result)
         db.run('commit')
