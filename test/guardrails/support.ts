@@ -8,11 +8,12 @@ import {
   type CreatePatrolPlanRequest,
   type OperationId,
   type OperationSpec,
+  type RecordInventoryCheckRequest,
   type Role
 } from '@safe-edge/contracts'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { expect } from 'bun:test'
-import { S1, fixtureDevTokens, startApi } from '../../apps/api/test/support.ts'
+import { S1, fixtureDevTokens, seed, startApi } from '../../apps/api/test/support.ts'
 import type { Stage } from '../../packages/sdk/test/story.ts'
 
 export { S1, raiseTier2, tier2Candidate } from '../../apps/api/test/support.ts'
@@ -89,6 +90,24 @@ export async function answer(request: Promise<Response>) {
 
 /** A 403 naming the policy rule, as the API sends it. */
 export const denied = (rule: string) => ({ status: 403, body: { ok: false, rule, message: expect.any(String) } })
+
+/** An inventory check of S1's viewpoint that finds every item in place, so it raises nothing. */
+export const s1Check = (observationId: string) =>
+  ({
+    observationId,
+    items: seed.segments
+      .find((s) => s.id === S1.segmentId)!
+      .viewpoints.find((v) => v.id === S1.viewpointId)!
+      .expectedItemIds.map((id) => ({
+        inventoryItemId: id,
+        status: 'present',
+        score: 0.9,
+        uncertainty: 'low',
+        gridCell: 'B3',
+        rationale: 'In place'
+      })),
+    model: null
+  }) satisfies RecordInventoryCheckRequest
 
 /** A patrol over S1 from the township's only dock and drone. */
 export const patrolRequest = {

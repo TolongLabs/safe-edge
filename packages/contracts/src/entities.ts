@@ -9,6 +9,7 @@ import {
   DroneProfileId,
   EvidenceRef,
   FindingId,
+  InventoryCheckId,
   InventoryItemId,
   LineString,
   NoticeId,
@@ -502,6 +503,46 @@ export const Candidate = named(
   })
 )
 export type Candidate = z.infer<typeof Candidate>
+
+/** One expected item as an observation showed it. A result other than `present` becomes a candidate with these fields. */
+export const ItemResult = named(
+  'ItemResult',
+  z.object({
+    inventoryItemId: InventoryItemId,
+    status: ItemStatus,
+    score: z.number().min(0).max(1),
+    uncertainty: Uncertainty.nullable(),
+    gridCell: z
+      .string()
+      .regex(/^[A-D][1-4]$/)
+      .nullable(),
+    rationale: z.string()
+  })
+)
+export type ItemResult = z.infer<typeof ItemResult>
+
+/** Edge Watch's report on one observation (PRD WATCH-6): every item its viewpoint expects, once, and what it raised. */
+export const InventoryCheck = named(
+  'InventoryCheck',
+  z.object({
+    id: InventoryCheckId,
+    observationId: ObservationId,
+    segmentId: SegmentId,
+    viewpointId: ViewpointId,
+    patrolId: PatrolId.nullable().describe("The observation's patrol; null for a phone capture outside a patrol"),
+    items: z.array(ItemResult).describe("In the viewpoint's order"),
+    candidateIds: z.array(CandidateId).describe('One per item that was not present'),
+    model: z.string().nullable().describe('The model that judged the items; null for scripted or human input'),
+    checkedBy: ActorRef,
+    checkedAt: Timestamp,
+    ...provenance
+  })
+)
+export type InventoryCheck = z.infer<typeof InventoryCheck>
+
+/** What false flags are counted by (PRD WATCH-7): the item type for an expected-inventory flag, else its class. */
+export const FlagClass = named('FlagClass', z.enum([...InventoryItemType.options, ...OTHER_CHANGE_CLASSES]))
+export type FlagClass = z.infer<typeof FlagClass>
 
 export const Severity = named('Severity', z.enum(['low', 'medium', 'high']))
 export type Severity = z.infer<typeof Severity>

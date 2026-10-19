@@ -25,12 +25,16 @@ import {
   EdgeContext,
   EdgePassList,
   EvidenceUrl,
+  FalseFlagReport,
   FindingList,
   IdParam,
   InboxDraft,
+  InventoryCheckList,
+  InventoryCheckResult,
   ListAuditQuery,
   ListCandidatesQuery,
   ListFindingsQuery,
+  ListInventoryChecksQuery,
   ListNoticesQuery,
   ListPassesQuery,
   ListTasksQuery,
@@ -40,6 +44,7 @@ import {
   PatrolList,
   PatrolPlanList,
   RaiseCandidateRequest,
+  RecordInventoryCheckRequest,
   RecordObservationRequest,
   RecordRetestRequest,
   RegisterWebhookRequest,
@@ -280,6 +285,31 @@ export const operations = {
     status: 201,
     events: []
   },
+  recordInventoryCheck: {
+    method: 'post',
+    path: '/inventory-checks',
+    summary:
+      "Report every item an observation's viewpoint expects as present, missing, changed or not visible; core raises a candidate for each item not present",
+    handledBy: 'core',
+    roles: ['provider', 'crew', 'system'],
+    agentScope: null,
+    body: RecordInventoryCheckRequest,
+    response: InventoryCheckResult,
+    status: 201,
+    events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
+  },
+  listInventoryChecks: {
+    method: 'get',
+    path: '/inventory-checks',
+    summary: 'Per-item results at fixed viewpoints, by segment or patrol',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'inspection.read',
+    query: ListInventoryChecksQuery,
+    response: InventoryCheckList,
+    status: 200,
+    events: []
+  },
 
   // Inbox
   listCandidates: {
@@ -331,6 +361,17 @@ export const operations = {
     response: CandidateDecision,
     status: 200,
     events: ['edge.candidate.decided.v1', 'edge.work_order.drafted.v1']
+  },
+  getFalseFlags: {
+    method: 'get',
+    path: '/false-flags',
+    summary: 'False flags per patrol and class against the budget, and the classes over it, for the board',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    response: FalseFlagReport,
+    status: 200,
+    events: []
   },
   listFindings: {
     method: 'get',

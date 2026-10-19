@@ -413,6 +413,76 @@ paths:
         - provider
         - crew
       x-safe-edge-events: []
+  /inventory-checks:
+    post:
+      operationId: recordInventoryCheck
+      summary: Report every item an observation's viewpoint expects as present, missing, changed or not visible; core raises a candidate for each item not present
+      description: "Roles: provider, crew, system. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1."
+      tags:
+        - inventory-checks
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordInventoryCheckRequest"
+      responses:
+        "201":
+          description: Report every item an observation's viewpoint expects as present, missing, changed or not visible; core raises a candidate for each item not present
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryCheckResult"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - provider
+        - crew
+        - system
+      x-safe-edge-events:
+        - edge.candidate.raised.v1
+        - edge.pass.suspended.v1
+    get:
+      operationId: listInventoryChecks
+      summary: Per-item results at fixed viewpoints, by segment or patrol
+      description: "Roles: any. Agents need scope `inspection.read`."
+      tags:
+        - inventory-checks
+      parameters:
+        - name: segmentId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: ^seg_
+        - name: patrolId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: ^ptl_
+      responses:
+        "200":
+          description: Per-item results at fixed viewpoints, by segment or patrol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryCheckList"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: inspection.read
+      x-safe-edge-events: []
   /candidates:
     get:
       operationId: listCandidates
@@ -563,6 +633,27 @@ paths:
       x-safe-edge-events:
         - edge.candidate.decided.v1
         - edge.work_order.drafted.v1
+  /false-flags:
+    get:
+      operationId: getFalseFlags
+      summary: False flags per patrol and class against the budget, and the classes over it, for the board
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - false-flags
+      responses:
+        "200":
+          description: False flags per patrol and class against the budget, and the classes over it, for the board
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FalseFlagReport"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /findings:
     get:
       operationId: listFindings
@@ -1903,6 +1994,7 @@ components:
         - remedy_not_approved
         - plan_not_approved
         - weather_hold
+        - every_item_reported
     Denial:
       type: object
       properties:
@@ -3239,6 +3331,113 @@ components:
         - simulated
         - source
       additionalProperties: false
+    ItemResult:
+      type: object
+      properties:
+        inventoryItemId:
+          type: string
+          pattern: ^item_
+        status:
+          $ref: "#/components/schemas/ItemStatus"
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        uncertainty:
+          anyOf:
+            - $ref: "#/components/schemas/Uncertainty"
+            - type: "null"
+        gridCell:
+          anyOf:
+            - type: string
+              pattern: ^[A-D][1-4]$
+            - type: "null"
+        rationale:
+          type: string
+      required:
+        - inventoryItemId
+        - status
+        - score
+        - uncertainty
+        - gridCell
+        - rationale
+      additionalProperties: false
+    InventoryCheck:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^chk_
+        observationId:
+          type: string
+          pattern: ^obs_
+        segmentId:
+          type: string
+          pattern: ^seg_
+        viewpointId:
+          type: string
+          pattern: ^vp_
+        patrolId:
+          anyOf:
+            - type: string
+              pattern: ^ptl_
+            - type: "null"
+          description: The observation's patrol; null for a phone capture outside a patrol
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemResult"
+          description: In the viewpoint's order
+        candidateIds:
+          type: array
+          items:
+            type: string
+            pattern: ^cand_
+          description: One per item that was not present
+        model:
+          description: The model that judged the items; null for scripted or human input
+          type:
+            - string
+            - "null"
+        checkedBy:
+          $ref: "#/components/schemas/ActorRef"
+        checkedAt:
+          type: string
+          format: date-time
+        simulated:
+          type: boolean
+        source:
+          $ref: "#/components/schemas/Source"
+      required:
+        - id
+        - observationId
+        - segmentId
+        - viewpointId
+        - patrolId
+        - items
+        - candidateIds
+        - model
+        - checkedBy
+        - checkedAt
+        - simulated
+        - source
+      additionalProperties: false
+    FlagClass:
+      type: string
+      enum:
+        - fence_panel
+        - cover
+        - grating
+        - gate
+        - ring_buoy
+        - sign
+        - worn_path
+        - bank_change
+        - vegetation
+        - floating_debris
+        - water_level_change
+        - text_in_image
+        - other
     Severity:
       type: string
       enum:
@@ -3859,6 +4058,10 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Patrol"
+    InventoryCheckList:
+      type: array
+      items:
+        $ref: "#/components/schemas/InventoryCheck"
     CandidateList:
       type: array
       items:
@@ -4036,6 +4239,92 @@ components:
         - quality
         - privacyAction
         - simulated
+      additionalProperties: false
+    RecordInventoryCheckRequest:
+      type: object
+      properties:
+        observationId:
+          type: string
+          pattern: ^obs_
+        items:
+          minItems: 1
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemResult"
+        model:
+          type:
+            - string
+            - "null"
+      required:
+        - observationId
+        - items
+        - model
+      additionalProperties: false
+    InventoryCheckResult:
+      type: object
+      properties:
+        check:
+          $ref: "#/components/schemas/InventoryCheck"
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Candidate"
+      required:
+        - check
+        - candidates
+      additionalProperties: false
+    FalseFlagReport:
+      type: object
+      properties:
+        budgetPerPatrol:
+          type: integer
+          exclusiveMinimum: 0
+        patrols:
+          type: array
+          items:
+            type: object
+            properties:
+              patrolId:
+                type: string
+                pattern: ^ptl_
+              startedAt:
+                type: string
+                format: date-time
+              classes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    flagClass:
+                      $ref: "#/components/schemas/FlagClass"
+                    reviewed:
+                      type: integer
+                      exclusiveMinimum: 0
+                      description: Flags a person confirmed, rejected or sent to recapture
+                    falseFlags:
+                      type: integer
+                      minimum: 0
+                      description: Flags a person rejected
+                  required:
+                    - flagClass
+                    - reviewed
+                    - falseFlags
+                  additionalProperties: false
+            required:
+              - patrolId
+              - startedAt
+              - classes
+            additionalProperties: false
+          description: Patrols with reviewed flags, oldest first
+        overBudget:
+          type: array
+          items:
+            $ref: "#/components/schemas/FlagClass"
+          description: "Classes whose latest reviewed patrol went over the budget: core raises their flags at Tier 1, not 2"
+      required:
+        - budgetPerPatrol
+        - patrols
+        - overBudget
       additionalProperties: false
     RaiseCandidateRequest:
       type: object

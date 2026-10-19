@@ -16,6 +16,7 @@ import {
   playS1toS3,
   raiseTier2,
   S1,
+  s1Check,
   startGuardedApi,
   tier2Candidate
 } from './support.ts'
@@ -186,28 +187,36 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   )
   const validBefore = await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))
 
+  const observation = {
+    patrolId: patrol.id,
+    segmentId: S1.segmentId,
+    viewpointId: S1.viewpointId,
+    captureSource: 'drone',
+    image: null,
+    pose: { lon: 101.51341, lat: 3.178948, altM: 9, headingDeg: -30.9, pitchDeg: -36.9 },
+    capturedAt: '2026-10-22T05:30:00.000Z',
+    quality: { sharpness: 0.92, alignmentResidualPx: 1.4, occlusion: 0.05 },
+    privacyAction: 'none',
+    simulated: true
+  }
+  // An observation is checked once, so each automation token checks its own: S1's frame, and one more.
+  const toCheck: Record<string, string> = {
+    dev_system: played.candidate.observationIds[0]!,
+    dev_drone_sim: (await json(api.request('post', '/observations', { token: 'dev_drone_sim', body: observation }))).id
+  }
+
   // What each automation role sends where the table lets it act. A row the table opens to them later has no
   // request here, and the test fails until it gets one.
-  const requests: Partial<Record<OperationId, unknown>> = {
+  const requests = (token: string): Partial<Record<OperationId, unknown>> => ({
     createPatrolPlan: patrolRequest,
     raiseCandidate: tier2Candidate,
-    recordObservation: {
-      patrolId: patrol.id,
-      segmentId: S1.segmentId,
-      viewpointId: S1.viewpointId,
-      captureSource: 'drone',
-      image: null,
-      pose: { lon: 101.51341, lat: 3.178948, altM: 9, headingDeg: -30.9, pitchDeg: -36.9 },
-      capturedAt: '2026-10-22T05:30:00.000Z',
-      quality: { sharpness: 0.92, alignmentResidualPx: 1.4, occlusion: 0.05 },
-      privacyAction: 'none',
-      simulated: true
-    },
+    recordObservation: observation,
+    recordInventoryCheck: s1Check(toCheck[token]!),
     completePatrol: { coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }] },
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
     setWorkOrderExternalRef: { externalRef: 'procore-observation-1' }
-  }
+  })
   const ids = {
     'patrol-plans': flying.id,
     patrols: patrol.id,
@@ -221,6 +230,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   const writes = httpOperations.filter(([, op]) => op.method !== 'get')
   for (const token of ['dev_system', 'dev_drone_sim']) {
     const { role } = api.actorOf(token)
+    const sent = requests(token)
     for (const [operationId, op] of writes) {
       const allowed = op.roles === 'any' || op.roles.includes(role)
       if (!allowed) {
@@ -228,8 +238,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
         expect({ token, operationId, ...refused }).toEqual({ token, operationId, ...denied('role_forbidden') })
         continue
       }
-      if (!(operationId in requests)) throw new Error(`No ${role} request for ${operationId}`)
-      const response = await api.request(op.method, pathFor(op, ids), { token, body: requests[operationId] })
+      if (!(operationId in sent)) throw new Error(`No ${role} request for ${operationId}`)
+      const response = await api.request(op.method, pathFor(op, ids), { token, body: sent[operationId] })
       expect({ token, operationId, ok: response.ok }).toEqual({ token, operationId, ok: true })
     }
   }
@@ -289,6 +299,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     eventTypes: ['edge.pass.issued.v1']
   })
   await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
+  await as('dev_drone_sim', 'post', '/inventory-checks', s1Check(played.candidate.observationIds[0]!))
 
   // And one refused attempt at every write: the agent at a people-only row, otherwise a role the row leaves out.
   const ids = {

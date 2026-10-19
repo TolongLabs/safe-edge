@@ -1,10 +1,82 @@
-import type { Candidate, Finding, Task, WorkOrder } from '@safe-edge/contracts'
-import { movePass, tierFor } from '../policy.ts'
+import type {
+  Candidate,
+  Denial,
+  Finding,
+  InventoryCheck,
+  InventoryItem,
+  RaiseCandidateRequest,
+  Segment,
+  Task,
+  WorkOrder
+} from '@safe-edge/contracts'
+import { falseFlagReport, flagClassOf, itemOf, movePass, tierFor } from '../policy.ts'
+import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
 const DECIDED = { confirm: 'confirmed', reject: 'rejected', recapture: 'needs_recapture' } as const
 
-export const inbox: Handlers<'raiseCandidate' | 'decideCandidate' | 'completeTask'> = {
+/**
+ * Raises one candidate on a checked segment and item. Core assigns the tier, under the false-flag budget; a Tier 2
+ * suspends the segment's pass in the same transaction, and a Tier 3 opens a field check.
+ */
+function raise(tx: Tx, segment: Segment, item: InventoryItem | null, body: RaiseCandidateRequest): Candidate | Denial {
+  const flagClass = flagClassOf(item, body.class)
+  const overBudget = flagClass !== null && falseFlagReport(tx).overBudget.includes(flagClass)
+  const candidate: Candidate = {
+    id: tx.id('cand'),
+    ...body,
+    tier: tierFor(item, body.itemStatus, overBudget),
+    status: 'candidate',
+    raisedBy: { type: tx.actor.type, id: tx.actor.id },
+    raisedAt: tx.now,
+    decidedBy: null,
+    decidedAt: null,
+    decisionReason: null,
+    source: tx.source
+  }
+  tx.put('candidates', candidate)
+  tx.emit(
+    'edge.candidate.raised.v1',
+    { candidateId: candidate.id, segmentId: segment.id, tier: candidate.tier, simulated: candidate.simulated },
+    segment.id
+  )
+
+  // Suspicion suspends, in this same transaction.
+  const pass = segment.passId === null ? null : tx.must('passes', segment.passId)
+  if (candidate.tier === 2 && pass && (pass.state === 'valid' || pass.state === 'expiring')) {
+    const suspended = movePass(tx, pass, {
+      to: 'suspended',
+      reason: `Tier 2 candidate ${candidate.id} awaiting review`
+    })
+    if ('rule' in suspended) return suspended
+    tx.emit(
+      'edge.pass.suspended.v1',
+      { passId: pass.id, segmentId: segment.id, candidateId: candidate.id, simulated: pass.simulated },
+      segment.id
+    )
+  }
+
+  // Tier 3: the item was not visible, so the segment is not inspected there until someone checks in the field.
+  if (candidate.tier === 3) {
+    const task: Task = {
+      id: tx.id('task'),
+      kind: 'field_check',
+      segmentId: segment.id,
+      findingId: null,
+      assigneeUserId: tx.must('assets', segment.assetId).custodianUserId,
+      status: 'open',
+      reason: `${item?.label ?? 'An expected item'} was not visible (${candidate.id}); check it in the field`,
+      dueAt: null,
+      createdAt: tx.now,
+      simulated: candidate.simulated,
+      source: tx.source
+    }
+    tx.put('tasks', task)
+  }
+  return candidate
+}
+
+export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decideCandidate' | 'completeTask'> = {
   raiseCandidate: (tx, { body }) => {
     const segment = tx.get('segments', body.segmentId)
     if (!segment) return tx.notFound(`No segment ${body.segmentId}`)
@@ -15,59 +87,69 @@ export const inbox: Handlers<'raiseCandidate' | 'decideCandidate' | 'completeTas
     const item =
       body.inventoryItemId === null ? null : segment.expectedInventory.find((i) => i.id === body.inventoryItemId)
     if (item === undefined) return tx.notFound(`Segment ${segment.id} expects no item ${body.inventoryItemId}`)
+    const raised = raise(tx, segment, item, body)
+    return 'rule' in raised ? raised : ok(raised)
+  },
 
-    const candidate: Candidate = {
-      id: tx.id('cand'),
-      ...body,
-      tier: tierFor(item, body.itemStatus),
-      status: 'candidate',
-      raisedBy: { type: tx.actor.type, id: tx.actor.id },
-      raisedAt: tx.now,
-      decidedBy: null,
-      decidedAt: null,
-      decisionReason: null,
+  // Edge Watch reports every item a viewpoint expects (PRD WATCH-6): an item left out would read as inspected.
+  recordInventoryCheck: (tx, { body }) => {
+    const observation = tx.get('observations', body.observationId)
+    if (!observation) return tx.notFound(`No observation ${body.observationId}`)
+    const earlier = tx.all('inventoryChecks').find((c) => c.observationId === observation.id)
+    if (earlier) {
+      return tx.deny('invalid_transition', `${observation.id} was already checked as ${earlier.id}`, observation.id)
+    }
+    const segment = tx.must('segments', observation.segmentId)
+    const viewpoint = segment.viewpoints.find((v) => v.id === observation.viewpointId)
+    if (viewpoint === undefined) {
+      throw new Error(`store integrity: ${segment.id} has no viewpoint ${observation.viewpointId}`)
+    }
+    const reported = body.items.map((r) => r.inventoryItemId)
+    const unexpected = reported.find((id) => !viewpoint.expectedItemIds.includes(id))
+    if (unexpected) return tx.notFound(`${viewpoint.id} expects no item ${unexpected}`)
+    const twice = reported.find((id, i) => reported.indexOf(id) !== i)
+    if (twice) {
+      return tx.deny('every_item_reported', `${observation.id}'s check reports ${twice} twice`, observation.id)
+    }
+    const unreported = viewpoint.expectedItemIds.find((id) => !reported.includes(id))
+    if (unreported) {
+      const message = `${viewpoint.id} expects ${unreported}, which ${observation.id}'s check does not report`
+      return tx.deny('every_item_reported', message, observation.id)
+    }
+
+    const items = viewpoint.expectedItemIds.map((id) => body.items.find((r) => r.inventoryItemId === id)!)
+    const candidates: Candidate[] = []
+    for (const result of items.filter((r) => r.status !== 'present')) {
+      const { inventoryItemId, status, ...judgement } = result
+      const raised = raise(tx, segment, itemOf(tx, { segmentId: segment.id, inventoryItemId }), {
+        segmentId: segment.id,
+        observationIds: [observation.id],
+        inventoryItemId,
+        itemStatus: status,
+        class: 'inventory_item',
+        ...judgement,
+        model: body.model,
+        simulated: observation.simulated
+      })
+      if ('rule' in raised) return raised
+      candidates.push(raised)
+    }
+    const check: InventoryCheck = {
+      id: tx.id('chk'),
+      observationId: observation.id,
+      segmentId: segment.id,
+      viewpointId: viewpoint.id,
+      patrolId: observation.patrolId,
+      items,
+      candidateIds: candidates.map((c) => c.id),
+      model: body.model,
+      checkedBy: { type: tx.actor.type, id: tx.actor.id },
+      checkedAt: tx.now,
+      simulated: observation.simulated,
       source: tx.source
     }
-    tx.put('candidates', candidate)
-    tx.emit(
-      'edge.candidate.raised.v1',
-      { candidateId: candidate.id, segmentId: segment.id, tier: candidate.tier, simulated: candidate.simulated },
-      segment.id
-    )
-
-    // Suspicion suspends, in this same transaction.
-    const pass = segment.passId === null ? null : tx.must('passes', segment.passId)
-    if (candidate.tier === 2 && pass && (pass.state === 'valid' || pass.state === 'expiring')) {
-      const suspended = movePass(tx, pass, {
-        to: 'suspended',
-        reason: `Tier 2 candidate ${candidate.id} awaiting review`
-      })
-      if ('rule' in suspended) return suspended
-      tx.emit(
-        'edge.pass.suspended.v1',
-        { passId: pass.id, segmentId: segment.id, candidateId: candidate.id, simulated: pass.simulated },
-        segment.id
-      )
-    }
-
-    // Tier 3: the item was not visible, so the segment is not inspected there until someone checks in the field.
-    if (candidate.tier === 3) {
-      const task: Task = {
-        id: tx.id('task'),
-        kind: 'field_check',
-        segmentId: segment.id,
-        findingId: null,
-        assigneeUserId: tx.must('assets', segment.assetId).custodianUserId,
-        status: 'open',
-        reason: `${item?.label ?? 'An expected item'} was not visible (${candidate.id}); check it in the field`,
-        dueAt: null,
-        createdAt: tx.now,
-        simulated: candidate.simulated,
-        source: tx.source
-      }
-      tx.put('tasks', task)
-    }
-    return ok(candidate)
+    tx.put('inventoryChecks', check)
+    return ok({ check, candidates })
   },
 
   decideCandidate: (tx, { params, body }) => {

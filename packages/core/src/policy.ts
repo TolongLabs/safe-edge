@@ -1,8 +1,12 @@
 import {
   Scope,
   type Actor,
+  type Candidate,
+  type CandidateClass,
   type Denial,
   type EdgePass,
+  type FalseFlagReport,
+  type FlagClass,
   type InventoryItem,
   type ItemStatus,
   type OperationSpec,
@@ -45,12 +49,75 @@ export function actorFor(user: User): Actor {
 
 /**
  * Core assigns tiers, never the caller: a missing or changed safety-critical item is Tier 2, an item that was not
- * visible is Tier 3 (a field check), and everything else, including every generic image change, is Tier 1.
+ * visible is Tier 3 (a field check), and everything else, including every generic image change, is Tier 1. A flag
+ * whose class is over its false-flag budget drops from Tier 2 to Tier 1, so noise stops suspending passes.
  */
-export function tierFor(item: InventoryItem | null, itemStatus: ItemStatus | null): Tier {
+export function tierFor(item: InventoryItem | null, itemStatus: ItemStatus | null, overBudget: boolean): Tier {
   if (itemStatus === 'not_visible') return 3
-  if (item?.safetyCritical && (itemStatus === 'missing' || itemStatus === 'changed')) return 2
+  if (item?.safetyCritical && (itemStatus === 'missing' || itemStatus === 'changed')) return overBudget ? 1 : 2
   return 1
+}
+
+/** The proposed false flags allowed per patrol and class (PRD WATCH-7); a hypothesis to tune with SDP. */
+export const FALSE_FLAG_BUDGET = 10
+
+/**
+ * What a flag's false flags count against: the item type for an expected-inventory flag, else its class. Null for an
+ * expected-inventory flag that names no item, which no budget covers.
+ */
+export function flagClassOf(item: InventoryItem | null, candidateClass: CandidateClass): FlagClass | null {
+  if (candidateClass !== 'inventory_item') return candidateClass
+  return item?.type ?? null
+}
+
+/**
+ * Reviewed flags and false (rejected) flags per patrol and class. A flag belongs to the patrol of its first observation
+ * made on one; flags from phone captures outside a patrol count against no patrol. A class is over budget when the
+ * latest patrol with reviewed flags of that class rejected more than the budget, so one quieter patrol restores it.
+ */
+export function falseFlagReport(tx: Tx): FalseFlagReport {
+  const byPatrol = new Map<string, Map<FlagClass, { reviewed: number; falseFlags: number }>>()
+  for (const candidate of tx.all('candidates')) {
+    if (candidate.status === 'candidate') continue
+    const patrolId = candidate.observationIds.map((id) => tx.must('observations', id).patrolId).find((p) => p !== null)
+    if (patrolId === undefined) continue
+    const flagClass = flagClassOf(itemOf(tx, candidate), candidate.class)
+    if (flagClass === null) continue
+    const classes = byPatrol.get(patrolId) ?? new Map()
+    const counts = classes.get(flagClass) ?? { reviewed: 0, falseFlags: 0 }
+    classes.set(flagClass, {
+      reviewed: counts.reviewed + 1,
+      falseFlags: counts.falseFlags + (candidate.status === 'rejected' ? 1 : 0)
+    })
+    byPatrol.set(patrolId, classes)
+  }
+  const patrols = [...byPatrol]
+    .map(([patrolId, classes]) => ({
+      patrolId,
+      startedAt: tx.must('patrols', patrolId).startedAt,
+      classes: [...classes]
+        .map(([flagClass, counts]) => ({ flagClass, ...counts }))
+        .toSorted((a, b) => a.flagClass.localeCompare(b.flagClass))
+    }))
+    .toSorted((a, b) => a.startedAt.localeCompare(b.startedAt) || a.patrolId.localeCompare(b.patrolId))
+  const latest = new Map<FlagClass, number>()
+  for (const patrol of patrols) for (const c of patrol.classes) latest.set(c.flagClass, c.falseFlags)
+  const overBudget = [...latest]
+    .filter(([, falseFlags]) => falseFlags > FALSE_FLAG_BUDGET)
+    .map(([flagClass]) => flagClass)
+    .toSorted()
+  return { budgetPerPatrol: FALSE_FLAG_BUDGET, patrols, overBudget }
+}
+
+/** The expected item a candidate names, or null. */
+export function itemOf(tx: Tx, candidate: Pick<Candidate, 'segmentId' | 'inventoryItemId'>): InventoryItem | null {
+  if (candidate.inventoryItemId === null) return null
+  const item = tx
+    .must('segments', candidate.segmentId)
+    .expectedInventory.find((i) => i.id === candidate.inventoryItemId)
+  if (item === undefined)
+    throw new Error(`store integrity: ${candidate.segmentId} has no item ${candidate.inventoryItemId}`)
+  return item
 }
 
 /**
