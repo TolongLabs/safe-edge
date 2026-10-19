@@ -8,6 +8,7 @@ import {
   type ThirdParty
 } from '@safe-edge/contracts'
 import { canonicalJson } from '../audit.ts'
+import { passesQualityGate } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
@@ -232,8 +233,9 @@ export const patrolHandlers = (
     if (body.patrolId !== null && !tx.get('patrols', body.patrolId)) return tx.notFound(`No patrol ${body.patrolId}`)
     const observation = { id: tx.id('obs'), ...body, source: tx.source }
     tx.put('observations', observation)
-    // A frame taken since a recapture was asked for is the re-shoot, unless the privacy gate discarded it.
-    if (observation.privacyAction !== 'discarded') {
+    // A frame taken since a recapture was asked for is the re-shoot, unless the privacy gate discarded it or it fails
+    // the quality gate: low quality means recapture.
+    if (observation.privacyAction !== 'discarded' && passesQualityGate(observation.quality)) {
       const takenAt = Date.parse(observation.capturedAt)
       closeRecaptures(
         tx,

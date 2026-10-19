@@ -1,6 +1,6 @@
 // INBOX-2's recapture leaves owned work, like confirm: a task to capture the viewpoint again, through dispatch.
 import { describe, expect, test } from 'bun:test'
-import type { Task } from '@safe-edge/contracts'
+import type { ImageQuality, Task } from '@safe-edge/contracts'
 import { S1, observeS1, raiseOnS1, seed, startCore, type Harness } from './support.ts'
 
 function sendForRecapture(h: Harness, reason = 'Blurred frame') {
@@ -98,6 +98,42 @@ describe('A recapture task is done when the viewpoint is captured again', () => 
       ['recordObservation', retaken.data.id, 'usr_crew'],
       ['recordObservation', task!.id, 'usr_crew']
     ])
+  })
+})
+
+describe('Low quality means recapture (TRD perception routing)', () => {
+  test('a blurred, misaligned or occluded re-shoot leaves the task open; one that passes the quality gate closes it', () => {
+    const h = startCore()
+    const { decision } = sendForRecapture(h)
+    const [task] = decision.data.tasks
+    const viewpoint = seed.segments.find((s) => s.id === S1.segmentId)!.viewpoints.find((v) => v.id === S1.viewpointId)!
+    const good: ImageQuality = { sharpness: 0.95, alignmentResidualPx: 1.1, occlusion: 0.02 }
+    const frame = (quality: Partial<ImageQuality>) =>
+      h.call('recordObservation', 'usr_crew', {
+        body: {
+          patrolId: null,
+          segmentId: S1.segmentId,
+          viewpointId: S1.viewpointId,
+          captureSource: 'phone',
+          image: null,
+          pose: viewpoint.pose,
+          capturedAt: h.now(),
+          quality: { ...good, ...quality },
+          privacyAction: 'none',
+          simulated: true
+        }
+      })
+    const status = () => h.call('listTasks', 'usr_manager', { query: {} }).data.find((t) => t.id === task!.id)!.status
+
+    h.setNow('2026-10-20T03:00:00.000Z')
+    frame({ sharpness: 0.31 })
+    frame({ alignmentResidualPx: 9.5 })
+    frame({ occlusion: 0.4 })
+    expect(status()).toBe('open')
+
+    // No baseline to align against (alignment residual null) is not a failed alignment.
+    frame({ alignmentResidualPx: null })
+    expect(status()).toBe('done')
   })
 })
 
