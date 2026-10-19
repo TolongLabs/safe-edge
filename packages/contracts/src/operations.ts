@@ -233,7 +233,7 @@ export const operations = {
   releasePlanHold: {
     method: 'post',
     path: '/patrol-plans/{id}/holds/{segmentId}/release',
-    summary: "Record that the pilot or observer saw a waiting segment's path clear",
+    summary: "Record that the pilot or observer saw a waiting segment's path, or the dock, clear",
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,

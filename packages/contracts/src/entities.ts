@@ -18,12 +18,14 @@ import {
   PatrolId,
   PatrolPlanId,
   PhotoMark,
+  Point,
   Polygon,
   Pose,
   Quote,
   RemedyId,
   RetestId,
   RouteId,
+  Source,
   SegmentId,
   TaskId,
   Timestamp,
@@ -242,6 +244,28 @@ export const ContextSnapshot = named(
 )
 export type ContextSnapshot = z.infer<typeof ContextSnapshot>
 
+/**
+ * A person, vessel, vehicle or structure not under the remote pilot's control, as a create-plan request reports it
+ * (core stamps the source). CAR 2016 regulation 143(1)(e)–(g): no flight within 50 m of one, nor within 30 m of any
+ * person during take-off or landing, without the Director General's authorisation.
+ */
+export const ReportedThirdParty = named(
+  'ReportedThirdParty',
+  z.object({
+    id: z.string().min(1),
+    kind: z.enum(['person', 'vessel', 'vehicle', 'structure']),
+    label: z.string().describe('As people should read it, e.g. "3 people on the lakeside footway"'),
+    geometry: z.union([Point, LineString, Polygon]),
+    observedAt: Timestamp.nullable().describe('When it was seen; null for a mapped structure'),
+    simulated: z.boolean()
+  })
+)
+export type ReportedThirdParty = z.infer<typeof ReportedThirdParty>
+
+/** A third party with its provenance, as the seed records it and the planner port takes it. Not on the REST API. */
+export const ThirdParty = ReportedThirdParty.extend({ source: Source })
+export type ThirdParty = z.infer<typeof ThirdParty>
+
 /** Each part is 0–1, or null when its input is stale or missing ("unknown", never zero). */
 export const PriorityScore = named(
   'PriorityScore',
@@ -280,7 +304,10 @@ export const PatrolTask = named(
     flightLine: LineString,
     stations: z.array(CameraStation),
     priority: PriorityScore,
-    energyWh: z.number().nonnegative().describe('Flying the task and hovering at its stations, without transit')
+    energyWh: z
+      .number()
+      .nonnegative()
+      .describe('Flying the task, hovering at its stations and any wait for a separation hold, without transit')
   })
 )
 export type PatrolTask = z.infer<typeof PatrolTask>
@@ -310,10 +337,22 @@ export const PlanHold = named(
 )
 export type PlanHold = z.infer<typeof PlanHold>
 
-/** Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off. */
+/**
+ * Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off.
+ * `authorisation`: it would fly over or within 150 m of a designated area without the Director General's authorisation.
+ */
 export const RejectionCode = named(
   'RejectionCode',
-  z.enum(['battery', 'geofence', 'flight_line', 'weather_hold', 'separation_hold', 'stale_input', 'outside_window'])
+  z.enum([
+    'battery',
+    'geofence',
+    'flight_line',
+    'weather_hold',
+    'separation_hold',
+    'stale_input',
+    'outside_window',
+    'authorisation'
+  ])
 )
 export type RejectionCode = z.infer<typeof RejectionCode>
 
@@ -389,6 +428,14 @@ export const PatrolPlan = named(
     energyWh: z.number().nonnegative(),
     reserveWh: z.number().nonnegative().describe("Energy left on landing; at least the drone profile's reserve"),
     rejected: z.array(z.object({ segmentId: SegmentId, code: RejectionCode, reason: z.string() })),
+    authorisation: z
+      .object({
+        ref: z.string().describe("The Director General's authorisation the flight relies on"),
+        reason: z.string().describe('The designated areas the route flies over or within 150 m of'),
+        simulated: z.boolean().describe('True for an assumed authorisation, such as a fixture')
+      })
+      .nullable()
+      .describe('CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area'),
     replan: PlanReplan.nullable().describe('null for a plan a person or the agent asked for'),
     approvedBy: UserId.nullable(),
     approvedAt: Timestamp.nullable(),

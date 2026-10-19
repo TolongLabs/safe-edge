@@ -210,6 +210,8 @@ describe('PLAN-4: plans that have not flown, and patrols the triggers queue', ()
     expect(replanned!.window).toMatchObject({ reason: 'next_dry_window' })
     expect(Date.parse(replanned!.window.start)).toBeGreaterThan(Date.parse(plan.window.end))
     expect(replanned!.holds.map((x) => x.kind)).toEqual(['weather'])
+    // The seed's S1 path crowd would hold the path segment, but its 2-minute wait does not fit the 90 Wh battery.
+    expect(replanned!.rejected.find((r) => r.segmentId === 'seg_866518980_9')?.code).toBe('battery')
 
     // The same reading again changes nothing; a new trigger re-plans the newest plan, not the one it superseded.
     expect(subscriber.onTrigger({ kind: 'heavy_rain', reading })).toEqual([])

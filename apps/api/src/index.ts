@@ -19,7 +19,8 @@ const seed = Seed.parse(await readJson('data/elmina/fixtures/seed.json'))
 // The wall clock, or with SAFE_EDGE_CLOCK=scenario the clock a scenario player sets (refused in production).
 const clock = clockFrom(process.env, seed.asOf)
 const ids = counterIds()
-// The seed maps no third parties and no observation feeds them yet (DECISIONS #79), so plans see none.
+// Observed third parties reach plans through core: the seed's (S1's path crowd) and each create-plan request's. Mapped
+// structures such as buildings arrive with #59's Overpass extract; the research extract maps none.
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
 const core = createCore({ seed, clock, ids, planner })
 

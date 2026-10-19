@@ -254,7 +254,7 @@ paths:
   /patrol-plans/{id}/holds/{segmentId}/release:
     post:
       operationId: releasePlanHold
-      summary: Record that the pilot or observer saw a waiting segment's path clear
+      summary: Record that the pilot or observer saw a waiting segment's path, or the dock, clear
       description: "Roles: pilot. Agents are refused."
       tags:
         - patrol-plans
@@ -269,12 +269,16 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            pattern: ^seg_
+            anyOf:
+              - type: string
+                pattern: ^seg_
+              - type: string
+                const: dock
+            description: The held segment, or `dock` for the take-off and landing hold on the plan's dock
         - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
-          description: Record that the pilot or observer saw a waiting segment's path clear
+          description: Record that the pilot or observer saw a waiting segment's path, or the dock, clear
           content:
             application/json:
               schema:
@@ -1951,6 +1955,22 @@ components:
         - provider
         - model
         - system
+    Point:
+      type: object
+      properties:
+        type:
+          type: string
+          const: Point
+        coordinates:
+          minItems: 2
+          maxItems: 3
+          type: array
+          items:
+            type: number
+      required:
+        - type
+        - coordinates
+      additionalProperties: false
     LineString:
       type: object
       properties:
@@ -2159,6 +2179,7 @@ components:
         - plan_not_approved
         - plan_superseded
         - weather_hold
+        - separation_hold
         - outside_window
         - invalid_coverage
     Denial:
@@ -2787,6 +2808,43 @@ components:
         - simulated
         - source
       additionalProperties: false
+    ReportedThirdParty:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          enum:
+            - person
+            - vessel
+            - vehicle
+            - structure
+        label:
+          type: string
+          description: As people should read it, e.g. "3 people on the lakeside footway"
+        geometry:
+          anyOf:
+            - $ref: "#/components/schemas/Point"
+            - $ref: "#/components/schemas/LineString"
+            - $ref: "#/components/schemas/Polygon"
+        observedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+          description: When it was seen; null for a mapped structure
+        simulated:
+          type: boolean
+      required:
+        - id
+        - kind
+        - label
+        - geometry
+        - observedAt
+        - simulated
+      additionalProperties: false
     PriorityScore:
       type: object
       properties:
@@ -2876,7 +2934,7 @@ components:
         energyWh:
           type: number
           minimum: 0
-          description: Flying the task and hovering at its stations, without transit
+          description: Flying the task, hovering at its stations and any wait for a separation hold, without transit
       required:
         - segmentId
         - flightLine
@@ -2991,6 +3049,7 @@ components:
         - separation_hold
         - stale_input
         - outside_window
+        - authorisation
     ReplanTrigger:
       oneOf:
         - type: object
@@ -3186,6 +3245,26 @@ components:
               - code
               - reason
             additionalProperties: false
+        authorisation:
+          anyOf:
+            - type: object
+              properties:
+                ref:
+                  type: string
+                  description: The Director General's authorisation the flight relies on
+                reason:
+                  type: string
+                  description: The designated areas the route flies over or within 150 m of
+                simulated:
+                  type: boolean
+                  description: True for an assumed authorisation, such as a fixture
+              required:
+                - ref
+                - reason
+                - simulated
+              additionalProperties: false
+            - type: "null"
+          description: CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area
         replan:
           anyOf:
             - $ref: "#/components/schemas/PlanReplan"
@@ -3222,6 +3301,7 @@ components:
         - energyWh
         - reserveWh
         - rejected
+        - authorisation
         - replan
         - approvedBy
         - approvedAt
@@ -4327,6 +4407,11 @@ components:
           type: number
           exclusiveMinimum: 0
           description: Agreed with air traffic control
+        thirdParties:
+          description: People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportedThirdParty"
         replan:
           description: Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider
           $ref: "#/components/schemas/PlanReplan"

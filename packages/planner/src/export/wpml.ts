@@ -63,7 +63,7 @@ export function exportWpmlKmz(input: MissionExportInput): Uint8Array {
   ]
   const stamp: El[] = [
     ['name', `Safe Edge ${plan.id} (${NOT_FLIGHT_READY})`],
-    ['description', notFlightReadyNotice]
+    ['description', notFlightReadyNotice(plan)]
   ]
   const placemarks = (fields: (w: MissionWaypoint) => El[]): El[] => {
     let groupId = 0
@@ -81,7 +81,7 @@ export function exportWpmlKmz(input: MissionExportInput): Uint8Array {
             ['wpml:waypointHeadingPathMode', 'followBadArc']
           ]
         ],
-        ...(w.kind === 'station' ? [capture(groupId++, index, w)] : [])
+        ...(w.kind === 'station' ? [capture(groupId++, index, w, drone.camera.hfovDeg)] : [])
       ]
     ])
   }
@@ -147,17 +147,19 @@ export function exportWpmlKmz(input: MissionExportInput): Uint8Array {
   )
 }
 
-/** At a station: pitch the gimbal, hover for the assumed capture time, take one photo named for the segment. */
-function capture(groupId: number, index: number, w: MissionWaypoint): El {
-  return [
-    'wpml:actionGroup',
+/**
+ * At a station: pitch the gimbal, hover for the assumed capture time, take one photo named for the segment. A station
+ * standing off with zoom (above 1×) first sets the zoom lens's focal length and takes the photo with that lens.
+ * DJI's `zoom` action takes `focalLength` in mm (> 0) without saying whether that is the lens's real or 35 mm-equivalent
+ * focal length; this writes the 35 mm equivalent of the camera's HFOV times the zoom, to 0.1 mm (unverified on an
+ * aircraft). A 1× station shoots wide, so the zoom lens's setting does not matter to it.
+ */
+function capture(groupId: number, index: number, w: MissionWaypoint, hfovDeg: number): El {
+  const zoomed = w.zoom > 1
+  const actions: [string, El[]][] = [
     [
-      ['wpml:actionGroupId', groupId],
-      ['wpml:actionGroupStartIndex', index],
-      ['wpml:actionGroupEndIndex', index],
-      ['wpml:actionGroupMode', 'sequence'],
-      ['wpml:actionTrigger', [['wpml:actionTriggerType', 'reachPoint']]],
-      action(0, 'gimbalRotate', [
+      'gimbalRotate',
+      [
         ['wpml:gimbalHeadingYawBase', 'north'],
         ['wpml:gimbalRotateMode', 'absoluteAngle'],
         ['wpml:gimbalPitchRotateEnable', 1],
@@ -169,16 +171,46 @@ function capture(groupId: number, index: number, w: MissionWaypoint): El {
         ['wpml:gimbalRotateTimeEnable', 0],
         ['wpml:gimbalRotateTime', 0],
         ['wpml:payloadPositionIndex', AIRCRAFT.payloadPositionIndex]
-      ]),
-      action(1, 'hover', [['wpml:hoverTime', assumedEnergyModel.stationHoverS]]),
-      action(2, 'takePhoto', [
+      ]
+    ],
+    ...(zoomed
+      ? [
+          [
+            'zoom',
+            [
+              ['wpml:payloadPositionIndex', AIRCRAFT.payloadPositionIndex],
+              ['wpml:focalLength', (equivalentFocalMm(hfovDeg) * w.zoom).toFixed(1)]
+            ]
+          ] satisfies [string, El[]]
+        ]
+      : []),
+    ['hover', [['wpml:hoverTime', assumedEnergyModel.stationHoverS]]],
+    [
+      'takePhoto',
+      [
         ['wpml:payloadPositionIndex', AIRCRAFT.payloadPositionIndex],
         ['wpml:fileSuffix', w.segmentId!],
-        ['wpml:payloadLensIndex', 'wide'],
+        ['wpml:payloadLensIndex', zoomed ? 'zoom' : 'wide'],
         ['wpml:useGlobalPayloadLensIndex', 0]
-      ])
+      ]
     ]
   ]
+  return [
+    'wpml:actionGroup',
+    [
+      ['wpml:actionGroupId', groupId],
+      ['wpml:actionGroupStartIndex', index],
+      ['wpml:actionGroupEndIndex', index],
+      ['wpml:actionGroupMode', 'sequence'],
+      ['wpml:actionTrigger', [['wpml:actionTriggerType', 'reachPoint']]],
+      ...actions.map(([func, params], id) => action(id, func, params))
+    ]
+  ]
+}
+
+/** The 35 mm-equivalent focal length of a horizontal field of view: half the 36 mm frame width over tan(HFOV / 2). */
+function equivalentFocalMm(hfovDeg: number): number {
+  return 18 / Math.tan((hfovDeg / 2) * (Math.PI / 180))
 }
 
 function action(id: number, func: string, params: El[]): El {

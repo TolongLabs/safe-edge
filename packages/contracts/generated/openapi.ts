@@ -196,7 +196,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Record that the pilot or observer saw a waiting segment's path clear
+         * Record that the pilot or observer saw a waiting segment's path, or the dock, clear
          * @description Roles: pilot. Agents are refused.
          */
         post: operations["releasePlanHold"];
@@ -1056,6 +1056,11 @@ export interface components {
     schemas: {
         /** @enum {string} */
         Source: "fixture" | "scenario" | "user" | "agent" | "provider" | "model" | "system";
+        Point: {
+            /** @constant */
+            type: "Point";
+            coordinates: number[];
+        };
         LineString: {
             /** @constant */
             type: "LineString";
@@ -1111,7 +1116,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "outside_window" | "invalid_coverage";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "separation_hold" | "outside_window" | "invalid_coverage";
         Denial: {
             /** @constant */
             ok: false;
@@ -1297,6 +1302,17 @@ export interface components {
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
+        ReportedThirdParty: {
+            id: string;
+            /** @enum {string} */
+            kind: "person" | "vessel" | "vehicle" | "structure";
+            /** @description As people should read it, e.g. "3 people on the lakeside footway" */
+            label: string;
+            geometry: components["schemas"]["Point"] | components["schemas"]["LineString"] | components["schemas"]["Polygon"];
+            /** @description When it was seen; null for a mapped structure */
+            observedAt: string | null;
+            simulated: boolean;
+        };
         PriorityScore: {
             total: number | null;
             expiry: number | null;
@@ -1320,7 +1336,7 @@ export interface components {
             flightLine: components["schemas"]["LineString"];
             stations: components["schemas"]["CameraStation"][];
             priority: components["schemas"]["PriorityScore"];
-            /** @description Flying the task and hovering at its stations, without transit */
+            /** @description Flying the task, hovering at its stations and any wait for a separation hold, without transit */
             energyWh: number;
         };
         Waypoint: {
@@ -1354,7 +1370,7 @@ export interface components {
             releasedAt: string | null;
         };
         /** @enum {string} */
-        RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
+        RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window" | "authorisation";
         ReplanTrigger: {
             /** @constant */
             kind: "heavy_rain";
@@ -1423,6 +1439,15 @@ export interface components {
                 code: components["schemas"]["RejectionCode"];
                 reason: string;
             }[];
+            /** @description CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area */
+            authorisation: {
+                /** @description The Director General's authorisation the flight relies on */
+                ref: string;
+                /** @description The designated areas the route flies over or within 150 m of */
+                reason: string;
+                /** @description True for an assumed authorisation, such as a fixture */
+                simulated: boolean;
+            } | null;
             /** @description null for a plan a person or the agent asked for */
             replan: components["schemas"]["PlanReplan"] | null;
             approvedBy: string | null;
@@ -1751,6 +1776,8 @@ export interface components {
             notBefore: string;
             /** @description Agreed with air traffic control */
             altitudeCapM: number;
+            /** @description People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller */
+            thirdParties?: components["schemas"]["ReportedThirdParty"][];
             /** @description Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider */
             replan?: components["schemas"]["PlanReplan"];
         };
@@ -2336,13 +2363,13 @@ export interface operations {
             };
             path: {
                 id: string;
-                segmentId: string;
+                segmentId: string | "dock";
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Record that the pilot or observer saw a waiting segment's path clear */
+            /** @description Record that the pilot or observer saw a waiting segment's path, or the dock, clear */
             200: {
                 headers: {
                     [name: string]: unknown;

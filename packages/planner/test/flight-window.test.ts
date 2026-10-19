@@ -66,7 +66,9 @@ describe('flight windows', async () => {
     passes: ids.map((segmentId) => ({ segmentId, state: 'valid', validTo: plus(now, 200 * 24 * 60), readAt: now })),
     flags: ids.map((segmentId) => ({ segmentId, severity: null, readAt: now })),
     geofences: [],
-    thirdParties: []
+    authorisation: null,
+    thirdParties: [],
+    separationWaitS: 120
   })
 
   test('a plan asked for in the evening opens at first light next morning, under the air-traffic altitude cap', () => {
@@ -140,7 +142,7 @@ describe('flight windows', async () => {
     // The segment stays in the route and waits there; the camera has no zoom to stand further off.
     const held = Array.from({ length: 11 }, (_, i) => `stn_866518980_9_${i + 8}`).join(', ')
     expect(pathHold!.reason).toBe(
-      `stations ${held} are within 50 m of "3 people on the lakeside footway" (person, seen ${people.observedAt}), closest 23 m; the segment waits for the pilot or observer to confirm the path is clear`
+      `stations ${held} are within 50 m of "3 people on the lakeside footway" (person, seen ${people.observedAt}), closest 23 m; the segment waits for the pilot or observer to confirm the path is clear; the plan budgets 2.0 min of hover before stn_866518980_9_8 for it, and a longer wait uses the reserve`
     )
     expect(plan.tasks.map((t) => t.segmentId).toSorted()).toEqual(base.segments.map((s) => s.id).toSorted())
     expect(plan.rejected).toEqual([])
@@ -187,6 +189,102 @@ describe('flight windows', async () => {
     }
     expect(plan.waypoints.at(-1)!.kind).toBe('landing')
     expect(Date.parse(plan.waypoints.at(-1)!.eta)).toBeLessThanOrEqual(Date.parse(plan.window.end))
+  })
+
+  test('time waiting for a held segment counts against the battery and the window', () => {
+    const id = 'seg_866518980_9'
+    // People on the footway (OSM way/926276001) beside segment 9, as in S1: a labelled fixture. The test drone has no
+    // zoom, so the stations stay where they are and only the wait changes the plan.
+    const peopleAt = [101.514381, 3.180066]
+    const people: ThirdParty = {
+      id: 'obs_people_footway',
+      kind: 'person',
+      label: '3 people on the lakeside footway',
+      geometry: { type: 'Point', coordinates: peopleAt },
+      observedAt: myt('2026-10-20T19:50:00'),
+      simulated: true,
+      source: 'fixture'
+    }
+    const base = input([id], myt('2026-10-20T20:00:00'))
+    const clear = planPatrol(base)
+    const held = planPatrol({ ...base, thirdParties: [people] })
+    expect(clear.holds).toEqual([])
+    expect(held.holds.map((h) => [h.kind, h.segmentId])).toEqual([['separation', id]])
+    // Stations 8 to 18 are within 50 m of them; the first of those in flying order is where the wait ends.
+    expect(held.holds[0]!.reason).toMatch(
+      /; the plan budgets 2\.0 min of hover before stn_866518980_9_(8|18) for it, and a longer wait uses the reserve$/
+    )
+
+    // Two minutes of hover at the test drone's 220 W: 7.33 Wh more for the task and the plan, and 2 minutes later home.
+    const waitWh = (220 * 120) / 3600
+    expect(held.tasks[0]!.energyWh - clear.tasks[0]!.energyWh).toBeCloseTo(waitWh, 9)
+    expect(held.energyWh - clear.energyWh).toBeCloseTo(waitWh, 9)
+    const landing = (plan: typeof held) => Date.parse(plan.waypoints.at(-1)!.eta)
+    expect(landing(held) - landing(clear)).toBe(120 * SECOND_MS)
+    // The drone waits at the last waypoint clear of the people, then flies on to the first station that is too close:
+    // between those two, and nowhere else, the time is more than the 8 m/s flight plus the 3 s capture hover.
+    const m = { units: 'meters' } as const
+    const w = held.waypoints
+    const at = (i: number) => [w[i]!.lon, w[i]!.lat]
+    const extraS = w.slice(1).map((next, i) => {
+      const takenS = (Date.parse(next.eta) - Date.parse(w[i]!.eta)) / SECOND_MS
+      const flyS = distance(at(i), at(i + 1), m) / 8 + Math.abs(next.altM - w[i]!.altM) / 3
+      return Math.round(takenS - flyS - (w[i]!.kind === 'station' ? 3 : 0)) + 0 // + 0 turns -0 into 0
+    })
+    const k = extraS.findIndex((x) => x > 0) + 1
+    expect(extraS).toEqual(extraS.map((_, i) => (i + 1 === k ? 120 : 0)))
+    expect(w[k]!.kind).toBe('station')
+    expect(distance(at(k), peopleAt, m)).toBeLessThan(50)
+    expect(distance(at(k - 1), peopleAt, m)).toBeGreaterThanOrEqual(50)
+
+    // A window with a minute to spare without the wait, and a battery with 3 Wh to spare: the wait does not fit either.
+    const minutes = (landing(clear) - Date.parse(clear.window.start)) / MINUTE_MS + 1
+    const late = planPatrol({ ...base, thirdParties: [people], windowMinutes: minutes })
+    expect(late.tasks).toEqual([])
+    expect(late.rejected).toEqual([
+      { segmentId: id, code: 'outside_window', reason: expect.stringMatching(/^needs \d+\.\d min more; /) }
+    ])
+    const small = { ...drone, usableBatteryWh: drone.reserveWh + clear.energyWh + 3 }
+    expect(planPatrol({ ...base, drone: small }).tasks).toHaveLength(1)
+    const flat = planPatrol({ ...base, drone: small, thirdParties: [people] })
+    expect(flat.tasks).toEqual([])
+    expect(flat.rejected).toEqual([
+      { segmentId: id, code: 'battery', reason: expect.stringMatching(/^needs \d+\.\d Wh more; /) }
+    ])
+  })
+
+  test('take-off and landing wait while a person is within 30 m of the dock, and only then', () => {
+    // CAR 2016 reg. 143(1)(g): not "within 30 metres of any person during take-off or landing". Labelled fixtures south
+    // of the dock, away from the lake: one 20 m off, one 40 m off.
+    const south = (m: number): ThirdParty => ({
+      id: `obs_person_${m}m`,
+      kind: 'person',
+      label: `person ${m} m south of the dock`,
+      geometry: { type: 'Point', coordinates: [dock.position.lon, dock.position.lat - m / 111_320] },
+      observedAt: myt('2026-10-20T19:50:00'),
+      simulated: true,
+      source: 'fixture'
+    })
+    const base = input(['seg_866518980_5'], myt('2026-10-20T20:00:00'))
+    const near = planPatrol({ ...base, thirdParties: [south(20), south(40)] })
+    expect(near.holds).toEqual([
+      {
+        kind: 'separation',
+        segmentId: null,
+        until: null,
+        releasedBy: null,
+        releasedAt: null,
+        reason: `"person 20 m south of the dock" (person, seen ${myt('2026-10-20T19:50:00')}) is within 30 m of ${dock.name}, closest 20 m; take-off and landing wait for the pilot or observer to confirm no one is within 30 m of the dock (CAR 2016 reg. 143(1)(g))`
+      }
+    ])
+    // The route itself is unchanged: the hold is on the dock, not on any segment.
+    expect(near.waypoints).toEqual(planPatrol(base).waypoints)
+
+    expect(planPatrol({ ...base, thirdParties: [south(40)] }).holds).toEqual([])
+    // A mapped structure by the dock is not a person: rule (g) is about people.
+    expect(
+      planPatrol({ ...base, thirdParties: [{ ...south(20), kind: 'structure', observedAt: null }] }).holds
+    ).toEqual([])
   })
 
   test('a station within 50 m of a person moves to a longer zoom stand-off when the camera allows it', () => {

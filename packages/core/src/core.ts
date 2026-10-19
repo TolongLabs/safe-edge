@@ -83,7 +83,14 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   const seed = Seed.parse(rawSeed)
   checkSeed(seed)
   const state = createState(seed)
-  const handlers: Handlers = { ...reads, ...patrolHandlers(planner), ...inbox, ...fixLens, ...work, ...notices }
+  const handlers: Handlers = {
+    ...reads,
+    ...patrolHandlers(planner, seed.thirdParties),
+    ...inbox,
+    ...fixLens,
+    ...work,
+    ...notices
+  }
   const openTx = (actor: Actor, now: string) => new Tx(state, actor, now, (prefix) => ids.next(prefix), seed.townshipId)
 
   const checkAccess = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {

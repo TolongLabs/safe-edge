@@ -7,6 +7,7 @@ import {
   InventoryItemId,
   SegmentId,
   Segment,
+  ThirdParty,
   Timestamp,
   TownshipId,
   User,
@@ -33,6 +34,8 @@ export const Seed = z.object({
   baselines: z.array(Baseline),
   passes: z.array(EdgePass),
   docks: z.array(Dock),
-  droneProfiles: z.array(DroneProfile)
+  droneProfiles: z.array(DroneProfile),
+  /** People, vessels, vehicles and structures every plan keeps clear of (S1's path crowd), besides a request's own. */
+  thirdParties: z.array(ThirdParty)
 })
 export type Seed = z.infer<typeof Seed>
