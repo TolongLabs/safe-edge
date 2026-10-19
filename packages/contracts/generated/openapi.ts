@@ -283,7 +283,7 @@ export interface paths {
         };
         /**
          * A candidate with its observations and baseline
-         * @description Roles: manager, engineer, reviewer. Agents need scope `inspection.read`.
+         * @description Roles: manager, engineer, reviewer, system. Agents need scope `inspection.read`.
          */
         get: operations["getCandidate"];
         put?: never;
@@ -540,6 +540,26 @@ export interface paths {
          * @description Roles: manager. Agents need scope `workorder.draft`.
          */
         patch: operations["updateWorkOrder"];
+        trace?: never;
+    };
+    "/work-orders/{id}/external-ref": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record the external work-order system's record for a work order, once (system only)
+         * @description Roles: system. Agents are refused.
+         */
+        post: operations["setWorkOrderExternalRef"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/work-orders/{id}/submit": {
@@ -1181,6 +1201,43 @@ export interface components {
         };
         /** @enum {string} */
         RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
+        ReplanTrigger: {
+            /** @constant */
+            kind: "heavy_rain";
+            /** @description A `rainfall` reading in the JPS heavy (31–60 mm) or very heavy (> 60 mm) band */
+            reading: components["schemas"]["ContextSnapshot"];
+        } | {
+            /** @constant */
+            kind: "weather_warning";
+            /** @description A `weather_warning` or `lightning_warning` in force */
+            warning: components["schemas"]["ContextSnapshot"];
+        } | {
+            /** @constant */
+            kind: "flag_confirmed";
+            segmentId: string;
+            findingId: string;
+        } | {
+            /** @constant */
+            kind: "pass_expiring";
+            segmentId: string;
+            passId: string;
+            /** Format: date-time */
+            validTo: string;
+        } | {
+            /** @constant */
+            kind: "repair_completed";
+            segmentId: string;
+            findingId: string;
+            workOrderId: string;
+        };
+        PlanReplan: {
+            trigger: components["schemas"]["ReplanTrigger"];
+            supersedes: {
+                planId: string;
+                /** @description Leading route stops already flown or in progress; they stay exactly as planned */
+                committedTasks: number;
+            } | null;
+        };
         PatrolPlan: {
             id: string;
             /** Format: date-time */
@@ -1212,6 +1269,8 @@ export interface components {
                 code: components["schemas"]["RejectionCode"];
                 reason: string;
             }[];
+            /** @description null for a plan a person or the agent asked for */
+            replan: components["schemas"]["PlanReplan"] | null;
             approvedBy: string | null;
             approvedAt: string | null;
             simulated: boolean;
@@ -1498,6 +1557,8 @@ export interface components {
             notBefore: string;
             /** @description Agreed with air traffic control */
             altitudeCapM: number;
+            /** @description Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider */
+            replan?: components["schemas"]["PlanReplan"];
         };
         StartPatrolRequest: {
             planId: string;
@@ -1562,6 +1623,9 @@ export interface components {
         UpdateWorkOrderRequest: {
             remedyId?: string | null;
             notes?: string;
+        };
+        SetWorkOrderExternalRefRequest: {
+            externalRef: string;
         };
         SubmitWorkOrderRequest: {
             installerUserId: string;
@@ -2607,6 +2671,39 @@ export interface operations {
         };
         responses: {
             /** @description Edit a draft work order (remedy, notes) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    setWorkOrderExternalRef: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetWorkOrderExternalRefRequest"];
+            };
+        };
+        responses: {
+            /** @description Record the external work-order system's record for a work order, once (system only) */
             200: {
                 headers: {
                     [name: string]: unknown;

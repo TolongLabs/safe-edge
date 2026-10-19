@@ -1,8 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
-import { createApp } from './app.ts'
+import { createApp, type ApiOptions } from './app.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
+import { PROCORE_DEVELOPER_SANDBOX, ProcoreWorkOrderProvider, readProcoreEnv } from '@safe-edge/providers'
 import { devTokens } from './tokens.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -20,6 +21,20 @@ const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
 if (!agentToken) throw new Error('Set SAFE_EDGE_AGENT_TOKEN to the API token the agent acts with (dev_agent in dev)')
 const agent = { claude: new Anthropic(), token: agentToken }
 
+// Accepted findings go to the Procore Developer Sandbox when the PROCORE_* variables are set (the sandbox wizard,
+// scripts/procore-sandbox-wizard.sh, writes them to .env). With none set, work orders stay in Safe Edge.
+const procore = readProcoreEnv(process.env)
+const workOrders: ApiOptions['workOrders'] =
+  procore === null
+    ? undefined
+    : (readEvidence) =>
+        new ProcoreWorkOrderProvider({
+          ...PROCORE_DEVELOPER_SANDBOX,
+          ...procore,
+          observationType: 'Safety Hazard',
+          readEvidence
+        })
+
 // Bun serves the default export on PORT (3000 by default). Its idle timeout is 10 s, so the event stream's heartbeat
 // comes every 5 s.
 export default createApp({
@@ -28,5 +43,6 @@ export default createApp({
   ids,
   tokens: await devTokens(process.env, seed.users),
   heartbeatMs: 5_000,
-  agent
+  agent,
+  workOrders
 })

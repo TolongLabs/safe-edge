@@ -3,13 +3,23 @@ import { booleanIntersects } from '@turf/boolean-intersects'
 import { destination } from '@turf/destination'
 import { distance } from '@turf/distance'
 import { lineString, point, polygon } from '@turf/helpers'
-import { PatrolPlan, type Dock, type DroneProfile, type PriorityScore, type Waypoint } from '@safe-edge/contracts'
+import {
+  PatrolPlan,
+  type ContextSnapshot,
+  type Dock,
+  type DroneProfile,
+  type PatrolTask,
+  type PlanHold,
+  type PlanReplan,
+  type PriorityScore,
+  type Waypoint
+} from '@safe-edge/contracts'
 import type { MultiPolygon, Polygon, Position } from 'geojson'
 import { rankingPriority, scorePriority, type ScoreInputs } from './score.ts'
 import { keepSeparation, separationHold, separationReason, type Separation, type ThirdParty } from './separation.ts'
 import type { Edge, Segment } from './segments.ts'
 import { planStations, type Rejection, type SegmentTask, type Station } from './stations.ts'
-import { flightWindow } from './window.ts'
+import { flightWindow, weatherBlockers } from './window.ts'
 
 const meters = { units: 'meters' } as const
 
@@ -100,7 +110,40 @@ interface Insertion extends Stop {
  * approval lets it fly.
  */
 export function planPatrol(input: PatrolPlanInput): PatrolPlan {
+  return planFresh(input, null)
+}
+
+/** A plan from take-off, with its window and launch holds from the weather gate. */
+export function planFresh(input: PatrolPlanInput, replan: PlanReplan | null): PatrolPlan {
+  const { window, holds } = flightWindow({
+    at: [input.dock.position.lon, input.dock.position.lat],
+    notBefore: input.notBefore,
+    windowMinutes: input.windowMinutes,
+    rainLimitMmPerH: input.dock.rainLimitMmPerH,
+    context: input.context
+  })
+  return buildPlan(input, { window, holds, replan, committed: null })
+}
+
+/** How a route starts: from take-off, or after the committed stops of a plan being re-planned. */
+export interface RouteStart {
+  window: PatrolPlan['window']
+  holds: PlanHold[]
+  replan: PlanReplan | null
+  /** Stops already flown or in progress, kept exactly as planned; null for a route that starts at take-off. */
+  committed: {
+    tasks: PatrolTask[]
+    /** Every waypoint up to and including the last committed station. */
+    waypoints: Waypoint[]
+    rejected: Rejection[]
+    simulated: boolean
+  } | null
+}
+
+export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan {
   const { dock, drone, altitudeM, altitudeCapM, geofences } = input
+  const { window, committed } = start
+  const holds = [...start.holds]
   if (!dock.droneProfileIds.includes(drone.id)) throw new Error(`dock ${dock.id} does not take drone ${drone.id}`)
   if (altitudeM > altitudeCapM) throw new RangeError(`altitude ${altitudeM} m is above the ${altitudeCapM} m cap`)
 
@@ -110,6 +153,15 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
   const climbS = Math.abs(altitudeM - dock.position.altM) / assumedEnergyModel.verticalSpeedMps
   const climbWh = (drone.hoverPowerW * climbS) / 3600
   const dockAt: Position = [dock.position.lon, dock.position.lat]
+  const startMs = Date.parse(window.start)
+
+  // The route goes on from the dock after the climb, or from the last committed station after its hover.
+  const lastCommitted = committed?.waypoints.at(-1)
+  const from: Position = lastCommitted ? [lastCommitted.lon, lastCommitted.lat] : dockAt
+  const departS = lastCommitted
+    ? (Date.parse(lastCommitted.eta) - startMs) / 1000 + assumedEnergyModel.stationHoverS
+    : climbS
+  const departWh = lastCommitted ? lastCommitted.energyWh + hoverWh : climbWh
 
   const noFly = geofences.filter((g) => g.kind === 'no_fly')
   const noCapture = geofences.filter((g) => g.kind === 'no_capture')
@@ -118,20 +170,22 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
     return noFly.filter((zone) => booleanIntersects(path, zone.geometry))
   })
 
-  const { window, holds } = flightWindow({
-    at: dockAt,
-    notBefore: input.notBefore,
-    windowMinutes: input.windowMinutes,
-    rainLimitMmPerH: dock.rainLimitMmPerH,
-    context: input.context
-  })
-
-  const stationPlan = planStations({ ...input, camera: drone.camera })
+  const committedIds = new Set(committed?.tasks.map((t) => t.segmentId))
+  const open = input.segments.filter((s) => !committedIds.has(s.id))
+  // A drone already flying returns after its committed stops while rain above the dock's limit or lightning holds.
+  const grounding = committed
+    ? weatherBlockers(input.context, dock.rainLimitMmPerH, Math.max(startMs + departS * 1000, Date.parse(input.now)))
+    : []
+  const stationPlan = planStations({ ...input, segments: grounding.length > 0 ? [] : open, camera: drone.camera })
   const waterOf = (segmentId: string) => {
     const { assetId } = input.segments.find((s) => s.id === segmentId)!
     return polygon([input.edges.find((e) => e.assetId === assetId)!.geometry.coordinates])
   }
   const rejected: Rejection[] = [...stationPlan.rejected]
+  if (grounding.length > 0) {
+    const reason = `${groundingReason(grounding, dock.rainLimitMmPerH)}; the drone returns to the dock after its committed stops`
+    rejected.push(...open.map((s) => ({ segmentId: s.id, code: 'weather_hold' as const, reason })))
+  }
   const pending: Candidate[] = []
   for (const task of stationPlan.tasks) {
     const { segmentId } = task
@@ -182,13 +236,14 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
 
   const route: Stop[] = []
   const budgetWh = drone.usableBatteryWh - drone.reserveWh
-  let usedWh = 2 * climbWh
+  // So far: flying up to the start of the route, straight home from there, and the descent.
+  let usedWh = departWh + flyWh(from, dockAt) + climbWh
   // The route must land before the window closes.
-  const windowS = (Date.parse(window.end) - Date.parse(window.start)) / 1000
-  let usedS = 2 * climbS
+  const windowS = (Date.parse(window.end) - startMs) / 1000
+  let usedS = departS + flyS(from, dockAt) + climbS
   const insertions = (candidate: Candidate): Insertion[] =>
     Array.from({ length: route.length + 1 }, (_, index) => {
-      const before = index === 0 ? dockAt : ends(route[index - 1]!)[1]
+      const before = index === 0 ? from : ends(route[index - 1]!)[1]
       const after = index === route.length ? dockAt : ends(route[index]!)[0]
       return [false, true].map((reversed): Insertion => {
         const [entry, exit] = ends({ candidate, reversed })
@@ -249,10 +304,9 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
   const flown = route.flatMap((stop) =>
     ordered(stop, stop.candidate.stations).map((station) => ({ station, segmentId: stop.candidate.task.segmentId }))
   )
-  const waypoints: Waypoint[] = []
+  const waypoints: Waypoint[] = [...(committed?.waypoints ?? [])]
   let clockS = 0
   let energyWh = 0
-  const startMs = Date.parse(window.start)
   const arrive = (
     kind: Waypoint['kind'],
     at: Position,
@@ -266,24 +320,30 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
       eta: new Date(startMs + clockS * 1000).toISOString(),
       energyWh
     })
-  if (flown.length > 0) {
-    const out = bearing(dockAt, position(flown[0]!.station))
-    const home = bearing(position(flown.at(-1)!.station), dockAt)
+  // A drone already flying always comes home; a route from take-off flies only when it has stops.
+  if (committed || flown.length > 0) {
+    const home = bearing(flown.length > 0 ? position(flown.at(-1)!.station) : from, dockAt)
     const atDock = (altM: number, headingDeg: number) =>
       ({ altM, headingDeg, gimbalPitchDeg: 0, zoom: 1, viewpointId: null, segmentId: null }) as const
-    let from = dockAt
+    let at = from
     const fly = (to: Position) => {
-      clockS += flyS(from, to)
-      energyWh += flyWh(from, to)
-      from = to
+      clockS += flyS(at, to)
+      energyWh += flyWh(at, to)
+      at = to
     }
-    arrive('takeoff', dockAt, atDock(dock.position.altM, out))
-    clockS += climbS
-    energyWh += climbWh
-    arrive('transit', dockAt, atDock(altitudeM, out))
+    if (committed) {
+      clockS = departS
+      energyWh = departWh
+    } else {
+      const out = bearing(dockAt, position(flown[0]!.station))
+      arrive('takeoff', dockAt, atDock(dock.position.altM, out))
+      clockS += climbS
+      energyWh += climbWh
+      arrive('transit', dockAt, atDock(altitudeM, out))
+    }
     for (const { station, segmentId } of flown) {
       fly(position(station))
-      arrive('station', from, { ...station.pose, viewpointId: null, segmentId })
+      arrive('station', at, { ...station.pose, viewpointId: null, segmentId })
       clockS += assumedEnergyModel.stationHoverS
       energyWh += hoverWh
     }
@@ -306,13 +366,16 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
     window,
     altitudeCapM,
     holds,
-    tasks: route.map((stop) => ({
-      segmentId: stop.candidate.task.segmentId,
-      flightLine: { type: 'LineString', coordinates: ordered(stop, stop.candidate.task.flightLine.coordinates) },
-      stations: ordered(stop, stop.candidate.stations).map((s) => ({ ...s.pose, viewpointId: null })),
-      priority: stop.candidate.priority,
-      energyWh: stop.candidate.energyWh
-    })),
+    tasks: [
+      ...(committed?.tasks ?? []),
+      ...route.map((stop) => ({
+        segmentId: stop.candidate.task.segmentId,
+        flightLine: { type: 'LineString', coordinates: ordered(stop, stop.candidate.task.flightLine.coordinates) },
+        stations: ordered(stop, stop.candidate.stations).map((s) => ({ ...s.pose, viewpointId: null })),
+        priority: stop.candidate.priority,
+        energyWh: stop.candidate.energyWh
+      }))
+    ],
     waypoints,
     route: {
       type: 'LineString',
@@ -320,12 +383,26 @@ export function planPatrol(input: PatrolPlanInput): PatrolPlan {
     },
     energyWh,
     reserveWh: drone.usableBatteryWh - energyWh,
-    rejected,
+    rejected: [...(committed?.rejected ?? []), ...rejected],
+    replan: start.replan,
     approvedBy: null,
     approvedAt: null,
-    simulated: [dock, drone, ...input.segments, ...input.context, ...geofences].some((r) => r.simulated),
+    simulated:
+      committed?.simulated === true ||
+      [dock, drone, ...input.segments, ...input.context, ...geofences].some((r) => r.simulated),
     source: 'system'
   })
+}
+
+/** Why a drone in flight must come home: the readings and warnings that ground it. */
+function groundingReason(grounding: ContextSnapshot[], rainLimitMmPerH: number): string {
+  return grounding
+    .map((c) =>
+      c.kind === 'rainfall'
+        ? `rain ${c.value} mm/h at ${c.publisher}${c.stationId ? ` station ${c.stationId}` : ''} (observed ${c.observedAt}) is above the dock's ${rainLimitMmPerH} mm/h limit`
+        : `lightning warning from ${c.publisher} is in force until ${c.validTo}`
+    )
+    .join('; ')
 }
 
 /** Highest priority per added watt-hour; on a tie, the cheaper insertion. */

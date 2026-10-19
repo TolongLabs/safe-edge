@@ -5,7 +5,13 @@ import { blockedOpenings } from './fix-lens.ts'
 import { ok, type Handlers } from './handler.ts'
 
 type WorkOperation =
-  'createWorkOrder' | 'updateWorkOrder' | 'submitWorkOrder' | 'startWorkOrder' | 'completeWorkOrder' | 'recordRetest'
+  | 'createWorkOrder'
+  | 'updateWorkOrder'
+  | 'setWorkOrderExternalRef'
+  | 'submitWorkOrder'
+  | 'startWorkOrder'
+  | 'completeWorkOrder'
+  | 'recordRetest'
 
 /** A remedy on the work order's segment, or a not-found message. */
 function remedyFor(tx: Tx, finding: Finding, remedyId: string | null) {
@@ -68,6 +74,18 @@ export const work: Handlers<WorkOperation> = {
     const updated: WorkOrder = { ...workOrder, remedyId, notes: body.notes ?? workOrder.notes }
     tx.put('workOrders', updated)
     return ok(updated)
+  },
+
+  // The link to the external work-order system's record is written once, so it always names what was created.
+  setWorkOrderExternalRef: (tx, { params, body }) => {
+    const workOrder = tx.get('workOrders', params.id)
+    if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    if (workOrder.externalRef !== null) {
+      return tx.deny('invalid_transition', `${workOrder.id} already links ${workOrder.externalRef}`, workOrder.id)
+    }
+    const linked: WorkOrder = { ...workOrder, externalRef: body.externalRef }
+    tx.put('workOrders', linked)
+    return ok(linked)
   },
 
   submitWorkOrder: (tx, { params, body }) => {

@@ -471,7 +471,7 @@ paths:
     get:
       operationId: getCandidate
       summary: A candidate with its observations and baseline
-      description: "Roles: manager, engineer, reviewer. Agents need scope `inspection.read`."
+      description: "Roles: manager, engineer, reviewer, system. Agents need scope `inspection.read`."
       tags:
         - candidates
       parameters:
@@ -498,6 +498,7 @@ paths:
         - manager
         - engineer
         - reviewer
+        - system
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
   /candidates/{id}/decision:
@@ -993,6 +994,45 @@ paths:
       x-safe-edge-roles:
         - manager
       x-safe-edge-agent-scope: workorder.draft
+      x-safe-edge-events: []
+  /work-orders/{id}/external-ref:
+    post:
+      operationId: setWorkOrderExternalRef
+      summary: Record the external work-order system's record for a work order, once (system only)
+      description: "Roles: system. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetWorkOrderExternalRefRequest"
+      responses:
+        "200":
+          description: Record the external work-order system's record for a work order, once (system only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
       x-safe-edge-events: []
   /work-orders/{id}/submit:
     post:
@@ -2632,6 +2672,113 @@ components:
         - separation_hold
         - stale_input
         - outside_window
+    ReplanTrigger:
+      oneOf:
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: heavy_rain
+            reading:
+              description: A `rainfall` reading in the JPS heavy (31–60 mm) or very heavy (> 60 mm) band
+              $ref: "#/components/schemas/ContextSnapshot"
+          required:
+            - kind
+            - reading
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: weather_warning
+            warning:
+              description: A `weather_warning` or `lightning_warning` in force
+              $ref: "#/components/schemas/ContextSnapshot"
+          required:
+            - kind
+            - warning
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: flag_confirmed
+            segmentId:
+              type: string
+              pattern: ^seg_
+            findingId:
+              type: string
+              pattern: ^fnd_
+          required:
+            - kind
+            - segmentId
+            - findingId
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: pass_expiring
+            segmentId:
+              type: string
+              pattern: ^seg_
+            passId:
+              type: string
+              pattern: ^pass_
+            validTo:
+              type: string
+              format: date-time
+          required:
+            - kind
+            - segmentId
+            - passId
+            - validTo
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: repair_completed
+            segmentId:
+              type: string
+              pattern: ^seg_
+            findingId:
+              type: string
+              pattern: ^fnd_
+            workOrderId:
+              type: string
+              pattern: ^wo_
+          required:
+            - kind
+            - segmentId
+            - findingId
+            - workOrderId
+          additionalProperties: false
+    PlanReplan:
+      type: object
+      properties:
+        trigger:
+          $ref: "#/components/schemas/ReplanTrigger"
+        supersedes:
+          anyOf:
+            - type: object
+              properties:
+                planId:
+                  type: string
+                  pattern: ^plan_
+                committedTasks:
+                  type: integer
+                  minimum: 0
+                  description: Leading route stops already flown or in progress; they stay exactly as planned
+              required:
+                - planId
+                - committedTasks
+              additionalProperties: false
+            - type: "null"
+      required:
+        - trigger
+        - supersedes
+      additionalProperties: false
     PatrolPlan:
       type: object
       properties:
@@ -2720,6 +2867,11 @@ components:
               - code
               - reason
             additionalProperties: false
+        replan:
+          anyOf:
+            - $ref: "#/components/schemas/PlanReplan"
+            - type: "null"
+          description: null for a plan a person or the agent asked for
         approvedBy:
           anyOf:
             - type: string
@@ -2751,6 +2903,7 @@ components:
         - energyWh
         - reserveWh
         - rejected
+        - replan
         - approvedBy
         - approvedAt
         - simulated
@@ -3748,6 +3901,9 @@ components:
           type: number
           exclusiveMinimum: 0
           description: Agreed with air traffic control
+        replan:
+          description: Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider
+          $ref: "#/components/schemas/PlanReplan"
       required:
         - dockId
         - droneProfileId
@@ -3975,6 +4131,15 @@ components:
             - type: "null"
         notes:
           type: string
+      additionalProperties: false
+    SetWorkOrderExternalRefRequest:
+      type: object
+      properties:
+        externalRef:
+          type: string
+          minLength: 1
+      required:
+        - externalRef
       additionalProperties: false
     SubmitWorkOrderRequest:
       type: object

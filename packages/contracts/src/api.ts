@@ -22,6 +22,7 @@ import {
   PassState,
   Patrol,
   PatrolPlan,
+  PlanReplan,
   Remedy,
   RemedyType,
   Retest,
@@ -112,7 +113,10 @@ export const CreatePatrolPlanRequest = named(
     segmentIds: z.array(SegmentId).min(1),
     context: z.array(ContextSnapshot),
     notBefore: Timestamp,
-    altitudeCapM: z.number().positive().describe('Agreed with air traffic control')
+    altitudeCapM: z.number().positive().describe('Agreed with air traffic control'),
+    replan: PlanReplan.optional().describe(
+      "Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider"
+    )
   })
 )
 export type CreatePatrolPlanRequest = z.infer<typeof CreatePatrolPlanRequest>
@@ -198,6 +202,13 @@ export const UpdateWorkOrderRequest = named(
   z.object({ remedyId: RemedyId.nullable().optional(), notes: z.string().optional() })
 )
 export type UpdateWorkOrderRequest = z.infer<typeof UpdateWorkOrderRequest>
+
+/** The record an external work-order system created for the work order's finding. */
+export const SetWorkOrderExternalRefRequest = named(
+  'SetWorkOrderExternalRefRequest',
+  z.object({ externalRef: z.string().min(1) })
+)
+export type SetWorkOrderExternalRefRequest = z.infer<typeof SetWorkOrderExternalRefRequest>
 
 export const SubmitWorkOrderRequest = named(
   'SubmitWorkOrderRequest',
