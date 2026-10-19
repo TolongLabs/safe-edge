@@ -24,7 +24,8 @@
     "procore:e2e": "bun packages/providers/scripts/procore-e2e.ts",
     "procore:smoke": "bun packages/providers/scripts/procore-smoke.ts",
     "test": "bun test --pass-with-no-tests",
-    "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck"
+    "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck",
+    "fetch:osm": "bun packages/scene/scripts/fetch-osm.ts"
   },
   "lint-staged": {
     "*": "prettier --write --ignore-unknown"

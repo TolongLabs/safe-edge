@@ -4,14 +4,14 @@ import type { Geofence } from './patrol.ts'
 import type { AssetKind, Edge, Obstruction, OwnerArea } from './segments.ts'
 
 /**
- * The one place that knows where the Elmina OSM layers live, relative to the repo root. It points at the research
- * extract until #59 lands the Overpass extract in `data/elmina/`; then only these paths change.
+ * The one place that knows where the Elmina OSM layers live, relative to the repo root: the Overpass extract that
+ * `bun run fetch:osm` writes.
  */
 export const elminaLayerPaths = {
-  water: 'docs/research/drone-integration/data/water.geojson',
-  barriers: 'docs/research/drone-integration/data/barriers.geojson',
-  paths: 'docs/research/drone-integration/data/paths.geojson',
-  parks: 'docs/research/drone-integration/data/parks.geojson'
+  water: 'data/elmina/osm/water.geojson',
+  barriers: 'data/elmina/osm/barriers.geojson',
+  paths: 'data/elmina/osm/paths.geojson',
+  parks: 'data/elmina/osm/parks.geojson'
 } as const
 
 /** The Elmina Central Park lake and the three polygons OSM names "flood retention pond". */
