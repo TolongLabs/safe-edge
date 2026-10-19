@@ -193,12 +193,10 @@ export const patrolHandlers = (
     const coverage = [...covered, ...unreported]
     const completed: Patrol = { ...patrol, status: 'completed', completedAt: tx.now, coverage }
     tx.put('patrols', completed)
-    // Inspecting any of a segment restarts its patrol interval; a segment the patrol saw none of has missed it.
+    // Inspecting any of a segment restarts its patrol interval; a segment the patrol saw none of has missed it. It
+    // also does a whole-segment recapture asked for before take-off.
     for (const c of coverage.filter((c) => c.inspectedM > 0)) {
       tx.put('segments', { ...tx.must('segments', c.segmentId), lastPatrolledAt: tx.now })
-    }
-    // A whole-segment recapture asked for before take-off is done once the patrol inspects some of the segment.
-    for (const c of coverage.filter((c) => c.inspectedM > 0)) {
       const tookOff = Date.parse(patrol.startedAt)
       closeRecaptures(tx, c.segmentId, (t) => t.viewpointId === null && Date.parse(t.createdAt) <= tookOff)
     }
@@ -241,7 +239,7 @@ export const patrolHandlers = (
         tx,
         segment.id,
         (t) =>
-          (t.viewpointId ?? observation.viewpointId) === observation.viewpointId && takenAt >= Date.parse(t.createdAt)
+          (t.viewpointId === null || t.viewpointId === observation.viewpointId) && takenAt >= Date.parse(t.createdAt)
       )
     }
     return ok(observation)

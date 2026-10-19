@@ -1,7 +1,7 @@
 // INBOX-2's recapture leaves owned work, like confirm: a task to capture the viewpoint again, through dispatch.
 import { describe, expect, test } from 'bun:test'
 import type { Task } from '@safe-edge/contracts'
-import { S1, raiseOnS1, seed, startCore, type Harness } from './support.ts'
+import { S1, observeS1, raiseOnS1, seed, startCore, type Harness } from './support.ts'
 
 function sendForRecapture(h: Harness, reason = 'Blurred frame') {
   const raised = raiseOnS1(h, 'usr_drone_sim', {
@@ -153,5 +153,18 @@ describe('A recapture of a candidate with no photo covers its whole segment', ()
       subjectId: decision.data.tasks[0]!.id,
       after: { status: 'done' }
     })
+  })
+
+  test('on a segment with viewpoints, a new frame from any of them also does it', () => {
+    const h = startCore()
+    h.setNow('2026-10-23T01:00:00.000Z')
+    const missed = h.call('reportMissedPatrol', 'usr_system', { params: { id: S1.segmentId } }).data
+    const [task] = h.call('decideCandidate', 'usr_manager', {
+      params: { id: missed.id },
+      body: { decision: 'recapture', reason: 'Walk it today' }
+    }).data.tasks
+    expect(task).toMatchObject({ segmentId: S1.segmentId, viewpointId: null })
+    observeS1(h)
+    expect(h.call('listTasks', 'usr_manager', { query: {} }).data).toEqual([{ ...task!, status: 'done' }])
   })
 })
