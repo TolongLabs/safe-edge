@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { SafeEdgeApiError, SafeEdgeDeniedError, createSafeEdgeClient } from '../src/index.ts'
-import { startTestApi } from './server.ts'
+import { startApi } from './server.ts'
 import { S1, playS1toS3 } from './story.ts'
 
-let api: ReturnType<typeof startTestApi>
+let api: ReturnType<typeof startApi>
 afterEach(() => api.stop())
 
 const httpAs = (userId: string, token = api.tokenFor(userId)) =>
@@ -11,7 +11,7 @@ const httpAs = (userId: string, token = api.tokenFor(userId)) =>
 
 describe('http transport: the same typed client against the v1 API', () => {
   test('S1 to S3 over HTTP leaves the same records and audit chain as the memory transport', async () => {
-    api = startTestApi()
+    api = startApi()
     const overHttp = await playS1toS3({ as: (userId) => httpAs(userId), setNow: api.setNow })
 
     let now = '2026-10-20T00:00:00.000Z'
@@ -27,7 +27,7 @@ describe('http transport: the same typed client against the v1 API', () => {
   })
 
   test('every request carries the bearer token, and every write a fresh Idempotency-Key unless the caller gives one', async () => {
-    api = startTestApi()
+    api = startApi()
     await playS1toS3({ as: (userId) => httpAs(userId), setNow: api.setNow })
     const manager = httpAs('usr_manager')
     await manager.draftNotice(
@@ -49,7 +49,7 @@ describe('http transport: the same typed client against the v1 API', () => {
   })
 
   test('a 403 surfaces as a typed error naming the rule; 401 and 404 as typed API errors', async () => {
-    api = startTestApi()
+    api = startApi()
     const { workOrderId } = await playS1toS3({ as: (userId) => httpAs(userId), setNow: api.setNow })
 
     const agentSubmit = httpAs('usr_agent').submitWorkOrder({

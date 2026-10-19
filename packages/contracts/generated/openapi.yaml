@@ -4219,10 +4219,13 @@ components:
             - type: string
               format: date-time
             - type: "null"
+        simulated:
+          type: boolean
       required:
         - mediaType
         - dataBase64
         - capturedAt
+        - simulated
       additionalProperties: false
     EvidenceUrl:
       type: object
