@@ -1287,7 +1287,7 @@ export interface components {
             releasedAt: string | null;
         };
         /** @enum {string} */
-        RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
+        RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window" | "authorisation";
         ReplanTrigger: {
             /** @constant */
             kind: "heavy_rain";
@@ -1356,6 +1356,15 @@ export interface components {
                 code: components["schemas"]["RejectionCode"];
                 reason: string;
             }[];
+            /** @description CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area */
+            authorisation: {
+                /** @description The Director General's authorisation the flight relies on */
+                ref: string;
+                /** @description The designated areas the route flies over or within 150 m of */
+                reason: string;
+                /** @description True for an assumed authorisation, such as a fixture */
+                simulated: boolean;
+            } | null;
             /** @description null for a plan a person or the agent asked for */
             replan: components["schemas"]["PlanReplan"] | null;
             approvedBy: string | null;

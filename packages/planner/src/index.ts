@@ -2,7 +2,14 @@ export * from './segments.ts'
 export * from './elmina.ts'
 export * from './stations.ts'
 export * from './score.ts'
-export { assumedEnergyModel, planPatrol, type Geofence, type PatrolPlanInput } from './patrol.ts'
+export {
+  DESIGNATED_AREA_M,
+  assumedEnergyModel,
+  planPatrol,
+  type FlightAuthorisation,
+  type Geofence,
+  type PatrolPlanInput
+} from './patrol.ts'
 export { replan, weatherTriggers, type PatrolProgress } from './replan.ts'
 export { firstLightAfter } from './window.ts'
 export { SEPARATION_M, type ThirdParty } from './separation.ts'

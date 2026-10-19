@@ -2885,6 +2885,7 @@ components:
         - separation_hold
         - stale_input
         - outside_window
+        - authorisation
     ReplanTrigger:
       oneOf:
         - type: object
@@ -3080,6 +3081,26 @@ components:
               - code
               - reason
             additionalProperties: false
+        authorisation:
+          anyOf:
+            - type: object
+              properties:
+                ref:
+                  type: string
+                  description: The Director General's authorisation the flight relies on
+                reason:
+                  type: string
+                  description: The designated areas the route flies over or within 150 m of
+                simulated:
+                  type: boolean
+                  description: True for an assumed authorisation, such as a fixture
+              required:
+                - ref
+                - reason
+                - simulated
+              additionalProperties: false
+            - type: "null"
+          description: CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area
         replan:
           anyOf:
             - $ref: "#/components/schemas/PlanReplan"
@@ -3116,6 +3137,7 @@ components:
         - energyWh
         - reserveWh
         - rejected
+        - authorisation
         - replan
         - approvedBy
         - approvedAt

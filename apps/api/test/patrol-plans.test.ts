@@ -80,6 +80,13 @@ describe('separation holds on API-served plans', () => {
     const stations = plan.waypoints.filter((w) => w.segmentId === FAR_BANK)
     expect(stations.map((w) => w.zoom)).toEqual(farBank.stations.map((s) => s.zoom))
     expect(plan.tasks.map((t) => t.segmentId).toSorted()).toEqual([PATH_SEGMENT, FAR_BANK, S1.segmentId].toSorted())
+    // The lake is in a park, a designated area (CAR 2016 reg. 143(3)): the plan names the authorisation it flies under,
+    // an assumed one, since CAAM has issued none.
+    expect(plan.authorisation).toEqual({
+      ref: 'Assumed CAAM authorisation (fixture: none has been issued)',
+      reason: expect.stringContaining('designated area "Elmina Valley Central Park (recreational)"'),
+      simulated: true
+    })
   })
 })
 

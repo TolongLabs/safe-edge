@@ -66,6 +66,7 @@ describe('flight windows', async () => {
     passes: ids.map((segmentId) => ({ segmentId, state: 'valid', validTo: plus(now, 200 * 24 * 60), readAt: now })),
     flags: ids.map((segmentId) => ({ segmentId, severity: null, readAt: now })),
     geofences: [],
+    authorisation: null,
     thirdParties: [],
     separationWaitS: 120
   })

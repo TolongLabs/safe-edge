@@ -324,10 +324,22 @@ export const PlanHold = named(
 )
 export type PlanHold = z.infer<typeof PlanHold>
 
-/** Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off. */
+/**
+ * Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off.
+ * `authorisation`: it would fly over or within 150 m of a designated area without the Director General's authorisation.
+ */
 export const RejectionCode = named(
   'RejectionCode',
-  z.enum(['battery', 'geofence', 'flight_line', 'weather_hold', 'separation_hold', 'stale_input', 'outside_window'])
+  z.enum([
+    'battery',
+    'geofence',
+    'flight_line',
+    'weather_hold',
+    'separation_hold',
+    'stale_input',
+    'outside_window',
+    'authorisation'
+  ])
 )
 export type RejectionCode = z.infer<typeof RejectionCode>
 
@@ -403,6 +415,14 @@ export const PatrolPlan = named(
     energyWh: z.number().nonnegative(),
     reserveWh: z.number().nonnegative().describe("Energy left on landing; at least the drone profile's reserve"),
     rejected: z.array(z.object({ segmentId: SegmentId, code: RejectionCode, reason: z.string() })),
+    authorisation: z
+      .object({
+        ref: z.string().describe("The Director General's authorisation the flight relies on"),
+        reason: z.string().describe('The designated areas the route flies over or within 150 m of'),
+        simulated: z.boolean().describe('True for an assumed authorisation, such as a fixture')
+      })
+      .nullable()
+      .describe('CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area'),
     replan: PlanReplan.nullable().describe('null for a plan a person or the agent asked for'),
     approvedBy: UserId.nullable(),
     approvedAt: Timestamp.nullable(),
