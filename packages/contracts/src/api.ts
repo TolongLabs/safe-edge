@@ -22,6 +22,7 @@ import {
   PassState,
   Patrol,
   PatrolPlan,
+  PlanReplan,
   Remedy,
   RemedyType,
   Retest,
@@ -112,7 +113,10 @@ export const CreatePatrolPlanRequest = named(
     segmentIds: z.array(SegmentId).min(1),
     context: z.array(ContextSnapshot),
     notBefore: Timestamp,
-    altitudeCapM: z.number().positive().describe('Agreed with air traffic control')
+    altitudeCapM: z.number().positive().describe('Agreed with air traffic control'),
+    replan: PlanReplan.optional().describe(
+      "Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider"
+    )
   })
 )
 export type CreatePatrolPlanRequest = z.infer<typeof CreatePatrolPlanRequest>
