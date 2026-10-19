@@ -44,9 +44,10 @@ interface Item {
  * The plan as a QGroundControl `.plan` file (JSON text) for a PX4 quadrotor, heights relative to home. The dock is
  * the planned home: the mission takes off there, climbs to the plan's first transit height, flies every waypoint and
  * lands back on it. At each station it holds for the assumed capture hover, then pitches the gimbal and takes one
- * photo, encoded as QGroundControl's own camera section writes them (so QGroundControl shows them on the waypoint).
- * Between the two it sets the station's zoom with MAV_CMD_SET_CAMERA_ZOOM (PX4 runs it in missions), as the field of
- * view the zoom narrows the camera's HFOV to: at every station, since zoom stays set on the camera.
+ * photo, encoded as QGroundControl's own camera section writes them. Between the two it sets the station's zoom with
+ * MAV_CMD_SET_CAMERA_ZOOM (PX4 runs it in missions), as the field of view the zoom narrows the camera's HFOV to: at
+ * every station, since zoom stays set on the camera. QGroundControl 5.1.5 folds the gimbal pitch into the waypoint but
+ * stops at the zoom, so it lists the zoom and the photo as their own items (docs/evidence/mission-exports.md).
  */
 export function exportQgcPlan(input: QgcPlanExportInput): string {
   const waypoints = missionWaypoints(input, 'qgc_plan')

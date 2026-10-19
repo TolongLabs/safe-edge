@@ -205,6 +205,15 @@ test('the agent reads context, proposes, triages and drafts through every other 
     approvedBy: null
   })
   expect(plan.tasks.map((task: { segmentId: string }) => task.segmentId)).toEqual([S1.segmentId])
+  // A summary, coarse enough to read the same on macOS and Linux: no waypoints, energy to 0.1 Wh, the window to the second.
+  expect(plan).not.toHaveProperty('waypoints')
+  for (const wh of [plan.energyWh, plan.reserveWh, ...plan.tasks.map((task: { energyWh: number }) => task.energyWh)]) {
+    expect(Math.round(wh * 10) / 10).toBe(wh)
+  }
+  expect([plan.window.start, plan.window.end]).toEqual([
+    expect.stringMatching(/:\d\d\.000Z$/),
+    expect.stringMatching(/:\d\d\.000Z$/)
+  ])
 })
 
 /** A person-confirmed S1 finding: the drone raises a Tier 2 candidate and the manager confirms it. */

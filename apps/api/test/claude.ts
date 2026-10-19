@@ -147,6 +147,10 @@ function firstDifference(recorded: unknown, actual: unknown, path: string): stri
     return null
   }
   if (recorded === actual) return null
+  // A tool result is JSON in a string: compare it parsed, so the path reaches the value that differs.
+  if (typeof recorded === 'string' && typeof actual === 'string' && /^{"/.test(recorded) && /^{"/.test(actual)) {
+    return firstDifference(JSON.parse(recorded), JSON.parse(actual), `${path}(json)`)
+  }
   const show = (value: unknown) => JSON.stringify(value)?.slice(0, 300)
   return `${path}: recorded ${show(recorded)}, sent ${show(actual)}; ${RERECORD}`
 }
