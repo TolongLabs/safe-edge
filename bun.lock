@@ -59,9 +59,11 @@
     "apps/web": {
       "name": "@safe-edge/web",
       "dependencies": {
+        "@safe-edge/contracts": "workspace:*",
         "@safe-edge/scene": "workspace:*",
         "@safe-edge/sdk": "workspace:*",
         "react": "^19.3.1",
+        "react-compare-slider": "4.0.0",
         "react-dom": "^19.3.1",
       },
       "devDependencies": {
@@ -794,6 +796,8 @@
     "protocol-buffers-schema": ["protocol-buffers-schema@3.6.1", "", {}, "sha512-VG2K63Igkiv9p76tk1lilczEK1cT+kCjKtkdhw1dQZV3k3IXJbd3o6Ho8b9zJZaHSnT2hKe4I+ObmX9w6m5SmQ=="],
 
     "react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
+
+    "react-compare-slider": ["react-compare-slider@4.0.0", "", { "peerDependencies": { "react": ">=16.8", "react-dom": ">=16.8" } }, "sha512-XNpwfWa8OHvJZIsC+ywhjpRWX8VCY8fIavQ82R63Tever1pQndhicr0ecDuU69GjA+YjesoV7LX3QnKsECtMDw=="],
 
     "react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
 
