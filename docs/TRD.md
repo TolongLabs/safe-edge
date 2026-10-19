@@ -1,6 +1,6 @@
 # Safe Edge TRD
 
-How the team builds Safe Edge in five days: architecture, data model, interfaces, the AI layer, the drone integration and the Three.js simulation. Product intent is in [`PRODUCT.md`](/PRODUCT.md); scope and acceptance tests are in the [PRD](/docs/PRD.md). Every version and API below comes from the fact-checked [drone integration research](/docs/research/drone-integration.md); check the linked docs again before you code against them.
+How the team builds Safe Edge in five days: architecture, data model, interfaces, the AI layer, the drone integration and the Three.js simulation. Product intent is in [`PRODUCT.md`](/docs/PRODUCT.md); scope and acceptance tests are in the [PRD](/docs/PRD.md). Every version and API below comes from the fact-checked [drone integration research](/docs/research/drone-integration.md); check the linked docs again before you code against them.
 
 Contents:
 
@@ -443,6 +443,6 @@ The [project conventions](/docs/references/project-conventions.md) rule out unit
 
 ## See also
 
-- [`PRODUCT.md`](/PRODUCT.md) and the [PRD](/docs/PRD.md)
+- [`PRODUCT.md`](/docs/PRODUCT.md) and the [PRD](/docs/PRD.md)
 - [Drone integration research](/docs/research/drone-integration.md): CAAM rules, privacy, hardware and cost, detection, mission planning, drone SDKs, AI perception, the agent layer, Three.js and geodata, prior art
 - [Safe Edge pitch and Fix Lens design](/docs/research/shortlist/safe-edge.md)

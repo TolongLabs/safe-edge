@@ -1,6 +1,6 @@
 # Safe Edge PRD
 
-What the team ships by noon on 23 October 2026, and how we know each part is done. The product truth is in [`PRODUCT.md`](/PRODUCT.md); the build design is in the [TRD](/docs/TRD.md).
+What the team ships by noon on 23 October 2026, and how we know each part is done. The product truth is in [`PRODUCT.md`](/docs/PRODUCT.md); the build design is in the [TRD](/docs/TRD.md).
 
 Contents:
 
