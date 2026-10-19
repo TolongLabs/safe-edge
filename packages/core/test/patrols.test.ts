@@ -61,6 +61,7 @@ describe('PLAN-6: a plan flies only after a pilot approves it', () => {
     })
     expect(approve('usr_pilot')).toMatchObject({ ok: false, rule: 'invalid_transition' })
 
+    h.setNow(approved.data.window.start)
     const patrol = h.call('startPatrol', 'usr_pilot', { body: { planId: 'plan_1', provider: 'sim', droneId: 'sim-1' } })
     expect(patrol.data).toMatchObject({ id: 'ptl_1', status: 'in_flight', pilotUserId: 'usr_pilot' })
     expect(patrol.events.map((e) => e.type)).toEqual(['edge.patrol.started.v1'])
@@ -83,9 +84,40 @@ describe('PLAN-6: a plan flies only after a pilot approves it', () => {
       rule: 'plan_not_approved'
     })
     h.call('approvePatrolPlan', 'usr_pilot', { params: { id: 'plan_1' } })
+    h.setNow(proposed.data.window.start)
     expect(
       h.call('startPatrol', 'usr_pilot', { body: { planId: 'plan_1', provider: 'sim', droneId: 'sim-1' } }).data.status
     ).toBe('in_flight')
+  })
+})
+
+describe("PLAN-7: a patrol launches only inside its plan's window", () => {
+  test('before the window opens and once it has closed, the start is refused', () => {
+    const h = startCore()
+    const plan = h.call('createPatrolPlan', 'usr_manager', { body: request }).data
+    h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
+    const start = () =>
+      h.attempt('startPatrol', 'usr_pilot', { body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' } })
+    const minute = 60_000
+    const at = (iso: string, deltaMs: number) => new Date(Date.parse(iso) + deltaMs).toISOString()
+
+    h.setNow(at(plan.window.start, -minute))
+    expect(start()).toMatchObject({
+      ok: false,
+      rule: 'outside_window',
+      message: expect.stringContaining(plan.window.start)
+    })
+    expect(lastAudit(h)).toMatchObject({ action: 'startPatrol', subjectId: plan.id, rule: 'outside_window' })
+    h.setNow(plan.window.end)
+    expect(start()).toMatchObject({
+      ok: false,
+      rule: 'outside_window',
+      message: expect.stringContaining(plan.window.end)
+    })
+    expect(h.call('listPatrols', 'usr_manager', {}).data).toEqual([])
+
+    h.setNow(plan.window.start)
+    expect(start()).toMatchObject({ ok: true, data: { status: 'in_flight', startedAt: plan.window.start } })
   })
 })
 
@@ -126,14 +158,10 @@ describe('PLAN-4: a plan a re-plan superseded never flies', () => {
 
 describe('WATCH-3: unknown coverage stays unknown', () => {
   test('unknown stretches and unreported segments create field checks and never count as inspected', () => {
-    const h = startCore()
-    h.call('createPatrolPlan', 'usr_manager', { body: request })
-    h.call('approvePatrolPlan', 'usr_pilot', { params: { id: 'plan_1' } })
-    h.call('startPatrol', 'usr_pilot', { body: { planId: 'plan_1', provider: 'sim', droneId: 'sim-1' } })
+    const h = startFlying()
     const length = (id: string) => h.segment(id).segment.lengthM
     const [occluded, clear, unreported] = SEGMENTS as [string, string, string]
 
-    h.setNow('2026-10-22T00:20:00.000Z')
     const completed = h.call('completePatrol', 'usr_drone_sim', {
       params: { id: 'ptl_1' },
       body: {
@@ -216,10 +244,12 @@ describe('WATCH-3: unknown coverage stays unknown', () => {
   })
 })
 
+/** A patrol in flight from plan_1, launched when its window opened; the clock is then at its landing. */
 function startFlying() {
   const h = startCore()
-  h.call('createPatrolPlan', 'usr_manager', { body: request })
-  h.call('approvePatrolPlan', 'usr_pilot', { params: { id: 'plan_1' } })
+  const plan = h.call('createPatrolPlan', 'usr_manager', { body: request }).data
+  h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
+  h.setNow(plan.window.start)
   h.call('startPatrol', 'usr_pilot', { body: { planId: 'plan_1', provider: 'sim', droneId: 'sim-1' } })
   h.setNow('2026-10-22T00:20:00.000Z')
   return h

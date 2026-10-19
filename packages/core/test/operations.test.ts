@@ -101,6 +101,7 @@ describe('the operations table in core', () => {
       }
     }).data
     h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
+    h.setNow(plan.window.start)
     const patrol = h.call('startPatrol', 'usr_pilot', {
       body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' }
     }).data

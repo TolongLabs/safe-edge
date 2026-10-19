@@ -220,7 +220,7 @@ export interface paths {
         get: operations["listPatrols"];
         put?: never;
         /**
-         * Start a patrol from an approved plan that no re-plan superseded
+         * Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
          * @description Roles: pilot. Agents are refused. Emits edge.patrol.started.v1.
          */
         post: operations["startPatrol"];
@@ -1007,7 +1007,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "invalid_coverage";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "outside_window" | "invalid_coverage";
         Denial: {
             /** @constant */
             ok: false;
@@ -2205,7 +2205,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Start a patrol from an approved plan that no re-plan superseded */
+            /** @description Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold) */
             201: {
                 headers: {
                     [name: string]: unknown;

@@ -311,7 +311,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: startPatrol
-      summary: Start a patrol from an approved plan that no re-plan superseded
+      summary: Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
       description: "Roles: pilot. Agents are refused. Emits edge.patrol.started.v1."
       tags:
         - patrols
@@ -325,7 +325,7 @@ paths:
               $ref: "#/components/schemas/StartPatrolRequest"
       responses:
         "201":
-          description: Start a patrol from an approved plan that no re-plan superseded
+          description: Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
           content:
             application/json:
               schema:
@@ -1945,6 +1945,7 @@ components:
         - plan_not_approved
         - plan_superseded
         - weather_hold
+        - outside_window
         - invalid_coverage
     Denial:
       type: object

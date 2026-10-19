@@ -247,7 +247,8 @@ export const operations = {
   startPatrol: {
     method: 'post',
     path: '/patrols',
-    summary: 'Start a patrol from an approved plan that no re-plan superseded',
+    summary:
+      "Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)",
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,

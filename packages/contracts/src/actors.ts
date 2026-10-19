@@ -62,6 +62,7 @@ export const PolicyRule = named(
     'plan_not_approved',
     'plan_superseded',
     'weather_hold',
+    'outside_window',
     'invalid_coverage'
   ])
 )

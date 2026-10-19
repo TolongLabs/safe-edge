@@ -142,6 +142,12 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
       const holds = launchHolds.map((h) => `${h.kind} hold until ${h.until}: ${h.reason}`).join('; ')
       return tx.deny('weather_hold', `${plan.id} cannot launch yet: ${holds}`, plan.id)
     }
+    // The agreed window: from its start, up to (not at) its end.
+    const now = Date.parse(tx.now)
+    if (now < Date.parse(plan.window.start) || now >= Date.parse(plan.window.end)) {
+      const message = `${plan.id} flies from ${plan.window.start} until ${plan.window.end}; it is ${tx.now}`
+      return tx.deny('outside_window', message, plan.id)
+    }
     const patrol: Patrol = {
       id: tx.id('ptl'),
       planId: plan.id,
