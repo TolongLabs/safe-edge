@@ -1084,6 +1084,7 @@ export interface components {
             flightLine: components["schemas"]["LineString"];
             stations: components["schemas"]["CameraStation"][];
             priority: components["schemas"]["PriorityScore"];
+            /** @description Flying the task and hovering at its stations, without transit */
             energyWh: number;
         };
         Waypoint: {
@@ -1112,7 +1113,7 @@ export interface components {
             reason: string;
         };
         /** @enum {string} */
-        RejectionCode: "battery" | "geofence" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
+        RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
         PatrolPlan: {
             id: string;
             /** Format: date-time */
@@ -1137,6 +1138,7 @@ export interface components {
             waypoints: components["schemas"]["Waypoint"][];
             route: components["schemas"]["LineString"];
             energyWh: number;
+            /** @description Energy left on landing; at least the drone profile's reserve */
             reserveWh: number;
             rejected: {
                 segmentId: string;
