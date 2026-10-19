@@ -117,6 +117,7 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
       return tx.deny('every_item_reported', message, observation.id)
     }
 
+    // Each expected item is reported exactly once (checked above), so every lookup finds one.
     const items = viewpoint.expectedItemIds.map((id) => body.items.find((r) => r.inventoryItemId === id)!)
     const candidates: Candidate[] = []
     for (const result of items.filter((r) => r.status !== 'present')) {

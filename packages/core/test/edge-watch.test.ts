@@ -178,67 +178,98 @@ describe('WATCH-6: Edge Watch reports every expected item at its fixed viewpoint
 })
 
 describe('WATCH-7: the false-flag budget', () => {
+  /** Panels 4 to 6 missing: three fence-panel flags per check. */
+  const panels = {
+    [item('fence_panel_4')]: 'missing',
+    [item('fence_panel_5')]: 'missing',
+    [item('fence_panel_6')]: 'missing'
+  } as const
+  /** Four drone checks at viewpoint 2 on one patrol: twelve fence-panel flags. */
+  const twelvePanelFlags = (h: Harness, patrolId: string) =>
+    Array.from({ length: 4 }, () =>
+      check(h, 'usr_drone_sim', observe(h, 'usr_drone_sim', VP2, { patrolId }), report(VP2, panels))
+    ).flatMap((checked) => checked.data.candidates)
+  const decide = (h: Harness, id: string, decision: 'reject' | 'recapture') =>
+    h.call('decideCandidate', 'usr_manager', {
+      params: { id },
+      body: { decision, reason: 'The panel is in place; glare on the water' }
+    })
+  const board = (h: Harness) => h.call('getFalseFlags', 'usr_gm', {}).data
+
   test('a class with more than 10 false flags on its latest reviewed patrol drops to Tier 1, and the board shows the counts', () => {
     const h = startCore()
     const first = flyPatrol(h, '2026-10-21T23:40:00.000Z')
-    // Four drone checks each report panels 4 to 6 missing: twelve fence-panel flags on one patrol.
-    const panels = {
-      [item('fence_panel_4')]: 'missing',
-      [item('fence_panel_5')]: 'missing',
-      [item('fence_panel_6')]: 'missing'
-    } as const
-    const flags = Array.from({ length: 4 }, () =>
-      check(h, 'usr_drone_sim', observe(h, 'usr_drone_sim', VP2, { patrolId: first.id }), report(VP2, panels))
-    ).flatMap((checked) => checked.data.candidates)
+    const flags = twelvePanelFlags(h, first.id)
     expect(flags.map((c) => c.tier)).toEqual(Array(12).fill(2))
 
-    const reject = (id: string) =>
-      h.call('decideCandidate', 'usr_manager', {
-        params: { id },
-        body: { decision: 'reject', reason: 'The panel is in place; glare on the water' }
-      })
-    const board = () => h.call('getFalseFlags', 'usr_gm', {}).data
-    for (const flag of flags.slice(0, 10)) reject(flag.id)
-    // Ten is the budget, not over it.
-    expect(board()).toEqual({
+    for (const flag of flags.slice(0, 10)) decide(h, flag.id, 'reject')
+    // A recaptured flag is reviewed but not false, and ten false flags is the budget, not over it.
+    decide(h, flags[11]!.id, 'recapture')
+    expect(board(h)).toEqual({
       budgetPerPatrol: 10,
       patrols: [
         {
           patrolId: first.id,
           startedAt: '2026-10-21T23:40:00.000Z',
-          classes: [{ flagClass: 'fence_panel', reviewed: 10, falseFlags: 10 }]
+          classes: [{ flagClass: 'fence_panel', reviewed: 11, falseFlags: 10 }]
         }
       ],
       overBudget: []
     })
-    reject(flags[10]!.id)
-    expect(board()).toMatchObject({
-      patrols: [{ patrolId: first.id, classes: [{ flagClass: 'fence_panel', reviewed: 11, falseFlags: 11 }] }],
+    decide(h, flags[10]!.id, 'reject')
+    expect(board(h)).toMatchObject({
+      patrols: [{ patrolId: first.id, classes: [{ flagClass: 'fence_panel', reviewed: 12, falseFlags: 11 }] }],
       overBudget: ['fence_panel']
     })
 
-    // The next patrol: a missing panel is now Tier 1, while a missing ring buoy is still Tier 2.
+    // The next patrol. A check that raises no panel flag leaves the class over budget: only reviewed flags restore it.
     h.call('completePatrol', 'usr_pilot', { params: { id: first.id }, body: { coverage: [] } })
     const next = flyPatrol(h, '2026-10-28T23:40:00.000Z')
+    check(h, 'usr_drone_sim', observe(h, 'usr_drone_sim', VP2, { patrolId: next.id }), report(VP2))
+    expect(board(h).overBudget).toEqual(['fence_panel'])
+
+    // A missing panel is now Tier 1; a panel not visible is still Tier 3, and a missing ring buoy still Tier 2.
     const nextFlags = check(
       h,
       'usr_drone_sim',
       observe(h, 'usr_drone_sim', VP2, { patrolId: next.id }),
-      report(VP2, { [S1.inventoryItemId]: 'missing', [item('ring_buoy')]: 'missing' })
+      report(VP2, {
+        [S1.inventoryItemId]: 'missing',
+        [item('fence_panel_5')]: 'not_visible',
+        [item('ring_buoy')]: 'missing'
+      })
     ).data.candidates
     expect(nextFlags.map((c) => [c.inventoryItemId, c.tier])).toEqual([
       [S1.inventoryItemId, 1],
+      [item('fence_panel_5'), 3],
       [item('ring_buoy'), 2]
     ])
 
     // Reviewing the next patrol with one false panel flag brings the class back within budget.
-    reject(nextFlags[0]!.id)
-    expect(board()).toMatchObject({
+    decide(h, nextFlags[0]!.id, 'reject')
+    expect(board(h)).toMatchObject({
       patrols: [
-        { patrolId: first.id, classes: [{ flagClass: 'fence_panel', reviewed: 11, falseFlags: 11 }] },
+        { patrolId: first.id, classes: [{ flagClass: 'fence_panel', reviewed: 12, falseFlags: 11 }] },
         { patrolId: next.id, classes: [{ flagClass: 'fence_panel', reviewed: 1, falseFlags: 1 }] }
       ],
       overBudget: []
     })
+  })
+
+  test('patrols that start at the same instant count in the order they were created, not by the text of their IDs', () => {
+    const h = startCore()
+    for (let day = 1; day <= 8; day++) flyPatrol(h, `2026-11-0${day}T23:40:00.000Z`)
+    const ninth = flyPatrol(h, '2026-11-09T23:40:00.000Z')
+    const tenth = flyPatrol(h, '2026-11-09T23:40:00.000Z')
+    expect([ninth.id, tenth.id]).toEqual(['ptl_9', 'ptl_10'])
+
+    // The ninth patrol goes over budget; the tenth, created after it, stays within it.
+    for (const flag of twelvePanelFlags(h, ninth.id).slice(0, 11)) decide(h, flag.id, 'reject')
+    decide(h, twelvePanelFlags(h, tenth.id)[0]!.id, 'reject')
+    expect(board(h).patrols.map((p) => [p.patrolId, p.classes[0]!.falseFlags])).toEqual([
+      ['ptl_9', 11],
+      ['ptl_10', 1]
+    ])
+    expect(board(h).overBudget).toEqual([])
   })
 })

@@ -73,9 +73,12 @@ export function flagClassOf(item: InventoryItem | null, candidateClass: Candidat
 /**
  * Reviewed flags and false (rejected) flags per patrol and class. A flag belongs to the patrol of its first observation
  * made on one; flags from phone captures outside a patrol count against no patrol. A class is over budget when the
- * latest patrol with reviewed flags of that class rejected more than the budget, so one quieter patrol restores it.
+ * latest patrol with reviewed flags of that class rejected more than the budget. Only reviewed flags restore it: a later
+ * patrol that raised no flags of the class leaves it as it was, and one whose reviewed flags stay within budget restores it.
  */
 export function falseFlagReport(tx: Tx): FalseFlagReport {
+  // Patrols that start at the same instant are ordered as they were created.
+  const created = new Map(tx.all('patrols').map((p, i) => [p.id, i]))
   const byPatrol = new Map<string, Map<FlagClass, { reviewed: number; falseFlags: number }>>()
   for (const candidate of tx.all('candidates')) {
     if (candidate.status === 'candidate') continue
@@ -99,7 +102,7 @@ export function falseFlagReport(tx: Tx): FalseFlagReport {
         .map(([flagClass, counts]) => ({ flagClass, ...counts }))
         .toSorted((a, b) => a.flagClass.localeCompare(b.flagClass))
     }))
-    .toSorted((a, b) => a.startedAt.localeCompare(b.startedAt) || a.patrolId.localeCompare(b.patrolId))
+    .toSorted((a, b) => a.startedAt.localeCompare(b.startedAt) || created.get(a.patrolId)! - created.get(b.patrolId)!)
   const latest = new Map<FlagClass, number>()
   for (const patrol of patrols) for (const c of patrol.classes) latest.set(c.flagClass, c.falseFlags)
   const overBudget = [...latest]
