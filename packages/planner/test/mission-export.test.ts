@@ -18,8 +18,8 @@ const DO_MOUNT_CONTROL = 205
 const IMAGE_START_CAPTURE = 2000
 
 describe('mission export of a patrol planned over real Elmina segments', async () => {
-  // The demo dock sits on a 6 m roof at 101.5135, 3.1784, on ground 36 m above sea level; the plan flies 9 m above
-  // the edge, so 3 m above the dock, and hovers 3 s at each camera station.
+  // The seed dock sits on a 6 m roof at 101.513484, 3.178393, on ground 36 m above sea level. The seed drone cruises
+  // at 10 m/s. The plan flies 9 m above the edge, so 3 m above the dock, and hovers 3 s at each camera station.
   const { plan, drone, groundAmslM } = await demoPlan(readJson)
   const stations = plan.waypoints.filter((w) => w.kind === 'station')
 
@@ -57,9 +57,9 @@ describe('mission export of a patrol planned over real Elmina segments', async (
           firmwareType: 12, // MAV_AUTOPILOT_PX4
           vehicleType: 2, // MAV_TYPE_QUADROTOR
           globalPlanAltitudeMode: 1, // relative to home
-          cruiseSpeed: drone.cruiseSpeedMps,
-          hoverSpeed: drone.cruiseSpeedMps,
-          plannedHomePosition: [3.1784, 101.5135, 42]
+          cruiseSpeed: 10,
+          hoverSpeed: 10,
+          plannedHomePosition: [3.178393, 101.513484, 42]
         }
       })
       expect(items.map((item) => item.doJumpId)).toEqual(items.map((_, i) => i + 1))
@@ -87,7 +87,7 @@ describe('mission export of a patrol planned over real Elmina segments', async (
       expect(nav.map((item) => item.Altitude)).toEqual(heights)
       expect(nav.map((item) => item.params[6])).toEqual(heights)
       expect(nav.every((item) => item.AltitudeMode === 1 && item.autoContinue === true)).toBe(true)
-      expect(nav.at(-1)!.params.slice(4, 6)).toEqual([3.1784, 101.5135])
+      for (const item of [nav[0]!, nav.at(-1)!]) expect(item.params.slice(4, 6)).toEqual([3.178393, 101.513484])
     })
 
     test('hovers 3 s at each station, then pitches the gimbal and takes one photo', () => {
@@ -143,7 +143,7 @@ describe('mission export of a patrol planned over real Elmina segments', async (
           executeRCLostAction: 'goBack',
           // DJI's floor for a dock: the plan's own climb is only 3 m above the dock.
           takeOffSecurityHeight: '8',
-          globalTransitionalSpeed: '8',
+          globalTransitionalSpeed: '10',
           ...(name === 'wpmz/waylines.wpml' ? { globalRTHHeight: '3' } : {})
         })
         expect(wpmlValues(child(config, WPML, 'droneInfo'))).toEqual({ droneEnumValue: '91', droneSubEnumValue: '1' })
@@ -160,12 +160,12 @@ describe('mission export of a patrol planned over real Elmina segments', async (
         templateId: '0',
         waylineId: '0',
         executeHeightMode: 'relativeToStartPoint',
-        autoFlightSpeed: '8'
+        autoFlightSpeed: '10'
       })
       const placemarks = children(folder, KML, 'Placemark')
       expect(placemarks).toHaveLength(airborne.length)
       placemarks.forEach((placemark, i) => {
-        expect(wpmlValues(placemark)).toMatchObject({ index: String(i), executeHeight: '3', waypointSpeed: '8' })
+        expect(wpmlValues(placemark)).toMatchObject({ index: String(i), executeHeight: '3', waypointSpeed: '10' })
         expect(wpmlValues(child(placemark, WPML, 'waypointTurnParam'))).toEqual({
           waypointTurnMode: 'toPointAndStopWithDiscontinuityCurvature',
           waypointTurnDampingDist: '0'
@@ -180,7 +180,7 @@ describe('mission export of a patrol planned over real Elmina segments', async (
       expect(wpmlValues(folder)).toMatchObject({
         templateType: 'waypoint',
         templateId: '0',
-        autoFlightSpeed: '8',
+        autoFlightSpeed: '10',
         globalHeight: '3',
         gimbalPitchMode: 'usePointSetting',
         globalWaypointTurnMode: 'toPointAndStopWithDiscontinuityCurvature'
