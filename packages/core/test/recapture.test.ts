@@ -155,6 +155,39 @@ describe('A recapture of a candidate with no photo covers its whole segment', ()
     })
   })
 
+  test('a patrol that saw only part of the segment leaves it open', () => {
+    const h = startCore()
+    const segmentId = 'seg_866518980_5'
+    const lengthM = seed.segments.find((s) => s.id === segmentId)!.lengthM
+    h.setNow('2026-10-23T01:00:00.000Z')
+    const missed = h.call('reportMissedPatrol', 'usr_system', { params: { id: segmentId } }).data
+    h.call('decideCandidate', 'usr_manager', {
+      params: { id: missed.id },
+      body: { decision: 'recapture', reason: 'Fly it on the next patrol' }
+    })
+    const plan = h.call('createPatrolPlan', 'usr_manager', {
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds: [segmentId],
+        context: [],
+        notBefore: h.now(),
+        altitudeCapM: 60
+      }
+    }).data
+    h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
+    h.setNow(plan.window.start)
+    const patrol = h.call('startPatrol', 'usr_pilot', { body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' } })
+    h.call('completePatrol', 'usr_drone_sim', {
+      params: { id: patrol.data.id },
+      body: { coverage: [{ segmentId, inspectedM: lengthM - 10, unknownM: 10 }] }
+    })
+    expect(h.call('listTasks', 'usr_manager', { query: { segmentId } }).data.map((t) => [t.kind, t.status])).toEqual([
+      ['recapture', 'open'],
+      ['field_check', 'open']
+    ])
+  })
+
   test('on a segment with viewpoints, a new frame from any of them also does it', () => {
     const h = startCore()
     h.setNow('2026-10-23T01:00:00.000Z')

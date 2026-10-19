@@ -193,9 +193,9 @@ export const patrolHandlers = (
     const coverage = [...covered, ...unreported]
     const completed: Patrol = { ...patrol, status: 'completed', completedAt: tx.now, coverage }
     tx.put('patrols', completed)
-    // Inspecting any of a segment restarts its patrol interval; a segment the patrol saw none of has missed it. It
-    // also does a whole-segment recapture asked for before take-off.
-    for (const c of coverage.filter((c) => c.inspectedM > 0)) {
+    // Inspecting a whole segment restarts its patrol interval and does a whole-segment recapture asked for before
+    // take-off. Part of one does neither: its unknown rest gets a field check, and the patrol is still due.
+    for (const c of coverage.filter((c) => c.unknownM === 0)) {
       tx.put('segments', { ...tx.must('segments', c.segmentId), lastPatrolledAt: tx.now })
       const tookOff = Date.parse(patrol.startedAt)
       closeRecaptures(tx, c.segmentId, (t) => t.viewpointId === null && Date.parse(t.createdAt) <= tookOff)

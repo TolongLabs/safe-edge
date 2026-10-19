@@ -1202,7 +1202,7 @@ export interface components {
             passId: string | null;
             /** @description How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later */
             patrolIntervalDays: number;
-            /** @description When a completed patrol last inspected some of the segment */
+            /** @description When a completed patrol last inspected the whole segment */
             lastPatrolledAt: string | null;
             simulated: boolean;
             source: components["schemas"]["Source"];

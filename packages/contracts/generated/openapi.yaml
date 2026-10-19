@@ -2417,7 +2417,7 @@ components:
             - type: string
               format: date-time
             - type: "null"
-          description: When a completed patrol last inspected some of the segment
+          description: When a completed patrol last inspected the whole segment
         simulated:
           type: boolean
         source:

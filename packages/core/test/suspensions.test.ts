@@ -133,7 +133,7 @@ describe('a missed patrol suspends the pass', () => {
     expect(verifyAuditChain(h.audit()).ok).toBe(true)
   })
 
-  test('a patrol that inspected the segment restarts its interval; one that saw none of it does not', () => {
+  test('a patrol that inspected the whole segment restarts its interval; one that saw none of it does not', () => {
     const h = startCore()
     const plan = h.call('createPatrolPlan', 'usr_manager', {
       body: {
@@ -153,7 +153,7 @@ describe('a missed patrol suspends the pass', () => {
     const lengthM = h.segment(S1.segmentId).segment.lengthM
     h.call('completePatrol', 'usr_drone_sim', {
       params: { id: patrol.data.id },
-      body: { coverage: [{ segmentId: S1.segmentId, inspectedM: lengthM - 5, unknownM: 5 }] }
+      body: { coverage: [{ segmentId: S1.segmentId, inspectedM: lengthM, unknownM: 0 }] }
     })
     expect(h.segment(S1.segmentId).segment.lastPatrolledAt).toBe(landed)
     expect(h.segment(SOON).segment.lastPatrolledAt).toBe(LAST_PATROL)
