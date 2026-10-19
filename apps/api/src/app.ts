@@ -139,7 +139,8 @@ export function createApp({
     clock,
     ids,
     options: webhooks,
-    journal,
+    command: journal.command,
+    atomic: journal.atomic,
     db,
     recordStored: core.recordStored
   })

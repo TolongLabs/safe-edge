@@ -124,14 +124,16 @@ export function createEventHub({
   clock,
   ids,
   options,
-  journal,
+  command,
+  atomic,
   db,
   recordStored
 }: {
   clock: Clock
   ids: IdGenerator
   options: WebhookOptions
-  journal: Pick<Journal, 'command' | 'atomic'>
+  command: Journal['command']
+  atomic: Journal['atomic']
   db: Database
   recordStored: Core['recordStored']
 }) {
@@ -150,23 +152,14 @@ export function createEventHub({
   const keepRetry = db.query('insert or replace into webhook_retries values (?, ?, ?, ?, ?)')
   const dropRetry = db.query('delete from webhook_retries where webhook_id = ? and event_id = ?')
 
-  const register = journal.command(
-    'registerWebhook',
-    (actor: Actor, body: RegisterWebhookRequest, secret: string): Webhook => {
-      const webhook: Webhook = {
-        id: ids.next('whk'),
-        ...body,
-        createdBy: actor.id,
-        createdAt: clock.now(),
-        failures: []
-      }
-      webhooks.set(webhook.id, { webhook, secret })
-      recordStored('registerWebhook', actor, webhook)
-      return webhook
-    }
-  )
+  const register = command('registerWebhook', (actor: Actor, body: RegisterWebhookRequest, secret: string): Webhook => {
+    const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: actor.id, createdAt: clock.now(), failures: [] }
+    webhooks.set(webhook.id, { webhook, secret })
+    recordStored('registerWebhook', actor, webhook)
+    return webhook
+  })
 
-  const fail = journal.command(
+  const fail = command(
     'deliverWebhook',
     (id: string, { eventId, attempt, error, final }: Omit<WebhookFailure, 'at'>) => {
       const entry = webhooks.get(id)
@@ -189,7 +182,7 @@ export function createEventHub({
 
   /** Records a failed attempt, and the retry it leaves pending until `dueAt` (none once final), in one transaction. */
   const record = (id: string, failure: Omit<WebhookFailure, 'at'>, body: string, dueAt: number) =>
-    journal.atomic(
+    atomic(
       () => fail(id, failure),
       () => {
         if (failure.final) dropRetry.run(id, failure.eventId)
