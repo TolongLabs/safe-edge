@@ -1,0 +1,8 @@
+{
+  "name": "@safe-edge/mcp",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc"
+  }
+}
