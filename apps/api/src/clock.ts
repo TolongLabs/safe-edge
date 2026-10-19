@@ -17,14 +17,15 @@ export function scenarioClock(start: string): Required<ApiClock> {
 }
 
 /**
- * The wall clock, or with `SAFE_EDGE_CLOCK=scenario` a scenario clock that starts at `start` (the seed's date) and
- * moves only when the scenario player sets it, so a replayed scenario's records carry its fixture's times. Production
- * (`NODE_ENV=production`) refuses the scenario clock.
+ * The wall clock (`SAFE_EDGE_CLOCK` unset or `wall`), or with `SAFE_EDGE_CLOCK=scenario` a scenario clock that starts
+ * at `start` (the seed's date) and moves only when the scenario player sets it, so a replayed scenario's records carry
+ * its fixture's times. Production (`NODE_ENV=production`) refuses the scenario clock. `bun run dev` sets `scenario`
+ * unless told otherwise (dev.ts).
  */
 export function clockFrom(env: Record<string, string | undefined>, start: string): ApiClock {
   const { SAFE_EDGE_CLOCK: mode } = env
-  if (mode === undefined) return { now: () => new Date().toISOString() }
-  if (mode !== 'scenario') throw new Error(`SAFE_EDGE_CLOCK is scenario or unset, not ${mode}`)
+  if (mode === undefined || mode === 'wall') return { now: () => new Date().toISOString() }
+  if (mode !== 'scenario') throw new Error(`SAFE_EDGE_CLOCK is scenario, wall or unset, not ${mode}`)
   if (env.NODE_ENV === 'production') throw new Error('The API refuses the scenario clock in production')
   return scenarioClock(start)
 }

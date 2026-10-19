@@ -26,7 +26,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Webhook as StandardWebhook } from 'standardwebhooks'
 import { createApp } from '../src/app.ts'
-import { scenarioClock } from '../src/clock.ts'
+import { scenarioClock, type ApiClock } from '../src/clock.ts'
 import { JournalWriteError } from '../src/journal.ts'
 import { devTokens } from '../src/tokens.ts'
 import { eventually } from '../../../test/spawn.ts'
@@ -216,6 +216,45 @@ test("a dev API on the scenario clock starts again at the scenario's time, not t
   expect(raised.raisedAt).toBe(scenarioTime)
 }, 30_000)
 
+test("a scenario clock won't start behind a store the wall clock wrote later: its writes would go on the chain before", async () => {
+  // #147: bun run dev now starts on the scenario clock, at the seed's date, and may meet a store an earlier run wrote
+  // on the wall clock after that date.
+  const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
+  afterAll(() => rm(dir, { recursive: true }))
+  const store = join(dir, 'in-process.sqlite')
+  const tokens = await devTokens(
+    { SAFE_EDGE_DEV_TOKENS: JSON.stringify({ tok_provider: 'usr_drone_sim' }) },
+    seed.users
+  )
+  const start = (clock: ApiClock) =>
+    createApp({
+      seed,
+      clock,
+      store,
+      tokens,
+      heartbeatMs: 5_000,
+      webhooks: { origins: [], allowLoopback: true, retryDelaysMs: [] },
+      idempotencyRetentionMs: 24 * 60 * 60 * 1000,
+      every: () => {}
+    })
+  const wallTime = '2026-10-25T09:00:00.000Z'
+  const raised = await start({ now: () => wallTime }).fetch(
+    new Request('http://safe-edge.test/v1/candidates', {
+      method: 'POST',
+      headers: { authorization: 'Bearer tok_provider', 'content-type': 'application/json' },
+      body: JSON.stringify(tier2Candidate)
+    })
+  )
+  expect(raised.status).toBe(201)
+
+  expect(() => start(scenarioClock(seed.asOf))).toThrow(
+    `${store} holds writes up to ${wallTime}, after the scenario clock's ${seed.asOf}: start with ` +
+      'SAFE_EDGE_CLOCK=wall, or move it away to start again from the seed'
+  )
+  // A scenario clock that has caught up starts on it.
+  expect(() => start(scenarioClock(wallTime))).not.toThrow()
+})
+
 test("the automation's writes are journaled like a request's: a restart replays them onto the same chain", async () => {
   const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
   afterAll(() => rm(dir, { recursive: true }))
@@ -266,7 +305,8 @@ test('a write the journal cannot keep throws out of the app, which takes no more
     store: join(dir, 'in-process.sqlite'),
     tokens,
     heartbeatMs: 5_000,
-    webhooks: { origins: [], allowLoopback: true, retryDelaysMs: [] }
+    webhooks: { origins: [], allowLoopback: true, retryDelaysMs: [] },
+    idempotencyRetentionMs: 24 * 60 * 60 * 1000
   })
   const raise = () =>
     app.fetch(

@@ -126,14 +126,22 @@ export const EdgeEvent = z.discriminatedUnion(
 )
 export type EdgeEvent = { [T in EventType]: z.infer<(typeof EVENT_SCHEMAS)[T]> }[EventType]
 
-/** One delivery attempt that did not reach the endpoint. Network errors, timeouts, 408, 429 and 5xx are retried. */
+/**
+ * One delivery attempt that did not reach the endpoint. Network errors, timeouts, 408, 429 and 5xx are retried. An
+ * attempt the API refused to send, because the webhook's origin is no longer on the allowlist, is final.
+ */
 export const WebhookFailure = named(
   'WebhookFailure',
   z.object({
     eventId: EventId,
     at: Timestamp,
     attempt: z.number().int().positive().describe('1 for the first attempt at this event, 2 for the first retry, ...'),
-    error: z.string().min(1).describe('HTTP <status>: <body, cut at 500 characters>, or the network error'),
+    error: z
+      .string()
+      .min(1)
+      .describe(
+        'HTTP <status>: <body, cut at 500 characters>, the network error, or "Not delivered: <origin> is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)"'
+      ),
     final: z.boolean().describe('True when the API gave up on this event for this endpoint: no retry follows')
   })
 )

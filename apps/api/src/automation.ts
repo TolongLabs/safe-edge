@@ -124,7 +124,9 @@ export function startAutomation({
       )
     }
   } else if (weather !== undefined) {
-    throw new Error('A scenario clock does not poll live weather; run the API on the wall clock to poll data.gov.my')
+    throw new Error(
+      'A scenario clock does not poll live weather; run the API on the wall clock (SAFE_EDGE_CLOCK=wall) to poll data.gov.my'
+    )
   }
   return {
     /** The scenario clock moved: run what the timers run on the wall clock, drone events first. */

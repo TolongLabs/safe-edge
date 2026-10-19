@@ -29,7 +29,7 @@ jq '.events[2].input.body' $S | post /retests dev_agent
 
 ### Replay on the scenario clock
 
-Since #131, the dev API can stamp records with the fixture's times instead of the wall clock. Start a fresh one on the scenario clock, which starts at the seed's `asOf`: `cd apps/api && PORT=3877 SAFE_EDGE_CLOCK=scenario bun run src/dev.ts`. Production refuses `SAFE_EDGE_CLOCK=scenario`. Then, from the repo root, set the clock to each event's `at` as `usr_system` before the event, with this machine's dev tokens:
+Since #131, the dev API can stamp records with the fixture's times instead of the wall clock. Start a fresh one on the scenario clock, which starts at the seed's `asOf`: `cd apps/api && PORT=3877 SAFE_EDGE_CLOCK=scenario bun run src/dev.ts`. Since #147 the dev entry starts on the scenario clock without the variable too. Production refuses `SAFE_EDGE_CLOCK=scenario`. Then, from the repo root, set the clock to each event's `at` as `usr_system` before the event, with this machine's dev tokens:
 
 ```sh
 S=data/elmina/scenarios/s6-text-in-image.json

@@ -4324,7 +4324,7 @@ components:
         error:
           type: string
           minLength: 1
-          description: "HTTP <status>: <body, cut at 500 characters>, or the network error"
+          description: 'HTTP <status>: <body, cut at 500 characters>, the network error, or "Not delivered: <origin> is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)"'
         final:
           type: boolean
           description: "True when the API gave up on this event for this endpoint: no retry follows"
