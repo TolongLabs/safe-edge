@@ -2,56 +2,16 @@
 // with SAFE_EDGE_CLOCK=scenario, the API's clock is the one the scenario player sets before each event, through the
 // audited setScenarioClock operation. Production refuses it.
 import { afterAll, expect, test } from 'bun:test'
+import { AuditEvent } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { ensureDevTokens } from '../src/dev-tokens.ts'
+import { refusedStart, startApiProcess } from './process.ts'
 import { S6, play, scenarioClockPlayer } from './s6.ts'
-import { seed } from './support.ts'
-
-const apiDir = join(import.meta.dir, '..')
-
-function freePort(): number {
-  const server = Bun.serve({ port: 0, fetch: () => new Response() })
-  const { port } = server
-  server.stop(true)
-  if (port === undefined) throw new Error('Bun.serve did not report a port')
-  return port
-}
-
-/**
- * Runs an API entry (`src/dev.ts` or `src/index.ts`) as its own process, on a fresh data directory, and returns its
- * `/v1` URL once it answers.
- */
-async function serve(entry: string, env: Record<string, string>): Promise<string> {
-  const port = freePort()
-  const dataDir = await mkdtemp(join(tmpdir(), 'safe-edge-scenario-api-'))
-  const api = Bun.spawn(['bun', entry], {
-    cwd: apiDir,
-    env: { ...process.env, SAFE_EDGE_DATA_DIR: dataDir, ...env, PORT: String(port) },
-    stdout: 'ignore',
-    stderr: 'inherit'
-  })
-  afterAll(async () => {
-    api.kill()
-    await api.exited
-    await rm(dataDir, { recursive: true })
-  })
-  const baseUrl = `http://localhost:${port}/v1`
-  const deadline = Date.now() + 20_000
-  while (Date.now() < deadline) {
-    if (api.exitCode !== null) throw new Error(`bun ${entry} exited with code ${api.exitCode}`)
-    const health = await fetch(`${baseUrl}/health`).catch((error: Error) => {
-      if (error.message.includes('Unable to connect')) return undefined
-      throw error
-    })
-    if (health?.ok) return baseUrl
-    await Bun.sleep(200)
-  }
-  throw new Error(`bun ${entry} did not answer within 20 s`)
-}
+import { seed, startApi } from './support.ts'
 
 /** ISO timestamps anywhere in a record's new state that its old state did not hold: the times a write stamped. */
 function stampedTimes(before: unknown, after: unknown): string[] {
@@ -67,8 +27,8 @@ test("replayed against the dev API in scenario mode, S6's records and audit even
   // The dev entry (what bun run dev serves), with this run's own generated dev tokens.
   const env = { XDG_STATE_HOME: await mkdtemp(join(tmpdir(), 'safe-edge-scenario-')) }
   afterAll(() => rm(env.XDG_STATE_HOME, { recursive: true }))
-  const baseUrl = await serve('src/dev.ts', { ...env, SAFE_EDGE_CLOCK: 'scenario' })
-  const player = scenarioClockPlayer(baseUrl, (await ensureDevTokens(env)).tokenOf)
+  const api = await startApiProcess({ ...env, SAFE_EDGE_CLOCK: 'scenario' }, 'dev')
+  const player = scenarioClockPlayer(`${api.url}/v1`, (await ensureDevTokens(env)).tokenOf)
   const scenario = [...S6.setup, ...S6.events]
   await play(player, scenario)
 
@@ -124,22 +84,43 @@ test('production refuses the scenario clock: it will not start with one, and its
     }),
     SAFE_EDGE_AGENT_TOKEN: 'tok_agent'
   }
-  const refused = Bun.spawn(['bun', 'src/index.ts'], {
-    cwd: apiDir,
-    env: { ...process.env, ...production, SAFE_EDGE_CLOCK: 'scenario', PORT: String(freePort()) },
-    stdout: 'ignore',
-    stderr: 'pipe'
-  })
-  expect(await refused.exited).toBe(1)
-  expect(await new Response(refused.stderr).text()).toContain('The API refuses the scenario clock in production')
+  const refused = await refusedStart({ ...production, SAFE_EDGE_CLOCK: 'scenario' })
+  expect(refused.code).toBe(1)
+  expect(refused.stderr).toContain('The API refuses the scenario clock in production')
 
   // Started without it, production runs on the wall clock, and the system user cannot set it.
-  const baseUrl = await serve('src/index.ts', production)
-  const as = (token: string) => createSafeEdgeClient({ transport: 'http', baseUrl, token })
+  const api = await startApiProcess(production)
+  const as = (token: string) => createSafeEdgeClient({ transport: 'http', baseUrl: `${api.url}/v1`, token })
   await expect(as('tok_system').setScenarioClock({ body: { now: S6.setup[0]!.at } })).rejects.toMatchObject({
     status: 501,
     error: 'not_implemented'
   })
   // Nothing moved, so the audit chain is still empty.
   expect(await as('tok_manager').listAudit({})).toEqual([])
+})
+
+test('the scenario clock moves forward only: an earlier time is refused, audited, and the clock stays put', async () => {
+  const api = startApi()
+  const set = (now: string) => api.request('post', '/scenario/clock', { token: 'tok_system', body: { now } })
+  const later = '2026-10-21T00:00:00.000Z'
+  const earlier = '2026-10-20T23:59:59.000Z'
+  expect((await set(later)).status).toBe(200)
+
+  const back = await set(earlier)
+  expect(back.status).toBe(403)
+  expect(await back.json()).toEqual({
+    ok: false,
+    rule: 'clock_backwards',
+    message: `The scenario clock is at ${later}; it moves forward only, so it cannot go back to ${earlier}`
+  })
+  // Setting the time it already shows is not a move back.
+  expect((await set(later)).status).toBe(200)
+
+  const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_gm' })).json())
+  expect(audit.map((e) => [e.action, e.decision, e.rule, e.subjectId, e.at])).toEqual([
+    ['setScenarioClock', 'allowed', null, 'clock', later],
+    ['setScenarioClock', 'denied', 'clock_backwards', 'setScenarioClock', later],
+    ['setScenarioClock', 'allowed', null, 'clock', later]
+  ])
+  expect(verifyAuditChain(audit)).toMatchObject({ ok: true })
 })

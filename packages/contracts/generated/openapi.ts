@@ -166,6 +166,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/patrol-plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a patrol plan
+         * @description Roles: any. Agents need scope `edge.read`.
+         */
+        get: operations["getPatrolPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/patrol-plans/{id}/approve": {
         parameters: {
             query?: never;
@@ -224,6 +244,26 @@ export interface paths {
          * @description Roles: pilot. Agents are refused. Emits edge.patrol.started.v1.
          */
         post: operations["startPatrol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patrols/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a patrol
+         * @description Roles: any. Agents need scope `edge.read`.
+         */
+        get: operations["getPatrol"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -384,7 +424,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+         * Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion
          * @description People are refused. Agents need scope `finding.propose`.
          */
         post: operations["recordAgentSummary"];
@@ -976,7 +1016,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
+         * The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
          * @description Roles: manager. Agents are refused.
          */
         post: operations["draftInbox"];
@@ -1060,7 +1100,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+         * Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered
          * @description Roles: system. Agents are refused.
          */
         post: operations["setScenarioClock"];
@@ -1136,7 +1176,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "separation_hold" | "outside_window" | "invalid_coverage";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "separation_hold" | "outside_window" | "invalid_coverage" | "clock_backwards";
         Denial: {
             /** @constant */
             ok: false;
@@ -1202,7 +1242,7 @@ export interface components {
             passId: string | null;
             /** @description How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later */
             patrolIntervalDays: number;
-            /** @description When a completed patrol last inspected some of the segment */
+            /** @description When a completed patrol last inspected the whole segment */
             lastPatrolledAt: string | null;
             simulated: boolean;
             source: components["schemas"]["Source"];
@@ -2387,6 +2427,31 @@ export interface operations {
             403: components["responses"]["Denied"];
         };
     };
+    getPatrolPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read a patrol plan */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolPlan"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     approvePatrolPlan: {
         parameters: {
             query?: never;
@@ -2494,6 +2559,31 @@ export interface operations {
             400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
+        };
+    };
+    getPatrol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read a patrol */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Patrol"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
         };
     };
     completePatrol: {
@@ -2749,7 +2839,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion */
+            /** @description Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3684,7 +3774,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft */
+            /** @description The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3836,7 +3926,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501) */
+            /** @description Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered */
             200: {
                 headers: {
                     [name: string]: unknown;

@@ -2,7 +2,7 @@
 // injectable clock. Bearer tokens `tok_<userId>` map to the seeded users.
 import { describe, expect, test } from 'bun:test'
 import { actorFor } from '@safe-edge/core'
-import type { EdgeEvent } from '@safe-edge/contracts'
+import type { AuditEvent, EdgeEvent } from '@safe-edge/contracts'
 import { startApi as startRealApi, tier2Candidate } from '../../../apps/api/test/support.ts'
 import { join } from 'node:path'
 import {
@@ -47,6 +47,31 @@ describe('http transport: the same typed client against the v1 API', () => {
     expect(await httpAs('usr_manager').listPasses({ query: { state: 'valid' } })).toEqual(
       await demo.listPasses({ query: { state: 'valid' } })
     )
+  })
+
+  test("the scheduled pass is the same in both: memory tick(now) does what moving the API's scenario clock does", async () => {
+    // 12 Nov: pass _5 expires, _12 starts expiring, and every seeded patrol interval has run out.
+    const NOV_12 = '2026-11-12T02:00:00.000Z'
+    api = startApi()
+    await httpAs('usr_system').setScenarioClock({ body: { now: NOV_12 } })
+    const demo = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager', clock: { now: () => NOV_12 } })
+    const events = await demo.tick(NOV_12)
+
+    expect(events.map((e) => [e.type, 'segmentId' in e.data ? e.data.segmentId : null])).toEqual([
+      ['edge.pass.expired.v1', 'seg_866518980_5'],
+      ['edge.pass.expiring.v1', 'seg_866518980_12'],
+      ['edge.candidate.raised.v1', S1.segmentId],
+      ['edge.pass.suspended.v1', S1.segmentId],
+      ['edge.candidate.raised.v1', 'seg_866518980_12'],
+      ['edge.pass.suspended.v1', 'seg_866518980_12']
+    ])
+    // The same writes by the same system actors, apart from the API's record of its clock moving.
+    const writes = (chain: AuditEvent[]) =>
+      chain
+        .filter((e) => e.action !== 'setScenarioClock')
+        .map(({ action, actor, subjectId, at, after }) => ({ action, actor, subjectId, at, after }))
+    expect(writes(await demo.listAudit())).toEqual(writes(await httpAs('usr_gm').listAudit()))
+    expect(writes(await demo.listAudit())).toHaveLength(6)
   })
 
   test('every request carries the bearer token, and every write a fresh Idempotency-Key unless the caller gives one', async () => {

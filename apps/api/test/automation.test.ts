@@ -160,11 +160,9 @@ async function approvedPlan(api: Api, segmentIds: string[]) {
   )
 }
 
-const startPatrol = async (api: Api, planId: string) =>
+const startPatrol = async (api: Api, planId: string, provider: Patrol['provider'] = 'sim') =>
   Patrol.parse(
-    await json(
-      api.request('post', '/patrols', { token: 'tok_pilot', body: { planId, provider: 'sim', droneId: 'sim-1' } })
-    )
+    await json(api.request('post', '/patrols', { token: 'tok_pilot', body: { planId, provider, droneId: 'sim-1' } }))
   )
 
 describe.each(['wall clock', 'scenario clock'] as const)('on the %s', (mode) => {
@@ -235,8 +233,53 @@ test('a failed automation step is recorded on the audit chain, readable over the
       'runAutomation',
       'core.automation',
       'allowed',
-      { id: 'automation', step: 'replan', error: `No drone this bridge flies reports ${patrol.id}'s progress` }
+      {
+        id: 'automation',
+        step: 'replan',
+        error: `${plan.id} was not re-planned: No drone this bridge flies reports ${patrol.id}'s progress`
+      }
     ]
+  ])
+})
+
+test('a patrol whose progress no drone reports fails only its own re-plan: the other open plan is re-planned', async () => {
+  const { api, moveTo } = startOn('wall clock')
+  const waiting = PatrolPlan.parse(
+    await json(api.request('post', '/patrol-plans', { token: 'tok_manager', body: planRequest(['seg_866518980_6']) }))
+  )
+  const flying = await approvedPlan(api, [EXPIRING])
+  await moveTo(flying.window.start)
+  // Nothing in this API flies MAVLink, so no drone reports how far this patrol got.
+  const patrol = await startPatrol(api, flying.id, 'mavlink')
+  const candidate = await json(raiseTier2(api))
+  const frames = await subscribe(api)
+  const decided = await api.request('post', `/candidates/${candidate.id}/decision`, {
+    token: 'tok_manager',
+    body: { decision: 'confirm', severity: 'high' }
+  })
+  expect(decided.status).toBe(200)
+
+  // The waiting plan is re-planned with the confirmed segment; the flying one, re-planned after it, is not. The
+  // re-plan made before that failure is still announced.
+  const replans = (await plansOf(api)).filter((p) => p.replan !== null)
+  expect(replans.map((p) => p.replan!.supersedes)).toEqual([{ planId: waiting.id, committedTasks: 0 }])
+  expect((await nextEvents(frames, 3)).map((e) => [e.type, 'planId' in e.data ? e.data.planId : null])).toEqual([
+    ['edge.candidate.decided.v1', null],
+    ['edge.work_order.drafted.v1', null],
+    ['edge.patrol.planned.v1', replans[0]!.id]
+  ])
+  expect(replans[0]!.tasks.map((t) => t.segmentId).toSorted()).toEqual([S1.segmentId, 'seg_866518980_6'].toSorted())
+  // The flying plan's failure is on the audit chain, naming it.
+  const failures = AuditEvent.array().parse(
+    await json(api.request('get', '/audit?subject=automation', { token: 'tok_manager' }))
+  )
+  expect(failures.map((e) => e.after)).toEqual([
+    { id: 'automation', step: 'drone', error: `This API flies only drone-sim; ${patrol.id} names mavlink` },
+    {
+      id: 'automation',
+      step: 'replan',
+      error: `${flying.id} was not re-planned: No drone this bridge flies reports ${patrol.id}'s progress`
+    }
   ])
 })
 

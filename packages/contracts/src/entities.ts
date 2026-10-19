@@ -100,7 +100,7 @@ export const Segment = named(
       .describe(
         "How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later"
       ),
-    lastPatrolledAt: Timestamp.nullable().describe('When a completed patrol last inspected some of the segment'),
+    lastPatrolledAt: Timestamp.nullable().describe('When a completed patrol last inspected the whole segment'),
     ...provenance
   })
 )

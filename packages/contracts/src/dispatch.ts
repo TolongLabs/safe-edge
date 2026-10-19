@@ -44,3 +44,18 @@ export type Dispatch = <K extends CoreOperationId>(
   actor: Actor,
   input: OperationInput<K>
 ) => DispatchResult<K>
+
+/**
+ * Dispatches as `actor` for a caller that needs the call to succeed (the automation, the drone bridge, the work-order
+ * hand-off): a refusal or a missing record throws, naming the operation and the actor.
+ */
+export function dispatchOrThrow<K extends CoreOperationId>(
+  dispatch: Dispatch,
+  operationId: K,
+  actor: Actor,
+  input: OperationInput<K>
+): DispatchSuccess<K> {
+  const result = dispatch(operationId, actor, input)
+  if (!result.ok) throw new Error(`${operationId} as ${actor.id} failed: ${result.message}`)
+  return result
+}

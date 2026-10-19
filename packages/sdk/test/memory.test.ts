@@ -129,28 +129,33 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
     expect(seen.length).toBe(8)
   })
 
-  test('tick(now) moves passes as the system, for S4: subscribers see each pass start expiring', async () => {
-    const { demo } = startDemo()
+  test('tick(now) runs the scheduled pass as the system, for S4: subscribers see each pass start expiring', async () => {
+    const { demo, stage } = startDemo()
     const seen: EdgeEvent[] = []
     demo.subscribe((event) => seen.push(event))
     // pass_866518980_12 is valid to 2026-12-01T02:00Z, so it starts expiring 30 days earlier.
+    stage.setNow('2026-11-01T02:00:00.000Z')
     const events = await demo.as('usr_gm').tick('2026-11-01T02:00:00.000Z')
-    expect(events.map((e): unknown[] => [e.type, e.data])).toEqual([
-      [
-        'edge.pass.expiring.v1',
-        {
-          passId: 'pass_866518980_12',
-          segmentId: 'seg_866518980_12',
-          validTo: '2026-12-01T02:00:00.000Z',
-          simulated: true
-        }
-      ]
-    ])
+    expect(events[0]).toMatchObject({
+      type: 'edge.pass.expiring.v1',
+      data: {
+        passId: 'pass_866518980_12',
+        segmentId: 'seg_866518980_12',
+        validTo: '2026-12-01T02:00:00.000Z',
+        simulated: true
+      }
+    })
+    // By then every seeded patrol interval has run out, so each pass still standing gets a missed patrol, as the API's
+    // scheduled pass does.
+    expect(events.slice(1).map((e) => [e.type, 'segmentId' in e.data ? e.data.segmentId : null])).toEqual(
+      ['seg_866518980_5', S1.segmentId, 'seg_866518980_12'].flatMap((segmentId) => [
+        ['edge.candidate.raised.v1', segmentId],
+        ['edge.pass.suspended.v1', segmentId]
+      ])
+    )
     expect(seen).toEqual(events)
-    expect(await demo.getPass({ params: { id: 'pass_866518980_12' } })).toMatchObject({ state: 'expiring' })
     // Whoever's client asks, the move is the system's, on the audit chain.
-    expect((await demo.listAudit()).at(-1)).toMatchObject({
-      action: 'tick',
+    expect((await demo.listAudit()).find((e) => e.action === 'tick')).toMatchObject({
       subjectId: 'pass_866518980_12',
       actor: { type: 'system', id: 'core.tick', role: 'system' },
       after: { state: 'expiring' }
@@ -239,6 +244,52 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
       [open.id, 'usr_manager'],
       ['plan_2', 'core.replan'],
       ['plan_3', 'core.replan']
+    ])
+  })
+
+  test('the demo flies no drone, so an in-flight patrol fails its own re-plan only: the other open plan is re-planned', async () => {
+    const repoRoot = join(import.meta.dir, '../../..')
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    let now = '2026-10-20T00:00:00.000Z'
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
+    const request = (segmentIds: string[]) => ({
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds,
+        context: [],
+        notBefore: now,
+        altitudeCapM: 60
+      }
+    })
+    const flying = await demo.createPatrolPlan(request(['seg_866518980_5']))
+    await demo.as('usr_pilot').approvePatrolPlan({ params: { id: flying.id } })
+    now = flying.window.start
+    const patrol = await demo
+      .as('usr_pilot')
+      .startPatrol({ body: { planId: flying.id, provider: 'sim', droneId: 'sim-1' } })
+    const waiting = await demo.createPatrolPlan(request(['seg_866518980_6']))
+
+    await playS1toRepair({ as: (id) => demo.as(id), setNow: (iso) => (now = iso) })
+
+    // Both triggers (the confirmed flag, then the repair) re-plan the waiting plan, and fail on the flying one.
+    const plans = await demo.listPatrolPlans()
+    expect(plans.map((p) => [p.id, p.replan?.trigger.kind ?? null, p.replan?.supersedes?.planId ?? null])).toEqual([
+      [flying.id, null, null],
+      [waiting.id, null, null],
+      ['plan_3', 'flag_confirmed', waiting.id],
+      ['plan_4', 'repair_completed', 'plan_3']
+    ])
+    const failures = await demo.listAudit({ query: { subject: 'automation' } })
+    const failed = `${flying.id} was not re-planned: The memory transport flies no drone, so nothing reports ${patrol.id}'s progress`
+    expect(failures.map((e) => e.after)).toEqual([
+      { id: 'automation', step: 'replan', error: failed },
+      { id: 'automation', step: 'replan', error: failed }
     ])
   })
 

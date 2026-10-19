@@ -21,10 +21,15 @@ import {
 } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
 import { Database } from 'bun:sqlite'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { chmod, mkdtemp, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Webhook as StandardWebhook } from 'standardwebhooks'
+import { createApp } from '../src/app.ts'
+import { scenarioClock } from '../src/clock.ts'
+import { JournalWriteError } from '../src/journal.ts'
+import { devTokens } from '../src/tokens.ts'
+import { eventually } from '../../../test/spawn.ts'
 import { startApiProcess } from './process.ts'
 import { S1, seed, tier2Candidate } from './support.ts'
 
@@ -62,15 +67,12 @@ test('S1 suspends the pass, the API is killed, and the restarted API carries S1 
     }
   })
   afterAll(() => receiver.stop(true))
-  const delivered = async (secret: string, type: EdgeEvent['type']) => {
-    for (;;) {
-      const found = deliveries
+  const delivered = (secret: string, type: EdgeEvent['type']) =>
+    eventually(`A signed ${type} delivery`, () =>
+      deliveries
         .map(({ headers, body }) => EdgeEvent.parse(new StandardWebhook(secret).verify(body, headers)))
         .find((event) => event.type === type)
-      if (found) return found
-      await Bun.sleep(10)
-    }
-  }
+    )
   const env = { NODE_ENV: 'test', SAFE_EDGE_DATA_DIR: dataDir }
 
   // Before the crash: an integrator's webhook, the crew's photo, and the drone's Tier 2 report, which suspends S1.
@@ -240,4 +242,61 @@ test("the automation's writes are journaled like a request's: a restart replays 
 
   const api = await startApiProcess(env)
   expect(await audit(api)).toEqual(written)
+}, 30_000)
+
+test('a write the journal cannot keep throws out of the app, which takes no more writes, and the entrypoint exits', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
+  afterAll(() => rm(dir, { recursive: true }))
+  // Another connection holds the database, so the API's append to its journal fails.
+  const lock = (file: string) => {
+    const db = new Database(join(dir, file))
+    db.run('begin exclusive')
+    return db
+  }
+
+  // In process, the app throws the failure to whoever serves it, and refuses every later write: memory holds one the
+  // journal lacks.
+  const tokens = await devTokens(
+    { SAFE_EDGE_DEV_TOKENS: JSON.stringify({ tok_provider: 'usr_drone_sim' }) },
+    seed.users
+  )
+  const app = createApp({
+    seed,
+    clock: scenarioClock(seed.asOf),
+    store: join(dir, 'in-process.sqlite'),
+    tokens,
+    heartbeatMs: 5_000,
+    webhooks: { origins: [], allowLoopback: true, retryDelaysMs: [] }
+  })
+  const raise = () =>
+    app.fetch(
+      new Request('http://safe-edge.test/v1/candidates', {
+        method: 'POST',
+        headers: { authorization: 'Bearer tok_provider', 'content-type': 'application/json' },
+        body: JSON.stringify(tier2Candidate)
+      })
+    )
+  const held = lock('in-process.sqlite')
+  await expect(raise()).rejects.toThrow(JournalWriteError)
+  held.run('rollback')
+  held.close()
+  await expect(raise()).rejects.toThrow(JournalWriteError)
+
+  // Deployed, the entrypoint stops the process rather than serve on without the write.
+  const api = await startApiProcess({ NODE_ENV: 'test', SAFE_EDGE_DATA_DIR: dir })
+  const deployed = lock('api.sqlite')
+  await expect(api.request('post', '/candidates', 'tok_provider', tier2Candidate)).rejects.toThrow()
+  const { code, stderr } = await api.exited()
+  deployed.run('rollback')
+  deployed.close()
+  expect(code).toBe(1)
+  expect(stderr).toContain('could not journal a dispatch')
+}, 30_000)
+
+test("the data directory, which holds webhook secrets and evidence, is the OS user's alone, even one that existed", async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
+  afterAll(() => rm(dir, { recursive: true }))
+  await chmod(dir, 0o755)
+  await startApiProcess({ NODE_ENV: 'test', SAFE_EDGE_DATA_DIR: dir })
+  expect((await stat(dir)).mode & 0o777).toBe(0o700)
 }, 30_000)

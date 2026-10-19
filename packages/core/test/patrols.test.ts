@@ -195,6 +195,26 @@ describe('WATCH-3: unknown coverage stays unknown', () => {
     })
   })
 
+  test('only a segment inspected along its whole length restarts its patrol interval', () => {
+    const h = startFlying()
+    const [partial, whole, unreported] = SEGMENTS as [string, string, string]
+    const length = (id: string) => h.segment(id).segment.lengthM
+    const lastPatrolled = () => SEGMENTS.map((id) => h.segment(id).segment.lastPatrolledAt)
+    const [partialBefore, , unreportedBefore] = lastPatrolled()
+
+    h.call('completePatrol', 'usr_drone_sim', {
+      params: { id: 'ptl_1' },
+      body: {
+        coverage: [
+          { segmentId: partial, inspectedM: length(partial) - 0.5, unknownM: 0.5 },
+          { segmentId: whole, inspectedM: length(whole), unknownM: 0 }
+        ]
+      }
+    })
+    // Half a metre unseen is a field check, and the segment is still overdue for a patrol.
+    expect(lastPatrolled()).toEqual([partialBefore, '2026-10-22T00:20:00.000Z', unreportedBefore])
+  })
+
   test('length reported as neither inspected nor unknown is unknown: a field check, never inspected', () => {
     const h = startFlying()
     const [partial, clear, third] = SEGMENTS as [string, string, string]

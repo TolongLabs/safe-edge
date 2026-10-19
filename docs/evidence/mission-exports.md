@@ -104,6 +104,10 @@ From the demo export, DJI's parser read one wayline with 177 waypoints and 175 a
 
 ## Steps that need a person
 
+Issue [#126][issue-126] tracks these; the steps below are what a person runs for it.
+
+[issue-126]: https://github.com/TolongLabs/sdp-hack/issues/126
+
 ### QGroundControl on a Mac
 
 This is optional, because the Linux build of the same release loaded the file. The macOS build needs someone at the screen, since the agent can't click it.

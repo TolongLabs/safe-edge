@@ -3,8 +3,11 @@ export {
   queuedRetest,
   recordAutomationFailure,
   runSchedule,
-  type AutomationStep
+  startReplanning,
+  type AutomationStep,
+  type Replanning
 } from './automation.ts'
+export { createEventQueue, type EventQueue } from './event-queue.ts'
 export { canonicalJson, verifyAuditChain, GENESIS_HASH, POLICY_VERSION, type AuditChainCheck } from './audit.ts'
 export { counterIds, createCore, type Clock, type Core, type CoreOptions, type IdGenerator } from './core.ts'
 export type { PatrolPlanner } from '@safe-edge/contracts'

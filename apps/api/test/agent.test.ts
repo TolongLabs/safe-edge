@@ -170,7 +170,7 @@ test('asked to submit a work order and approve its remedy, the agent cannot, and
   await recording.done()
 })
 
-test("the agent's Inbox summary is stored on the candidate for the card, and its draft for the confirmed finding is the one open work order", async () => {
+test("the agent's Inbox summary is stored on the candidate for the card until it is decided, and its draft for the confirmed finding is the one open work order", async () => {
   const recording = claude('inbox-s1')
   const api = startApi({ claude: recording.client })
   const manager = httpPlayer(api).clientFor('usr_manager')
@@ -199,7 +199,7 @@ test("the agent's Inbox summary is stored on the candidate for the card, and its
   expect(await storedSummary(candidate.id)).toEqual(asStored(card))
 
   // The manager confirms it, which drafts the finding's work order. Asked again, the agent's draft request gets that
-  // same draft back, so the finding still has one work order; the new summary replaces the first.
+  // same draft back, so the finding still has one work order. The card keeps the summary the decision was made on.
   const decided = await api.request('post', `/candidates/${candidate.id}/decision`, {
     token: 'tok_manager',
     body: { decision: 'confirm', severity: 'high' }
@@ -214,10 +214,10 @@ test("the agent's Inbox summary is stored on the candidate for the card, and its
     workOrder
   })
   expect(confirmed.citations).toEqual(expect.arrayContaining([candidate.id, S1.segmentId]))
-  expect(await storedSummary(candidate.id)).toEqual(asStored(confirmed))
+  expect(await storedSummary(candidate.id)).toEqual(asStored(card))
   expect((await manager.listWorkOrders({})).filter((w) => w.findingId === finding!.id)).toEqual([workOrder!])
   const agentWrites = (await manager.listAudit({})).filter((e) => e.actor.id === 'usr_agent').map((e) => e.action)
-  expect(agentWrites).toEqual(['recordAgentSummary', 'recordAgentSummary'])
+  expect(agentWrites).toEqual(['recordAgentSummary'])
 
   // The manager edits that draft, and the agent's token cannot submit it.
   const path = `/work-orders/${workOrder!.id}`

@@ -3,6 +3,7 @@ import {
   type Actor,
   type Denial,
   type EdgePass,
+  type ImageQuality,
   type InventoryItem,
   type ItemStatus,
   type OperationSpec,
@@ -42,6 +43,21 @@ export function authorize(operationId: string, op: OperationSpec, actor: Actor):
 export function actorFor(user: User): Actor {
   const type = user.role === 'agent' || user.role === 'system' || user.role === 'provider' ? user.role : 'user'
   return { type, id: user.id, role: user.role, scopes: type === 'agent' ? [...Scope.options] : [] }
+}
+
+/**
+ * The quality gate a frame passes to count as a re-shoot (TRD perception routing: low quality means recapture).
+ * Assumed figures: no perception model has calibrated them yet.
+ */
+const QUALITY_GATE = { minSharpness: 0.6, maxAlignmentResidualPx: 5, maxOcclusion: 0.3 }
+
+/** Sharp enough, aligned to its baseline (a frame with none to align to has a null residual) and not occluded. */
+export function passesQualityGate({ sharpness, alignmentResidualPx, occlusion }: ImageQuality): boolean {
+  return (
+    sharpness >= QUALITY_GATE.minSharpness &&
+    (alignmentResidualPx === null || alignmentResidualPx <= QUALITY_GATE.maxAlignmentResidualPx) &&
+    occlusion <= QUALITY_GATE.maxOcclusion
+  )
 }
 
 /**

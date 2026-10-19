@@ -208,6 +208,18 @@ export const operations = {
     status: 200,
     events: []
   },
+  getPatrolPlan: {
+    method: 'get',
+    path: '/patrol-plans/{id}',
+    summary: 'Read a patrol plan',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    params: IdParam.patrolPlan,
+    response: PatrolPlan,
+    status: 200,
+    events: []
+  },
   createPatrolPlan: {
     method: 'post',
     path: '/patrol-plans',
@@ -252,6 +264,18 @@ export const operations = {
     roles: 'any',
     agentScope: 'edge.read',
     response: PatrolList,
+    status: 200,
+    events: []
+  },
+  getPatrol: {
+    method: 'get',
+    path: '/patrols/{id}',
+    summary: 'Read a patrol',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    params: IdParam.patrol,
+    response: Patrol,
     status: 200,
     events: []
   },
@@ -377,7 +401,7 @@ export const operations = {
     method: 'post',
     path: '/candidates/{id}/agent-summary',
     summary:
-      "Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion",
+      "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion",
     handledBy: 'core',
     roles: [],
     agentScope: 'finding.propose',
@@ -792,7 +816,7 @@ export const operations = {
     method: 'post',
     path: '/agent/inbox-drafts',
     summary:
-      "The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft",
+      "The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft",
     handledBy: 'api',
     roles: ['manager'],
     agentScope: null,
@@ -867,7 +891,8 @@ export const operations = {
     path: '/scenario/clock',
     summary:
       'Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs ' +
-      'started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)',
+      'started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). ' +
+      'The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered',
     handledBy: 'api',
     roles: ['system'],
     agentScope: null,

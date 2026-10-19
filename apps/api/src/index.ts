@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { Seed } from '@safe-edge/core'
-import { mkdirSync } from 'node:fs'
+import { chmodSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
 import { clockFrom } from './clock.ts'
@@ -13,6 +13,7 @@ import {
   SAFETY_HAZARD_OBSERVATION_TYPE
 } from '@safe-edge/providers'
 import { webhookOptions } from './events.ts'
+import { JournalWriteError } from './journal.ts'
 import { devTokens } from './tokens.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -26,10 +27,12 @@ const clock = clockFrom(process.env, seed.asOf)
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
 
 // The API keeps its state in SAFE_EDGE_DATA_DIR/api.sqlite and picks it up again on restart (journal.ts). The file
-// holds webhook secrets and evidence, so the directory is the OS user's alone. bun run dev uses apps/api/.data.
+// holds webhook secrets and evidence, so the directory is the OS user's alone, one that already existed included.
+// bun run dev uses apps/api/.data.
 const dataDir = process.env.SAFE_EDGE_DATA_DIR
 if (!dataDir) throw new Error('Set SAFE_EDGE_DATA_DIR to the directory the API keeps its state in')
 mkdirSync(dataDir, { recursive: true, mode: 0o700 })
+chmodSync(dataDir, 0o700)
 
 // The agent acts with its own API token (an agent actor). Claude reads ANTHROPIC_API_KEY; without it, agent calls fail.
 const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
@@ -63,7 +66,7 @@ const weather =
 
 // Bun serves the default export on PORT (3000 by default). Its idle timeout is 10 s, so the event stream's heartbeat
 // comes every 5 s.
-export default createApp({
+const app = createApp({
   seed,
   planner,
   clock,
@@ -78,3 +81,14 @@ export default createApp({
   every: (ms, run) => void setInterval(() => void run(), ms),
   weather
 })
+
+export default {
+  fetch: app.fetch,
+  // A write the journal could not keep stops the API: serving on would lose it at the next start (journal.ts). Outside a
+  // request (a timer, a webhook retry) the same error is uncaught, which also stops Bun.
+  error(error: Error) {
+    console.error('Safe Edge API:', error)
+    if (error instanceof JournalWriteError) process.exit(1)
+    return new Response('Internal Server Error', { status: 500 })
+  }
+}

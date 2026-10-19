@@ -1,6 +1,6 @@
 // INBOX-2's recapture leaves owned work, like confirm: a task to capture the viewpoint again, through dispatch.
 import { describe, expect, test } from 'bun:test'
-import type { Task } from '@safe-edge/contracts'
+import type { ImageQuality, Task } from '@safe-edge/contracts'
 import { S1, observeS1, raiseOnS1, seed, startCore, type Harness } from './support.ts'
 
 function sendForRecapture(h: Harness, reason = 'Blurred frame') {
@@ -101,6 +101,42 @@ describe('A recapture task is done when the viewpoint is captured again', () => 
   })
 })
 
+describe('Low quality means recapture (TRD perception routing)', () => {
+  test('a blurred, misaligned or occluded re-shoot leaves the task open; one that passes the quality gate closes it', () => {
+    const h = startCore()
+    const { decision } = sendForRecapture(h)
+    const [task] = decision.data.tasks
+    const viewpoint = seed.segments.find((s) => s.id === S1.segmentId)!.viewpoints.find((v) => v.id === S1.viewpointId)!
+    const good: ImageQuality = { sharpness: 0.95, alignmentResidualPx: 1.1, occlusion: 0.02 }
+    const frame = (quality: Partial<ImageQuality>) =>
+      h.call('recordObservation', 'usr_crew', {
+        body: {
+          patrolId: null,
+          segmentId: S1.segmentId,
+          viewpointId: S1.viewpointId,
+          captureSource: 'phone',
+          image: null,
+          pose: viewpoint.pose,
+          capturedAt: h.now(),
+          quality: { ...good, ...quality },
+          privacyAction: 'none',
+          simulated: true
+        }
+      })
+    const status = () => h.call('listTasks', 'usr_manager', { query: {} }).data.find((t) => t.id === task!.id)!.status
+
+    h.setNow('2026-10-20T03:00:00.000Z')
+    frame({ sharpness: 0.31 })
+    frame({ alignmentResidualPx: 9.5 })
+    frame({ occlusion: 0.4 })
+    expect(status()).toBe('open')
+
+    // No baseline to align against (alignment residual null) is not a failed alignment.
+    frame({ alignmentResidualPx: null })
+    expect(status()).toBe('done')
+  })
+})
+
 describe('A recapture of a candidate with no photo covers its whole segment', () => {
   test('a missed patrol sent for recapture is done when a patrol that took off after the request inspects the segment', () => {
     const h = startCore()
@@ -153,6 +189,39 @@ describe('A recapture of a candidate with no photo covers its whole segment', ()
       subjectId: decision.data.tasks[0]!.id,
       after: { status: 'done' }
     })
+  })
+
+  test('a patrol that saw only part of the segment leaves it open', () => {
+    const h = startCore()
+    const segmentId = 'seg_866518980_5'
+    const lengthM = seed.segments.find((s) => s.id === segmentId)!.lengthM
+    h.setNow('2026-10-23T01:00:00.000Z')
+    const missed = h.call('reportMissedPatrol', 'usr_system', { params: { id: segmentId } }).data
+    h.call('decideCandidate', 'usr_manager', {
+      params: { id: missed.id },
+      body: { decision: 'recapture', reason: 'Fly it on the next patrol' }
+    })
+    const plan = h.call('createPatrolPlan', 'usr_manager', {
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds: [segmentId],
+        context: [],
+        notBefore: h.now(),
+        altitudeCapM: 60
+      }
+    }).data
+    h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
+    h.setNow(plan.window.start)
+    const patrol = h.call('startPatrol', 'usr_pilot', { body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' } })
+    h.call('completePatrol', 'usr_drone_sim', {
+      params: { id: patrol.data.id },
+      body: { coverage: [{ segmentId, inspectedM: lengthM - 10, unknownM: 10 }] }
+    })
+    expect(h.call('listTasks', 'usr_manager', { query: { segmentId } }).data.map((t) => [t.kind, t.status])).toEqual([
+      ['recapture', 'open'],
+      ['field_check', 'open']
+    ])
   })
 
   test('on a segment with viewpoints, a new frame from any of them also does it', () => {

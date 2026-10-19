@@ -25,6 +25,7 @@ import type { DataGovMyClient, EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
+import { HTTPException } from 'hono/http-exception'
 import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
@@ -33,7 +34,7 @@ import { startAutomation, type Every } from './automation.ts'
 import type { ApiClock } from './clock.ts'
 import { createEventHub, newWebhookSecret, type WebhookOptions } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
-import { openJournal } from './journal.ts'
+import { JournalWriteError, openJournal } from './journal.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
 import { forwardWorkOrders } from './work-orders.ts'
 
@@ -110,6 +111,7 @@ export function createApp({
     dispatch: journal.command('dispatch', unjournaled.dispatch) as Dispatch,
     checkAccess: journal.command('checkAccess', unjournaled.checkAccess),
     recordStored: journal.command('recordStored', unjournaled.recordStored),
+    refuse: journal.command('refuse', unjournaled.refuse),
     tick: journal.command('tick', unjournaled.tick)
   }
   const hub = createEventHub({
@@ -153,7 +155,8 @@ export function createApp({
   const afterDispatch: { [K in CoreOperationId]?: (data: OperationOutput<K>) => void } = {
     // A person cleared a failed hand-off; the API resumes it from the step that failed.
     retryWorkOrderHandOff: ({ workOrder, retried }) => {
-      if (forwarder) return forwarder.retry(workOrder.id, retried.step)
+      // A bug in the hand-off rejects, unhandled, and stops the API; Procore's own failures go on the record.
+      if (forwarder) return void forwarder.retry(workOrder.id, retried.step)
       // This API runs without a work-order system, so the retry fails at once, on the record like any other failure.
       const body = { step: retried.step, message: 'This API instance has no work-order system configured' }
       const recorded = core.dispatch('recordWorkOrderExternalError', WORK_ORDERS, {
@@ -163,6 +166,14 @@ export function createApp({
       if (!recorded.ok) throw new Error(recorded.message)
     }
   }
+  // A write the journal could not keep is not a 500 to serve on from: it goes to the server, whose entrypoint stops
+  // (index.ts). Anything else gets Hono's default answer.
+  app.onError((error, c) => {
+    if (error instanceof JournalWriteError) throw error
+    if (error instanceof HTTPException) return error.getResponse()
+    console.error(error)
+    return c.text('Internal Server Error', 500)
+  })
   app.get('/health', (c) => c.json({ status: 'ok' }))
   // Where getEvidenceUrl points. The signed query is the credential, so it takes no bearer token.
   app.get('/evidence/:id/content', (c) => {
@@ -324,6 +335,12 @@ export function createApp({
     setScenarioClock: (c, { body }) => {
       if (baseClock.set === undefined) {
         return fail(c, 501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
+      }
+      // Moving back would stamp later writes before earlier ones on the audit chain.
+      const at = clock.now()
+      if (Date.parse(body.now) < Date.parse(at)) {
+        const message = `The scenario clock is at ${at}; it moves forward only, so it cannot go back to ${body.now}`
+        return c.json(core.refuse('setScenarioClock', c.get('actor'), 'clock_backwards', message), 403)
       }
       const moved = setScenarioClock(c.get('actor'), body.now)
       // After the journaled move, so each write the automation makes is its own entry and replays once.

@@ -41,7 +41,10 @@ async function openPlan(now: string) {
     dispatch: core.dispatch,
     clock: { now: () => now },
     committedTasks: () => 0,
-    retest: { dockId: 'dock_elmina_roof', droneProfileId: 'drn_assumed', altitudeCapM: 60 }
+    retest: { dockId: 'dock_elmina_roof', droneProfileId: 'drn_assumed', altitudeCapM: 60 },
+    onFailure: (error) => {
+      throw error
+    }
   })
   const plans = (events: EdgeEvent[]): PatrolPlan[] => {
     const listed = core.dispatch('listPatrolPlans', manager, {})

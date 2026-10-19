@@ -220,6 +220,36 @@ paths:
       x-safe-edge-agent-scope: patrol.propose
       x-safe-edge-events:
         - edge.patrol.planned.v1
+  /patrol-plans/{id}:
+    get:
+      operationId: getPatrolPlan
+      summary: Read a patrol plan
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - patrol-plans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^plan_
+      responses:
+        "200":
+          description: Read a patrol plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatrolPlan"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /patrol-plans/{id}/approve:
     post:
       operationId: approvePatrolPlan
@@ -344,6 +374,36 @@ paths:
         - pilot
       x-safe-edge-events:
         - edge.patrol.started.v1
+  /patrols/{id}:
+    get:
+      operationId: getPatrol
+      summary: Read a patrol
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - patrols
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^ptl_
+      responses:
+        "200":
+          description: Read a patrol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patrol"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /patrols/{id}/complete:
     post:
       operationId: completePatrol
@@ -637,7 +697,7 @@ paths:
   /candidates/{id}/agent-summary:
     post:
       operationId: recordAgentSummary
-      summary: Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+      summary: "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion"
       description: People are refused. Agents need scope `finding.propose`.
       tags:
         - candidates
@@ -657,7 +717,7 @@ paths:
               $ref: "#/components/schemas/RecordAgentSummaryRequest"
       responses:
         "200":
-          description: Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+          description: "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion"
           content:
             application/json:
               schema:
@@ -1762,7 +1822,7 @@ paths:
   /agent/inbox-drafts:
     post:
       operationId: draftInbox
-      summary: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
+      summary: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
       description: "Roles: manager. Agents are refused."
       tags:
         - agent
@@ -1776,7 +1836,7 @@ paths:
               $ref: "#/components/schemas/DraftInboxRequest"
       responses:
         "200":
-          description: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
+          description: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
           content:
             application/json:
               schema:
@@ -1909,7 +1969,7 @@ paths:
   /scenario/clock:
     post:
       operationId: setScenarioClock
-      summary: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+      summary: "Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered"
       description: "Roles: system. Agents are refused."
       tags:
         - scenario
@@ -1923,7 +1983,7 @@ paths:
               $ref: "#/components/schemas/SetScenarioClockRequest"
       responses:
         "200":
-          description: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+          description: "Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered"
           content:
             application/json:
               schema:
@@ -2214,6 +2274,7 @@ components:
         - separation_hold
         - outside_window
         - invalid_coverage
+        - clock_backwards
     Denial:
       type: object
       properties:
@@ -2417,7 +2478,7 @@ components:
             - type: string
               format: date-time
             - type: "null"
-          description: When a completed patrol last inspected some of the segment
+          description: When a completed patrol last inspected the whole segment
         simulated:
           type: boolean
         source:

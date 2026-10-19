@@ -1,10 +1,9 @@
-import type { Actor, EdgeEvent } from '@safe-edge/contracts'
+import { dispatchOrThrow, type Actor, type EdgeEvent } from '@safe-edge/contracts'
 import {
   AUTOMATION_ACTOR,
-  createReplanSubscriber,
-  queuedRetest,
   recordAutomationFailure,
   runSchedule,
+  startReplanning,
   type AutomationStep,
   type Clock,
   type Core
@@ -67,12 +66,8 @@ export function startAutomation({
   }
   const schedule = () => attempt('schedule', () => publish(runSchedule(core, clock.now())))
 
-  const read = <T>(result: { ok: true; data: T } | { ok: false; message: string }) => {
-    if (!result.ok) throw new Error(result.message)
-    return result.data
-  }
-  const profiles = read(core.dispatch('listDroneProfiles', AUTOMATION_ACTOR, {}))
-  const devices = read(core.dispatch('listDocks', AUTOMATION_ACTOR, {})).flatMap((dock) =>
+  const profiles = dispatchOrThrow(core.dispatch, 'listDroneProfiles', AUTOMATION_ACTOR, {}).data
+  const devices = dispatchOrThrow(core.dispatch, 'listDocks', AUTOMATION_ACTOR, {}).data.flatMap((dock) =>
     dock.droneProfileIds.map((id) => {
       const drone = profiles.find((p) => p.id === id)
       if (drone === undefined) throw new Error(`${dock.id} takes ${id}, which is not a drone profile`)
@@ -96,21 +91,16 @@ export function startAutomation({
     onFailure: (error) => recordAutomationFailure(core, 'drone', error)
   })
   const fly = async (patrolId: string) => {
-    const patrol = read(core.dispatch('listPatrols', AUTOMATION_ACTOR, {})).find((p) => p.id === patrolId)!
+    const patrol = dispatchOrThrow(core.dispatch, 'getPatrol', AUTOMATION_ACTOR, { params: { id: patrolId } }).data
     if (patrol.provider !== 'sim')
       throw new Error(`This API flies only drone-sim; ${patrol.id} names ${patrol.provider}`)
     await drone.fly(patrol)
   }
   const flySim = () => attempt('drone', () => sim.tick())
 
-  const replan = createReplanSubscriber({
-    dispatch: core.dispatch,
-    clock,
-    committedTasks: drone.committedTasks,
-    retest: queuedRetest(core)
-  })
+  const replan = startReplanning({ core, clock, committedTasks: drone.committedTasks, publish })
   subscribe((event) => {
-    attempt('replan', () => publish(replan.onEvent(event)))
+    replan.onEvent(event)
     if (event.type === 'edge.patrol.started.v1') {
       fly(event.data.patrolId).catch((error: unknown) => recordAutomationFailure(core, 'drone', error))
     }
@@ -121,7 +111,7 @@ export function startAutomation({
     const warnings = await client.warnings()
     const publisher = 'data.gov.my (MET Malaysia)'
     const snapshots = warningSnapshots({ publisher, warnings, simulated: false, source: 'provider' }, ELMINA_AREA)
-    for (const trigger of weatherTriggers(snapshots, clock.now())) publish(replan.onTrigger(trigger))
+    for (const trigger of weatherTriggers(snapshots, clock.now())) replan.onTrigger(trigger)
   }
 
   if (!scenario) {

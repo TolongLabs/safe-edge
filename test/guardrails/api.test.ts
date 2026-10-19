@@ -345,6 +345,9 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     expect({ role, ...refused }).toEqual({ role, ...denied(role === 'agent' ? 'agents_draft_only' : 'role_forbidden') })
   }
   await as('dev_pilot', 'post', release)
+  // The plan's window opened before S3's re-test, and the scenario clock moves forward only (clock_backwards): the
+  // harness puts it back unaudited, and the system sets it to the time it shows through the operation.
+  api.setNow(plan.window.start)
   await as('dev_system', 'post', '/scenario/clock', { now: plan.window.start })
   const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
   await as('dev_drone_sim', 'post', `/patrols/${patrol.id}/complete`, {
@@ -409,24 +412,13 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     )
     return { answered, written, appended }
   }
-  // The Inbox card for the crew's damage report, once the manager confirmed it: the agent stores its summary, and the
-  // draft it hands back is the open one the confirm made, so it drafts no other.
+  // The Inbox draft for the crew's damage report, once the manager confirmed it: the draft the agent hands back is the
+  // open one the confirm made, so it drafts no other, and the decided candidate keeps the summary it was decided on
+  // (none), so the flow writes nothing.
   await as('dev_manager', 'post', `/candidates/${damage.id}/decision`, { decision: 'confirm', severity: 'medium' })
   const inbox = await agentFlow(() => as('dev_manager', 'post', '/agent/inbox-drafts', { candidateId: damage.id }))
-  expect(inbox.appended.map((e) => e.action)).toEqual(['recordAgentSummary'])
-  expect(inbox.written.map((r) => [r.id, r.agentSummary])).toEqual([
-    [
-      damage.id,
-      {
-        label: 'ai_suggestion',
-        text: inbox.answered.summary,
-        citations: inbox.answered.citations,
-        model: inbox.answered.model,
-        draftedBy: { type: 'agent', id: 'usr_agent' },
-        draftedAt: MISSED_PATROL_DUE
-      }
-    ]
-  ])
+  expect(inbox.appended).toEqual([])
+  expect(inbox.written).toEqual([])
   expect((await api.audit()).findLast((e) => e.subjectId === inbox.answered.workOrder.id)).toMatchObject({
     action: 'decideCandidate',
     actor: { id: 'usr_manager' },

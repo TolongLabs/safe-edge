@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import * as z from 'zod'
 import { ensureDevTokens } from '../../../apps/api/src/dev-tokens.ts'
+import { answer, eventually, freePort } from '../../../test/spawn.ts'
 import { PROCORE_DEVELOPER_SANDBOX, readProcoreEnv } from '../src/index.ts'
 
 if (process.env.CI) throw new Error('procore:e2e calls the real Procore sandbox, so it never runs in CI')
@@ -30,24 +31,9 @@ const photoBytes = new Uint8Array(await Bun.file(join(repoRoot, PHOTO_PATH)).arr
 const sha256 = (bytes: Uint8Array) => new Bun.CryptoHasher('sha256').update(bytes).digest('hex')
 const DEADLINE_MS = 60_000
 
-function freePort(): number {
-  const server = Bun.serve({ port: 0, fetch: () => new Response() })
-  const { port } = server
-  server.stop(true)
-  if (port === undefined) throw new Error('Bun.serve did not report a port')
-  return port
-}
-
-/** Calls `check` every second until it returns a value, for at most a minute. */
-async function until<T>(what: string, check: () => Promise<T | undefined>): Promise<T> {
-  const deadline = Date.now() + DEADLINE_MS
-  while (Date.now() < deadline) {
-    const value = await check()
-    if (value !== undefined) return value
-    await Bun.sleep(1_000)
-  }
-  throw new Error(`${what} did not happen within ${DEADLINE_MS / 1000} s`)
-}
+/** Calls `check` every second until it returns a value, for at most a minute: Procore answers on its own time. */
+const until = <T>(what: string, check: () => Promise<T | undefined>) =>
+  eventually(what, check, { timeoutMs: DEADLINE_MS, intervalMs: 1_000 })
 
 const port = freePort()
 const dataDir = await mkdtemp(join(tmpdir(), 'safe-edge-procore-e2e-'))
@@ -60,14 +46,8 @@ const dev = Bun.spawn(['bun', 'run', 'dev'], {
 })
 try {
   const baseUrl = `http://localhost:${port}/v1`
-  await until('The dev API answering /v1/health', async () => {
-    if (dev.exitCode !== null) throw new Error(`The dev API exited with code ${dev.exitCode}`)
-    const response = await fetch(`${baseUrl}/health`).catch((error: Error) => {
-      if (error.message.includes('Unable to connect')) return undefined
-      throw error
-    })
-    return response?.ok ? response : undefined
-  })
+  const health = await answer(`${baseUrl}/health`, dev)
+  if (!health.ok) throw new Error(`The dev API answered /v1/health with ${health.status}`)
 
   // S1 by phone, as the people do it, each with this machine's dev token, the ones `bun run dev` serves.
   const tokens = await ensureDevTokens(process.env)

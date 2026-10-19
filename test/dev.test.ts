@@ -3,48 +3,27 @@ import type { Subprocess } from 'bun'
 import { mkdtemp, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { answer, freePort, testEnv } from './spawn.ts'
 
 const root = join(import.meta.dir, '..')
 // bun run dev generates this machine's dev tokens under $XDG_STATE_HOME on first start; this run gets its own.
 const stateHome = await mkdtemp(join(tmpdir(), 'safe-edge-dev-'))
 const tokenFile = join(stateHome, 'safe-edge/dev-tokens.json')
 
-function freePort(): number {
-  const server = Bun.serve({ port: 0, fetch: () => new Response() })
-  const { port } = server
-  server.stop(true)
-  if (port === undefined) throw new Error('Bun.serve did not report a port')
-  return port
-}
-
 const apiPort = freePort()
 const webPort = freePort()
-let dev: Subprocess
-
-async function waitFor(url: string): Promise<Response> {
-  const deadline = Date.now() + 20_000
-  while (Date.now() < deadline) {
-    if (dev.exitCode !== null) throw new Error(`bun run dev exited with code ${dev.exitCode}`)
-    const response = await fetch(url).catch((error: Error) => {
-      if (error.message.includes('Unable to connect')) return undefined
-      throw error
-    })
-    if (response) return response
-    await Bun.sleep(200)
-  }
-  throw new Error(`${url} did not respond within 20 s`)
-}
+let dev: Subprocess<'ignore', 'ignore', 'inherit'>
+const waitFor = (url: string) => answer(url, dev)
 
 beforeAll(() => {
   dev = Bun.spawn(['bun', 'run', 'dev'], {
     cwd: root,
-    env: {
-      ...process.env,
+    env: testEnv({
       PORT: String(apiPort),
       WEB_PORT: String(webPort),
       XDG_STATE_HOME: stateHome,
       SAFE_EDGE_DATA_DIR: join(stateHome, 'api')
-    },
+    }),
     stdout: 'ignore',
     stderr: 'inherit',
     detached: true
@@ -98,7 +77,7 @@ test('bun run dev serves the API, with the seeded core behind generated dev toke
   // The agent's token, for the MCP server's environment, comes from bun run dev:token.
   const printed = Bun.spawnSync(['bun', 'run', '--silent', 'dev:token', 'usr_agent'], {
     cwd: root,
-    env: { ...process.env, XDG_STATE_HOME: stateHome },
+    env: testEnv({ XDG_STATE_HOME: stateHome }),
     stderr: 'inherit'
   })
   expect(printed.exitCode).toBe(0)
@@ -115,7 +94,7 @@ test('bun run dev serves the API, with the seeded core behind generated dev toke
 }, 30_000)
 
 test('the API refuses the generated dev token file in production', async () => {
-  const env = { ...process.env, XDG_STATE_HOME: stateHome }
+  const env = testEnv({ XDG_STATE_HOME: stateHome })
   const agentToken = Bun.spawnSync(['bun', 'run', '--silent', 'dev:token', 'usr_agent'], { cwd: root, env })
   expect(agentToken.exitCode).toBe(0)
 
