@@ -40,6 +40,7 @@ import {
   PatrolList,
   PatrolPlanList,
   RaiseCandidateRequest,
+  RecordClearanceRequest,
   RecordObservationRequest,
   RecordRetestRequest,
   RegisterWebhookRequest,
@@ -553,6 +554,20 @@ export const operations = {
     roles: ['reviewer'],
     agentScope: null,
     body: RecordRetestRequest,
+    response: RetestOutcome,
+    status: 201,
+    events: ['edge.retest.recorded.v1', 'edge.pass.issued.v1']
+  },
+  recordClearance: {
+    method: 'post',
+    path: '/candidates/{id}/clearance',
+    summary:
+      'Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment',
+    handledBy: 'core',
+    roles: ['reviewer'],
+    agentScope: null,
+    params: IdParam.candidate,
+    body: RecordClearanceRequest,
     response: RetestOutcome,
     status: 201,
     events: ['edge.retest.recorded.v1', 'edge.pass.issued.v1']

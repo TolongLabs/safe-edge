@@ -247,7 +247,10 @@ export class Tx {
     if ('segmentId' in record && typeof record.segmentId === 'string') return record.segmentId
     if ('findingId' in record && typeof record.findingId === 'string')
       return this.must('findings', record.findingId).segmentId
-    if ('workOrderId' in record) return this.segmentOf(this.must('workOrders', record.workOrderId))
+    if ('workOrderId' in record && typeof record.workOrderId === 'string')
+      return this.segmentOf(this.must('workOrders', record.workOrderId))
+    if ('candidateId' in record && typeof record.candidateId === 'string')
+      return this.must('candidates', record.candidateId).segmentId
     return null
   }
 

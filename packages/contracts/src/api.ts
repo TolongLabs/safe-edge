@@ -243,6 +243,10 @@ export const RecordRetestRequest = named(
 )
 export type RecordRetestRequest = z.infer<typeof RecordRetestRequest>
 
+/** A clearance re-test: a reviewer checks the edge a rejected or recapture Tier 2 candidate suspended. */
+export const RecordClearanceRequest = named('RecordClearanceRequest', RecordRetestRequest.omit({ workOrderId: true }))
+export type RecordClearanceRequest = z.infer<typeof RecordClearanceRequest>
+
 /** An accepted re-test issues the pass, once no other suspicion on the segment is open. */
 export const RetestOutcome = named(
   'RetestOutcome',

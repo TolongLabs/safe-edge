@@ -11,7 +11,7 @@ import {
 } from '@safe-edge/contracts'
 import type { ThirdParty } from '@safe-edge/planner'
 import { verifyAuditChain } from '../src/index.ts'
-import { S1, playS1toRepair, plannerWith, startCore } from './support.ts'
+import { S1, playS1toRepair, plannerWith, raiseOnS1, startCore } from './support.ts'
 
 const coreOperations = (Object.keys(operations) as (keyof typeof operations)[]).filter(
   (id): id is CoreOperationId => operations[id].handledBy === 'core'
@@ -63,6 +63,19 @@ describe('the operations table in core', () => {
     const h = startCore({ planner: plannerWith({ thirdParties: [onTheEdge] }) })
     const played = playS1toRepair(h)
     h.call('recordRetest', 'usr_reviewer', { body: played.retest })
+    // Then a false alarm: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+    const alarm = raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: S1.inventoryItemId,
+      itemStatus: 'missing',
+      class: 'inventory_item',
+      rationale: 'Panel 4 missing again'
+    }).data
+    h.call('decideCandidate', 'usr_manager', {
+      params: { id: alarm.id },
+      body: { decision: 'reject', reason: 'Shadow' }
+    })
+    const { workOrderId: _, ...clearance } = played.retest
+    h.call('recordClearance', 'usr_reviewer', { params: { id: alarm.id }, body: clearance })
 
     h.call('createWorkOrder', 'usr_agent', {
       body: { findingId: played.findingId, remedyId: null, notes: 'Follow-up' }

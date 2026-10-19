@@ -304,6 +304,15 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     eventTypes: ['edge.pass.issued.v1']
   })
   await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
+  // A false alarm after S3: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+  const alarm = await as('dev_drone_sim', 'post', '/candidates', tier2Candidate)
+  await as('dev_manager', 'post', `/candidates/${alarm.id}/decision`, { decision: 'reject', reason: 'A shadow' })
+  await as('dev_reviewer', 'post', `/candidates/${alarm.id}/clearance`, {
+    checklist: played.retest.retest.checklist,
+    evidence: [],
+    result: 'accepted',
+    reason: 'Panel 4 is in place; the frame was a shadow'
+  })
 
   // And one refused attempt at every write: the agent at a people-only row, otherwise a role the row leaves out.
   const ids = {

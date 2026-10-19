@@ -586,11 +586,15 @@ export const RetestCheck = named(
 )
 export type RetestCheck = z.infer<typeof RetestCheck>
 
+/** A repair re-test (`workOrderId`) or a clearance re-test of a false alarm (`candidateId`); exactly one is set. */
 export const Retest = named(
   'Retest',
   z.object({
     id: RetestId,
-    workOrderId: WorkOrderId,
+    workOrderId: WorkOrderId.nullable().describe('The completed repair re-tested; null for a clearance'),
+    candidateId: CandidateId.nullable().describe(
+      'The rejected or recapture Tier 2 candidate a clearance re-test clears; null for a repair re-test'
+    ),
     reviewerUserId: UserId,
     checklist: z.array(RetestCheck),
     evidence: z.array(EvidenceRef),

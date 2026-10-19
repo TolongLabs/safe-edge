@@ -128,16 +128,19 @@ export function movePass(tx: Tx, pass: EdgePass, move: PassMove): EdgePass | Den
 }
 
 /**
- * What still holds a segment's pass suspended: Tier 2 candidates awaiting a decision or a recapture, and findings not
- * yet closed (TRD "Suspicion suspends"). An accepted re-test restores the pass only when this is empty. `except` is
- * the record the re-test itself resolves.
+ * What still holds a segment's pass suspended (TRD "Suspicion suspends"): Tier 2 candidates awaiting a decision, or a
+ * recapture no one has cleared, and findings not yet closed. An accepted re-test restores the pass only when there are
+ * none.
  */
-export function openSuspicions(tx: Tx, segmentId: string, except?: string): string[] {
+export function openSuspicions(tx: Tx, segmentId: string): string[] {
+  const cleared = new Set(
+    tx.all('retests').flatMap((r) => (r.candidateId !== null && r.result === 'accepted' ? [r.candidateId] : []))
+  )
   const candidates = tx
     .all('candidates')
-    .filter((c) => c.tier === 2 && (c.status === 'candidate' || c.status === 'needs_recapture'))
+    .filter((c) => c.tier === 2 && (c.status === 'candidate' || (c.status === 'needs_recapture' && !cleared.has(c.id))))
   const findings = tx.all('findings').filter((f) => f.status !== 'closed')
-  return [...candidates, ...findings].filter((r) => r.segmentId === segmentId && r.id !== except).map((r) => r.id)
+  return [...candidates, ...findings].filter((r) => r.segmentId === segmentId).map((r) => r.id)
 }
 
 /** When a valid pass starts expiring: 30 days before `validTo`. */

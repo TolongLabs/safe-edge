@@ -1200,6 +1200,47 @@ paths:
       x-safe-edge-events:
         - edge.retest.recorded.v1
         - edge.pass.issued.v1
+  /candidates/{id}/clearance:
+    post:
+      operationId: recordClearance
+      summary: Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment
+      description: "Roles: reviewer. Agents are refused. Emits edge.retest.recorded.v1, edge.pass.issued.v1."
+      tags:
+        - candidates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^cand_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordClearanceRequest"
+      responses:
+        "201":
+          description: Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetestOutcome"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - reviewer
+      x-safe-edge-events:
+        - edge.retest.recorded.v1
+        - edge.pass.issued.v1
   /passes:
     get:
       operationId: listPasses
@@ -3481,8 +3522,17 @@ components:
           type: string
           pattern: ^rt_
         workOrderId:
-          type: string
-          pattern: ^wo_
+          anyOf:
+            - type: string
+              pattern: ^wo_
+            - type: "null"
+          description: The completed repair re-tested; null for a clearance
+        candidateId:
+          anyOf:
+            - type: string
+              pattern: ^cand_
+            - type: "null"
+          description: The rejected or recapture Tier 2 candidate a clearance re-test clears; null for a repair re-test
         reviewerUserId:
           type: string
           pattern: ^usr_
@@ -3512,6 +3562,7 @@ components:
       required:
         - id
         - workOrderId
+        - candidateId
         - reviewerUserId
         - checklist
         - evidence
@@ -4244,6 +4295,32 @@ components:
           minLength: 1
       required:
         - workOrderId
+        - checklist
+        - evidence
+        - result
+        - reason
+      additionalProperties: false
+    RecordClearanceRequest:
+      type: object
+      properties:
+        checklist:
+          minItems: 1
+          type: array
+          items:
+            $ref: "#/components/schemas/RetestCheck"
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceRef"
+        result:
+          type: string
+          enum:
+            - accepted
+            - rejected
+        reason:
+          type: string
+          minLength: 1
+      required:
         - checklist
         - evidence
         - result

@@ -61,7 +61,8 @@ export const EVENT_DATA = {
   'edge.repair.completed.v1': z.object({ workOrderId: WorkOrderId, findingId: FindingId, simulated }),
   'edge.retest.recorded.v1': z.object({
     retestId: RetestId,
-    workOrderId: WorkOrderId,
+    workOrderId: WorkOrderId.nullable(),
+    candidateId: CandidateId.nullable(),
     result: z.enum(['accepted', 'rejected']),
     simulated
   }),
@@ -87,7 +88,8 @@ export const EVENT_SUMMARIES: Record<EventType, string> = {
   'edge.work_order.drafted.v1': 'A person or the agent drafted a work order.',
   'edge.work_order.submitted.v1': 'A manager or engineer submitted a work order with an approved remedy.',
   'edge.repair.completed.v1': 'The installer marked the repair complete.',
-  'edge.retest.recorded.v1': 'A reviewer other than the installer recorded a re-test.',
+  'edge.retest.recorded.v1':
+    'A reviewer recorded a re-test: of a repair they did not install (workOrderId), or a clearance of a rejected or recapture Tier 2 candidate they did not decide (candidateId).',
   'edge.pass.issued.v1': 'An accepted re-test issued a pass valid for at most 12 months.',
   'edge.pass.expiring.v1': 'A pass entered its last 30 days.',
   'edge.pass.expired.v1': 'A pass reached its validTo date.'

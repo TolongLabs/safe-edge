@@ -662,6 +662,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/candidates/{id}/clearance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment
+         * @description Roles: reviewer. Agents are refused. Emits edge.retest.recorded.v1, edge.pass.issued.v1.
+         */
+        post: operations["recordClearance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/passes": {
         parameters: {
             query?: never;
@@ -1449,7 +1469,10 @@ export interface components {
         };
         Retest: {
             id: string;
-            workOrderId: string;
+            /** @description The completed repair re-tested; null for a clearance */
+            workOrderId: string | null;
+            /** @description The rejected or recapture Tier 2 candidate a clearance re-test clears; null for a repair re-test */
+            candidateId: string | null;
             reviewerUserId: string;
             checklist: components["schemas"]["RetestCheck"][];
             evidence: components["schemas"]["EvidenceRef"][];
@@ -1666,6 +1689,13 @@ export interface components {
         };
         RecordRetestRequest: {
             workOrderId: string;
+            checklist: components["schemas"]["RetestCheck"][];
+            evidence: components["schemas"]["EvidenceRef"][];
+            /** @enum {string} */
+            result: "accepted" | "rejected";
+            reason: string;
+        };
+        RecordClearanceRequest: {
             checklist: components["schemas"]["RetestCheck"][];
             evidence: components["schemas"]["EvidenceRef"][];
             /** @enum {string} */
@@ -2891,6 +2921,39 @@ export interface operations {
             400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
+        };
+    };
+    recordClearance: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordClearanceRequest"];
+            };
+        };
+        responses: {
+            /** @description Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetestOutcome"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
         };
     };
     listPasses: {
