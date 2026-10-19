@@ -652,10 +652,30 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+         * Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)
          * @description Roles: system. Agents are refused.
          */
         post: operations["recordWorkOrderExternalError"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/{id}/external-retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)
+         * @description Roles: manager, engineer. Agents are refused.
+         */
+        post: operations["retryWorkOrderHandOff"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1020,7 +1040,7 @@ export interface paths {
         get: operations["listWebhooks"];
         put?: never;
         /**
-         * Register a webhook endpoint for CloudEvents
+         * Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
          * @description Roles: integrator. Agents are refused.
          */
         post: operations["registerWebhook"];
@@ -1591,6 +1611,16 @@ export interface components {
         };
         /** @enum {string} */
         WorkOrderStatus: "draft" | "submitted" | "in_progress" | "completed" | "accepted" | "rejected";
+        WorkOrderExternalError: {
+            /**
+             * @description The call that failed: filing the finding, attaching its photos, or moving the record’s status
+             * @enum {string}
+             */
+            step: "createFinding" | "addEvidence" | "updateStatus";
+            message: string;
+            /** Format: date-time */
+            at: string;
+        };
         WorkOrder: {
             id: string;
             findingId: string;
@@ -1605,12 +1635,8 @@ export interface components {
             completionEvidence: components["schemas"]["EvidenceRef"][];
             /** @description Procore observation ID */
             externalRef: string | null;
-            /** @description Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried */
-            externalError: {
-                message: string;
-                /** Format: date-time */
-                at: string;
-            } | null;
+            /** @description Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it */
+            externalError: components["schemas"]["WorkOrderExternalError"] | null;
             /** Format: date-time */
             createdAt: string;
             simulated: boolean;
@@ -1709,8 +1735,12 @@ export interface components {
             eventId: string;
             /** Format: date-time */
             at: string;
-            /** @description HTTP <status>: <body>, or the network error */
+            /** @description 1 for the first attempt at this event, 2 for the first retry, ... */
+            attempt: number;
+            /** @description HTTP <status>: <body, cut at 500 characters>, or the network error */
             error: string;
+            /** @description True when the API gave up on this event for this endpoint: no retry follows */
+            final: boolean;
         };
         Webhook: {
             id: string;
@@ -1720,7 +1750,7 @@ export interface components {
             createdBy: string;
             /** Format: date-time */
             createdAt: string;
-            /** @description Failed deliveries, oldest first; each is also on the audit chain */
+            /** @description The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain */
             failures: components["schemas"]["WebhookFailure"][];
         };
         TriageResult: {
@@ -1862,8 +1892,17 @@ export interface components {
             externalRef: string;
         };
         RecordWorkOrderExternalErrorRequest: {
+            /**
+             * @description The call that failed: filing the finding, attaching its photos, or moving the record’s status
+             * @enum {string}
+             */
+            step: "createFinding" | "addEvidence" | "updateStatus";
             /** @description The work-order system's error */
             message: string;
+        };
+        HandOffRetry: {
+            workOrder: components["schemas"]["WorkOrder"];
+            retried: components["schemas"]["WorkOrderExternalError"];
         };
         SubmitWorkOrderRequest: {
             installerUserId: string;
@@ -2057,6 +2096,19 @@ export interface components {
             /** Format: uri */
             url: string;
             eventTypes: components["schemas"]["EventType"][];
+        };
+        RegisteredWebhook: {
+            id: string;
+            /** Format: uri */
+            url: string;
+            eventTypes: components["schemas"]["EventType"][];
+            createdBy: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain */
+            failures: components["schemas"]["WebhookFailure"][];
+            /** @description Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>"> */
+            secret: string;
         };
         SetScenarioClockRequest: {
             /** Format: date-time */
@@ -3133,7 +3185,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it) */
+            /** @description Record why handing a work order to the external work-order system failed (system only; once, until a person retries it) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3143,6 +3195,34 @@ export interface operations {
                 };
             };
             400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    retryWorkOrderHandOff: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandOffRetry"];
+                };
+            };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
             404: components["responses"]["NotFound"];
@@ -3717,13 +3797,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Register a webhook endpoint for CloudEvents */
+            /** @description Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS) */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Webhook"];
+                    "application/json": components["schemas"]["RegisteredWebhook"];
                 };
             };
             400: components["responses"]["InvalidInput"];
