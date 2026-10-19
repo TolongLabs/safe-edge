@@ -166,6 +166,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/patrol-plans/{id}/holds/{segmentId}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record that the pilot or observer saw a waiting segment's path clear
+         * @description Roles: pilot. Agents are refused.
+         */
+        post: operations["releasePlanHold"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/patrols": {
         parameters: {
             query?: never;
@@ -881,7 +901,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "weather_hold";
         Denial: {
             /** @constant */
             ok: false;
@@ -1077,6 +1097,8 @@ export interface components {
             altM: number;
             headingDeg: number;
             gimbalPitchDeg: number;
+            /** @description Camera zoom; above 1 where the station stands further off to keep 50 m separation */
+            zoom: number;
             viewpointId: string | null;
         };
         PatrolTask: {
@@ -1094,6 +1116,8 @@ export interface components {
             altM: number;
             headingDeg: number;
             gimbalPitchDeg: number;
+            /** @description Camera zoom; above 1 where the station stands further off to keep 50 m separation */
+            zoom: number;
             viewpointId: string | null;
             /** @enum {string} */
             kind: "takeoff" | "transit" | "station" | "landing";
@@ -1111,6 +1135,9 @@ export interface components {
             /** @description null waits for a person to confirm the path is clear */
             until: string | null;
             reason: string;
+            /** @description The pilot who recorded the path clear; never set by the planner */
+            releasedBy: string | null;
+            releasedAt: string | null;
         };
         /** @enum {string} */
         RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
@@ -1869,6 +1896,35 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Allow the plan to fly */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatrolPlan"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    releasePlanHold: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+                segmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Record that the pilot or observer saw a waiting segment's path clear */
             200: {
                 headers: {
                     [name: string]: unknown;

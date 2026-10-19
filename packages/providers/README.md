@@ -73,7 +73,9 @@ The sim has no camera, so `observation.image` is null, `quality` is nominal (`sh
 
 ## Approval gate
 
-`dispatchPatrol` rejects with `ApprovalRequiredError` unless the scheduled plan is `approved` and the `HumanApproval` equals what core recorded on `approvePatrolPlan` (`planId`, `approvedBy`, `approvedAt`). Only a pilot can approve in core, never an agent. Scheduling a proposed plan is allowed, but that run can never fly: once a pilot approves, schedule the approved plan again. The DJI and MAVLink adapters must apply the same check before they send any flight command.
+`dispatchPatrol` rejects with `ApprovalRequiredError` unless the scheduled plan is `approved` and the `HumanApproval` equals what core recorded on `approvePatrolPlan` (`planId`, `approvedBy`, `approvedAt`). Only a pilot can approve in core, never an agent. Scheduling a proposed plan is allowed, but that run can never fly: once a pilot approves, schedule the approved plan again.
+
+The DJI and MAVLink adapters must apply the same check before they send any flight command.
 
 ## Feeding core
 

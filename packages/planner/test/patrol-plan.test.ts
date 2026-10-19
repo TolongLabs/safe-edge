@@ -1,59 +1,14 @@
 import { describe, expect, test } from 'bun:test'
-import { PatrolPlan, type ContextSnapshot, type Dock, type DroneProfile } from '@safe-edge/contracts'
+import { PatrolPlan } from '@safe-edge/contracts'
 import { booleanIntersects } from '@turf/boolean-intersects'
 import { distance } from '@turf/distance'
 import { lineString } from '@turf/helpers'
-import { join } from 'node:path'
 import { loadElmina, planPatrol, planStations, splitEdges, type Geofence, type PatrolPlanInput } from '../src/index.ts'
-
-const repoRoot = join(import.meta.dir, '../../..')
-const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
+import { dock, drone, readJson, reading } from './support.ts'
 
 const NOW = '2026-10-20T06:00:00.000Z'
 const HOUR_MS = 3_600_000
 const at = (hours: number) => new Date(Date.parse(NOW) + hours * HOUR_MS).toISOString()
-
-// Test fixtures, not a chosen site or aircraft: a dock on a park building roof by the lake, and assumed drone figures.
-const dock: Dock = {
-  id: 'dock_central_park',
-  name: 'Central Park facility roof',
-  position: { lon: 101.5135, lat: 3.1784, altM: 6 },
-  rainLimitMmPerH: 2,
-  droneProfileIds: ['drn_assumed'],
-  simulated: true,
-  source: 'fixture'
-}
-const drone: DroneProfile = {
-  id: 'drn_assumed',
-  name: 'assumed test drone',
-  usableBatteryWh: 400,
-  reserveWh: 30,
-  cruiseSpeedMps: 8,
-  cruisePowerW: 250,
-  hoverPowerW: 220,
-  maxWindMps: 12,
-  camera: { hfovDeg: 70, vfovDeg: 55, imageWidthPx: 4000, imageHeightPx: 3000, maxZoom: 1 },
-  missionFormats: ['wpml', 'qgc_plan'],
-  simulated: true,
-  source: 'fixture'
-}
-const reading = (
-  kind: 'rainfall' | 'water_level',
-  value: number,
-  observedAt: string,
-  validTo: string | null = null
-): ContextSnapshot => ({
-  kind,
-  value,
-  text: null,
-  observedAt,
-  validTo,
-  publisher: 'JPS Public Infobanjir',
-  stationId: kind === 'rainfall' ? '27880' : null,
-  url: null,
-  simulated: true,
-  source: 'fixture'
-})
 
 describe('patrol plans over real Elmina segments', async () => {
   const elmina = await loadElmina(readJson)
@@ -72,12 +27,15 @@ describe('patrol plans over real Elmina segments', async () => {
     forwardOverlap: 0.6,
     altitudeM: 9,
     altitudeCapM: 60,
-    window: { start: NOW, end: at(2), reason: 'requested' },
+    // The window opens at first light next morning and is long enough for every segment.
+    notBefore: NOW,
+    windowMinutes: 180,
     context: [reading('rainfall', 0, at(-0.5)), reading('water_level', 1, at(-0.5))],
     waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 },
     passes: selected.map((s) => ({ segmentId: s.id, state: 'valid', validTo: at(24 * 200), readAt: NOW })),
     flags: selected.map((s) => ({ segmentId: s.id, severity: null, readAt: NOW })),
-    geofences: []
+    geofences: [],
+    thirdParties: []
   })
 
   test('scores each segment as 0.25 expiry + 0.35 reviewed flag + 0.25 rain + 0.15 water level, with the parts', () => {
@@ -167,7 +125,7 @@ describe('patrol plans over real Elmina segments', async () => {
 
     const [takeoff, landing] = [plan.waypoints[0]!, plan.waypoints.at(-1)!]
     const atDock = { lon: dock.position.lon, lat: dock.position.lat, altM: dock.position.altM }
-    expect(takeoff).toMatchObject({ ...atDock, kind: 'takeoff', eta: NOW, energyWh: 0 })
+    expect(takeoff).toMatchObject({ ...atDock, kind: 'takeoff', eta: plan.window.start, energyWh: 0 })
     expect(landing).toMatchObject({ ...atDock, kind: 'landing', energyWh: plan.energyWh })
     expect(plan.energyWh).toBeLessThanOrEqual(90)
     expect(plan.reserveWh).toBeCloseTo(120 - plan.energyWh, 9)

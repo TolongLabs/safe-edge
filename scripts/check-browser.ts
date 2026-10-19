@@ -19,6 +19,7 @@ await Bun.build({
     'packages/contracts/src/index.ts',
     'packages/core/src/index.ts',
     'packages/planner/src/index.ts',
+    'packages/planner/src/export/index.ts',
     'packages/providers/src/index.ts',
     'packages/sdk/src/index.ts'
   ],

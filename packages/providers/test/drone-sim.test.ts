@@ -1,6 +1,7 @@
 // drone-sim through the DroneProvider port, wired to core the way a transport would: the plan comes from
-// `@safe-edge/planner` over real Elmina segments, the pilot approves it through core's dispatch, the sim flies it, and
-// its observations go back through dispatch (`POST /observations`) until core completes the patrol.
+// `@safe-edge/planner` over real Elmina segments (through the SDK's Elmina adapter), the pilot approves it through
+// core's dispatch, the sim flies it, and its observations go back through dispatch (`POST /observations`) until core
+// completes the patrol.
 import { describe, expect, test } from 'bun:test'
 import {
   ProviderEvent,
@@ -16,45 +17,15 @@ import {
   type Pose,
   type Segment
 } from '@safe-edge/contracts'
-import { actorFor, counterIds, createCore, type PatrolPlanner, type Seed } from '@safe-edge/core'
-import { loadElmina, planPatrol, splitEdges } from '@safe-edge/planner'
+import { actorFor, counterIds, createCore, type Seed } from '@safe-edge/core'
+import type { ThirdParty } from '@safe-edge/planner'
+import { createElminaPlanner } from '@safe-edge/sdk'
 import { distance } from '@turf/distance'
 import { join } from 'node:path'
 import { ApprovalRequiredError, createDroneSim } from '../src/index.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
 const seed = (await Bun.file(join(repoRoot, 'data/elmina/fixtures/seed.json')).json()) as Seed
-const elmina = await loadElmina((path) => Bun.file(join(repoRoot, path)).json())
-const plannerSegments = splitEdges({ ...elmina, maxBendDeg: 40, pointObstructionToleranceM: 3 })
-
-/** The adapter a transport writes over `planPatrol` (copied from core's test support, as #52 asks). */
-const elminaPlanner: PatrolPlanner = ({ id, now, request, dock, droneProfile, segments, passes, findings }) =>
-  planPatrol({
-    id,
-    now,
-    edges: elmina.edges,
-    segments: segments.map((s) => plannerSegments.find((p) => p.id === s.id)!),
-    dock,
-    drone: droneProfile,
-    rangeM: 15,
-    forwardOverlap: 0.6,
-    altitudeM: Math.min(9, request.altitudeCapM),
-    altitudeCapM: request.altitudeCapM,
-    window: {
-      start: request.notBefore,
-      end: new Date(Date.parse(request.notBefore) + 2 * 3_600_000).toISOString(),
-      reason: 'requested'
-    },
-    geofences: [],
-    passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: now })),
-    flags: segments.map((s) => ({
-      segmentId: s.id,
-      severity: findings.find((f) => f.segmentId === s.id && f.status !== 'closed')?.severity ?? null,
-      readAt: now
-    })),
-    context: request.context,
-    waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 }
-  })
 
 // S1 (two fixed viewpoints) and two other lake segments: real Elmina geometry from the seed.
 const SEGMENT_IDS = [seed.story.s1.segmentId, 'seg_866518980_5', 'seg_866518980_6']
@@ -62,10 +33,11 @@ const APPROVED_AT = '2026-10-21T22:00:00.000Z'
 const NOT_BEFORE = '2026-10-21T23:30:00.000Z'
 
 /** One core and one sim sharing a clock, driven as seeded users. */
-function start() {
+async function start({ thirdParties = [] }: { thirdParties?: ThirdParty[] } = {}) {
   let now = seed.asOf
   const clock = { now: () => now }
-  const core = createCore({ seed, clock, ids: counterIds(), planner: elminaPlanner })
+  const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties })
+  const core = createCore({ seed, clock, ids: counterIds(), planner })
   const actor = (userId: string): Actor => actorFor(seed.users.find((u) => u.id === userId)!)
   const attempt = <K extends CoreOperationId>(op: K, userId: string, input: OperationInput<K>): DispatchResult<K> =>
     core.dispatch(op, actor(userId), input)
@@ -84,12 +56,12 @@ function start() {
   const events: ProviderEvent[] = []
   sim.onEvent((event) => events.push(ProviderEvent.parse(event)))
 
-  const plan = (): PatrolPlan =>
+  const plan = (segmentIds = SEGMENT_IDS): PatrolPlan =>
     call('createPatrolPlan', 'usr_manager', {
       body: {
         dockId: dock!.id,
         droneProfileId: drone!.id,
-        segmentIds: SEGMENT_IDS,
+        segmentIds,
         context: [],
         notBefore: NOT_BEFORE,
         altitudeCapM: 60
@@ -117,7 +89,7 @@ function start() {
 
 describe('drone-sim refuses to fly without a human approval', () => {
   test('a proposed plan, a missing approval and an approval the pilot never gave are all refused', async () => {
-    const h = start()
+    const h = await start()
     const proposed = h.plan()
     const run = await h.sim.schedulePatrol(proposed)
     expect(run).toMatchObject({ planId: proposed.id, deviceId: 'sim-1', status: 'scheduled', approval: null })
@@ -144,7 +116,7 @@ describe('drone-sim refuses to fly without a human approval', () => {
   })
 })
 
-type Harness = ReturnType<typeof start>
+type Harness = Awaited<ReturnType<typeof start>>
 
 /** The S1 viewpoint a frame was taken from: same place and height, within a metre. */
 function viewpointAt(segment: Segment, pose: Pose) {
@@ -237,7 +209,7 @@ async function flyApprovedPlan(h: Harness, { cancelAfterFrames }: { cancelAfterF
 
 describe('drone-sim flies an approved plan and feeds core', () => {
   test("it flies the planner's route on the planner's timeline, and its observations complete the patrol", async () => {
-    const h = start()
+    const h = await start()
     const { approved, patrol, segments, recorded, completed } = await flyApprovedPlan(h)
     const waypoints = approved.waypoints
     expect(approved.tasks.map((t) => t.segmentId).toSorted()).toEqual(SEGMENT_IDS.toSorted())
@@ -292,15 +264,15 @@ describe('drone-sim flies an approved plan and feeds core', () => {
   })
 
   test('the same plan on the same clock gives the same event stream', async () => {
-    const first = start()
+    const first = await start()
     await flyApprovedPlan(first)
-    const second = start()
+    const second = await start()
     await flyApprovedPlan(second)
     expect(second.events).toEqual(first.events)
   })
 
   test('a cancelled flight goes straight back to the dock, and what it missed becomes field checks', async () => {
-    const h = start()
+    const h = await start()
     const { approved, run, patrol, cancelled, completed } = await flyApprovedPlan(h, { cancelAfterFrames: 1 })
     expect(cancelled!.status).toMatchObject({ state: 'in_flight', runId: run.id })
     expect(cancelled!.status.batteryWh).toBeLessThan(h.drone.usableBatteryWh)
