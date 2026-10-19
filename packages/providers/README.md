@@ -10,6 +10,7 @@ Contents:
     1.  [Event types](#event-types)
     1.  [Event timing and order](#event-timing-and-order)
 1.  [Approval gate](#approval-gate)
+1.  [Window gate](#window-gate)
 1.  [Feeding core](#feeding-core)
 1.  [Sending findings to Procore](#sending-findings-to-procore)
     1.  [Procore does not notify assignees](#procore-does-not-notify-assignees)
@@ -94,7 +95,7 @@ Whoever hosts the sim turns its events into core operations with `bridgeDrone({ 
 
 1.  After `approvePatrolPlan` and `startPatrol`, `bridge.fly(patrol)` schedules the plan on the provider and dispatches it with the approval core recorded. A refused dispatch drops the scheduled run and rejects.
 2.  `observation` becomes `recordObservation` (`POST /observations`) as the provider actor, with `patrolId` from core and `capturedAt: at`, when the frame carries a `viewpointId`. The planner gives each fixed viewpoint's ID to the station nearest it, so the frame matches its viewpoint by ID. Other frames only count towards coverage.
-3.  `landed` becomes `completePatrol` with one coverage entry per planned segment. A segment counts as inspected only when every one of its stations was captured; otherwise its whole length is unknown, and core opens a field check for it.
+3.  `landed` becomes `completePatrol` with one coverage entry per planned segment. Coverage counts stations, not frames: a station is seen once it has a frame the privacy gate kept, and each station seen stands for an equal share of its segment's length. The rest is unknown, and core opens a field check for it. A frame at a waypoint that is not a station of its segment, or a station on a segment the plan does not fly, is a failure.
 4.  `bridge.committedTasks(patrol)` is how many route stops the drone has reached (`waypoint` events at stations), which core's re-plan subscriber asks for an in-flight patrol.
 
 The bridge goes on after a write fails and hands the error to `onFailure`; the API records it as a failed `runAutomation` on the audit chain.
@@ -108,7 +109,7 @@ When a manager or engineer submits a work order (`edge.work_order.submitted.v1`)
 3.  The API stores the Observation ID as the work order's `externalRef` with `setWorkOrderExternalRef` (system only, set once, audited), before any photo goes.
 4.  `addEvidence` uploads each observation photo and attaches it to the Observation.
 
-A failure is not retried: the API records it on the work order as `externalError` (`recordWorkOrderExternalError`, system only, set once, audited), readable with `GET /v1/work-orders/{id}`, and logs it. Every submitted work order gets its own Observation, including the one a reopened finding gets. Nothing calls `updateStatus` yet. It maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
+A Procore failure (refused, unreachable, or an undocumented answer: `WorkOrderProviderError`) is recorded on the work order as `externalError` with the step that failed (`recordWorkOrderExternalError`, system only, audited), readable with `GET /v1/work-orders/{id}`, and logged. Any other error is a bug and is not recorded. A manager or engineer retries with `POST /v1/work-orders/{id}/external-retry`, which resumes from that step. Every submitted work order gets its own Observation, including the one a reopened finding gets. The repair moves it with `updateStatus`: a completed repair to `ready_for_review`, an accepted re-test to `closed`, a rejected one to `not_accepted`. The adapter maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
 
 ### Procore does not notify assignees
 

@@ -117,7 +117,10 @@ e2e/                    Playwright tests
 | Contracts           | OpenAPI 3.1, AsyncAPI 3.0, CloudEvents 1.0 envelopes                  | `openapi-typescript@7.13.0` for types ([SDK research][sdk])    |
 | MCP                 | Official TypeScript server SDK, spec revision 2026-07-28              | `@modelcontextprotocol/server@2.3.1` ([agent research][agent]) |
 | AI                  | Anthropic TypeScript SDK, `claude-opus-5-5`                           | `@anthropic-ai/sdk`, latest stable                             |
+| API state           | `bun:sqlite` command journal and idempotency table (`apps/api`)       | Built into Bun                                                 |
+| Webhooks            | Standard Webhooks 1.0.0 signatures; reference library in tests        | `standardwebhooks@1.1.1`                                       |
 | Tests               | Playwright end-to-end; `bun test` integration tests over HTTP and MCP | Latest stable                                                  |
+| Mission check (CI)  | uv runs the MAVSDK QGroundControl importer on the exported `.plan`    | `mavsdk==4.0.6`, uv via `astral-sh/setup-uv` v10.3.0           |
 
 [geodata]: /docs/research/drone-integration/threejs-geodata.md
 [planning]: /docs/research/drone-integration/mission-planning.md
