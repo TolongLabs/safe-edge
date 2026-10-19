@@ -3,8 +3,8 @@ import { booleanPointInPolygon } from '@turf/boolean-point-in-polygon'
 import { destination } from '@turf/destination'
 import { distance } from '@turf/distance'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
-import type { PlanHold } from '@safe-edge/contracts'
-import type { Feature, LineString, Point, Polygon, Position } from 'geojson'
+import type { ThirdParty as ContractThirdParty, PlanHold } from '@safe-edge/contracts'
+import type { Feature, Polygon, Position } from 'geojson'
 import type { Station } from './stations.ts'
 
 const meters = { units: 'meters' } as const
@@ -18,18 +18,11 @@ const STAND_OFF_STEP_M = 1
  */
 export const SEPARATION_M = 50
 
-/** A person, vessel, vehicle or structure not under the remote pilot's control. */
-export interface ThirdParty {
-  id: string
-  kind: 'person' | 'vessel' | 'vehicle' | 'structure'
-  /** As people should read it, e.g. "3 people on the lakeside footway" or "footbridge way/926280618". */
-  label: string
-  geometry: Point | LineString | Polygon
-  /** When it was seen; `null` for a mapped structure. */
-  observedAt: string | null
-  simulated: boolean
-  source: string
-}
+/**
+ * A person, vessel, vehicle or structure not under the remote pilot's control: the contracts' `ThirdParty`, whose
+ * `source` may also name a map layer (`osm`), like the planner's other geometry inputs.
+ */
+export type ThirdParty = Omit<ContractThirdParty, 'source'> & { source: string }
 
 export interface SeparationOptions {
   /** The water body the segment's edge encloses: a station only moves within it. */

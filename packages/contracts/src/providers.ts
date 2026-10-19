@@ -9,7 +9,8 @@ import {
   type EdgePass,
   type Finding,
   type PatrolPlan,
-  type Segment
+  type Segment,
+  type ThirdParty
 } from './entities.ts'
 import {
   DockId,
@@ -162,7 +163,8 @@ export interface WorkOrderProvider {
  * `planPatrol` (#71), which holds what the store does not: planner geometry, capture settings, geofences and
  * water-level bands. Synchronous, like the rest of core. Core supplies the plan ID and the time, and stores the plan
  * only if it comes back proposed and unapproved. A re-plan request (`request.replan`) also gets the plan it supersedes
- * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`.
+ * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`. `thirdParties`
+ * are the ones the site records (the seed's) followed by the ones the request reports.
  */
 export type PatrolPlanner = (input: {
   id: string
@@ -174,4 +176,5 @@ export type PatrolPlanner = (input: {
   segments: Segment[]
   passes: EdgePass[]
   findings: Finding[]
+  thirdParties: ThirdParty[]
 }) => PatrolPlan

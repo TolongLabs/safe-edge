@@ -9,8 +9,9 @@ import type { ThirdParty } from './separation.ts'
  * Core's planner port (`PatrolPlanner`) over `planPatrol` for the Elmina seed: the one adapter the API, the SDK and
  * the tests use. It holds what the store lacks: planner geometry, capture settings, geofences (none yet), water-level
  * bands and a 120-minute window after first light. `readJson` loads a path from `elminaLayerPaths` (relative to the repo root): the browser fetches
- * it, Bun reads the file. `thirdParties` are the people, vessels, vehicles and structures not under the pilot's control
- * that plans keep 50 m from (S1's people on the path); there is no default, so none are left out by accident.
+ * it, Bun reads the file. `thirdParties` are mapped people, vessels, vehicles and structures not under the pilot's
+ * control that every plan keeps 50 m from; there is no default, so none are left out by accident. Core adds the ones
+ * the seed records and the create-plan request reports (the port's `thirdParties`).
  */
 export async function createElminaPlanner(
   readJson: (path: string) => Promise<unknown>,
@@ -25,7 +26,7 @@ export async function createElminaPlanner(
     return segment
   }
 
-  return ({ id, now, request, previous, dock, droneProfile, segments, passes, findings }) => {
+  return ({ id, now, request, previous, dock, droneProfile, segments, passes, findings, ...observed }) => {
     const input: PatrolPlanInput = {
       id,
       now,
@@ -40,7 +41,7 @@ export async function createElminaPlanner(
       notBefore: request.notBefore,
       windowMinutes: 120,
       geofences: [],
-      thirdParties,
+      thirdParties: [...thirdParties, ...observed.thirdParties],
       passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: now })),
       flags: segments.map((s) => ({
         segmentId: s.id,

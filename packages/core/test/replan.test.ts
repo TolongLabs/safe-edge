@@ -209,7 +209,11 @@ describe('PLAN-4: plans that have not flown, and patrols the triggers queue', ()
     expect(replanned!.replan?.supersedes).toEqual({ planId: plan.id, committedTasks: 0 })
     expect(replanned!.window).toMatchObject({ reason: 'next_dry_window' })
     expect(Date.parse(replanned!.window.start)).toBeGreaterThan(Date.parse(plan.window.end))
-    expect(replanned!.holds.map((x) => x.kind)).toEqual(['weather'])
+    // The seed's S1 path crowd still holds the path segment on the new plan.
+    expect(replanned!.holds.map((x) => [x.kind, x.segmentId])).toEqual([
+      ['weather', null],
+      ['separation', 'seg_866518980_9']
+    ])
 
     // The same reading again changes nothing; a new trigger re-plans the newest plan, not the one it superseded.
     expect(subscriber.onTrigger({ kind: 'heavy_rain', reading })).toEqual([])

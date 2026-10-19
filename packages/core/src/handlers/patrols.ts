@@ -4,7 +4,8 @@ import {
   type PatrolPlanner,
   type Segment,
   type SegmentCoverage,
-  type Task
+  type Task,
+  type ThirdParty
 } from '@safe-edge/contracts'
 import { canonicalJson } from '../audit.ts'
 import type { Tx } from '../store.ts'
@@ -16,7 +17,11 @@ const ROUNDING_M = 1e-6
 type PatrolOperation =
   'createPatrolPlan' | 'approvePatrolPlan' | 'releasePlanHold' | 'startPatrol' | 'completePatrol' | 'recordObservation'
 
-export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<PatrolOperation> => ({
+/** `thirdParties` are the ones the site records (the seed's); a create-plan request may report more. */
+export const patrolHandlers = (
+  planner: PatrolPlanner | undefined,
+  thirdParties: ThirdParty[]
+): Handlers<PatrolOperation> => ({
   createPatrolPlan: (tx, { body }) => {
     const dock = tx.get('docks', body.dockId)
     if (!dock) return tx.notFound(`No dock ${body.dockId}`)
@@ -53,7 +58,8 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
         droneProfile,
         segments,
         passes: segments.flatMap((s) => (s.passId === null ? [] : [tx.must('passes', s.passId)])),
-        findings: tx.all('findings').filter((f) => ids.has(f.segmentId))
+        findings: tx.all('findings').filter((f) => ids.has(f.segmentId)),
+        thirdParties: [...thirdParties, ...(body.thirdParties ?? [])]
       })
     )
     if (plan.id !== id || plan.status !== 'proposed' || plan.approvedBy !== null || plan.approvedAt !== null) {

@@ -17,7 +17,8 @@ const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
 const seed = Seed.parse(await readJson('data/elmina/fixtures/seed.json'))
 const clock = { now: () => new Date().toISOString() }
 const ids = counterIds()
-// The seed maps no third parties and no observation feeds them yet (DECISIONS #79), so plans see none.
+// Observed third parties reach plans through core: the seed's (S1's path crowd) and each create-plan request's. Mapped
+// structures such as buildings arrive with #59's Overpass extract; the research extract maps none.
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
 const core = createCore({ seed, clock, ids, planner })
 

@@ -80,6 +80,8 @@ export const provenance = { simulated: z.boolean(), source: Source }
 
 /** GeoJSON position: [lon, lat] or [lon, lat, metres above ground]. */
 export const Position = z.array(z.number()).min(2).max(3)
+export const Point = named('Point', z.object({ type: z.literal('Point'), coordinates: Position }))
+export type Point = z.infer<typeof Point>
 export const LineString = named(
   'LineString',
   z.object({ type: z.literal('LineString'), coordinates: z.array(Position).min(2) })

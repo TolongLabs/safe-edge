@@ -976,6 +976,11 @@ export interface components {
     schemas: {
         /** @enum {string} */
         Source: "fixture" | "scenario" | "user" | "agent" | "provider" | "model" | "system";
+        Point: {
+            /** @constant */
+            type: "Point";
+            coordinates: number[];
+        };
         LineString: {
             /** @constant */
             type: "LineString";
@@ -1210,6 +1215,18 @@ export interface components {
             publisher: string;
             stationId: string | null;
             url: string | null;
+            simulated: boolean;
+            source: components["schemas"]["Source"];
+        };
+        ThirdParty: {
+            id: string;
+            /** @enum {string} */
+            kind: "person" | "vessel" | "vehicle" | "structure";
+            /** @description As people should read it, e.g. "3 people on the lakeside footway" */
+            label: string;
+            geometry: components["schemas"]["Point"] | components["schemas"]["LineString"] | components["schemas"]["Polygon"];
+            /** @description When it was seen; null for a mapped structure */
+            observedAt: string | null;
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
@@ -1647,6 +1664,8 @@ export interface components {
             notBefore: string;
             /** @description Agreed with air traffic control */
             altitudeCapM: number;
+            /** @description People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot */
+            thirdParties?: components["schemas"]["ThirdParty"][];
             /** @description Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider */
             replan?: components["schemas"]["PlanReplan"];
         };
