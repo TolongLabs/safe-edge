@@ -360,6 +360,34 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   expect(brokenLinks(raw.toSpliced(firstRefusal, 1))).toEqual([firstRefusal])
 })
 
+// Paths around the guardrails, found while writing this suite. Each failed before its fix.
+
+test('an Idempotency-Key replay stays with its token: a narrower token of the same agent is refused, not replayed', async () => {
+  const api = startGuardedApi({
+    dev_agent_read_only: { type: 'agent', id: 'usr_agent', role: 'agent', scopes: ['edge.read'] }
+  })
+  const propose = (token: string) =>
+    answer(
+      api.request('post', '/candidates', {
+        token,
+        body: { ...tier2Candidate, rationale: 'Fence panel 4 looks missing in the latest frame' },
+        headers: { 'idempotency-key': 'propose-panel-4' }
+      })
+    )
+
+  const first = await propose('dev_agent')
+  expect(first.status).toBe(201)
+  expect(await propose('dev_agent_read_only')).toEqual(denied('scope_missing'))
+  expect((await api.audit()).at(-1)).toMatchObject({
+    action: 'raiseCandidate',
+    actor: { type: 'agent', id: 'usr_agent' },
+    decision: 'denied',
+    rule: 'scope_missing'
+  })
+  // The token that made the request still gets its answer replayed.
+  expect(await propose('dev_agent')).toEqual(first)
+})
+
 /** A write's main record: the body itself, or its first record (decideCandidate's candidate, recordRetest's re-test). */
 function answeredRecord(body: unknown): { id: string } {
   const isRecord = (value: unknown): value is { id: string } =>

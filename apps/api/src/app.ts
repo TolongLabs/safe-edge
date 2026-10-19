@@ -67,8 +67,9 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions)
     await next()
   })
 
-  // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). Server
-  // errors are not kept, so a retry runs again. In memory, like the core.
+  // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). The caller
+  // is the whole actor, role and scopes included: a replay skips the access check, so another token of the same person
+  // must not share it. Server errors are not kept, so a retry runs again. In memory, like the core.
   const replays = new Map<
     string,
     { fingerprint: string; response?: { status: number; headers: Headers; body: string } }
@@ -76,7 +77,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions)
   const idempotency = createMiddleware<Env>(async (c, next) => {
     const key = c.req.header('idempotency-key')
     if (key === undefined) return next()
-    const scope = JSON.stringify([c.get('actor').id, c.req.method, c.req.path, key])
+    const scope = JSON.stringify([c.get('actor'), c.req.method, c.req.path, key])
     const fingerprint = new Bun.CryptoHasher('sha256').update(await c.req.text()).digest('hex')
     const seen = replays.get(scope)
     if (seen && seen.fingerprint !== fingerprint) {
