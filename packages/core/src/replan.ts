@@ -29,7 +29,10 @@ export interface ReplanSubscriberOptions {
 }
 
 export interface ReplanSubscriber {
-  /** Re-plans on `edge.candidate.decided.v1` (confirmed), `edge.repair.completed.v1` and `edge.pass.expiring.v1`. */
+  /**
+   * Re-plans on `edge.candidate.decided.v1` (confirm or recapture), `edge.repair.completed.v1` and
+   * `edge.pass.expiring.v1`.
+   */
   onEvent(event: EdgeEvent): EdgeEvent[]
   /** Re-plans on any trigger, such as the planner's `weatherTriggers` from new weather snapshots. */
   onTrigger(trigger: ReplanTrigger): EdgeEvent[]
@@ -109,7 +112,8 @@ export function createReplanSubscriber({
   const onEvent = (event: EdgeEvent): EdgeEvent[] => {
     switch (event.type) {
       case 'edge.candidate.decided.v1': {
-        const { decision, findingId, segmentId } = event.data
+        const { decision, findingId, segmentId, candidateId } = event.data
+        if (decision === 'recapture') return onTrigger({ kind: 'recapture_requested', segmentId, candidateId })
         if (decision !== 'confirm') return []
         if (findingId === null) throw new Error(`confirmed candidate ${event.data.candidateId} has no finding`)
         return onTrigger({ kind: 'flag_confirmed', segmentId, findingId })

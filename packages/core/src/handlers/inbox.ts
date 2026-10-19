@@ -78,6 +78,8 @@ function raise(
       id: tx.id('task'),
       kind: 'field_check',
       segmentId: segment.id,
+      viewpointId: null,
+      candidateId: candidate.id,
       findingId: null,
       assigneeUserId: tx.must('assets', segment.assetId).custodianUserId,
       status: 'open',
@@ -153,6 +155,33 @@ export const inbox: Handlers<
     }
     tx.put('candidates', decided)
     if (body.decision !== 'confirm') {
+      // A recapture is owned work, like confirm: the custodian has each viewpoint of the candidate's photos captured
+      // again, or the whole segment when it has none.
+      const tasks: Task[] = []
+      if (body.decision === 'recapture') {
+        const segment = tx.must('segments', candidate.segmentId)
+        const custodian = tx.must('assets', segment.assetId).custodianUserId
+        const viewpointIds = new Set(candidate.observationIds.map((id) => tx.must('observations', id).viewpointId))
+        for (const viewpointId of viewpointIds.size === 0 ? [null] : viewpointIds) {
+          const task: Task = {
+            id: tx.id('task'),
+            kind: 'recapture',
+            segmentId: segment.id,
+            viewpointId,
+            candidateId: candidate.id,
+            findingId: null,
+            assigneeUserId: custodian,
+            status: 'open',
+            reason: body.reason,
+            dueAt: null,
+            createdAt: tx.now,
+            simulated: candidate.simulated,
+            source: tx.source
+          }
+          tx.put('tasks', task)
+          tasks.push(task)
+        }
+      }
       tx.emit(
         'edge.candidate.decided.v1',
         {
@@ -164,7 +193,7 @@ export const inbox: Handlers<
         },
         candidate.segmentId
       )
-      return ok({ candidate: decided, finding: null, tasks: [], workOrder: null })
+      return ok({ candidate: decided, finding: null, tasks, workOrder: null })
     }
 
     // Confirming opens work: a finding owned by the custodian, interim protection and a draft work order.
@@ -187,6 +216,8 @@ export const inbox: Handlers<
       id: tx.id('task'),
       kind: 'interim_protection',
       segmentId: segment.id,
+      viewpointId: null,
+      candidateId: null,
       findingId: finding.id,
       assigneeUserId: custodian,
       status: 'open',

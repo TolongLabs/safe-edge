@@ -1,10 +1,10 @@
 // #128: what the Inbox and Ask panel (#80) get from the agent layer, over HTTP against the real API, without Claude.
 // The agent's own runs are in agent.test.ts.
 import { expect, test } from 'bun:test'
-import { CandidateDecision, WorkOrder } from '@safe-edge/contracts'
+import { CandidateDecision, Task, WorkOrder } from '@safe-edge/contracts'
 import { playS1toRepair } from '../../../packages/sdk/test/story.ts'
 import { auditLength, httpPlayer } from './s6.ts'
-import { S1, raiseTier2, seed, startApi } from './support.ts'
+import { S1, raiseTier2, seed, startApi, tier2Candidate } from './support.ts'
 
 test("the agent's Inbox summary is stored on the candidate as an AI suggestion, and only an agent's token writes one", async () => {
   const api = startApi()
@@ -107,4 +107,63 @@ test('a work order past draft blocks another until a re-test reopens the finding
     (w) => w.findingId === findingId && w.status === 'draft'
   )
   expect(open).toEqual([agents])
+})
+
+test('a recapture opens a task the Inbox reads from GET /tasks, and the crew closes it with a new photo of the viewpoint', async () => {
+  const api = startApi()
+  const viewpoint = seed.segments.find((s) => s.id === S1.segmentId)!.viewpoints.find((v) => v.id === S1.viewpointId)!
+  const photo = async (sharpness: number) =>
+    (await (
+      await api.request('post', '/observations', {
+        token: 'tok_crew',
+        body: {
+          patrolId: null,
+          segmentId: S1.segmentId,
+          viewpointId: viewpoint.id,
+          captureSource: 'phone',
+          image: null,
+          pose: viewpoint.pose,
+          capturedAt: seed.asOf,
+          quality: { sharpness, alignmentResidualPx: 2, occlusion: 0.1 },
+          privacyAction: 'none',
+          simulated: true
+        }
+      })
+    ).json()) as { id: string }
+  const blurred = await photo(0.2)
+  const raised = await api.request('post', '/candidates', {
+    token: 'tok_provider',
+    body: { ...tier2Candidate, observationIds: [blurred.id] }
+  })
+  const candidate = (await raised.json()) as { id: string }
+  const decided = await api.request('post', `/candidates/${candidate.id}/decision`, {
+    token: 'tok_manager',
+    body: { decision: 'recapture', reason: 'Too blurred to see panel 4; shoot it again' }
+  })
+  const { tasks } = CandidateDecision.parse(await decided.json())
+  const tasksAt = async (status: 'open' | 'done') =>
+    Task.array().parse(await (await api.request('get', `/tasks?status=${status}`, { token: 'tok_manager' })).json())
+
+  expect(await tasksAt('open')).toEqual(tasks)
+  expect(tasks).toEqual([
+    {
+      id: 'task_1',
+      kind: 'recapture',
+      segmentId: S1.segmentId,
+      viewpointId: S1.viewpointId,
+      candidateId: candidate.id,
+      findingId: null,
+      assigneeUserId: 'usr_manager',
+      status: 'open',
+      reason: 'Too blurred to see panel 4; shoot it again',
+      dueAt: null,
+      createdAt: seed.asOf,
+      simulated: true,
+      source: 'user'
+    }
+  ])
+
+  await photo(0.94)
+  expect(await tasksAt('open')).toEqual([])
+  expect(await tasksAt('done')).toEqual([{ ...tasks[0]!, status: 'done' }])
 })

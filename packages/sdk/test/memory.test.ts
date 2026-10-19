@@ -241,4 +241,89 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
       ['plan_3', 'core.replan']
     ])
   })
+
+  test('a recapture opens a task the Inbox reads from listTasks, and the open plan is re-planned to fly its segment', async () => {
+    const repoRoot = join(import.meta.dir, '../../..')
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    const now = '2026-10-20T00:00:00.000Z'
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
+    const seen: string[] = []
+    demo.subscribe((event) => seen.push(event.type))
+    const open = await demo.createPatrolPlan({
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds: ['seg_866518980_5'],
+        context: [],
+        notBefore: now,
+        altitudeCapM: 60
+      }
+    })
+    const { segment } = await demo.getSegment({ params: { id: S1.segmentId } })
+    const frame = await demo.as('usr_drone_sim').recordObservation({
+      body: {
+        patrolId: null,
+        segmentId: S1.segmentId,
+        viewpointId: S1.viewpointId,
+        captureSource: 'drone',
+        image: null,
+        pose: segment.viewpoints.find((v) => v.id === S1.viewpointId)!.pose,
+        capturedAt: now,
+        quality: { sharpness: 0.31, alignmentResidualPx: 9.5, occlusion: 0.4 },
+        privacyAction: 'none',
+        simulated: true
+      }
+    })
+    const candidate = await demo.as('usr_drone_sim').raiseCandidate({
+      body: {
+        segmentId: S1.segmentId,
+        observationIds: [frame.id],
+        inventoryItemId: null,
+        itemStatus: null,
+        class: 'bank_change',
+        score: 0.55,
+        uncertainty: 'high',
+        gridCell: 'B3',
+        rationale: 'The bank may have slumped',
+        model: null,
+        simulated: true
+      }
+    })
+    seen.length = 0
+    await demo.decideCandidate({
+      params: { id: candidate.id },
+      body: { decision: 'recapture', reason: 'Too blurred to judge the bank' }
+    })
+
+    expect(await demo.as('usr_crew').listTasks({ query: { status: 'open' } })).toEqual([
+      {
+        id: 'task_1',
+        kind: 'recapture',
+        segmentId: S1.segmentId,
+        viewpointId: S1.viewpointId,
+        candidateId: candidate.id,
+        findingId: null,
+        assigneeUserId: 'usr_manager',
+        status: 'open',
+        reason: 'Too blurred to judge the bank',
+        dueAt: null,
+        createdAt: now,
+        simulated: true,
+        source: 'user'
+      }
+    ])
+    // The next patrol includes the viewpoint: the open plan is re-planned with the segment, as the system.
+    expect(seen).toEqual(['edge.candidate.decided.v1', 'edge.patrol.planned.v1'])
+    const replanned = (await demo.listPatrolPlans()).at(-1)!
+    expect(replanned.replan).toEqual({
+      trigger: { kind: 'recapture_requested', segmentId: S1.segmentId, candidateId: candidate.id },
+      supersedes: { planId: open.id, committedTasks: 0 }
+    })
+    expect(replanned.tasks.map((t) => t.segmentId).toSorted()).toEqual([S1.segmentId, 'seg_866518980_5'].toSorted())
+  })
 })

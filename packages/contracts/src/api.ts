@@ -215,7 +215,10 @@ export const DecideCandidateRequest = named(
 )
 export type DecideCandidateRequest = z.infer<typeof DecideCandidateRequest>
 
-/** Confirming creates a finding, an interim protection task and a draft work order (PRD INBOX-3). */
+/**
+ * Confirming creates a finding, an interim protection task and a draft work order (PRD INBOX-3). A recapture opens a
+ * recapture task per viewpoint of the candidate's photos, or one for the segment when it has none (INBOX-2).
+ */
 export const CandidateDecision = named(
   'CandidateDecision',
   z.object({

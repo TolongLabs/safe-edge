@@ -362,7 +362,8 @@ export const operations = {
   decideCandidate: {
     method: 'post',
     path: '/candidates/{id}/decision',
-    summary: 'Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)',
+    summary:
+      'Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition)',
     handledBy: 'core',
     roles: ['manager'],
     agentScope: null,
@@ -413,7 +414,7 @@ export const operations = {
   listTasks: {
     method: 'get',
     path: '/tasks',
-    summary: 'List interim protection and field-check tasks',
+    summary: 'List interim protection, field-check and recapture tasks',
     handledBy: 'core',
     roles: 'any',
     agentScope: 'edge.read',

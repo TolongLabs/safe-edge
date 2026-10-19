@@ -193,9 +193,12 @@ export const patrolHandlers = (
     const coverage = [...covered, ...unreported]
     const completed: Patrol = { ...patrol, status: 'completed', completedAt: tx.now, coverage }
     tx.put('patrols', completed)
-    // Inspecting any of a segment restarts its patrol interval; a segment the patrol saw none of has missed it.
+    // Inspecting any of a segment restarts its patrol interval; a segment the patrol saw none of has missed it. It
+    // also does a whole-segment recapture asked for before take-off.
     for (const c of coverage.filter((c) => c.inspectedM > 0)) {
       tx.put('segments', { ...tx.must('segments', c.segmentId), lastPatrolledAt: tx.now })
+      const tookOff = Date.parse(patrol.startedAt)
+      closeRecaptures(tx, c.segmentId, (t) => t.viewpointId === null && Date.parse(t.createdAt) <= tookOff)
     }
     for (const c of coverage.filter((c) => c.unknownM > 0)) {
       const segment = tx.must('segments', c.segmentId)
@@ -203,6 +206,8 @@ export const patrolHandlers = (
         id: tx.id('task'),
         kind: 'field_check',
         segmentId: segment.id,
+        viewpointId: null,
+        candidateId: null,
         findingId: null,
         assigneeUserId: tx.must('assets', segment.assetId).custodianUserId,
         status: 'open',
@@ -227,9 +232,28 @@ export const patrolHandlers = (
     if (body.patrolId !== null && !tx.get('patrols', body.patrolId)) return tx.notFound(`No patrol ${body.patrolId}`)
     const observation = { id: tx.id('obs'), ...body, source: tx.source }
     tx.put('observations', observation)
+    // A frame taken since a recapture was asked for is the re-shoot, unless the privacy gate discarded it.
+    if (observation.privacyAction !== 'discarded') {
+      const takenAt = Date.parse(observation.capturedAt)
+      closeRecaptures(
+        tx,
+        segment.id,
+        (t) =>
+          (t.viewpointId === null || t.viewpointId === observation.viewpointId) && takenAt >= Date.parse(t.createdAt)
+      )
+    }
     return ok(observation)
   }
 })
+
+/** Marks done the open recapture tasks on a segment that a new capture covers: its viewpoint's, or the segment's. */
+function closeRecaptures(tx: Tx, segmentId: string, covers: (task: Task) => boolean): void {
+  for (const task of tx.all('tasks')) {
+    if (task.kind === 'recapture' && task.status === 'open' && task.segmentId === segmentId && covers(task)) {
+      tx.put('tasks', { ...task, status: 'done' })
+    }
+  }
+}
 
 /** The re-plan that replaced `plan`, if any. A superseded plan is never approved or flown. */
 const supersededBy = (tx: Tx, plan: PatrolPlan) =>
