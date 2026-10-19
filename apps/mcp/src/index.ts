@@ -26,7 +26,8 @@ if (me.type !== 'agent') {
 }
 
 // Only protocol revision 2026-07-28: a 2025-era `initialize` gets the unsupported-version error.
-serveStdio(() => createServer({ client, now }), {
+// The server never learns which model its client runs, so proposals carry model null rather than the model's own claim.
+serveStdio(() => createServer({ client, now, model: () => null }), {
   legacy: 'reject',
   onerror: (error) => console.error('safe-edge mcp:', error)
 })

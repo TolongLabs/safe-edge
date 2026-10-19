@@ -33,6 +33,7 @@ export interface Exchange {
   method: string
   path: string
   token: string | null
+  idempotencyKey: string | null
   status: number
   body: unknown
 }
@@ -65,6 +66,7 @@ export function startApi({
         method: request.method,
         path: new URL(request.url).pathname,
         token: /^Bearer (\S+)$/i.exec(request.headers.get('authorization') ?? '')?.[1] ?? null,
+        idempotencyKey: request.headers.get('idempotency-key'),
         status: response.status,
         body: json ? await response.clone().json() : undefined
       })

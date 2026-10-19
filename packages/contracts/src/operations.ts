@@ -44,9 +44,11 @@ import {
   PatrolList,
   PatrolPlanList,
   RaiseCandidateRequest,
+  RecordClearanceRequest,
   RecordInventoryCheckRequest,
   RecordObservationRequest,
   RecordRetestRequest,
+  RecordWorkOrderExternalErrorRequest,
   RegisterWebhookRequest,
   RetestOutcome,
   RouteClosure,
@@ -61,6 +63,7 @@ import {
   UpdateWorkOrderRequest,
   UploadEvidenceRequest,
   UserList,
+  WebhookList,
   WorkOrderList
 } from './api.ts'
 import {
@@ -216,7 +219,7 @@ export const operations = {
   approvePatrolPlan: {
     method: 'post',
     path: '/patrol-plans/{id}/approve',
-    summary: 'Allow the plan to fly',
+    summary: 'Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)',
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,
@@ -251,7 +254,8 @@ export const operations = {
   startPatrol: {
     method: 'post',
     path: '/patrols',
-    summary: 'Start a patrol from an approved plan',
+    summary:
+      "Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)",
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,
@@ -525,7 +529,7 @@ export const operations = {
   updateWorkOrder: {
     method: 'patch',
     path: '/work-orders/{id}',
-    summary: 'Edit a draft work order (remedy, notes)',
+    summary: 'Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted',
     handledBy: 'core',
     roles: ['manager'],
     agentScope: 'workorder.draft',
@@ -544,6 +548,20 @@ export const operations = {
     agentScope: null,
     params: IdParam.workOrder,
     body: SetWorkOrderExternalRefRequest,
+    response: WorkOrder,
+    status: 200,
+    events: []
+  },
+  recordWorkOrderExternalError: {
+    method: 'post',
+    path: '/work-orders/{id}/external-error',
+    summary:
+      'Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)',
+    handledBy: 'core',
+    roles: ['system'],
+    agentScope: null,
+    params: IdParam.workOrder,
+    body: RecordWorkOrderExternalErrorRequest,
     response: WorkOrder,
     status: 200,
     events: []
@@ -594,6 +612,20 @@ export const operations = {
     roles: ['reviewer'],
     agentScope: null,
     body: RecordRetestRequest,
+    response: RetestOutcome,
+    status: 201,
+    events: ['edge.retest.recorded.v1', 'edge.pass.issued.v1']
+  },
+  recordClearance: {
+    method: 'post',
+    path: '/candidates/{id}/clearance',
+    summary:
+      'Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment',
+    handledBy: 'core',
+    roles: ['reviewer'],
+    agentScope: null,
+    params: IdParam.candidate,
+    body: RecordClearanceRequest,
     response: RetestOutcome,
     status: 201,
     events: ['edge.retest.recorded.v1', 'edge.pass.issued.v1']
@@ -762,6 +794,17 @@ export const operations = {
     response: EdgeEvent,
     status: 200,
     stream: true,
+    events: []
+  },
+  listWebhooks: {
+    method: 'get',
+    path: '/webhooks',
+    summary: 'List webhook endpoints with their failed deliveries',
+    handledBy: 'api',
+    roles: ['integrator'],
+    agentScope: null,
+    response: WebhookList,
+    status: 200,
     events: []
   },
   registerWebhook: {

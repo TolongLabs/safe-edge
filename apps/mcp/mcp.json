@@ -6,7 +6,7 @@
       "args": ["apps/mcp/src/index.ts"],
       "env": {
         "SAFE_EDGE_API_URL": "${SAFE_EDGE_API_URL:-http://localhost:3000/v1}",
-        "SAFE_EDGE_AGENT_TOKEN": "${SAFE_EDGE_AGENT_TOKEN:-dev_agent}"
+        "SAFE_EDGE_AGENT_TOKEN": "${SAFE_EDGE_AGENT_TOKEN}"
       }
     }
   }

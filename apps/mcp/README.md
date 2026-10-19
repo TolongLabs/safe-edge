@@ -23,7 +23,7 @@ Protocol messages use stdout, so the server logs only to stderr. A client still 
 Start the API (`bun run dev`). Then, from the repo root, either pass the config file for one session:
 
 ```sh
-claude --mcp-config apps/mcp/mcp.json --allowedTools "mcp__safe-edge__*"
+SAFE_EDGE_AGENT_TOKEN=dev_agent claude --mcp-config apps/mcp/mcp.json --allowedTools "mcp__safe-edge__*"
 ```
 
 or add the server to your local Claude Code config:
@@ -33,7 +33,7 @@ claude mcp add safe-edge -e SAFE_EDGE_API_URL=http://localhost:3000/v1 -e SAFE_E
   -- bun "$PWD/apps/mcp/src/index.ts"
 ```
 
-`apps/mcp/mcp.json` reads `SAFE_EDGE_API_URL` and `SAFE_EDGE_AGENT_TOKEN` from your environment, with those same local defaults. To stop a session reaching the API another way (for example by reading another dev token from the fixture file), turn off the built-in tools with `--tools ""`, as the [S5 evidence run](/docs/evidence/s5-mcp-claude-code.md) did.
+`apps/mcp/mcp.json` reads `SAFE_EDGE_API_URL` (default `http://localhost:3000/v1`) and `SAFE_EDGE_AGENT_TOKEN` from your environment. The token has no default, so the server never acts with a token you did not choose: without it, Claude Code refuses the config. To stop a session reaching the API another way (for example by reading another dev token from the fixture file), turn off the built-in tools with `--tools ""`, as the [S5 evidence run](/docs/evidence/s5-mcp-claude-code.md) did.
 
 ## What it serves
 

@@ -1,6 +1,12 @@
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server'
-import { agentInstructions, agentTools, type AgentToolContext } from '@safe-edge/agent-tools'
-import { SafeEdgeApiError, SafeEdgeDeniedError } from '@safe-edge/sdk'
+import {
+  agentInstructions,
+  agentTools,
+  apiRefusal,
+  monthlyReportPrompt,
+  toolDescription,
+  type AgentToolContext
+} from '@safe-edge/agent-tools'
 import * as z from 'zod'
 
 /**
@@ -16,7 +22,7 @@ export function createServer(context: AgentToolContext): McpServer {
       tool.name,
       {
         title: tool.title,
-        description: `${tool.description} Needs the ${tool.scope} scope.`,
+        description: toolDescription(tool),
         inputSchema: tool.input,
         outputSchema: tool.output,
         annotations: { readOnlyHint: tool.readOnly, destructiveHint: false, openWorldHint: false }
@@ -27,12 +33,8 @@ export function createServer(context: AgentToolContext): McpServer {
           return { content: [{ type: 'text', text: JSON.stringify(output) }], structuredContent: output }
         } catch (error) {
           // A policy refusal or a bad request is a tool result the model should see, with the rule that refused it.
-          if (error instanceof SafeEdgeDeniedError) {
-            return refused(`Refused by the Safe Edge API (403, rule ${error.rule}): ${error.message}`)
-          }
-          if (error instanceof SafeEdgeApiError) {
-            return refused(`Safe Edge API error (${error.status} ${error.error}): ${error.message}`)
-          }
+          const refusal = apiRefusal(error)
+          if (refusal !== null) return refused(refusal)
           console.error(`safe-edge mcp: ${tool.name} failed`, error)
           throw error
         }
@@ -93,17 +95,7 @@ export function createServer(context: AgentToolContext): McpServer {
           .describe('YYYY-MM')
       })
     },
-    ({ month }) =>
-      userMessage(
-        [
-          `Draft the Safe Edge monthly report for ${month}.`,
-          '1. Call list_open_findings, and list_expiring_passes with days 30.',
-          '2. Summarise open findings by status, owner and age, and the passes about to expire, citing record IDs.',
-          '   Label records with simulated: true as simulated.',
-          '3. Save the report with draft_escalation (kind monthly_report, subjectId null). It stays a draft until a',
-          '   person reviews and sends it.'
-        ].join('\n')
-      )
+    ({ month }) => userMessage(monthlyReportPrompt(month))
   )
 
   return server

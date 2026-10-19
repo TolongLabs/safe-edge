@@ -3,7 +3,12 @@ import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
-import { PROCORE_DEVELOPER_SANDBOX, ProcoreWorkOrderProvider, readProcoreEnv } from '@safe-edge/providers'
+import {
+  PROCORE_DEVELOPER_SANDBOX,
+  ProcoreWorkOrderProvider,
+  readProcoreEnv,
+  SAFETY_HAZARD_OBSERVATION_TYPE
+} from '@safe-edge/providers'
 import { devTokens } from './tokens.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -31,7 +36,7 @@ const workOrders: ApiOptions['workOrders'] =
         new ProcoreWorkOrderProvider({
           ...PROCORE_DEVELOPER_SANDBOX,
           ...procore,
-          observationType: 'Safety Hazard',
+          observationType: SAFETY_HAZARD_OBSERVATION_TYPE,
           readEvidence
         })
 

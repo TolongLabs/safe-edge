@@ -1,8 +1,8 @@
 // Core-level guardrail tests (PRD MCP-3, PROOF-1, PROOF-4, WATCH-2, MCP-4). #57 repeats them over HTTP and MCP.
 import { describe, expect, test } from 'bun:test'
-import type { Actor, PolicyRule } from '@safe-edge/contracts'
+import type { Actor, PolicyRule, RecordClearanceRequest } from '@safe-edge/contracts'
 import { verifyAuditChain } from '../src/index.ts'
-import { S1, playS1toRepair, raiseOnS1, startCore, type Harness } from './support.ts'
+import { S1, playS1toRepair, raiseOnS1, startCore, type Harness, type Who } from './support.ts'
 
 const AGENT = 'usr_agent'
 
@@ -85,6 +85,34 @@ describe('the agent reads, proposes and drafts, and nothing else', () => {
     })
     // Policy, not the agent, picks the recipient.
     expect(notice.data).toMatchObject({ status: 'draft', recipientUserId: 'usr_gm', draftedBy: { type: 'agent' } })
+  })
+
+  test("it edits only the drafts it drafted, never a person's", () => {
+    const h = startCore()
+    const proposed = raiseOnS1(h, AGENT, {
+      inventoryItemId: null,
+      itemStatus: null,
+      class: 'worn_path',
+      rationale: 'A worn path leads from the playground to the bank'
+    })
+    const confirmed = h.call('decideCandidate', 'usr_manager', {
+      params: { id: proposed.data.id },
+      body: { decision: 'confirm', severity: 'low' }
+    })
+    const managers = confirmed.data.workOrder!
+    expect(managers.draftedBy).toEqual({ type: 'user', id: 'usr_manager' })
+    const edit = h.attempt('updateWorkOrder', AGENT, { params: { id: managers.id }, body: { notes: 'Agent rewrite' } })
+    expectDenied(h, edit, 'agents_draft_only', AGENT, 'updateWorkOrder')
+    expect(h.audit().at(-1)!.subjectId).toBe(managers.id)
+    expect(h.call('getWorkOrder', 'usr_manager', { params: { id: managers.id } }).data.notes).toBe(managers.notes)
+    // The manager edits any draft, the agent's included.
+    const agents = h.call('createWorkOrder', AGENT, {
+      body: { findingId: confirmed.data.finding!.id, remedyId: null, notes: 'Agent draft' }
+    }).data
+    expect(
+      h.call('updateWorkOrder', 'usr_manager', { params: { id: agents.id }, body: { notes: 'Manager edit' } }).data
+        .notes
+    ).toBe('Manager edit')
   })
 
   test('a token without the operation scope is refused with scope_missing', () => {
@@ -180,6 +208,141 @@ describe('the one-way rule: automation never makes a pass valid', () => {
     const result = h.attempt('recordRetest', 'usr_reviewer', { body: { ...played.retest, checklist } })
     expectDenied(h, result, 'invalid_transition', 'usr_reviewer', 'recordRetest')
     expect(h.segment(S1.segmentId).pass!.state).toBe('suspended')
+  })
+})
+
+describe('suspicion suspends: an accepted re-test restores the pass only when nothing else is open on the segment', () => {
+  test('a second Tier 2 candidate awaiting review keeps the pass suspended; the re-test still closes its own work', () => {
+    const h = startCore()
+    const played = playS1toRepair(h)
+    const buoy = h.segment(S1.segmentId).segment.expectedInventory.find((i) => i.type === 'ring_buoy')!
+    const second = raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: buoy.id,
+      itemStatus: 'missing',
+      class: 'inventory_item',
+      rationale: 'Ring buoy missing from its post'
+    }).data
+    expect(second.tier).toBe(2)
+
+    const outcome = h.call('recordRetest', 'usr_reviewer', { body: played.retest })
+    expect(outcome.data.pass).toBeNull()
+    expect(outcome.events.map((e) => e.type)).toEqual(['edge.retest.recorded.v1'])
+    expect(h.call('getWorkOrder', 'usr_manager', { params: { id: played.workOrderId } }).data.status).toBe('accepted')
+    expect(h.call('getFinding', 'usr_manager', { params: { id: played.findingId } }).data.status).toBe('closed')
+    const pass = h.segment(S1.segmentId).pass!
+    expect(pass.state).toBe('suspended')
+    expect(pass.stateReason).toContain(second.id)
+    expect(pass.stateReason).toContain(outcome.data.retest.id)
+  })
+
+  test('another open finding on the segment keeps the pass suspended until its own repair is accepted', () => {
+    const h = startCore()
+    const played = playS1toRepair(h)
+    // A worn path the manager confirmed as a Tier 1 finding: open work on the same segment.
+    const worn = raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: null,
+      itemStatus: null,
+      class: 'worn_path',
+      rationale: 'A worn path leads to the bank'
+    }).data
+    const other = h.call('decideCandidate', 'usr_manager', {
+      params: { id: worn.id },
+      body: { decision: 'confirm', severity: 'low' }
+    }).data.finding!
+
+    expect(h.call('recordRetest', 'usr_reviewer', { body: played.retest }).data.pass).toBeNull()
+    const pass = h.segment(S1.segmentId).pass!
+    expect(pass.state).toBe('suspended')
+    expect(pass.stateReason).toContain(other.id)
+  })
+})
+
+describe("a false alarm: a rejected Tier 2 candidate is cleared by a second person's re-test", () => {
+  const clearance = {
+    checklist: [
+      { kind: 'saved_view', subjectId: S1.viewpointId, result: 'pass', reason: 'Panel 4 in place', measuredMm: null }
+    ],
+    evidence: [],
+    result: 'accepted',
+    reason: 'Panel 4 is in place; the drone frame was a shadow'
+  } satisfies RecordClearanceRequest
+  const raiseMissingPanel = (h: Harness) =>
+    raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: S1.inventoryItemId,
+      itemStatus: 'missing',
+      class: 'inventory_item',
+      rationale: 'Fence panel 4 is missing by the playground path'
+    }).data
+
+  test('only a reviewer other than the person who rejected it can clear it, and the pass is valid again', () => {
+    const h = startCore()
+    const alarm = raiseMissingPanel(h)
+    expect(h.segment(S1.segmentId).pass!.state).toBe('suspended')
+    const undecided = h.attempt('recordClearance', 'usr_reviewer', { params: { id: alarm.id }, body: clearance })
+    expectDenied(h, undecided, 'invalid_transition', 'usr_reviewer', 'recordClearance')
+    h.call('decideCandidate', 'usr_manager', {
+      params: { id: alarm.id },
+      body: { decision: 'reject', reason: 'A shadow, not a gap' }
+    })
+    // Rejecting a false alarm alone never restores the pass.
+    expect(h.segment(S1.segmentId).pass!.state).toBe('suspended')
+
+    const clear = (who: Who, body: RecordClearanceRequest = clearance) =>
+      h.attempt('recordClearance', who, { params: { id: alarm.id }, body })
+    const rejecter = as(h, 'usr_manager', 'reviewer')
+    expectDenied(h, clear(rejecter), 'two_person_rule', 'usr_manager', 'recordClearance')
+    const automation = as(h, 'usr_system', 'reviewer', 'system')
+    expectDenied(h, clear(automation), 'one_way_rule', 'usr_system', 'recordClearance')
+    const failed = { ...clearance, checklist: [{ ...clearance.checklist[0]!, result: 'fail' as const }] }
+    expectDenied(h, clear('usr_reviewer', failed), 'invalid_transition', 'usr_reviewer', 'recordClearance')
+    expect(h.segment(S1.segmentId).pass!.state).toBe('suspended')
+
+    h.setNow('2026-10-21T04:00:00.000Z')
+    const cleared = clear('usr_reviewer')
+    if (!cleared.ok) throw new Error(cleared.message)
+    expect(cleared.data.retest).toMatchObject({
+      candidateId: alarm.id,
+      workOrderId: null,
+      reviewerUserId: 'usr_reviewer',
+      result: 'accepted'
+    })
+    expect(cleared.data.pass).toMatchObject({
+      state: 'valid',
+      issuedBy: 'usr_reviewer',
+      validTo: '2027-10-21T04:00:00.000Z',
+      scope: { retestIds: [cleared.data.retest.id] }
+    })
+    expect(cleared.events.map((e) => e.type)).toEqual(['edge.retest.recorded.v1', 'edge.pass.issued.v1'])
+    expect(h.audit().at(-1)).toMatchObject({
+      action: 'recordClearance',
+      decision: 'allowed',
+      actor: { id: 'usr_reviewer' }
+    })
+    // A cleared pass has nothing left to clear.
+    expectDenied(h, clear('usr_reviewer'), 'invalid_transition', 'usr_reviewer', 'recordClearance')
+  })
+
+  test('a clearance while another Tier 2 candidate awaits review is recorded, and the pass stays suspended', () => {
+    const h = startCore()
+    const alarm = raiseMissingPanel(h)
+    h.call('decideCandidate', 'usr_manager', {
+      params: { id: alarm.id },
+      body: { decision: 'reject', reason: 'Shadow' }
+    })
+    const buoy = h.segment(S1.segmentId).segment.expectedInventory.find((i) => i.type === 'ring_buoy')!
+    const second = raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: buoy.id,
+      itemStatus: 'missing',
+      class: 'inventory_item',
+      rationale: 'Ring buoy missing from its post'
+    }).data
+    const cleared = h.call('recordClearance', 'usr_reviewer', { params: { id: alarm.id }, body: clearance })
+    expect(cleared.data.pass).toBeNull()
+    expect(cleared.events.map((e) => e.type)).toEqual(['edge.retest.recorded.v1'])
+    expect(h.segment(S1.segmentId).pass).toMatchObject({
+      state: 'suspended',
+      stateReason: expect.stringContaining(second.id)
+    })
   })
 })
 

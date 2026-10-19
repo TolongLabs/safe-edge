@@ -223,7 +223,7 @@ paths:
   /patrol-plans/{id}/approve:
     post:
       operationId: approvePatrolPlan
-      summary: Allow the plan to fly
+      summary: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
       description: "Roles: pilot. Agents are refused."
       tags:
         - patrol-plans
@@ -237,7 +237,7 @@ paths:
         - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
-          description: Allow the plan to fly
+          description: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
           content:
             application/json:
               schema:
@@ -311,7 +311,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: startPatrol
-      summary: Start a patrol from an approved plan
+      summary: Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
       description: "Roles: pilot. Agents are refused. Emits edge.patrol.started.v1."
       tags:
         - patrols
@@ -325,7 +325,7 @@ paths:
               $ref: "#/components/schemas/StartPatrolRequest"
       responses:
         "201":
-          description: Start a patrol from an approved plan
+          description: Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
           content:
             application/json:
               schema:
@@ -1070,7 +1070,7 @@ paths:
       x-safe-edge-events: []
     patch:
       operationId: updateWorkOrder
-      summary: Edit a draft work order (remedy, notes)
+      summary: Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted
       description: "Roles: manager. Agents need scope `workorder.draft`."
       tags:
         - work-orders
@@ -1090,7 +1090,7 @@ paths:
               $ref: "#/components/schemas/UpdateWorkOrderRequest"
       responses:
         "200":
-          description: Edit a draft work order (remedy, notes)
+          description: Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted
           content:
             application/json:
               schema:
@@ -1131,6 +1131,45 @@ paths:
       responses:
         "200":
           description: Record the external work-order system's record for a work order, once (system only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
+      x-safe-edge-events: []
+  /work-orders/{id}/external-error:
+    post:
+      operationId: recordWorkOrderExternalError
+      summary: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+      description: "Roles: system. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordWorkOrderExternalErrorRequest"
+      responses:
+        "200":
+          description: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
           content:
             application/json:
               schema:
@@ -1286,6 +1325,47 @@ paths:
           $ref: "#/components/responses/Unauthenticated"
         "403":
           $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - reviewer
+      x-safe-edge-events:
+        - edge.retest.recorded.v1
+        - edge.pass.issued.v1
+  /candidates/{id}/clearance:
+    post:
+      operationId: recordClearance
+      summary: Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment
+      description: "Roles: reviewer. Agents are refused. Emits edge.retest.recorded.v1, edge.pass.issued.v1."
+      tags:
+        - candidates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^cand_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordClearanceRequest"
+      responses:
+        "201":
+          description: Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetestOutcome"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
       x-safe-edge-roles:
         - reviewer
       x-safe-edge-events:
@@ -1707,6 +1787,26 @@ paths:
       x-safe-edge-agent-scope: edge.read
       x-safe-edge-events: []
   /webhooks:
+    get:
+      operationId: listWebhooks
+      summary: List webhook endpoints with their failed deliveries
+      description: "Roles: integrator. Agents are refused."
+      tags:
+        - webhooks
+      responses:
+        "200":
+          description: List webhook endpoints with their failed deliveries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookList"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - integrator
+      x-safe-edge-events: []
     post:
       operationId: registerWebhook
       summary: Register a webhook endpoint for CloudEvents
@@ -1993,7 +2093,10 @@ components:
         - invalid_transition
         - remedy_not_approved
         - plan_not_approved
+        - plan_superseded
         - weather_hold
+        - outside_window
+        - invalid_coverage
         - every_item_reported
     Denial:
       type: object
@@ -3280,7 +3383,7 @@ components:
         rationale:
           type: string
         model:
-          description: The model that proposed it; null for scripted or human input
+          description: The model that proposed it, as the model API reported serving the turn (never the model's own words); null for scripted or human input, or when the caller cannot see the model (an MCP client)
           type:
             - string
             - "null"
@@ -3613,6 +3716,22 @@ components:
           type:
             - string
             - "null"
+        externalError:
+          anyOf:
+            - type: object
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                at:
+                  type: string
+                  format: date-time
+              required:
+                - message
+                - at
+              additionalProperties: false
+            - type: "null"
+          description: Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried
         createdAt:
           type: string
           format: date-time
@@ -3633,6 +3752,7 @@ components:
         - completedAt
         - completionEvidence
         - externalRef
+        - externalError
         - createdAt
         - simulated
         - source
@@ -3679,8 +3799,17 @@ components:
           type: string
           pattern: ^rt_
         workOrderId:
-          type: string
-          pattern: ^wo_
+          anyOf:
+            - type: string
+              pattern: ^wo_
+            - type: "null"
+          description: The completed repair re-tested; null for a clearance
+        candidateId:
+          anyOf:
+            - type: string
+              pattern: ^cand_
+            - type: "null"
+          description: The rejected or recapture Tier 2 candidate a clearance re-test clears; null for a repair re-test
         reviewerUserId:
           type: string
           pattern: ^usr_
@@ -3710,6 +3839,7 @@ components:
       required:
         - id
         - workOrderId
+        - candidateId
         - reviewerUserId
         - checklist
         - evidence
@@ -3938,6 +4068,24 @@ components:
         - edge.pass.issued.v1
         - edge.pass.expiring.v1
         - edge.pass.expired.v1
+    WebhookFailure:
+      type: object
+      properties:
+        eventId:
+          type: string
+          pattern: ^evt_
+        at:
+          type: string
+          format: date-time
+        error:
+          type: string
+          minLength: 1
+          description: "HTTP <status>: <body>, or the network error"
+      required:
+        - eventId
+        - at
+        - error
+      additionalProperties: false
     Webhook:
       type: object
       properties:
@@ -3956,12 +4104,18 @@ components:
         createdAt:
           type: string
           format: date-time
+        failures:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookFailure"
+          description: Failed deliveries, oldest first; each is also on the audit chain
       required:
         - id
         - url
         - eventTypes
         - createdBy
         - createdAt
+        - failures
       additionalProperties: false
     TriageResult:
       type: object
@@ -4030,6 +4184,10 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Asset"
+    WebhookList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Webhook"
     AuditEventList:
       type: array
       items:
@@ -4188,6 +4346,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SegmentCoverage"
+          description: At most one entry per segment, with inspectedM + unknownM no more than the segment's length (else 403 invalid_coverage). Length an entry leaves out, and every planned segment it omits, is unknown
       required:
         - coverage
       additionalProperties: false
@@ -4480,6 +4639,16 @@ components:
       required:
         - externalRef
       additionalProperties: false
+    RecordWorkOrderExternalErrorRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          description: The work-order system's error
+      required:
+        - message
+      additionalProperties: false
     SubmitWorkOrderRequest:
       type: object
       properties:
@@ -4536,6 +4705,32 @@ components:
         - result
         - reason
       additionalProperties: false
+    RecordClearanceRequest:
+      type: object
+      properties:
+        checklist:
+          minItems: 1
+          type: array
+          items:
+            $ref: "#/components/schemas/RetestCheck"
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceRef"
+        result:
+          type: string
+          enum:
+            - accepted
+            - rejected
+        reason:
+          type: string
+          minLength: 1
+      required:
+        - checklist
+        - evidence
+        - result
+        - reason
+      additionalProperties: false
     RetestOutcome:
       type: object
       properties:
@@ -4545,6 +4740,7 @@ components:
           anyOf:
             - $ref: "#/components/schemas/EdgePass"
             - type: "null"
+          description: The pass this re-test issued; null when it was rejected or another Tier 2 candidate or finding on the segment is still open (the suspended pass's stateReason names them)
       required:
         - retest
         - pass

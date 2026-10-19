@@ -14,7 +14,7 @@ import {
   type RetestCheck
 } from '@safe-edge/contracts'
 import { join } from 'node:path'
-import { loadElmina, planPatrol, replan, splitEdges, type PatrolPlanInput, type ThirdParty } from '@safe-edge/planner'
+import { createElminaPlanner, type ThirdParty } from '@safe-edge/planner'
 import { actorFor, counterIds, createCore, type PatrolPlanner, type Seed } from '../src/index.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -26,48 +26,14 @@ export const S1 = seed.story.s1
 /** A user ID from the seed, or an explicit Actor (to model a person holding a second role's token). */
 export type Who = string | Actor
 
-const elmina = await loadElmina((path) => Bun.file(join(repoRoot, path)).json())
-const plannerSegments = splitEdges({ ...elmina, maxBendDeg: 40, pointObstructionToleranceM: 3 })
-
 /**
- * The adapter a transport writes over #71's `planPatrol`: it holds what the store lacks (planner geometry, capture
- * settings, geofences, water-level bands, third parties) and maps core's records to the planner's inputs. Tests may
- * import the planner; core's source never does.
+ * The Elmina planner adapter a transport passes to core, with the third parties plans keep clear of. Tests may import
+ * the planner; core's source never does.
  */
-export const plannerWith =
-  ({ thirdParties }: { thirdParties: ThirdParty[] }): PatrolPlanner =>
-  ({ id, now, request, previous, dock, droneProfile, segments, passes, findings }) => {
-    const input: PatrolPlanInput = {
-      id,
-      now,
-      edges: elmina.edges,
-      segments: segments.map((s) => plannerSegments.find((p) => p.id === s.id)!),
-      dock,
-      drone: droneProfile,
-      rangeM: 15,
-      forwardOverlap: 0.6,
-      altitudeM: Math.min(9, request.altitudeCapM),
-      altitudeCapM: request.altitudeCapM,
-      // A site setting the request lacks: how long the agreed window stays open after first light.
-      notBefore: request.notBefore,
-      windowMinutes: 120,
-      geofences: [],
-      thirdParties,
-      passes: passes.map((p) => ({ segmentId: p.segmentId, state: p.state, validTo: p.validTo, readAt: now })),
-      flags: segments.map((s) => ({
-        segmentId: s.id,
-        severity: findings.find((f) => f.segmentId === s.id && f.status !== 'closed')?.severity ?? null,
-        readAt: now
-      })),
-      context: request.context,
-      waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 }
-    }
-    if (!request.replan) return planPatrol(input)
-    const committedTasks = request.replan.supersedes?.committedTasks ?? 0
-    return replan(previous, { committedTasks }, input, request.replan.trigger)
-  }
+export const plannerWith = ({ thirdParties }: { thirdParties: ThirdParty[] }): Promise<PatrolPlanner> =>
+  createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties })
 
-export const elminaPlanner = plannerWith({ thirdParties: [] })
+export const elminaPlanner = await plannerWith({ thirdParties: [] })
 
 export function startCore({ planner = elminaPlanner }: { planner?: PatrolPlanner } = {}) {
   let now = seed.asOf
@@ -83,9 +49,9 @@ export function startCore({ planner = elminaPlanner }: { planner?: PatrolPlanner
   const attempt = <K extends CoreOperationId>(op: K, who: Who, input: OperationInput<K>): DispatchResult<K> =>
     core.dispatch(op, actor(who), input)
 
-  /** A dispatch that must succeed; its data and events must match the contract. */
   /** Operations that have succeeded on this core. */
   const succeeded = new Set<CoreOperationId>()
+  /** A dispatch that must succeed; its data and events must match the contract. */
   const call = <K extends CoreOperationId>(op: K, who: Who, input: OperationInput<K>): DispatchSuccess<K> => {
     const result = attempt(op, who, input)
     if (!result.ok) throw new Error(`${op} as ${actor(who).id} failed: ${JSON.stringify(result)}`)

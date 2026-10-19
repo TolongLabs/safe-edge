@@ -1,6 +1,6 @@
 export * from './actors.ts'
 export * from './api.ts'
-export type * from './dispatch.ts'
+export * from './dispatch.ts'
 export * from './entities.ts'
 export * from './events.ts'
 export * from './operations.ts'

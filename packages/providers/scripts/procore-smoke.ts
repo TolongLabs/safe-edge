@@ -4,7 +4,12 @@
 // PROCORE_COMPANY_ID and PROCORE_PROJECT_ID (scripts/procore-sandbox-wizard.sh writes them to .env). It never runs in CI.
 import { EvidenceRef, Finding } from '@safe-edge/contracts'
 import { join } from 'node:path'
-import { PROCORE_DEVELOPER_SANDBOX, ProcoreWorkOrderProvider, readProcoreEnv } from '../src/index.ts'
+import {
+  PROCORE_DEVELOPER_SANDBOX,
+  ProcoreWorkOrderProvider,
+  readProcoreEnv,
+  SAFETY_HAZARD_OBSERVATION_TYPE
+} from '../src/index.ts'
 
 if (process.env.CI) throw new Error('procore:smoke calls the real Procore sandbox, so it never runs in CI')
 const credentials = readProcoreEnv(process.env)
@@ -45,7 +50,7 @@ const finding = Finding.parse({
 const procore = new ProcoreWorkOrderProvider({
   ...PROCORE_DEVELOPER_SANDBOX,
   ...credentials,
-  observationType: 'Safety Hazard',
+  observationType: SAFETY_HAZARD_OBSERVATION_TYPE,
   readEvidence: async () => bytes
 })
 const ref = await procore.createFinding(finding)

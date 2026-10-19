@@ -223,6 +223,7 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
       completedAt: null,
       completionEvidence: [],
       externalRef: null,
+      externalError: null,
       createdAt: tx.now,
       ...provenance
     }

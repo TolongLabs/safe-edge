@@ -1,5 +1,5 @@
-import type { Finding, Retest, WorkOrder } from '@safe-edge/contracts'
-import { movePass, routeStatus } from '../policy.ts'
+import type { Denial, EdgePass, Finding, Retest, Segment, WorkOrder } from '@safe-edge/contracts'
+import { isAgent, movePass, oneWayRule, openSuspicions, routeStatus } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { blockedOpenings } from './fix-lens.ts'
 import { ok, type Handlers } from './handler.ts'
@@ -8,10 +8,12 @@ type WorkOperation =
   | 'createWorkOrder'
   | 'updateWorkOrder'
   | 'setWorkOrderExternalRef'
+  | 'recordWorkOrderExternalError'
   | 'submitWorkOrder'
   | 'startWorkOrder'
   | 'completeWorkOrder'
   | 'recordRetest'
+  | 'recordClearance'
 
 /** A remedy on the work order's segment, or a not-found message. */
 function remedyFor(tx: Tx, finding: Finding, remedyId: string | null) {
@@ -24,6 +26,40 @@ const moveFinding = (tx: Tx, finding: Finding, status: Finding['status']): Findi
   const moved = { ...finding, status }
   tx.put('findings', moved)
   return moved
+}
+
+/**
+ * An accepted re-test makes the segment's pass valid, unless another suspicion is still open on the segment: then the
+ * pass stays as it is (a suspended pass names what holds it) and null is returned.
+ */
+function restorePass(tx: Tx, segment: Segment, retest: Retest): EdgePass | Denial | null {
+  if (segment.passId === null) throw new Error(`store integrity: ${segment.id} has no pass`)
+  const current = tx.must('passes', segment.passId)
+  const refused = oneWayRule(tx, current, retest)
+  if (refused) return refused
+  const open = openSuspicions(tx, segment.id)
+  if (open.length > 0) {
+    if (current.state === 'suspended') {
+      const stateReason = `Re-test ${retest.id} accepted, but ${open.join(', ')} still open on ${segment.id}`
+      tx.put('passes', { ...current, stateReason })
+    }
+    return null
+  }
+  // The pass covers the segment's routes the re-test checked and passed.
+  const routeIds = retest.checklist
+    .filter((c) => c.kind === 'route_check' && c.result === 'pass')
+    .flatMap((c) => {
+      const route = c.subjectId === null ? undefined : tx.get('routes', c.subjectId)
+      return route?.segmentId === segment.id ? [route.id] : []
+    })
+  const pass = movePass(tx, current, { to: 'valid', retest, routeIds })
+  if ('rule' in pass) return pass
+  tx.emit(
+    'edge.pass.issued.v1',
+    { passId: pass.id, segmentId: segment.id, retestId: retest.id, validTo: pass.validTo!, simulated: pass.simulated },
+    segment.id
+  )
+  return pass
 }
 
 export const work: Handlers<WorkOperation> = {
@@ -45,6 +81,7 @@ export const work: Handlers<WorkOperation> = {
       completedAt: null,
       completionEvidence: [],
       externalRef: null,
+      externalError: null,
       createdAt: tx.now,
       simulated: finding.simulated,
       source: tx.source
@@ -61,6 +98,12 @@ export const work: Handlers<WorkOperation> = {
   updateWorkOrder: (tx, { params, body }) => {
     const workOrder = tx.get('workOrders', params.id)
     if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    // People edit any draft; the agent only its own (INBOX-4).
+    const { draftedBy } = workOrder
+    if (isAgent(tx.actor) && (draftedBy.type !== 'agent' || draftedBy.id !== tx.actor.id)) {
+      const message = `${workOrder.id} was drafted by ${draftedBy.type} ${draftedBy.id}; the agent edits only its own drafts`
+      return tx.deny('agents_draft_only', message, workOrder.id)
+    }
     if (workOrder.status !== 'draft') {
       return tx.deny(
         'invalid_transition',
@@ -86,6 +129,19 @@ export const work: Handlers<WorkOperation> = {
     const linked: WorkOrder = { ...workOrder, externalRef: body.externalRef }
     tx.put('workOrders', linked)
     return ok(linked)
+  },
+
+  // A failed hand-off stays visible on the work order and the audit chain. Nothing retries it, so it is written once.
+  recordWorkOrderExternalError: (tx, { params, body }) => {
+    const workOrder = tx.get('workOrders', params.id)
+    if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    if (workOrder.externalError !== null) {
+      const message = `${workOrder.id} already records a failed hand-off: ${workOrder.externalError.message}`
+      return tx.deny('invalid_transition', message, workOrder.id)
+    }
+    const failed: WorkOrder = { ...workOrder, externalError: { message: body.message, at: tx.now } }
+    tx.put('workOrders', failed)
+    return ok(failed)
   },
 
   submitWorkOrder: (tx, { params, body }) => {
@@ -203,6 +259,7 @@ export const work: Handlers<WorkOperation> = {
     const retest: Retest = {
       id: tx.id('rt'),
       ...body,
+      candidateId: null,
       reviewerUserId: tx.actor.id,
       recordedAt: tx.now,
       simulated: workOrder.simulated,
@@ -211,7 +268,13 @@ export const work: Handlers<WorkOperation> = {
     tx.put('retests', retest)
     tx.emit(
       'edge.retest.recorded.v1',
-      { retestId: retest.id, workOrderId: workOrder.id, result: retest.result, simulated: retest.simulated },
+      {
+        retestId: retest.id,
+        workOrderId: workOrder.id,
+        candidateId: null,
+        result: retest.result,
+        simulated: retest.simulated
+      },
       finding.segmentId
     )
     if (retest.result === 'rejected') {
@@ -224,23 +287,8 @@ export const work: Handlers<WorkOperation> = {
     moveFinding(tx, finding, 'closed')
     const segment = tx.must('segments', finding.segmentId)
     const segmentRoutes = tx.all('routes').filter((r) => r.segmentId === segment.id)
-    const checkedRoutes = retest.checklist
-      .filter((c) => c.kind === 'route_check' && c.result === 'pass')
-      .flatMap((c) => segmentRoutes.filter((r) => r.id === c.subjectId).map((r) => r.id))
-    if (segment.passId === null) throw new Error(`store integrity: ${segment.id} has no pass`)
-    const pass = movePass(tx, tx.must('passes', segment.passId), { to: 'valid', retest, routeIds: checkedRoutes })
-    if ('rule' in pass) return pass
-    tx.emit(
-      'edge.pass.issued.v1',
-      {
-        passId: pass.id,
-        segmentId: segment.id,
-        retestId: retest.id,
-        validTo: pass.validTo!,
-        simulated: pass.simulated
-      },
-      segment.id
-    )
+    const pass = restorePass(tx, segment, retest)
+    if (pass !== null && 'rule' in pass) return pass
 
     // The verified remedy now blocks its openings, which closes the routes through them.
     if (workOrder.remedyId !== null) {
@@ -254,6 +302,59 @@ export const work: Handlers<WorkOperation> = {
         if (status !== route.status) tx.put('routes', { ...route, status })
       }
     }
+    return ok({ retest, pass })
+  },
+
+  // A false alarm: a Tier 2 candidate the manager rejected (or sent for recapture) opened no finding, so no repair
+  // re-test can lift its suspension. A second person checks the edge and records a clearance re-test instead.
+  recordClearance: (tx, { params, body }) => {
+    const candidate = tx.get('candidates', params.id)
+    if (!candidate) return tx.notFound(`No candidate ${params.id}`)
+    if (candidate.tier !== 2 || (candidate.status !== 'rejected' && candidate.status !== 'needs_recapture')) {
+      const message = `${candidate.id} is a ${candidate.status} Tier ${candidate.tier} candidate; only a rejected or recapture Tier 2 candidate is cleared`
+      return tx.deny('invalid_transition', message, candidate.id)
+    }
+    if (tx.actor.id === candidate.decidedBy) {
+      return tx.deny('two_person_rule', `${tx.actor.id} decided ${candidate.id} and cannot clear it`, candidate.id)
+    }
+    const segment = tx.must('segments', candidate.segmentId)
+    if (segment.passId === null) throw new Error(`store integrity: ${segment.id} has no pass`)
+    const current = tx.must('passes', segment.passId)
+    if (current.state !== 'suspended') {
+      return tx.deny(
+        'invalid_transition',
+        `${current.id} is ${current.state}; a clearance only lifts a suspension`,
+        candidate.id
+      )
+    }
+    if (body.result === 'accepted' && body.checklist.some((c) => c.result === 'fail')) {
+      return tx.deny('invalid_transition', 'A clearance with a failed check cannot be accepted', candidate.id)
+    }
+    const retest: Retest = {
+      id: tx.id('rt'),
+      workOrderId: null,
+      candidateId: candidate.id,
+      ...body,
+      reviewerUserId: tx.actor.id,
+      recordedAt: tx.now,
+      simulated: candidate.simulated,
+      source: tx.source
+    }
+    tx.put('retests', retest)
+    tx.emit(
+      'edge.retest.recorded.v1',
+      {
+        retestId: retest.id,
+        workOrderId: null,
+        candidateId: candidate.id,
+        result: retest.result,
+        simulated: retest.simulated
+      },
+      segment.id
+    )
+    if (retest.result === 'rejected') return ok({ retest, pass: null })
+    const pass = restorePass(tx, segment, retest)
+    if (pass !== null && 'rule' in pass) return pass
     return ok({ retest, pass })
   }
 }

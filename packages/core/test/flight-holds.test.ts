@@ -51,8 +51,8 @@ const people: ThirdParty = {
 }
 
 describe('PLAN-7: S1 holds through core', () => {
-  test('the weather hold stops the launch until the next dry window; the pilot records the path clear', () => {
-    const h = startCore({ planner: plannerWith({ thirdParties: [people] }) })
+  test('the weather hold stops the launch until the next dry window; the pilot records the path clear', async () => {
+    const h = startCore({ planner: await plannerWith({ thirdParties: [people] }) })
     h.setNow(NOW)
     const plan = h.call('createPatrolPlan', 'usr_manager', { body: request }).data
     expect(plan.window.reason).toBe('next_dry_window')

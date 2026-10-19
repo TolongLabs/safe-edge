@@ -2,7 +2,7 @@ import { createHttpClient, type HttpClient, type HttpOptions } from './http.ts'
 import { createMemoryClient, type MemoryClient, type MemoryOptions } from './memory.ts'
 
 export type { ApiOperationId, CallInput, CallOptions, MemoryOperationId, Methods, SafeEdgeClient } from './client.ts'
-export { createElminaPlanner } from './elmina-planner.ts'
+export { createElminaPlanner } from '@safe-edge/planner'
 export { SafeEdgeApiError, SafeEdgeDeniedError } from './errors.ts'
 export type { HttpClient, HttpOptions } from './http.ts'
 export { elminaSeed, type MemoryClient, type MemoryOptions } from './memory.ts'

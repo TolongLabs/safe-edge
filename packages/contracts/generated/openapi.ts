@@ -176,7 +176,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Allow the plan to fly
+         * Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
          * @description Roles: pilot. Agents are refused.
          */
         post: operations["approvePatrolPlan"];
@@ -220,7 +220,7 @@ export interface paths {
         get: operations["listPatrols"];
         put?: never;
         /**
-         * Start a patrol from an approved plan
+         * Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
          * @description Roles: pilot. Agents are refused. Emits edge.patrol.started.v1.
          */
         post: operations["startPatrol"];
@@ -600,7 +600,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Edit a draft work order (remedy, notes)
+         * Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted
          * @description Roles: manager. Agents need scope `workorder.draft`.
          */
         patch: operations["updateWorkOrder"];
@@ -620,6 +620,26 @@ export interface paths {
          * @description Roles: system. Agents are refused.
          */
         post: operations["setWorkOrderExternalRef"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/{id}/external-error": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+         * @description Roles: system. Agents are refused.
+         */
+        post: operations["recordWorkOrderExternalError"];
         delete?: never;
         options?: never;
         head?: never;
@@ -700,6 +720,26 @@ export interface paths {
          * @description Roles: reviewer. Agents are refused. Emits edge.retest.recorded.v1, edge.pass.issued.v1.
          */
         post: operations["recordRetest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/{id}/clearance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment
+         * @description Roles: reviewer. Agents are refused. Emits edge.retest.recorded.v1, edge.pass.issued.v1.
+         */
+        post: operations["recordClearance"];
         delete?: never;
         options?: never;
         head?: never;
@@ -957,7 +997,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List webhook endpoints with their failed deliveries
+         * @description Roles: integrator. Agents are refused.
+         */
+        get: operations["listWebhooks"];
         put?: never;
         /**
          * Register a webhook endpoint for CloudEvents
@@ -1031,7 +1075,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "weather_hold" | "every_item_reported";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "outside_window" | "invalid_coverage" | "every_item_reported";
         Denial: {
             /** @constant */
             ok: false;
@@ -1413,7 +1457,7 @@ export interface components {
             uncertainty: components["schemas"]["Uncertainty"] | null;
             gridCell: string | null;
             rationale: string;
-            /** @description The model that proposed it; null for scripted or human input */
+            /** @description The model that proposed it, as the model API reported serving the turn (never the model's own words); null for scripted or human input, or when the caller cannot see the model (an MCP client) */
             model: string | null;
             status: components["schemas"]["CandidateStatus"];
             raisedBy: components["schemas"]["ActorRef"];
@@ -1505,6 +1549,12 @@ export interface components {
             completionEvidence: components["schemas"]["EvidenceRef"][];
             /** @description Procore observation ID */
             externalRef: string | null;
+            /** @description Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried */
+            externalError: {
+                message: string;
+                /** Format: date-time */
+                at: string;
+            } | null;
             /** Format: date-time */
             createdAt: string;
             simulated: boolean;
@@ -1522,7 +1572,10 @@ export interface components {
         };
         Retest: {
             id: string;
-            workOrderId: string;
+            /** @description The completed repair re-tested; null for a clearance */
+            workOrderId: string | null;
+            /** @description The rejected or recapture Tier 2 candidate a clearance re-test clears; null for a repair re-test */
+            candidateId: string | null;
             reviewerUserId: string;
             checklist: components["schemas"]["RetestCheck"][];
             evidence: components["schemas"]["EvidenceRef"][];
@@ -1596,6 +1649,13 @@ export interface components {
         };
         /** @enum {string} */
         EventType: "edge.patrol.planned.v1" | "edge.patrol.started.v1" | "edge.patrol.completed.v1" | "edge.candidate.raised.v1" | "edge.candidate.decided.v1" | "edge.pass.suspended.v1" | "edge.work_order.drafted.v1" | "edge.work_order.submitted.v1" | "edge.repair.completed.v1" | "edge.retest.recorded.v1" | "edge.pass.issued.v1" | "edge.pass.expiring.v1" | "edge.pass.expired.v1";
+        WebhookFailure: {
+            eventId: string;
+            /** Format: date-time */
+            at: string;
+            /** @description HTTP <status>: <body>, or the network error */
+            error: string;
+        };
         Webhook: {
             id: string;
             /** Format: uri */
@@ -1604,6 +1664,8 @@ export interface components {
             createdBy: string;
             /** Format: date-time */
             createdAt: string;
+            /** @description Failed deliveries, oldest first; each is also on the audit chain */
+            failures: components["schemas"]["WebhookFailure"][];
         };
         TriageResult: {
             items: {
@@ -1623,6 +1685,7 @@ export interface components {
             notVisible: string[];
         };
         AssetList: components["schemas"]["Asset"][];
+        WebhookList: components["schemas"]["Webhook"][];
         AuditEventList: components["schemas"]["AuditEvent"][];
         SegmentList: components["schemas"]["Segment"][];
         UserList: components["schemas"]["User"][];
@@ -1667,6 +1730,7 @@ export interface components {
             droneId: string;
         };
         CompletePatrolRequest: {
+            /** @description At most one entry per segment, with inspectedM + unknownM no more than the segment's length (else 403 invalid_coverage). Length an entry leaves out, and every planned segment it omits, is unknown */
             coverage: components["schemas"]["SegmentCoverage"][];
         };
         RecordObservationRequest: {
@@ -1755,6 +1819,10 @@ export interface components {
         SetWorkOrderExternalRefRequest: {
             externalRef: string;
         };
+        RecordWorkOrderExternalErrorRequest: {
+            /** @description The work-order system's error */
+            message: string;
+        };
         SubmitWorkOrderRequest: {
             installerUserId: string;
             /** Format: date-time */
@@ -1772,8 +1840,16 @@ export interface components {
             result: "accepted" | "rejected";
             reason: string;
         };
+        RecordClearanceRequest: {
+            checklist: components["schemas"]["RetestCheck"][];
+            evidence: components["schemas"]["EvidenceRef"][];
+            /** @enum {string} */
+            result: "accepted" | "rejected";
+            reason: string;
+        };
         RetestOutcome: {
             retest: components["schemas"]["Retest"];
+            /** @description The pass this re-test issued; null when it was rejected or another Tier 2 candidate or finding on the segment is still open (the suspended pass's stateReason names them) */
             pass: components["schemas"]["EdgePass"] | null;
         };
         CreateOpeningRequest: {
@@ -2193,7 +2269,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Allow the plan to fly */
+            /** @description Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2274,7 +2350,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Start a patrol from an approved plan */
+            /** @description Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold) */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -2898,7 +2974,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Edit a draft work order (remedy, notes) */
+            /** @description Edit a draft work order (remedy, notes); the agent edits only the drafts it drafted */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2932,6 +3008,39 @@ export interface operations {
         };
         responses: {
             /** @description Record the external work-order system's record for a work order, once (system only) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    recordWorkOrderExternalError: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordWorkOrderExternalErrorRequest"];
+            };
+        };
+        responses: {
+            /** @description Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3068,6 +3177,39 @@ export interface operations {
             400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
+        };
+    };
+    recordClearance: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordClearanceRequest"];
+            };
+        };
+        responses: {
+            /** @description Record a clearance re-test of a rejected or recapture Tier 2 candidate (a false alarm); acceptance restores its suspended pass once nothing else is open on the segment */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetestOutcome"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
         };
     };
     listPasses: {
@@ -3420,6 +3562,28 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": string;
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    listWebhooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List webhook endpoints with their failed deliveries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookList"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
