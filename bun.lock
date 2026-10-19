@@ -18,6 +18,7 @@
       "dependencies": {
         "@safe-edge/contracts": "workspace:*",
         "@safe-edge/core": "workspace:*",
+        "@safe-edge/providers": "workspace:*",
         "@safe-edge/sdk": "workspace:*",
         "hono": "^4.13.13",
         "zod": "^4.6.7",
@@ -97,6 +98,7 @@
         "@safe-edge/contracts": "workspace:*",
         "@safe-edge/planner": "workspace:*",
         "@turf/distance": "7.4.0",
+        "zod": "^4.6.7",
       },
       "devDependencies": {
         "@safe-edge/core": "workspace:*",
