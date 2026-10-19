@@ -30,8 +30,8 @@ export const passStateColours: Record<PassState, number> = {
 /** Colour alone never carries a state: segments without a valid pass are drawn dashed. */
 const DASHED: ReadonlySet<PassState> = new Set(['none', 'expired'])
 const WIDTH_M = 8
-/** Above the paths and water ribbons, which lie at 0 m. */
-const LIFT_M = 1.5
+/** Just above the paths and water, which lie at 0 m, and below the modelled fences that stand on the edge. */
+const LIFT_M = 0.3
 
 /**
  * One ribbon object per pass state. `userData.segments` lists each segment ID with the index of its first line
@@ -57,6 +57,8 @@ export function buildSegmentRibbons(segments: SegmentView[]): LineSegments2[] {
       linewidth: WIDTH_M,
       worldUnits: true,
       dashed: DASHED.has(state),
+      // Flat on the ground like the base layers: draw order, not depth, puts it over the outline.
+      depthWrite: false,
       dashSize: 10,
       gapSize: 6
     })

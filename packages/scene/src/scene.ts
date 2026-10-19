@@ -18,6 +18,7 @@ import { LineSegments2 } from 'three/addons/lines/LineSegments2.js'
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js'
 import { toLocal } from './frame.ts'
 import { basePalette, buildBaseLayers, type ElminaLayers } from './layers.ts'
+import { buildEdgeAssets, type EdgeAssetView } from './assets.ts'
 import { buildSegmentRibbons, segmentAt, segmentMidpoint, type SegmentView } from './segments.ts'
 
 /** Orbit rotates around the target with the left button; map pans with it, like a web map. */
@@ -25,14 +26,16 @@ export type ControlMode = 'orbit' | 'map'
 
 export interface ElminaScene {
   setControlMode(mode: ControlMode): void
-  /** Outlines a segment (or none) and, with `focus`, flies the camera to it. */
-  select(segmentId: string | null, options?: { focus?: boolean }): void
+  /** Outlines a segment (or none) and, with `focus`, moves the camera to it, `distanceM` away (420 m by default). */
+  select(segmentId: string | null, options?: { focus?: boolean; distanceM?: number }): void
   dispose(): void
 }
 
 export interface SceneOptions {
   /** Edge segments to draw in their pass-state colours. */
   segments?: SegmentView[]
+  /** Expected inventory to model along its segments (fences, covers, gratings, gates, ring buoys, signs). */
+  assets?: EdgeAssetView[]
   /** Called with the clicked segment's ID, or null when a click misses every segment. */
   onSelect?: (segmentId: string | null) => void
 }
@@ -68,8 +71,11 @@ export function createElminaScene(
   ground.name = 'ground'
   const segments = options.segments ?? []
   const ribbons = buildSegmentRibbons(segments)
-  const objects = [ground, ...buildBaseLayers(layers), ...ribbons]
+  const assets = buildEdgeAssets(options.assets ?? [])
+  const objects = [ground, ...buildBaseLayers(layers), ...assets.objects, ...ribbons]
   ribbons.forEach((r) => (r.renderOrder = objects.length + 1))
+  // World-unit ribbons pass the depth test over anything near the ground, so the modelled assets draw after them.
+  assets.objects.forEach((o) => (o.renderOrder = objects.length + 2))
   scene.add(...objects)
 
   // Start south of the lake, looking north over the retention ponds to Sungai Buloh.
@@ -96,9 +102,9 @@ export function createElminaScene(
   setControlMode('orbit')
 
   // The selected segment gets a dark outline under its ribbon.
-  const outlineMaterial = new LineMaterial({ color: 0x1c2925, linewidth: 16, worldUnits: true })
+  const outlineMaterial = new LineMaterial({ color: 0x1c2925, linewidth: 14, worldUnits: true, depthWrite: false })
   let outline: LineSegments2 | null = null
-  const select = (segmentId: string | null, { focus = false } = {}) => {
+  const select = (segmentId: string | null, { focus = false, distanceM = FOCUS_DISTANCE_M } = {}) => {
     if (outline) {
       scene.remove(outline)
       outline.geometry.dispose()
@@ -112,7 +118,7 @@ export function createElminaScene(
     for (let i = 1; i < line.length; i++) {
       const [ae, an] = toLocal(line[i - 1]!)
       const [be, bn] = toLocal(line[i]!)
-      positions.push(ae, 1, -an, be, 1, -bn)
+      positions.push(ae, 0.2, -an, be, 0.2, -bn)
     }
     outline = new LineSegments2(new LineSegmentsGeometry().setPositions(positions), outlineMaterial)
     outline.name = 'selected segment'
@@ -121,7 +127,7 @@ export function createElminaScene(
     scene.add(outline)
     if (focus) {
       const [x, z] = segmentMidpoint(segment)
-      const offset = camera.position.clone().sub(active.target).setLength(FOCUS_DISTANCE_M)
+      const offset = camera.position.clone().sub(active.target).setLength(distanceM)
       for (const c of Object.values(controls)) c.target.set(x, 0, z)
       camera.position.set(x, 0, z).add(offset)
       active.update()

@@ -1,3 +1,4 @@
+export { buildEdgeAssets, type EdgeAssetView, type ItemType } from './assets.ts'
 export { ELMINA_ORIGIN, toLocal } from './frame.ts'
 export { basePalette, buildBaseLayers, type ElminaLayers } from './layers.ts'
 export { createElminaScene, type ControlMode, type ElminaScene, type SceneOptions } from './scene.ts'

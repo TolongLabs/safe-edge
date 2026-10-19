@@ -2,6 +2,7 @@ import {
   createElminaScene,
   type ControlMode,
   type ElminaLayers,
+  type EdgeAssetView,
   type ElminaScene as Scene,
   type SegmentView
 } from '@safe-edge/scene'
@@ -11,6 +12,7 @@ import parksUrl from '../../../data/elmina/osm/parks.geojson?url'
 import pathsUrl from '../../../data/elmina/osm/paths.geojson?url'
 import waterUrl from '../../../data/elmina/osm/water.geojson?url'
 import seedUrl from '../../../data/elmina/fixtures/seed.json?url'
+import { Legend } from './Legend.tsx'
 import { SegmentCard } from './SegmentCard.tsx'
 
 const layerUrls = { water: waterUrl, parks: parksUrl, paths: pathsUrl, buildings: buildingsUrl }
@@ -30,11 +32,18 @@ async function loadLayers(): Promise<ElminaLayers> {
 interface SeedSlice {
   users: Array<{ id: string; name: string }>
   assets: Array<{ id: string; custodianUserId: string }>
-  segments: Array<Omit<SegmentView, 'state' | 'owner' | 'validTo'> & { assetId: string; passId: string | null }>
+  segments: Array<
+    Omit<SegmentView, 'state' | 'owner' | 'validTo'> & {
+      assetId: string
+      passId: string | null
+      side: EdgeAssetView['side']
+      expectedInventory: EdgeAssetView['items']
+    }
+  >
   passes: Array<{ id: string; state: SegmentView['state']; validTo: string | null }>
 }
 
-async function loadSegments(): Promise<SegmentView[]> {
+async function loadSegments(): Promise<{ segments: SegmentView[]; assets: EdgeAssetView[] }> {
   const response = await fetch(seedUrl)
   if (!response.ok) throw new Error(`seed answered ${response.status}`)
   const seed = (await response.json()) as SeedSlice
@@ -42,7 +51,7 @@ async function loadSegments(): Promise<SegmentView[]> {
   const users = byId(seed.users)
   const assets = byId(seed.assets)
   const passes = byId(seed.passes)
-  return seed.segments.map((s) => {
+  const segments = seed.segments.map((s) => {
     const asset = assets.get(s.assetId)
     if (!asset) throw new Error(`${s.id} names unknown asset ${s.assetId}`)
     const owner = users.get(asset.custodianUserId)
@@ -59,6 +68,11 @@ async function loadSegments(): Promise<SegmentView[]> {
       validTo: pass?.validTo ?? null
     }
   })
+  // Segments with an expected inventory get their fences, covers, gates, buoys and signs modelled.
+  const modelled = seed.segments
+    .filter((s) => s.expectedInventory.length > 0)
+    .map((s) => ({ segmentId: s.id, geometry: s.geometry, side: s.side, items: s.expectedInventory }))
+  return { segments, assets: modelled }
 }
 
 /** The Elmina base scene from the OSM extract, with a switch between orbit and map controls. */
@@ -73,14 +87,20 @@ export function ElminaScene() {
   useEffect(() => {
     let disposed = false
     Promise.all([loadLayers(), loadSegments()])
-      .then(([layers, views]) => {
+      .then(([layers, { segments: views, assets }]) => {
         if (disposed) return
-        scene.current = createElminaScene(container.current!, layers, { segments: views, onSelect: setSelected })
+        scene.current = createElminaScene(container.current!, layers, {
+          segments: views,
+          assets,
+          onSelect: setSelected
+        })
         setSegments(views)
-        // ?segment=<id> opens the scene on one segment, for links from the Inbox and for recordings.
-        const linked = new URLSearchParams(location.search).get('segment')
+        // ?segment=<id>[&distance=<m>] opens the scene on one segment, for links from the Inbox and for recordings.
+        const query = new URLSearchParams(location.search)
+        const linked = query.get('segment')
         if (linked) {
-          scene.current.select(linked, { focus: true })
+          const distance = query.get('distance')
+          scene.current.select(linked, { focus: true, ...(distance ? { distanceM: Number(distance) } : {}) })
           setSelected(linked)
         }
         setStatus('ready')
@@ -110,6 +130,7 @@ export function ElminaScene() {
           {mode === 'orbit' ? 'Orbit controls' : 'Map controls'}: switch to {mode === 'orbit' ? 'map' : 'orbit'}
         </button>
       )}
+      {status === 'ready' && <Legend />}
       {selectedSegment && (
         <SegmentCard
           segment={selectedSegment}
