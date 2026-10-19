@@ -1,4 +1,10 @@
+import 'lenis/dist/lenis.css'
 import './style.css'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import Lenis from 'lenis'
+
+gsap.registerPlugin(ScrollTrigger)
 
 // Drownings and near-drownings in Selangor and Kuala Lumpur township water since January 2023, from
 // docs/research/niche-problems/drowning/drowning-incidents.md. `people` is everyone who went into the water.
@@ -34,18 +40,16 @@ const need = <T extends Element>(selector: string): T => {
   return element
 }
 
-document.documentElement.classList.add('js')
+const root = document.documentElement
 
 // The bars: one per incident, as tall as the number of people in the water.
 const most = Math.max(...incidents.map((i) => i.people))
 const labelled = new Set([...incidents].sort((a, b) => b.people - a.people).slice(0, 3))
 const bars = need<HTMLOListElement>('.bars')
-incidents.forEach((incident, index) => {
+for (const incident of incidents) {
   const item = document.createElement('li')
   item.className = incident.drain ? 'bar bar--drain' : 'bar'
   item.style.setProperty('--h', `${(incident.people / most) * 100}%`)
-  item.style.setProperty('--w', `${(incident.people / most) * 80}%`)
-  item.style.setProperty('--i', String(index))
   const people = incident.people === 1 ? '1 person' : `${incident.people} people`
   const text = `${incident.date}, ${incident.place}: ${incident.water}, ${people} in the water`
   const button = document.createElement('button')
@@ -64,16 +68,18 @@ incidents.forEach((incident, index) => {
     item.append(value)
   }
   bars.append(item)
-})
-
-// The band: every stretch of edge around Central Park Lake.
-const track = need<HTMLDivElement>('.marquee-track')
-const codes = Array.from({ length: 21 }, (_, i) => `LK·S${i + 1}`)
-for (const code of [...codes, ...codes]) {
-  const span = document.createElement('span')
-  span.textContent = code
-  track.append(span)
 }
+
+// The statement: one span per word, so scrolling can bring the words up in reading order.
+const statement = need<HTMLParagraphElement>('.statement')
+const words = (statement.textContent ?? '').trim().split(/\s+/)
+statement.textContent = ''
+words.forEach((word, index) => {
+  const span = document.createElement('span')
+  span.className = 'word'
+  span.textContent = word
+  statement.append(span, index < words.length - 1 ? ' ' : '')
+})
 
 // The fix check: the fence must reach past the route that walks around its end (5.5 m out).
 const slider = need<HTMLInputElement>('#extend')
@@ -82,7 +88,7 @@ const plan = need<HTMLElement>('.plan')
 const extension = need<SVGPathElement>('#ext')
 const verdict = need<HTMLElement>('#verdict-text')
 const ROUTE_AT_METRES = 5.5
-const render = () => {
+const renderFix = () => {
   const metres = Number(slider.value)
   output.value = `${metres} m`
   extension.setAttribute('d', `M402 262 H${402 + metres * 10}`)
@@ -92,42 +98,214 @@ const render = () => {
     ? `Closes all 3 ways to the water with ${metres} m more fence`
     : 'Leaves 1 way to the water open, around the fence end'
 }
-slider.addEventListener('input', render)
-render()
+slider.addEventListener('input', renderFix)
+renderFix()
 
-// The rules: pointing at a line shows the screen it belongs to and dims the others.
-const list = need<HTMLUListElement>('.rule-list')
-const frame = need<HTMLImageElement>('[data-frame]')
-let showing = 'inbox'
-const show = (rule: HTMLElement | null) => {
-  for (const row of list.querySelectorAll('.rule')) row.toggleAttribute('data-on', row === rule)
-  list.toggleAttribute('data-active', rule !== null)
-  const shot = rule?.dataset.shot
-  if (!shot || shot === showing) return
-  showing = shot
-  frame.setAttribute('data-fading', '')
-  window.setTimeout(() => {
-    frame.src = `/shots/${shot}.webp`
-    frame.removeAttribute('data-fading')
-  }, 120)
+// The clock plate in the top bar keeps the time of day for whatever is on screen.
+const clock = need<HTMLElement>('.clock')
+const clockTime = need<HTMLElement>('.clock-time')
+const clockWhat = need<HTMLElement>('.clock-what')
+const setClock = (time = '', what = '') => {
+  clock.toggleAttribute('data-empty', time === '')
+  if (time === '') return
+  clockTime.textContent = time
+  clockWhat.textContent = what
 }
-for (const rule of list.querySelectorAll<HTMLElement>('.rule')) {
-  rule.addEventListener('pointerenter', () => show(rule))
+for (const section of document.querySelectorAll<HTMLElement>('main > section[data-time]')) {
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top center',
+    end: 'bottom center',
+    // Refreshed after the pinned sections above it, so its start allows for their pin spacing.
+    refreshPriority: -1,
+    onToggle: ({ isActive }) => isActive && setClock(section.dataset.time, section.dataset.what)
+  })
 }
-list.addEventListener('pointerleave', () => show(null))
 
-// Entrances: each part of a section rises in once, a beat after the one before it.
-for (const group of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
-  Array.from(group.children).forEach((child, index) => (child as HTMLElement).style.setProperty('--i', String(index)))
+// The footer waits under the page when it fits on screen, and the page lifts off it.
+const footer = need<HTMLElement>('.footer')
+const fitFooter = () => {
+  const fits = footer.offsetHeight <= window.innerHeight - 24 && window.matchMedia('(min-width: 900px)').matches
+  root.style.setProperty('--footer-h', `${footer.offsetHeight}px`)
+  root.classList.toggle('has-reveal', fits)
 }
-const observer = new IntersectionObserver(
-  (entries) => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue
-      entry.target.classList.add('in')
-      observer.unobserve(entry.target)
-    }
+fitFooter()
+new ResizeObserver(() => {
+  fitFooter()
+  ScrollTrigger.refresh()
+}).observe(footer)
+window.addEventListener('resize', fitFooter)
+// It only shows once the page starts to lift, so it never sits as hidden text under the sections above.
+const start = need<HTMLElement>('.start')
+const showFooter = () =>
+  footer.toggleAttribute('data-shown', start.getBoundingClientRect().bottom < window.innerHeight + 1)
+window.addEventListener('scroll', showFooter, { passive: true })
+showFooter()
+
+const steps = gsap.utils.toArray<HTMLElement>('.step')
+let current = 0
+const setStep = (active: number) => {
+  current = active
+  steps.forEach((step, index) => step.toggleAttribute('data-active', index === active))
+  setClock(steps[active].dataset.time, steps[active].dataset.what)
+}
+
+const motion = gsap.matchMedia()
+motion.add(
+  {
+    calm: '(prefers-reduced-motion: no-preference)',
+    wide: '(prefers-reduced-motion: no-preference) and (min-width: 960px) and (min-height: 680px)'
   },
-  { rootMargin: '0px 0px -10% 0px' }
+  (context) => {
+    const { calm, wide } = context.conditions as { calm: boolean; wide: boolean }
+
+    // Without motion the steps are a plain list; each takes the clock as it crosses the middle.
+    if (!wide) {
+      steps.forEach((step, index) =>
+        ScrollTrigger.create({
+          trigger: step,
+          start: 'top center',
+          end: 'bottom center',
+          onToggle: ({ isActive }) => isActive && setStep(index)
+        })
+      )
+    }
+    if (!calm) return
+
+    const lenis = new Lenis({ anchors: true })
+    lenis.on('scroll', ScrollTrigger.update)
+    const tick = (time: number) => lenis.raf(time * 1000)
+    gsap.ticker.add(tick)
+    gsap.ticker.lagSmoothing(0)
+
+    // First light: the drone flies the patrol line and stops over the gap it found.
+    if (document.visibilityState === 'visible' && window.scrollY < 40) {
+      setClock('06:30', 'Dawn patrol')
+      gsap
+        .timeline({ defaults: { ease: 'expo.out' } })
+        .from('.hero-words > *', { y: 28, opacity: 0, duration: 1.1, stagger: 0.08 })
+        .from('.drone', { x: -980, y: -140, duration: 2.4, ease: 'power3.out' }, 0.15)
+        .from('.beam', { opacity: 0, duration: 0.6 }, 2.2)
+        .from('.flag-box', { opacity: 0, scale: 1.3, transformOrigin: '50% 50%', duration: 0.7 }, 2.4)
+        .from('.flag-lead, .flag-tag', { opacity: 0, y: 10, duration: 0.7 }, 2.55)
+        .call(() => setClock('06:42', 'Panel 4 missing'), [], 2.5)
+    }
+    gsap.to('.drone', { y: 4, duration: 1.8, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: 2.6 })
+
+    // Leaving the hero: far layers drift slower than near ones.
+    for (const layer of gsap.utils.toArray<SVGGElement>('.scene-art [data-depth]')) {
+      gsap.to(layer, {
+        y: (0.66 - Number(layer.dataset.depth)) * 240,
+        ease: 'none',
+        scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+      })
+    }
+    gsap.to('.hero-words', {
+      y: -90,
+      ease: 'none',
+      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
+    })
+
+    // The statement fills word by word, in reading order.
+    gsap.fromTo(
+      '.statement .word',
+      { opacity: 0.16 },
+      {
+        opacity: 1,
+        ease: 'none',
+        stagger: 0.1,
+        scrollTrigger: { trigger: '.statement', start: 'top 80%', end: 'bottom 40%', scrub: true }
+      }
+    )
+    gsap.from('.bar button', {
+      scaleY: 0,
+      duration: 1,
+      ease: 'expo.out',
+      stagger: 0.035,
+      scrollTrigger: { trigger: '.bars', start: 'top 85%', once: true }
+    })
+
+    // The day: pinned, with each screen wiping up over the last as the route fills.
+    if (wide) {
+      root.classList.add('has-story', 'has-walk')
+      const shots = steps.map((step) => {
+        const shot = step.querySelector<HTMLElement>('.shot')
+        if (!shot) throw new Error('Missing .shot in a step')
+        return shot
+      })
+      const story = gsap.timeline({
+        defaults: { ease: 'none', duration: 1 },
+        scrollTrigger: {
+          trigger: '.loop',
+          start: 'top top',
+          end: () => `+=${window.innerHeight * 3}`,
+          pin: true,
+          scrub: 0.6,
+          onToggle: ({ isActive }) => isActive && setStep(current),
+          onUpdate: ({ isActive, progress }) => isActive && setStep(Math.round(progress * (steps.length - 1)))
+        }
+      })
+      story.fromTo('.route-fill', { scaleY: 0 }, { scaleY: 1, duration: steps.length - 1 }, 0)
+      shots.slice(1).forEach((shot, index) => {
+        story.fromTo(
+          shot,
+          { clipPath: 'inset(100% 0% 0% 0% round 16px)' },
+          { clipPath: 'inset(0% 0% 0% 0% round 16px)' },
+          index
+        )
+        story.to(shots[index], { scale: 0.94, opacity: 0.6 }, index)
+      })
+
+      // The rules walk: the path runs sideways and each sign swings level as it arrives.
+      const track = need<HTMLElement>('.walk-track')
+      const distance = () => Math.max(0, track.scrollWidth - window.innerWidth)
+      const walk = gsap.to(track, {
+        x: () => -distance(),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.walk',
+          start: 'top top',
+          end: () => `+=${distance()}`,
+          pin: true,
+          scrub: 0.6,
+          invalidateOnRefresh: true
+        }
+      })
+      for (const plate of gsap.utils.toArray<HTMLElement>('.sign .plate')) {
+        gsap.from(plate, {
+          rotate: -5,
+          transformOrigin: '50% 100%',
+          ease: 'none',
+          scrollTrigger: {
+            trigger: plate,
+            containerAnimation: walk,
+            start: 'left right',
+            end: 'left 70%',
+            scrub: true
+          }
+        })
+      }
+    }
+
+    // Night: as the page lifts away, the lake rises into view under it.
+    gsap.from('.night-art', {
+      yPercent: 24,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.start',
+        start: 'bottom bottom',
+        end: () => `+=${footer.offsetHeight}`,
+        scrub: true,
+        invalidateOnRefresh: true
+      }
+    })
+
+    return () => {
+      gsap.ticker.remove(tick)
+      lenis.destroy()
+      root.classList.remove('has-story', 'has-walk')
+    }
+  }
 )
-for (const element of document.querySelectorAll('[data-reveal], .bars')) observer.observe(element)
+
+document.fonts.ready.then(() => ScrollTrigger.refresh())
