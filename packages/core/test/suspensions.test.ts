@@ -1,8 +1,8 @@
 // PROOF-4's other automatic suspensions (#123): a damage report and a missed patrol each suspend the segment's pass in
 // the same dispatch, audited, and neither can make a pass valid. The same paths over HTTP: apps/api/test/suspensions.test.ts.
 import { describe, expect, test } from 'bun:test'
-import type { RecordClearanceRequest, ReportDamageRequest } from '@safe-edge/contracts'
-import { verifyAuditChain } from '../src/index.ts'
+import type { Dispatch, RecordClearanceRequest, ReportDamageRequest } from '@safe-edge/contracts'
+import { runSchedule, verifyAuditChain } from '../src/index.ts'
 import { S1, playS1toRepair, startCore } from './support.ts'
 
 const damage = {
@@ -220,6 +220,35 @@ describe('a missed patrol suspends the pass', () => {
       body: { decision: 'recapture', reason: 'Walk it today' }
     })
     expect(recapture.data.candidate.status).toBe('needs_recapture')
+  })
+})
+
+describe("the scheduled pass (both transports' runSchedule)", () => {
+  test('a missed patrol that fails is recorded; the writes already made keep their events, and the other segments go on', () => {
+    const h = startCore()
+    const NOV_12 = '2026-11-12T02:00:00.000Z'
+    h.setNow(NOV_12)
+    // S1's report fails, as a bug in it would.
+    const dispatch = ((operationId, actor, input) =>
+      operationId === 'reportMissedPatrol' && (input as { params: { id: string } }).params.id === S1.segmentId
+        ? { ok: false, rule: 'invalid_transition', message: 'forced to fail' }
+        : h.core.dispatch(operationId, actor, input)) as Dispatch
+
+    const events = runSchedule({ ...h.core, dispatch }, NOV_12)
+
+    expect(events.map((e) => [e.type, 'segmentId' in e.data ? e.data.segmentId : null])).toEqual([
+      ['edge.pass.expired.v1', 'seg_866518980_5'],
+      ['edge.pass.expiring.v1', 'seg_866518980_12'],
+      ['edge.candidate.raised.v1', 'seg_866518980_12'],
+      ['edge.pass.suspended.v1', 'seg_866518980_12']
+    ])
+    expect(h.audit('automation').map((e) => [e.action, e.actor.id, e.after])).toEqual([
+      [
+        'runAutomation',
+        'core.automation',
+        { id: 'automation', step: 'schedule', error: `reportMissedPatrol ${S1.segmentId}: forced to fail` }
+      ]
+    ])
   })
 })
 

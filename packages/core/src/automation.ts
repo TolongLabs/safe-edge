@@ -13,23 +13,35 @@ export type AutomationStep = 'schedule' | 'replan' | 'weather' | 'drone'
  * The time-driven pass at `now`, core's clock time: `tick` moves passes to expiring and expired, then every valid or
  * expiring pass whose segment has gone a whole patrol interval uninspected gets a missed patrol (`reportMissedPatrol`),
  * which suspends it. A suspended pass is not checked again, so repeating the pass reports each segment once. Returns
- * the events to publish.
+ * the events of every write it made, to publish. A missed patrol that fails is recorded (`recordAutomationFailure`)
+ * and the other segments go on; only a failed `tick`, which writes nothing, throws.
  */
-export function runSchedule(core: Pick<Core, 'dispatch' | 'tick'>, now: string): EdgeEvent[] {
+export function runSchedule(core: Pick<Core, 'dispatch' | 'tick' | 'recordStored'>, now: string): EdgeEvent[] {
   const events = core.tick(now)
+  const attempt = (run: () => void) => {
+    try {
+      run()
+    } catch (error) {
+      recordAutomationFailure(core, 'schedule', error)
+    }
+  }
   const read = <T>(result: { ok: true; data: T } | { ok: false; message: string }) => {
     if (!result.ok) throw new Error(result.message)
     return result.data
   }
-  const passes = new Map(read(core.dispatch('listPasses', AUTOMATION_ACTOR, { query: {} })).map((p) => [p.id, p]))
-  for (const segment of read(core.dispatch('listSegments', AUTOMATION_ACTOR, {}))) {
-    const pass = segment.passId === null ? undefined : passes.get(segment.passId)
-    if (pass?.state !== 'valid' && pass?.state !== 'expiring') continue
-    if (Date.parse(now) < missedPatrolDue(segment, pass).dueMs) continue
-    const missed = core.dispatch('reportMissedPatrol', AUTOMATION_ACTOR, { params: { id: segment.id } })
-    if (!missed.ok) throw new Error(`reportMissedPatrol ${segment.id}: ${missed.message}`)
-    events.push(...missed.events)
-  }
+  attempt(() => {
+    const passes = new Map(read(core.dispatch('listPasses', AUTOMATION_ACTOR, { query: {} })).map((p) => [p.id, p]))
+    for (const segment of read(core.dispatch('listSegments', AUTOMATION_ACTOR, {}))) {
+      const pass = segment.passId === null ? undefined : passes.get(segment.passId)
+      if (pass?.state !== 'valid' && pass?.state !== 'expiring') continue
+      if (Date.parse(now) < missedPatrolDue(segment, pass).dueMs) continue
+      attempt(() => {
+        const missed = core.dispatch('reportMissedPatrol', AUTOMATION_ACTOR, { params: { id: segment.id } })
+        if (!missed.ok) throw new Error(`reportMissedPatrol ${segment.id}: ${missed.message}`)
+        events.push(...missed.events)
+      })
+    }
+  })
   return events
 }
 
