@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { counterIds, createCore, Seed } from '@safe-edge/core'
+import { Seed } from '@safe-edge/core'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
 import { clockFrom } from './clock.ts'
@@ -11,6 +12,7 @@ import {
   readProcoreEnv,
   SAFETY_HAZARD_OBSERVATION_TYPE
 } from '@safe-edge/providers'
+import { webhookOptions } from './events.ts'
 import { devTokens } from './tokens.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -19,11 +21,15 @@ const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
 const seed = Seed.parse(await readJson('data/elmina/fixtures/seed.json'))
 // The wall clock, or with SAFE_EDGE_CLOCK=scenario the clock a scenario player sets (refused in production).
 const clock = clockFrom(process.env, seed.asOf)
-const ids = counterIds()
 // Observed third parties reach plans through core: the seed's (S1's path crowd) and each create-plan request's. Mapped
 // structures such as buildings arrive with #59's Overpass extract; the research extract maps none.
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
-const core = createCore({ seed, clock, ids, planner })
+
+// The API keeps its state in SAFE_EDGE_DATA_DIR/api.sqlite and picks it up again on restart (journal.ts). The file
+// holds webhook secrets and evidence, so the directory is the OS user's alone. bun run dev uses apps/api/.data.
+const dataDir = process.env.SAFE_EDGE_DATA_DIR
+if (!dataDir) throw new Error('Set SAFE_EDGE_DATA_DIR to the directory the API keeps its state in')
+mkdirSync(dataDir, { recursive: true, mode: 0o700 })
 
 // The agent acts with its own API token (an agent actor). Claude reads ANTHROPIC_API_KEY; without it, agent calls fail.
 const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
@@ -58,13 +64,15 @@ const weather =
 // Bun serves the default export on PORT (3000 by default). Its idle timeout is 10 s, so the event stream's heartbeat
 // comes every 5 s.
 export default createApp({
-  core,
+  seed,
+  planner,
   clock,
-  ids,
+  store: join(dataDir, 'api.sqlite'),
   tokens: await devTokens(process.env, seed.users),
   heartbeatMs: 5_000,
   agent,
   workOrders,
+  webhooks: webhookOptions(process.env),
   // On the wall clock the automation (drone-sim, tick, missed patrols, weather) repeats on timers; a scenario clock runs
   // it when set.
   every: (ms, run) => void setInterval(() => void run(), ms),

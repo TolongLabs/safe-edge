@@ -6,6 +6,7 @@ import {
   recordAutomationFailure,
   runSchedule,
   type AutomationStep,
+  type Clock,
   type Core
 } from '@safe-edge/core'
 import { weatherTriggers } from '@safe-edge/planner'
@@ -17,7 +18,6 @@ import {
   type DataGovMyClient,
   type SimDevice
 } from '@safe-edge/providers'
-import type { ApiClock } from './clock.ts'
 
 /** Calls `run` every `ms` milliseconds: `setInterval` in a deployment, a timer the test fires by hand in tests. */
 export type Every = (ms: number, run: () => void | Promise<void>) => void
@@ -43,13 +43,16 @@ const DRONE_SIM: Actor = { type: 'provider', id: 'usr_drone_sim', role: 'provide
 export function startAutomation({
   core,
   clock,
+  scenario,
   every,
   weather,
   subscribe,
   publish
 }: {
   core: Core
-  clock: ApiClock
+  clock: Clock
+  /** Whether the API runs on a scenario clock, which runs the automation when set, instead of on timers. */
+  scenario: boolean
   every: Every | undefined
   weather: DataGovMyClient | undefined
   subscribe: (listener: (event: EdgeEvent) => void) => void
@@ -121,7 +124,7 @@ export function startAutomation({
     for (const trigger of weatherTriggers(snapshots, clock.now())) publish(replan.onTrigger(trigger))
   }
 
-  if (clock.set === undefined) {
+  if (!scenario) {
     if (every === undefined) throw new Error('An API on the wall clock needs `every` to run its automation')
     every(DRONE_MS, flySim)
     every(SCHEDULE_MS, schedule)

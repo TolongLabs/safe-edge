@@ -21,18 +21,23 @@ function freePort(): number {
   return port
 }
 
-/** Runs an API entry (`src/dev.ts` or `src/index.ts`) as its own process, and returns its `/v1` URL once it answers. */
+/**
+ * Runs an API entry (`src/dev.ts` or `src/index.ts`) as its own process, on a fresh data directory, and returns its
+ * `/v1` URL once it answers.
+ */
 async function serve(entry: string, env: Record<string, string>): Promise<string> {
   const port = freePort()
+  const dataDir = await mkdtemp(join(tmpdir(), 'safe-edge-scenario-api-'))
   const api = Bun.spawn(['bun', entry], {
     cwd: apiDir,
-    env: { ...process.env, ...env, PORT: String(port) },
+    env: { ...process.env, SAFE_EDGE_DATA_DIR: dataDir, ...env, PORT: String(port) },
     stdout: 'ignore',
     stderr: 'inherit'
   })
   afterAll(async () => {
     api.kill()
     await api.exited
+    await rm(dataDir, { recursive: true })
   })
   const baseUrl = `http://localhost:${port}/v1`
   const deadline = Date.now() + 20_000

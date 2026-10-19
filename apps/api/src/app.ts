@@ -7,15 +7,20 @@ import {
   type CoreOperationId,
   type OperationId,
   type OperationInput,
+  type OperationOutput,
+  type Dispatch,
   type OperationSpec,
   type Operations,
+  type PatrolPlanner,
+  type RegisteredWebhook,
   type ScenarioClock,
-  type Webhook,
+  type UploadEvidenceRequest,
   type WorkOrderProvider
 } from '@safe-edge/contracts'
 import type Anthropic from '@anthropic-ai/sdk'
 import { APIUserAbortError } from '@anthropic-ai/sdk'
-import type { Core, IdGenerator } from '@safe-edge/core'
+import { counterIds, createCore, type Core, type Seed } from '@safe-edge/core'
+import { Database } from 'bun:sqlite'
 import type { DataGovMyClient, EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
@@ -26,17 +31,23 @@ import * as z from 'zod'
 import { createAgent } from './agent.ts'
 import { startAutomation, type Every } from './automation.ts'
 import type { ApiClock } from './clock.ts'
-import { createEventHub } from './events.ts'
+import { createEventHub, newWebhookSecret, type WebhookOptions } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
+import { openJournal } from './journal.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
 import { forwardWorkOrders } from './work-orders.ts'
 
 export interface ApiOptions {
-  core: Core
+  seed: Seed
+  /** Needed only by `createPatrolPlan`. */
+  planner?: PatrolPlanner
   /** A scenario clock (one with `set`) serves setScenarioClock; on the wall clock that operation answers 501. */
   clock: ApiClock
-  /** The core's ID generator, shared so API-owned records (evidence, webhooks) get IDs from the same counters. */
-  ids: IdGenerator
+  /**
+   * The SQLite file the API keeps its state in (journal.ts), replayed on start; `:memory:` keeps it for the life of
+   * the process only. One API process per file.
+   */
+  store: string
   /** Opaque bearer token → the Actor it acts as. */
   tokens: ReadonlyMap<string, Actor>
   /** Interval of the SSE heartbeat comment. Keep it under Bun.serve's `idleTimeout` (10 s by default). */
@@ -51,6 +62,8 @@ export interface ApiOptions {
    * Without it, those routes answer 501.
    */
   agent?: { claude: Anthropic; token: string }
+  /** Where webhooks may point and how failed deliveries are retried. */
+  webhooks: WebhookOptions
   /**
    * How the API repeats its automation on the wall clock (`setInterval`); required there. A scenario clock runs the
    * automation each time `setScenarioClock` moves it, so it ignores this.
@@ -62,8 +75,8 @@ export interface ApiOptions {
 
 type Env = { Variables: { actor: Actor } }
 
-/** Who delivers webhooks and records their failures: the API itself. */
-const WEBHOOKS: Actor = { type: 'system', id: 'api.webhooks', role: 'system', scopes: [] }
+/** Who records a hand-off the API cannot run: the API itself, as in work-orders.ts. */
+const WORK_ORDERS: Actor = { type: 'system', id: 'api.work-orders', role: 'system', scopes: [] }
 type ApiOperationId = { [K in OperationId]: Operations[K]['handledBy'] extends 'api' ? K : never }[OperationId]
 type ApiHandlers = {
   [K in ApiOperationId]: (c: Context<Env>, input: OperationInput<K>) => Response | Promise<Response>
@@ -74,27 +87,81 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
 
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
 export function createApp({
-  core,
-  clock,
-  ids,
+  seed,
+  planner,
+  clock: baseClock,
+  store,
   tokens,
   heartbeatMs,
   workOrders,
   agent: agentOptions,
+  webhooks,
   every,
   weather
 }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
-  // A failed webhook delivery is the API's own write to the webhook, on the audit chain like any other.
+  // Every change to the API's state goes through a journaled command, so a restart replays it (journal.ts). Core and
+  // the API's own records (evidence, webhooks) draw IDs from the same counters.
+  const db = new Database(store, { create: true, strict: true })
+  const journal = openJournal(db, { seed, clock: baseClock, ids: counterIds() })
+  const { clock, ids } = journal
+  const unjournaled = createCore({ seed, clock, ids, planner })
+  const core: Core = {
+    dispatch: journal.command('dispatch', unjournaled.dispatch) as Dispatch,
+    checkAccess: journal.command('checkAccess', unjournaled.checkAccess),
+    recordStored: journal.command('recordStored', unjournaled.recordStored),
+    tick: journal.command('tick', unjournaled.tick)
+  }
   const hub = createEventHub({
     clock,
-    onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
+    ids,
+    options: webhooks,
+    command: journal.command,
+    recordStored: core.recordStored
   })
   const evidence = createEvidenceStore({ clock, ids })
-  const automation = startAutomation({ core, clock, every, weather, subscribe: hub.subscribe, publish: hub.publish })
-  if (workOrders) {
-    const provider = workOrders(async (ref) => evidence.bytes(ref))
-    forwardWorkOrders({ core, subscribe: hub.subscribe, provider })
+  // The scenario clock's time is state too: replaying its moves puts it back where the last process left it.
+  const setScenarioClock = journal.command('setScenarioClock', (actor: Actor, now: string): ScenarioClock => {
+    if (baseClock.set === undefined)
+      throw new Error('This store moved a scenario clock; start with SAFE_EDGE_CLOCK=scenario')
+    const before: ScenarioClock = { id: 'clock', now: clock.now() }
+    baseClock.set(now)
+    // Audited after the move, so the chain shows the change at the time it set.
+    const after: ScenarioClock = { id: 'clock', now: clock.now() }
+    core.recordStored('setScenarioClock', actor, after, before)
+    return after
+  })
+  const uploadEvidence = journal.command('uploadEvidence', (actor: Actor, body: UploadEvidenceRequest) => {
+    const ref = evidence.put(body, actor)
+    core.recordStored('uploadEvidence', actor, ref)
+    return ref
+  })
+  const forwarder =
+    workOrders &&
+    forwardWorkOrders({ core, subscribe: hub.subscribe, provider: workOrders(async (ref) => evidence.bytes(ref)) })
+  // Its writes go through the journaled core, each its own entry, so a restart replays them like any request's.
+  const automation = startAutomation({
+    core,
+    clock,
+    scenario: baseClock.set !== undefined,
+    every,
+    weather,
+    subscribe: hub.subscribe,
+    publish: hub.publish
+  })
+  /** Core operations the API acts on once they succeed, besides publishing their events. */
+  const afterDispatch: { [K in CoreOperationId]?: (data: OperationOutput<K>) => void } = {
+    // A person cleared a failed hand-off; the API resumes it from the step that failed.
+    retryWorkOrderHandOff: ({ workOrder, retried }) => {
+      if (forwarder) return forwarder.retry(workOrder.id, retried.step)
+      // This API runs without a work-order system, so the retry fails at once, on the record like any other failure.
+      const body = { step: retried.step, message: 'This API instance has no work-order system configured' }
+      const recorded = core.dispatch('recordWorkOrderExternalError', WORK_ORDERS, {
+        params: { id: workOrder.id },
+        body
+      })
+      if (!recorded.ok) throw new Error(recorded.message)
+    }
   }
   app.get('/health', (c) => c.json({ status: 'ok' }))
   // Where getEvidenceUrl points. The signed query is the credential, so it takes no bearer token.
@@ -121,30 +188,39 @@ export function createApp({
 
   // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). The caller
   // is the whole actor, role and scopes included: a replay skips the access check, so another token of the same person
-  // must not share it. Server errors are not kept, so a retry runs again. In memory, like the core.
-  const replays = new Map<
-    string,
-    { fingerprint: string; response?: { status: number; headers: Headers; body: string } }
-  >()
+  // must not share it. Server errors are not kept, so a retry runs again. Answers are kept in the store's
+  // `idempotency` table, so they outlive a restart; requests still running are tracked in memory.
+  db.run(
+    'create table if not exists idempotency (scope text primary key, fingerprint text not null, ' +
+      'status integer not null, headers text not null, body text not null)'
+  )
+  type Kept = { fingerprint: string; status: number; headers: string; body: string }
+  const keptAnswer = db.query<Kept, [string]>(
+    'select fingerprint, status, headers, body from idempotency where scope = ?'
+  )
+  const keepAnswer = db.query(
+    'insert into idempotency (scope, fingerprint, status, headers, body) values (?, ?, ?, ?, ?)'
+  )
+  const running = new Map<string, string>()
   const idempotency = createMiddleware<Env>(async (c, next) => {
     const key = c.req.header('idempotency-key')
     if (key === undefined) return next()
     const scope = JSON.stringify([c.get('actor'), c.req.method, c.req.path, key])
     const fingerprint = new Bun.CryptoHasher('sha256').update(await c.req.text()).digest('hex')
-    const seen = replays.get(scope)
-    if (seen && seen.fingerprint !== fingerprint) {
+    const kept = keptAnswer.get(scope)
+    const seen = kept?.fingerprint ?? running.get(scope)
+    if (seen !== undefined && seen !== fingerprint) {
       return fail(c, 422, 'idempotency_conflict', 'This Idempotency-Key was already used with a different body')
     }
-    if (seen?.response) return new Response(seen.response.body, seen.response)
-    if (seen) return fail(c, 409, 'idempotency_conflict', 'A request with this Idempotency-Key is still running')
+    if (kept) return new Response(kept.body, { status: kept.status, headers: JSON.parse(kept.headers) })
+    if (seen !== undefined)
+      return fail(c, 409, 'idempotency_conflict', 'A request with this Idempotency-Key is still running')
 
-    replays.set(scope, { fingerprint })
+    running.set(scope, fingerprint)
     await next()
-    if (c.res.status >= 500) replays.delete(scope)
-    else {
-      const response = { status: c.res.status, headers: new Headers(c.res.headers), body: await c.res.clone().text() }
-      replays.set(scope, { fingerprint, response })
-    }
+    const body = await c.res.clone().text()
+    running.delete(scope)
+    if (c.res.status < 500) keepAnswer.run(scope, fingerprint, c.res.status, JSON.stringify([...c.res.headers]), body)
   })
 
   // The agent calls this same app in process with its own token, so every call passes auth, policy, validation,
@@ -163,11 +239,7 @@ export function createApp({
   const noAgent = (c: Context) => fail(c, 501, 'not_implemented', 'This API instance runs without the agent')
 
   const apiHandlers: ApiHandlers = {
-    uploadEvidence: (c, { body }) => {
-      const ref = evidence.put(body, c.get('actor'))
-      core.recordStored('uploadEvidence', c.get('actor'), ref)
-      return c.json(ref, 201)
-    },
+    uploadEvidence: (c, { body }) => c.json(uploadEvidence(c.get('actor'), body), 201),
     getEvidenceUrl: (c, { params }) => {
       const url = evidence.url(params.id, c.req.url)
       return url ? c.json(url, 200) : fail(c, 404, 'not_found', `No evidence ${params.id}`)
@@ -241,28 +313,22 @@ export function createApp({
       }),
     listWebhooks: (c) => c.json(hub.list(), 200),
     registerWebhook: (c, { body }) => {
-      const webhook: Webhook = {
-        id: ids.next('whk'),
-        ...body,
-        createdBy: c.get('actor').id,
-        createdAt: clock.now(),
-        failures: []
+      if (!hub.allows(body.url)) {
+        const message = `url: ${new URL(body.url).origin} is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)`
+        return fail(c, 400, 'invalid_input', message)
       }
-      hub.register(webhook)
-      core.recordStored('registerWebhook', c.get('actor'), webhook)
-      return c.json(webhook, 201)
+      const secret = newWebhookSecret()
+      const webhook = hub.register(c.get('actor'), body, secret)
+      return c.json({ ...webhook, secret } satisfies RegisteredWebhook, 201)
     },
     setScenarioClock: (c, { body }) => {
-      if (clock.set === undefined) {
+      if (baseClock.set === undefined) {
         return fail(c, 501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
       }
-      const before: ScenarioClock = { id: 'clock', now: clock.now() }
-      clock.set(body.now)
-      // Audited after the move, so the chain shows the change at the time it set.
-      const after: ScenarioClock = { id: 'clock', now: clock.now() }
-      core.recordStored('setScenarioClock', c.get('actor'), after, before)
+      const moved = setScenarioClock(c.get('actor'), body.now)
+      // After the journaled move, so each write the automation makes is its own entry and replays once.
       automation.clockSet()
-      return c.json(after, 200)
+      return c.json(moved, 200)
     }
   }
 
@@ -292,6 +358,7 @@ export function createApp({
     const result = core.dispatch(operationId as CoreOperationId, actor, input as never)
     if (!result.ok) return c.json(result, failureStatus(result))
     hub.publish(result.events)
+    afterDispatch[operationId as CoreOperationId]?.(result.data as never)
     return c.json(result.data as object, result.status)
   }
 
@@ -302,6 +369,8 @@ export function createApp({
     if (op.method === 'get' || op.stream) app.on(op.method.toUpperCase(), path, authenticate, serve(operationId, op))
     else app.on(op.method.toUpperCase(), path, authenticate, idempotency, serve(operationId, op))
   }
+  // Every command is registered by now, so the journal can rebuild the state the last process left.
+  journal.replay()
   return app
 }
 

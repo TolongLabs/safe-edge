@@ -2,11 +2,12 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
 import { EdgeEvent, type Actor, type RaiseCandidateRequest, type Role } from '@safe-edge/contracts'
-import { counterIds, createCore, Seed } from '@safe-edge/core'
+import { Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from '../src/app.ts'
 import type { Every } from '../src/automation.ts'
 import { scenarioClock, type ApiClock } from '../src/clock.ts'
+import type { WebhookOptions } from '../src/events.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
 
@@ -44,11 +45,14 @@ export function startApi({
   tokens: tokenTable = tokens,
   workOrders,
   claude,
+  webhooks: { origins = [], allowLoopback = true, retryDelaysMs = [] } = {},
   clock = scenarioClock(seed.asOf),
   every,
   weather
 }: {
   heartbeatMs?: number
+  /** Loopback webhooks allowed and no retries by default, so a failed delivery is final at once. */
+  webhooks?: Partial<WebhookOptions>
   tokens?: ReadonlyMap<string, Actor>
   workOrders?: ApiOptions['workOrders']
   claude?: Anthropic
@@ -56,10 +60,20 @@ export function startApi({
   every?: Every
   weather?: ApiOptions['weather']
 } = {}) {
-  const ids = counterIds()
-  const core = createCore({ seed, clock, ids, planner })
   const agent = claude && { claude, token: 'tok_agent' }
-  const app = createApp({ core, clock, ids, tokens: tokenTable, heartbeatMs, workOrders, agent, every, weather })
+  const app = createApp({
+    seed,
+    planner,
+    clock,
+    store: ':memory:',
+    tokens: tokenTable,
+    heartbeatMs,
+    workOrders,
+    agent,
+    webhooks: { origins, allowLoopback, retryDelaysMs },
+    every,
+    weather
+  })
   const log: Exchange[] = []
   const server = Bun.serve({
     port: 0,

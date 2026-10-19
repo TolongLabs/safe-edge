@@ -650,6 +650,19 @@ export const WorkOrderStatus = named(
 )
 export type WorkOrderStatus = z.infer<typeof WorkOrderStatus>
 
+/** Why a hand-off to the external work-order system failed, and at which call of the WorkOrderProvider port. */
+export const WorkOrderExternalError = named(
+  'WorkOrderExternalError',
+  z.object({
+    step: z
+      .enum(['createFinding', 'addEvidence', 'updateStatus'])
+      .describe('The call that failed: filing the finding, attaching its photos, or moving the record’s status'),
+    message: z.string().min(1),
+    at: Timestamp
+  })
+)
+export type WorkOrderExternalError = z.infer<typeof WorkOrderExternalError>
+
 export const WorkOrder = named(
   'WorkOrder',
   z.object({
@@ -665,12 +678,9 @@ export const WorkOrder = named(
     completedAt: Timestamp.nullable(),
     completionEvidence: z.array(EvidenceRef),
     externalRef: z.string().nullable().describe('Procore observation ID'),
-    externalError: z
-      .object({ message: z.string().min(1), at: Timestamp })
-      .nullable()
-      .describe(
-        'Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried'
-      ),
+    externalError: WorkOrderExternalError.nullable().describe(
+      'Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it'
+    ),
     createdAt: Timestamp,
     ...provenance
   })

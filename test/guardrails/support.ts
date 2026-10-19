@@ -10,12 +10,13 @@ import {
   type OperationSpec,
   type Role
 } from '@safe-edge/contracts'
-import { createSafeEdgeClient } from '@safe-edge/sdk'
+import { createSafeEdgeClient, type AgentStreamEvent } from '@safe-edge/sdk'
 import { expect } from 'bun:test'
 import { devTokens } from '../../apps/api/src/tokens.ts'
 import { S1, seed, startApi } from '../../apps/api/test/support.ts'
 import type { Stage } from '../../packages/sdk/test/story.ts'
 
+export { claude } from '../../apps/api/test/claude.ts'
 export { S1, raiseTier2, tier2Candidate } from '../../apps/api/test/support.ts'
 export { playS1toRepair, playS1toS3 } from '../../packages/sdk/test/story.ts'
 
@@ -58,13 +59,27 @@ export function devTokenFor(userId: string): string {
   return entry[0]
 }
 
+/** Every list the manager reads, which is every record the agent can write; the audit chain is checked on its own. */
+const lists = httpOperations.filter(
+  ([id, op]) =>
+    op.method === 'get' &&
+    op.response.type === 'array' &&
+    id !== 'listAudit' &&
+    (op.roles === 'any' || op.roles.includes('manager'))
+)
+
 /**
  * The API as `bun run dev` serves it, but on a free port with a settable clock: behind the stage's tokens, plus any
- * extra tokens a test issues.
+ * extra tokens a test issues. With a `claude` client it runs its agent, which holds `tok_agent` (as startApi gives it),
+ * here the agent user's token like `dev_agent`.
  */
-export function startGuardedApi(extra: Record<string, Actor> = {}) {
-  const tokens = new Map([...stageTokens, ...Object.entries(extra)])
-  const api = startApi({ tokens })
+export function startGuardedApi(
+  extra: Record<string, Actor> = {},
+  { claude }: { claude?: NonNullable<Parameters<typeof startApi>[0]>['claude'] } = {}
+) {
+  const agentToken = claude === undefined ? [] : [['tok_agent', stageTokens.get('dev_agent')!] as const]
+  const tokens = new Map([...stageTokens, ...agentToken, ...Object.entries(extra)])
+  const api = startApi({ tokens, claude })
   const baseUrl = new URL('/v1', api.url).href
 
   const actorOf = (token: string) => {
@@ -82,8 +97,20 @@ export function startGuardedApi(extra: Record<string, Actor> = {}) {
   /** S1's Edge Pass. */
   const pass = async () =>
     EdgePass.parse(await json(api.request('get', '/passes/pass_866518980_11', { token: 'dev_manager' })))
+  /** Every record the manager can list, by ID. */
+  const records = async () => {
+    const listed = await Promise.all(lists.map(([, op]) => json(api.request('get', op.path, { token: 'dev_manager' }))))
+    return new Map<string, any>(listed.flat().map((record: { id: string }) => [record.id, record]))
+  }
+  /** Asks the agent through the SDK, as the Ask panel does, and reads its stream to the end. */
+  const ask = async (token: string, question: string) => {
+    const events: AgentStreamEvent[] = []
+    const client = createSafeEdgeClient({ transport: 'http', baseUrl, token })
+    for await (const event of await client.askAgent({ body: { question } })) events.push(event)
+    return events
+  }
 
-  return { ...api, actorOf, stage, audit, pass }
+  return { ...api, actorOf, stage, audit, pass, records, ask }
 }
 
 export type GuardedApi = ReturnType<typeof startGuardedApi>
