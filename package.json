@@ -13,6 +13,7 @@
     "check:qgc-plan": "out=$(mktemp -d) && bun run export:mission \"$out\" && uv run --script packages/planner/scripts/check-qgc-plan.py \"$out\"/*.plan",
     "dev": "bun --filter '@safe-edge/*' dev",
     "dev:token": "bun apps/api/src/dev-tokens.ts",
+    "e2e": "playwright test",
     "export:mission": "bun packages/planner/scripts/export-mission.ts",
     "fetch:weather": "bun packages/providers/scripts/fetch-weather.ts",
     "generate:contracts": "bun packages/contracts/scripts/generate.ts",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
+    "@playwright/test": "1.64.1",
     "@safe-edge/contracts": "workspace:*",
     "@safe-edge/sdk": "workspace:*",
     "@types/bun": "^1.4.3",

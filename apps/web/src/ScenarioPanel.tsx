@@ -160,10 +160,14 @@ export function ScenarioPanel({
   const [flight, setFlight] = useState<FlightState | null>(null)
   const [scrubTo, setScrubTo] = useState<number | null>(null)
   const [day, setDay] = useState<DayPhase | null>(null)
-  const shown = useRef<{ planId: string | null; now: string; flying: boolean }>({
+  // What the scene shows now: markers as JSON, so an unchanged set is not rebuilt, and how many steps had played
+  // when the lists were last read.
+  const shown = useRef<{ planId: string | null; now: string; flying: boolean; markers: string; played: number }>({
     planId: null,
     now: '',
-    flying: false
+    flying: false,
+    markers: '',
+    played: -1
   })
 
   useEffect(() => {
@@ -171,7 +175,7 @@ export function ScenarioPanel({
     let unsubscribe = () => {}
     setPlayer(null)
     scene.showFlight(null)
-    shown.current = { planId: null, now: '', flying: false }
+    shown.current = { planId: null, now: '', flying: false, markers: '', played: -1 }
     setFlight(null)
     loadPlanner()
       .then((planner) => createScenarioPlayer({ scenarios: elminaScenarios, id, planner, speed: 8 }))
@@ -187,23 +191,34 @@ export function ScenarioPanel({
           if (!plan && shown.current.planId !== null) scene.showFlight(null)
           shown.current = { ...shown.current, planId: plan?.id ?? null, now: created.now }
           setDay(scene.setConditions({ at: created.now, rainMmH: rainAt(elminaScenarios, id, created.now) }))
-          const [status, passes, markers] = await Promise.all([
+          // In flight only the drone moves between steps, so the lists are read again only when a step played
+          // something, the clock went back, or the drone took off or landed.
+          const played = created.played.length
+          const stale = rewound || played !== shown.current.played || !(created.airborne && shown.current.flying)
+          const [status, lists] = await Promise.all([
             plan ? created.client.droneStatus(DRONE) : null,
-            created.client.listPasses({}),
-            markersOf(created.client)
+            stale ? Promise.all([created.client.listPasses({}), markersOf(created.client)]) : null
           ])
           if (mine !== latest) return
-          scene.setMarkers(markers)
+          if (lists) {
+            const [passes, markers] = lists
+            const markersJson = JSON.stringify(markers)
+            if (markersJson !== shown.current.markers) {
+              scene.setMarkers(markers)
+              shown.current.markers = markersJson
+            }
+            scene.setPassStates(
+              Object.fromEntries(passes.map((p) => [p.segmentId, p.state as PassState])) as Record<string, PassState>
+            )
+            onPasses(passes.map((p) => ({ segmentId: p.segmentId, state: p.state as PassState, validTo: p.validTo })))
+            shown.current.played = played
+          }
           const placed = status ? scene.placeDrone(status) : null
           // The camera picks up the drone when it leaves the dock during playback.
           const flying = status?.state === 'in_flight'
           if (flying && !shown.current.flying && created.playing) scene.followDrone(true)
           shown.current.flying = flying
           setFlight(placed)
-          scene.setPassStates(
-            Object.fromEntries(passes.map((p) => [p.segmentId, p.state as PassState])) as Record<string, PassState>
-          )
-          onPasses(passes.map((p) => ({ segmentId: p.segmentId, state: p.state as PassState, validTo: p.validTo })))
           setVersion((v) => v + 1)
         }
         unsubscribe = created.subscribe(() => void sync())

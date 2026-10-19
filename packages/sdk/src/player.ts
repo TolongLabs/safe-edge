@@ -107,8 +107,11 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
     }
   }
 
-  /** Ticks every grid point up to `to`, running each event at its own time on the way. */
-  const advance = async (to: number) => {
+  /**
+   * Ticks every grid point up to `to`, running each event at its own time on the way. With `untilTakeoff`, it stops
+   * at the event that puts a drone in the air, so playback can slow to flight speed from there.
+   */
+  const advance = async (to: number, untilTakeoff = false) => {
     const done: Played[] = []
     for (;;) {
       const step = airborne > 0 ? FLIGHT_STEP_MS : GROUND_STEP_MS
@@ -117,6 +120,7 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
       if (next <= Math.min(grid, to)) {
         clock = next
         done.push(await run(queue.shift()!))
+        if (untilTakeoff && airborne > 0) break
         continue
       }
       if (grid > to) break
@@ -200,11 +204,13 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
         seeking = true
         void serial(async () => {
           if (!stopFrames) return
-          const rate = airborne > 0 ? speed : Math.max(speed, GROUND_PLAYBACK_RATE)
+          // A frame on the ground runs at the ground rate only until take-off, or one slow frame flies the patrol.
+          const grounded = airborne === 0
+          const rate = grounded ? Math.max(speed, GROUND_PLAYBACK_RATE) : speed
           const target = Math.min(position + owedMs * rate, end)
           owedMs = 0
-          await advance(target)
-          position = Math.max(position, target)
+          await advance(target, grounded)
+          position = Math.max(position, grounded && airborne > 0 ? clock : target)
           if (position >= end) {
             stopFrames?.()
             stopFrames = null
