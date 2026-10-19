@@ -369,7 +369,8 @@ export type PlanHold = z.infer<typeof PlanHold>
 
 /**
  * Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off.
- * `authorisation`: it would fly over or within 150 m of a designated area without the Director General's authorisation.
+ * `authorisation`: it would fly over or within 150 m of a designated area without the Director General's authorisation,
+ * or of an open-air assembly of more than 1,000 persons. `separation_hold`: a structure would be within 50 m of it.
  */
 export const RejectionCode = named(
   'RejectionCode',

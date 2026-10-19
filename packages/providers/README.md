@@ -81,7 +81,7 @@ The sim has no camera, so `observation.image` is null, `quality` is nominal (`sh
 
 `dispatchPatrol` rejects with `ApprovalRequiredError` unless the scheduled plan is `approved` and the `HumanApproval` equals what core recorded on `approvePatrolPlan` (`planId`, `approvedBy`, `approvedAt`). Only a pilot can approve in core, never an agent. Scheduling a proposed plan is allowed, but that run can never fly: once a pilot approves, schedule the approved plan again.
 
-A `separation` hold (#79) waits for a person to confirm the path is clear, on a segment or (#125, people within 30 m) on the dock. The sim does not model that wait, so it also refuses, with the same error, a plan that still has an unreleased separation hold: the pilot records the path clear with `releasePlanHold`, then schedules the released plan. A released hold flies without the wait the plan budgeted for it, so that flight lands earlier than the plan's ETAs. Weather and lightning holds stop the launch in core's `startPatrol`, which the pilot calls before dispatching.
+A `separation` hold (#79) waits for a person to confirm the path is clear, on a segment (its stations, flight line or the transit into it) or on the dock (#125, #150: its climb, descent or the transits from and to it). The sim does not model that wait, so it also refuses, with the same error, a plan that still has an unreleased separation hold: the pilot records the path clear with `releasePlanHold`, then schedules the released plan. A released hold flies without the wait the plan budgeted for it, so that flight lands earlier than the plan's ETAs. Weather and lightning holds stop the launch in core's `startPatrol`, which the pilot calls before dispatching.
 
 ## Window gate
 

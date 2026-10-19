@@ -98,11 +98,14 @@ export interface PatrolPlanInput extends ScoreInputs {
   geofences: Geofence[]
   /** The Director General's authorisation to fly over and within 150 m of designated areas, or null without one. */
   authorisation: FlightAuthorisation | null
-  /** People, vessels, vehicles and structures not under the pilot's control, from observations or the map. */
+  /**
+   * People, vessels, vehicles and structures not under the pilot's control, from observations or the map. A person
+   * with a `headcount` over 1,000 is an assembly in the open air.
+   */
   thirdParties: ThirdParty[]
   /**
-   * How long the drone may hover before a held segment for the pilot or observer to confirm its path is clear. It counts
-   * against the battery and the window like flying does.
+   * How long the drone may hover before a held segment (its stations, flight line or the transit into it) for the pilot
+   * or observer to confirm its path is clear. It counts against the battery and the window like flying does.
    */
   separationWaitS: number
 }
@@ -155,9 +158,12 @@ interface Insertion extends Stop {
  * "Patrol planner" steps 2 to 4). The window opens at first light, or later when the weather gate holds the launch
  * (see `flightWindow`). Greedy insertion adds, at its cheapest place in the route, the task with the highest priority
  * per added watt-hour, while the whole route, return included, stays within the usable battery minus the reserve and
- * lands before the window closes. Geofences are hard limits. Stations keep 50 m from third parties, standing further
- * off with zoom or waiting for a clear pass (see `keepSeparation`). The plan comes back `proposed`: only a pilot's
- * approval lets it fly.
+ * lands before the window closes. Geofences are hard limits. The whole flight keeps CAR 2016 regulation 143's distances
+ * from third parties: stations stand further off with zoom or wait for a clear pass (see `keepSeparation`); a stop whose
+ * flight line or transit in passes people, vessels or vehicles waits once for them, within the budget; the dock holds
+ * take-off while its climb, descent or transits are not clear (see `dockHold`); and no leg flies within 50 m of a
+ * structure or 150 m of an assembly of more than 1,000 persons. The plan comes back `proposed`: only a pilot's approval
+ * lets it fly.
  */
 export function planPatrol(input: PatrolPlanInput): PatrolPlan {
   return planFresh(input, null)

@@ -74,8 +74,8 @@ export interface Separation {
 
 /**
  * Checks each station against the third parties. A station within 50 m moves back along its line of sight, over the
- * water and at the same height, to the nearest stand-off (in 1 m steps) that clears them all, zooming in so its aim
- * point keeps the detail of `rangeM`. Where no stand-off up to `maxZoom` × `rangeM` clears them, it takes the nearest
+ * water and at the same height, to the nearest stand-off (in 1 m steps) that clears them all, and the leg from the
+ * previous clear station too where one does, zooming in so its aim point keeps the detail of `rangeM`. Where no stand-off up to `maxZoom` × `rangeM` clears them, it takes the nearest
  * stand-off that clears every structure and waits there for people, vessels and vehicles to pass. A station no
  * stand-off can clear of a structure is left out.
  */
