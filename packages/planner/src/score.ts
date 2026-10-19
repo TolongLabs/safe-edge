@@ -98,13 +98,24 @@ function expiryScore(pass: PassReading, now: number): number {
   return Math.min(Math.max(1 - daysLeft / EXPIRING_DAYS, 0), 1)
 }
 
-/** JPS one-hour rainfall categories (TRD), treating a reading in mm/h as the hour's total. */
+export type RainCategory = 'none' | 'light' | 'moderate' | 'heavy' | 'very_heavy'
+
+/**
+ * The JPS one-hour rainfall category (Public Infobanjir: light 1–10 mm, moderate 11–30 mm, heavy 31–60 mm, very heavy
+ * above 60 mm), treating a reading in mm/h as the hour's total. Below 1 mm is `none`.
+ */
+export function rainCategory(mm: number): RainCategory {
+  if (mm < 1) return 'none'
+  if (mm <= 10) return 'light'
+  if (mm <= 30) return 'moderate'
+  if (mm <= 60) return 'heavy'
+  return 'very_heavy'
+}
+
+const RAIN_SCORE: Record<RainCategory, number> = { none: 0, light: 0.25, moderate: 0.5, heavy: 0.75, very_heavy: 1 }
+
 function rainScore(mm: number): number {
-  if (mm < 1) return 0 // below "light"
-  if (mm <= 10) return 0.25 // light, 1–10 mm
-  if (mm <= 30) return 0.5 // moderate, 11–30 mm
-  if (mm <= 60) return 0.75 // heavy, 31–60 mm
-  return 1 // very heavy
+  return RAIN_SCORE[rainCategory(mm)]
 }
 
 function waterLevelScore(levelM: number, { alertM, warningM, dangerM }: WaterLevelBands): number {
