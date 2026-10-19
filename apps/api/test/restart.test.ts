@@ -21,7 +21,7 @@ import {
 } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
 import { Database } from 'bun:sqlite'
-import { mkdtemp, rm } from 'node:fs/promises'
+import { chmod, mkdtemp, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Webhook as StandardWebhook } from 'standardwebhooks'
@@ -293,4 +293,12 @@ test('a write the journal cannot keep throws out of the app, which takes no more
   deployed.close()
   expect(code).toBe(1)
   expect(stderr).toContain('could not journal a dispatch')
+}, 30_000)
+
+test("the data directory, which holds webhook secrets and evidence, is the OS user's alone, even one that existed", async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'safe-edge-api-'))
+  afterAll(() => rm(dir, { recursive: true }))
+  await chmod(dir, 0o755)
+  await startApiProcess({ NODE_ENV: 'test', SAFE_EDGE_DATA_DIR: dir })
+  expect((await stat(dir)).mode & 0o777).toBe(0o700)
 }, 30_000)

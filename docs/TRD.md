@@ -391,6 +391,8 @@ P2 only: 3DTilesRendererJS 0.5.3 with `GoogleCloudAuthPlugin`, a key restricted 
 - Stored evidence never shows people (see the [privacy research][privacy] for the eleven pilot rules).
 - Demo tokens work only in demo mode. The API rejects them.
 - Every state change is in the hash-chained audit log, including refused attempts.
+- The API keeps its state in `$SAFE_EDGE_DATA_DIR/api.sqlite`, unencrypted: the command journal holds every webhook's signing secret and uploaded evidence, and the idempotency table keeps each answer replayed by key, a webhook registration's secret included. The API sets the directory to 0700 on every start, one that already existed included, so only its OS user can read them.
+- A journal moved to another operating system may refuse to start: replay re-runs the planner, whose trigonometry comes from the platform's maths library and differs in the last bit between macOS and Linux, and a replayed result that differs from the recorded one stops the start.
 - Dependencies: no AGPL or GPL models; record every model and asset licence in `docs/licences.md`.
 
 [privacy]: /docs/research/drone-integration/privacy.md

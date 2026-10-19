@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { Seed } from '@safe-edge/core'
-import { mkdirSync } from 'node:fs'
+import { chmodSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
 import { clockFrom } from './clock.ts'
@@ -27,10 +27,12 @@ const clock = clockFrom(process.env, seed.asOf)
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
 
 // The API keeps its state in SAFE_EDGE_DATA_DIR/api.sqlite and picks it up again on restart (journal.ts). The file
-// holds webhook secrets and evidence, so the directory is the OS user's alone. bun run dev uses apps/api/.data.
+// holds webhook secrets and evidence, so the directory is the OS user's alone, one that already existed included.
+// bun run dev uses apps/api/.data.
 const dataDir = process.env.SAFE_EDGE_DATA_DIR
 if (!dataDir) throw new Error('Set SAFE_EDGE_DATA_DIR to the directory the API keeps its state in')
 mkdirSync(dataDir, { recursive: true, mode: 0o700 })
+chmodSync(dataDir, 0o700)
 
 // The agent acts with its own API token (an agent actor). Claude reads ANTHROPIC_API_KEY; without it, agent calls fail.
 const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
