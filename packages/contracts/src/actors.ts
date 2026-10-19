@@ -38,7 +38,10 @@ export const Scope = z.enum([
 export type Scope = z.infer<typeof Scope>
 
 /** Who is acting. Bearer tokens map to an Actor; the memory transport builds one with `client.as(userId)`. */
-export const Actor = z.object({ type: ActorType, id: z.string().min(1), role: Role, scopes: z.array(Scope) })
+export const Actor = named(
+  'Actor',
+  z.object({ type: ActorType, id: z.string().min(1), role: Role, scopes: z.array(Scope) })
+)
 export type Actor = z.infer<typeof Actor>
 
 /** Who drafted a record: a person or the agent. */

@@ -6,6 +6,7 @@ type ReadOperation =
   | 'listSegments'
   | 'getSegment'
   | 'listUsers'
+  | 'getMe'
   | 'listDocks'
   | 'listDroneProfiles'
   | 'listPatrolPlans'
@@ -39,6 +40,7 @@ export const reads: Handlers<ReadOperation> = {
     })
   },
   listUsers: (tx) => ok(tx.all('users')),
+  getMe: (tx) => ok(tx.actor),
   listDocks: (tx) => ok(tx.all('docks')),
   listDroneProfiles: (tx) => ok(tx.all('droneProfiles')),
   listPatrolPlans: (tx) => ok(tx.all('patrolPlans')),

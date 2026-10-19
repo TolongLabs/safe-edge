@@ -224,6 +224,11 @@ export class Tx {
     this.state.audit.push(...entries)
   }
 
+  /** Appends a write the transport stored outside the core's collections (an evidence file, a webhook). */
+  commitStored(action: string, record: { id: string }): void {
+    this.state.audit.push(this.entry([], action, record.id, null, record, null, null))
+  }
+
   /** Appends a refused attempt; nothing staged in this transaction is kept. */
   commitDenial(action: string, rule: PolicyRule, subjectId: string): void {
     const subject = this.findCommitted(subjectId)

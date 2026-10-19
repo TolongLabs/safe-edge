@@ -48,6 +48,11 @@ export interface Core {
    */
   checkAccess(operationId: OperationId, actor: Actor, input?: { params?: unknown; body?: unknown }): Denial | null
   /**
+   * Appends an allowed write that a transport stored itself (a `handledBy: 'api'` row: evidence, webhooks), with
+   * `before` null and `after` the record, so every write is on the audit chain. Call it once `checkAccess` allowed it.
+   */
+  recordStored(operationId: OperationId, actor: Actor, record: { id: string }): void
+  /**
    * Time-driven pass moves: valid → expiring 30 days before `validTo`, and → expired at `validTo`. Acts as the system,
    * which the one-way rule never lets make a pass valid. Returns the events to publish.
    */
@@ -80,6 +85,13 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     const refused = authorize(operationId, operations[operationId], who)
     if (refused) openTx(who, clock.now()).commitDenial(operationId, refused.rule, defaultSubject(operationId, input))
     return refused
+  }
+
+  const recordStored = (operationId: OperationId, actor: Actor, record: { id: string }) => {
+    const { handledBy } = operations[operationId]
+    if (handledBy !== 'api')
+      throw new Error(`${operationId} is handled by ${handledBy}, whose writes core audits itself`)
+    openTx(Actor.parse(actor), clock.now()).commitStored(operationId, record)
   }
 
   const dispatch = <K extends CoreOperationId>(
@@ -148,7 +160,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     return structuredClone(tx.events)
   }
 
-  return { dispatch: dispatch as Dispatch, checkAccess, tick }
+  return { dispatch: dispatch as Dispatch, checkAccess, recordStored, tick }
 }
 
 /** The record a refused call was about, from its input; the operation itself when there is none. */

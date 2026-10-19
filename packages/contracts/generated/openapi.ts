@@ -82,6 +82,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Who the bearer token acts as: type, ID, role and scopes
+         * @description Roles: any. Agents need scope `edge.read`.
+         */
+        get: operations["getMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/docks": {
         parameters: {
             query?: never;
@@ -956,6 +976,12 @@ export interface components {
         ActorType: "user" | "agent" | "system" | "provider";
         /** @enum {string} */
         Role: "manager" | "engineer" | "reviewer" | "installer" | "pilot" | "gm" | "crew" | "integrator" | "agent" | "system" | "provider";
+        Actor: {
+            type: components["schemas"]["ActorType"];
+            id: string;
+            role: components["schemas"]["Role"];
+            scopes: ("edge.read" | "inspection.read" | "finding.propose" | "workorder.draft" | "notice.draft" | "patrol.propose")[];
+        };
         ActorRef: {
             type: components["schemas"]["ActorType"];
             id: string;
@@ -1472,8 +1498,9 @@ export interface components {
             decision: "allowed" | "denied";
             rule: components["schemas"]["PolicyRule"] | null;
             policyVersion: string;
+            /** @description The previous event's hash; 64 zeros for the first event */
             prevHash: string;
-            /** @description SHA-256 of prevHash plus the canonical event JSON */
+            /** @description Hex SHA-256 of the UTF-8 text prevHash followed by the canonical JSON of this event without hash. Canonical JSON: object keys sorted, no whitespace, every value as JSON.stringify writes it. */
             hash: string;
         };
         Notice: {
@@ -1927,6 +1954,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    getMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Who the bearer token acts as: type, ID, role and scopes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Actor"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
