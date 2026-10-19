@@ -234,8 +234,16 @@ export const RecordRetestRequest = named(
 )
 export type RecordRetestRequest = z.infer<typeof RecordRetestRequest>
 
-/** An accepted re-test issues the pass. */
-export const RetestOutcome = named('RetestOutcome', z.object({ retest: Retest, pass: EdgePass.nullable() }))
+/** An accepted re-test issues the pass, once no other suspicion on the segment is open. */
+export const RetestOutcome = named(
+  'RetestOutcome',
+  z.object({
+    retest: Retest,
+    pass: EdgePass.nullable().describe(
+      "The pass this re-test issued; null when it was rejected or another Tier 2 candidate or finding on the segment is still open (the suspended pass's stateReason names them)"
+    )
+  })
+)
 export type RetestOutcome = z.infer<typeof RetestOutcome>
 
 export const CreateOpeningRequest = named(

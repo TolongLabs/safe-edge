@@ -183,6 +183,52 @@ describe('the one-way rule: automation never makes a pass valid', () => {
   })
 })
 
+describe('suspicion suspends: an accepted re-test restores the pass only when nothing else is open on the segment', () => {
+  test('a second Tier 2 candidate awaiting review keeps the pass suspended; the re-test still closes its own work', () => {
+    const h = startCore()
+    const played = playS1toRepair(h)
+    const buoy = h.segment(S1.segmentId).segment.expectedInventory.find((i) => i.type === 'ring_buoy')!
+    const second = raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: buoy.id,
+      itemStatus: 'missing',
+      class: 'inventory_item',
+      rationale: 'Ring buoy missing from its post'
+    }).data
+    expect(second.tier).toBe(2)
+
+    const outcome = h.call('recordRetest', 'usr_reviewer', { body: played.retest })
+    expect(outcome.data.pass).toBeNull()
+    expect(outcome.events.map((e) => e.type)).toEqual(['edge.retest.recorded.v1'])
+    expect(h.call('getWorkOrder', 'usr_manager', { params: { id: played.workOrderId } }).data.status).toBe('accepted')
+    expect(h.call('getFinding', 'usr_manager', { params: { id: played.findingId } }).data.status).toBe('closed')
+    const pass = h.segment(S1.segmentId).pass!
+    expect(pass.state).toBe('suspended')
+    expect(pass.stateReason).toContain(second.id)
+    expect(pass.stateReason).toContain(outcome.data.retest.id)
+  })
+
+  test('another open finding on the segment keeps the pass suspended until its own repair is accepted', () => {
+    const h = startCore()
+    const played = playS1toRepair(h)
+    // A worn path the manager confirmed as a Tier 1 finding: open work on the same segment.
+    const worn = raiseOnS1(h, 'usr_drone_sim', {
+      inventoryItemId: null,
+      itemStatus: null,
+      class: 'worn_path',
+      rationale: 'A worn path leads to the bank'
+    }).data
+    const other = h.call('decideCandidate', 'usr_manager', {
+      params: { id: worn.id },
+      body: { decision: 'confirm', severity: 'low' }
+    }).data.finding!
+
+    expect(h.call('recordRetest', 'usr_reviewer', { body: played.retest }).data.pass).toBeNull()
+    const pass = h.segment(S1.segmentId).pass!
+    expect(pass.state).toBe('suspended')
+    expect(pass.stateReason).toContain(other.id)
+  })
+})
+
 describe('two people: the re-test reviewer is neither the installer nor the confirming user', () => {
   test('the installer cannot accept their own work, even holding a reviewer token', () => {
     const h = startCore()

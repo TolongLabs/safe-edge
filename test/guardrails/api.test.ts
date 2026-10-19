@@ -132,9 +132,11 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
   // The same requests from the right people go through: only the agent's identity refused them.
   const statusFor = (token: string, method: string, path: string, body?: unknown) =>
     api.request(method, path, { token, body }).then((response) => response.status)
+  // The re-test goes first: once the manager confirms the agent's proposal, its finding is open work on the segment,
+  // and an accepted re-test restores the pass only when nothing else is open there.
   const decision = asAPersonWould.decideCandidate
-  expect(await statusFor('dev_manager', 'post', `/candidates/${proposed.id}/decision`, decision)).toBe(200)
   expect(await statusFor('dev_reviewer', 'post', '/retests', played.retest)).toBe(201)
+  expect(await statusFor('dev_manager', 'post', `/candidates/${proposed.id}/decision`, decision)).toBe(200)
   expect(await statusFor('dev_manager', 'post', `/notices/${notice.id}/send`)).toBe(200)
   expect((await api.pass()).state).toBe('valid')
 })
@@ -241,6 +243,19 @@ test('no system or provider call makes a pass valid, whichever operation it trie
 
   expect((await api.pass()).state).toBe('suspended')
   expect(await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))).toEqual(validBefore)
+  // The Tier 2 candidates automation raised above hold the pass too, so the manager rejects them as false alarms.
+  const raised: { id: string }[] = await json(
+    api.request('get', '/candidates?status=candidate', { token: 'dev_manager' })
+  )
+  expect(raised).toHaveLength(2)
+  for (const { id } of raised) {
+    await json(
+      api.request('post', `/candidates/${id}/decision`, {
+        token: 'dev_manager',
+        body: { decision: 'reject', reason: 'Scripted repeat of the S1 report' }
+      })
+    )
+  }
   // A person who reviews makes it valid, and that is the only write to a valid pass on the whole chain.
   const accepted = await answer(api.request('post', '/retests', { token: 'dev_reviewer', body: played.retest }))
   expect(accepted.status).toBe(201)

@@ -1673,6 +1673,7 @@ export interface components {
         };
         RetestOutcome: {
             retest: components["schemas"]["Retest"];
+            /** @description The pass this re-test issued; null when it was rejected or another Tier 2 candidate or finding on the segment is still open (the suspended pass's stateReason names them) */
             pass: components["schemas"]["EdgePass"] | null;
         };
         CreateOpeningRequest: {

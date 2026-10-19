@@ -1,5 +1,5 @@
-import type { Finding, Retest, WorkOrder } from '@safe-edge/contracts'
-import { movePass, routeStatus } from '../policy.ts'
+import type { Denial, EdgePass, Finding, Retest, Segment, WorkOrder } from '@safe-edge/contracts'
+import { movePass, oneWayRule, openSuspicions, routeStatus } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { blockedOpenings } from './fix-lens.ts'
 import { ok, type Handlers } from './handler.ts'
@@ -24,6 +24,33 @@ const moveFinding = (tx: Tx, finding: Finding, status: Finding['status']): Findi
   const moved = { ...finding, status }
   tx.put('findings', moved)
   return moved
+}
+
+/**
+ * An accepted re-test makes the segment's pass valid, unless another suspicion is still open on the segment: then the
+ * pass stays as it is (a suspended pass names what holds it) and null is returned.
+ */
+function restorePass(tx: Tx, segment: Segment, retest: Retest, routeIds: string[]): EdgePass | Denial | null {
+  if (segment.passId === null) throw new Error(`store integrity: ${segment.id} has no pass`)
+  const current = tx.must('passes', segment.passId)
+  const refused = oneWayRule(tx, current, retest)
+  if (refused) return refused
+  const open = openSuspicions(tx, segment.id)
+  if (open.length > 0) {
+    if (current.state === 'suspended') {
+      const stateReason = `Re-test ${retest.id} accepted, but ${open.join(', ')} still open on ${segment.id}`
+      tx.put('passes', { ...current, stateReason })
+    }
+    return null
+  }
+  const pass = movePass(tx, current, { to: 'valid', retest, routeIds })
+  if ('rule' in pass) return pass
+  tx.emit(
+    'edge.pass.issued.v1',
+    { passId: pass.id, segmentId: segment.id, retestId: retest.id, validTo: pass.validTo!, simulated: pass.simulated },
+    segment.id
+  )
+  return pass
 }
 
 export const work: Handlers<WorkOperation> = {
@@ -227,20 +254,8 @@ export const work: Handlers<WorkOperation> = {
     const checkedRoutes = retest.checklist
       .filter((c) => c.kind === 'route_check' && c.result === 'pass')
       .flatMap((c) => segmentRoutes.filter((r) => r.id === c.subjectId).map((r) => r.id))
-    if (segment.passId === null) throw new Error(`store integrity: ${segment.id} has no pass`)
-    const pass = movePass(tx, tx.must('passes', segment.passId), { to: 'valid', retest, routeIds: checkedRoutes })
-    if ('rule' in pass) return pass
-    tx.emit(
-      'edge.pass.issued.v1',
-      {
-        passId: pass.id,
-        segmentId: segment.id,
-        retestId: retest.id,
-        validTo: pass.validTo!,
-        simulated: pass.simulated
-      },
-      segment.id
-    )
+    const pass = restorePass(tx, segment, retest, checkedRoutes)
+    if (pass !== null && 'rule' in pass) return pass
 
     // The verified remedy now blocks its openings, which closes the routes through them.
     if (workOrder.remedyId !== null) {

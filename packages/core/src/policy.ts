@@ -79,21 +79,31 @@ export type PassMove =
   { to: 'expiring' | 'expired' | 'suspended'; reason: string } | { to: 'valid'; retest: Retest; routeIds: string[] }
 
 /**
+ * The one-way rule: only a reviewing person with an accepted re-test can make a pass valid. Checked by `movePass`, and
+ * by any accepted re-test before it decides whether the pass can be restored at all.
+ */
+export function oneWayRule(tx: Tx, pass: EdgePass, retest: Retest): Denial | null {
+  if (tx.actor.type !== 'user' || tx.actor.role !== 'reviewer') {
+    return tx.deny(
+      'one_way_rule',
+      `Only a reviewer can make ${pass.id} valid; ${tx.actor.type} ${tx.actor.id} cannot`,
+      pass.id
+    )
+  }
+  if (retest.result !== 'accepted') {
+    return tx.deny('one_way_rule', `${pass.id} becomes valid only through an accepted re-test`, pass.id)
+  }
+  return null
+}
+
+/**
  * Moves a pass and stages the write. The one-way rule lives here, so every caller gets it: only a reviewing person
  * with an accepted re-test can make a pass valid; system, agent and provider actors can only expire or suspend it.
  */
 export function movePass(tx: Tx, pass: EdgePass, move: PassMove): EdgePass | Denial {
   if (move.to === 'valid') {
-    if (tx.actor.type !== 'user' || tx.actor.role !== 'reviewer') {
-      return tx.deny(
-        'one_way_rule',
-        `Only a reviewer can make ${pass.id} valid; ${tx.actor.type} ${tx.actor.id} cannot`,
-        pass.id
-      )
-    }
-    if (move.retest.result !== 'accepted') {
-      return tx.deny('one_way_rule', `${pass.id} becomes valid only through an accepted re-test`, pass.id)
-    }
+    const refused = oneWayRule(tx, pass, move.retest)
+    if (refused) return refused
     const validTo = new Date(tx.now)
     validTo.setUTCMonth(validTo.getUTCMonth() + PASS_VALIDITY_MONTHS)
     const issued: EdgePass = {
@@ -115,6 +125,19 @@ export function movePass(tx: Tx, pass: EdgePass, move: PassMove): EdgePass | Den
   const moved: EdgePass = { ...pass, state: move.to, stateReason: move.reason }
   tx.put('passes', moved)
   return moved
+}
+
+/**
+ * What still holds a segment's pass suspended: Tier 2 candidates awaiting a decision or a recapture, and findings not
+ * yet closed (TRD "Suspicion suspends"). An accepted re-test restores the pass only when this is empty. `except` is
+ * the record the re-test itself resolves.
+ */
+export function openSuspicions(tx: Tx, segmentId: string, except?: string): string[] {
+  const candidates = tx
+    .all('candidates')
+    .filter((c) => c.tier === 2 && (c.status === 'candidate' || c.status === 'needs_recapture'))
+  const findings = tx.all('findings').filter((f) => f.status !== 'closed')
+  return [...candidates, ...findings].filter((r) => r.segmentId === segmentId && r.id !== except).map((r) => r.id)
 }
 
 /** When a valid pass starts expiring: 30 days before `validTo`. */
