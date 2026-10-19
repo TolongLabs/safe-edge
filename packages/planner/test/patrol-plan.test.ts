@@ -291,6 +291,31 @@ describe('patrol plans over real Elmina segments', async () => {
     expect(clear.rejected).toEqual([])
     expect(clear.authorisation).toBeNull()
   })
+
+  test('the same input plans the same bytes on every platform', () => {
+    // Every segment, a zoom lens and a person on S1's edge: Turf geometry, the first-light window and stand-offs.
+    const plan = planPatrol({
+      ...input(segments),
+      drone: { ...drone, camera: { ...drone.camera, maxZoom: 3 } },
+      thirdParties: [
+        {
+          id: 'obs_person_s1',
+          kind: 'person',
+          label: 'person on the S1 edge',
+          geometry: { type: 'Point', coordinates: [101.5124058, 3.1786474] },
+          observedAt: NOW,
+          simulated: true,
+          source: 'fixture'
+        }
+      ]
+    })
+    expect(plan.waypoints.some((w) => w.zoom > 1)).toBe(true)
+    // Made on macOS. Linux, as in CI, must plan the very same bytes (see same-math.ts); a planner change that moves the
+    // plan on purpose records the new hash.
+    expect(new Bun.CryptoHasher('sha256').update(JSON.stringify(plan)).digest('hex')).toBe(
+      'a885a942e1ecbbb85d92ba82f070705f476f7b75987351bdc384d354bdf0621d'
+    )
+  })
 })
 
 /** A closed square ring of half-width `d` degrees around a point. */
