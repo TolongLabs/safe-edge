@@ -1371,6 +1371,8 @@ export interface components {
             geometry: components["schemas"]["Point"] | components["schemas"]["LineString"] | components["schemas"]["Polygon"];
             /** @description When it was seen; null for a mapped structure */
             observedAt: string | null;
+            /** @description How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it */
+            headcount: number | null;
             simulated: boolean;
         };
         PriorityScore: {
@@ -1855,7 +1857,7 @@ export interface components {
             notBefore: string;
             /** @description Agreed with air traffic control */
             altitudeCapM: number;
-            /** @description People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller */
+            /** @description People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them (150 m from a person report counting more than 1,000) as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller and keeps them for every plan it makes until this plan's window closes */
             thirdParties?: components["schemas"]["ReportedThirdParty"][];
             /** @description Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider */
             replan?: components["schemas"]["PlanReplan"];

@@ -38,6 +38,7 @@ const PERSON_ON_S1 = {
   label: 'person on the S1 edge',
   geometry: { type: 'Point', coordinates: [101.5124058, 3.1786474] },
   observedAt: '2026-10-22T21:45:00.000Z',
+  headcount: null,
   simulated: true
 } satisfies ReportedThirdParty
 
@@ -334,9 +335,13 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     message: 'Procore answered 503'
   })
   await as('dev_manager', 'post', `/work-orders/${draft.id}/external-retry`)
-  // Someone on S1's edge, reported with the plan request (#125): the plan holds S1 until the pilot sees the path clear.
+  // Someone on S1's edge, reported with the plan request (#125): the plan holds S1 until the pilot sees the path clear,
+  // and the dock, since they are beside the transit from S1 back to it (#150).
   const plan = await as('dev_manager', 'post', '/patrol-plans', { ...patrolRequest, thirdParties: [PERSON_ON_S1] })
-  expect(plan.holds).toMatchObject([{ kind: 'separation', segmentId: S1.segmentId, releasedBy: null }])
+  expect(plan.holds).toMatchObject([
+    { kind: 'separation', segmentId: null, releasedBy: null },
+    { kind: 'separation', segmentId: S1.segmentId, releasedBy: null }
+  ])
   await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
   const release = `/patrol-plans/${plan.id}/holds/${S1.segmentId}/release`
   // Only the pilot records it: the agent and every other role are refused, naming the rule.
@@ -345,6 +350,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     expect({ role, ...refused }).toEqual({ role, ...denied(role === 'agent' ? 'agents_draft_only' : 'role_forbidden') })
   }
   await as('dev_pilot', 'post', release)
+  await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/holds/dock/release`)
   // The plan's window opened before S3's re-test, and the scenario clock moves forward only (clock_backwards): the
   // harness puts it back unaudited, and the system sets it to the time it shows through the operation.
   api.setNow(plan.window.start)

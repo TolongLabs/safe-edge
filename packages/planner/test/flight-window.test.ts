@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { PatrolPlan, type ContextSnapshot } from '@safe-edge/contracts'
+import { PatrolPlan, type ContextSnapshot, type PlanHold } from '@safe-edge/contracts'
 import { booleanPointInPolygon } from '@turf/boolean-point-in-polygon'
 import { distance } from '@turf/distance'
 import { polygon } from '@turf/helpers'
@@ -113,6 +113,7 @@ describe('flight windows', async () => {
       label: '3 people on the lakeside footway',
       geometry: { type: 'Point', coordinates: [101.514381, 3.180066] },
       observedAt: myt('2026-10-21T05:20:00'),
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -203,6 +204,7 @@ describe('flight windows', async () => {
       label: '3 people on the lakeside footway',
       geometry: { type: 'Point', coordinates: peopleAt },
       observedAt: myt('2026-10-20T19:50:00'),
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -254,38 +256,43 @@ describe('flight windows', async () => {
     ])
   })
 
-  test('take-off and landing wait while a person is within 30 m of the dock, and only then', () => {
-    // CAR 2016 reg. 143(1)(g): not "within 30 metres of any person during take-off or landing". Labelled fixtures south
-    // of the dock, away from the lake: one 20 m off, one 40 m off.
+  test('take-off and landing wait while a person is within 30 m of the dock, or within 50 m of its transits', () => {
+    // CAR 2016 reg. 143(1)(g): not "within 30 metres of any person during take-off or landing"; and (f) 50 m from anyone
+    // for the rest of the flight, the transits that start and end above the dock included. Labelled fixtures south of
+    // the dock, away from the lake: 20 m, 40 m and 60 m off.
+    const seen = myt('2026-10-20T19:50:00')
     const south = (m: number): ThirdParty => ({
       id: `obs_person_${m}m`,
       kind: 'person',
       label: `person ${m} m south of the dock`,
       geometry: { type: 'Point', coordinates: [dock.position.lon, dock.position.lat - m / 111_320] },
-      observedAt: myt('2026-10-20T19:50:00'),
+      observedAt: seen,
+      headcount: null,
       simulated: true,
       source: 'fixture'
     })
     const base = input(['seg_866518980_5'], myt('2026-10-20T20:00:00'))
+    const hold = (reason: string): PlanHold => ({
+      kind: 'separation',
+      segmentId: null,
+      until: null,
+      releasedBy: null,
+      releasedAt: null,
+      reason: `${reason}; take-off and landing wait for the pilot or observer to confirm the dock and the transits from and to it are clear (CAR 2016 reg. 143(1))`
+    })
+    // The transits head west-northwest, away from them, so the nearest they come is above the dock.
+    const transits = `the transit from ${dock.name} to seg_866518980_5 passes within 50 m of "person 40 m south of the dock" (person, seen ${seen}), closest 40 m; the transit from seg_866518980_5 to ${dock.name} passes within 50 m of "person 40 m south of the dock" (person, seen ${seen}), closest 40 m`
     const near = planPatrol({ ...base, thirdParties: [south(20), south(40)] })
     expect(near.holds).toEqual([
-      {
-        kind: 'separation',
-        segmentId: null,
-        until: null,
-        releasedBy: null,
-        releasedAt: null,
-        reason: `"person 20 m south of the dock" (person, seen ${myt('2026-10-20T19:50:00')}) is within 30 m of ${dock.name}, closest 20 m; take-off and landing wait for the pilot or observer to confirm no one is within 30 m of the dock (CAR 2016 reg. 143(1)(g))`
-      }
+      hold(
+        `"person 20 m south of the dock" (person, seen ${seen}) is within 30 m of ${dock.name}, closest 20 m; ${transits}`
+      )
     ])
     // The route itself is unchanged: the hold is on the dock, not on any segment.
     expect(near.waypoints).toEqual(planPatrol(base).waypoints)
 
-    expect(planPatrol({ ...base, thirdParties: [south(40)] }).holds).toEqual([])
-    // A mapped structure by the dock is not a person: rule (g) is about people.
-    expect(
-      planPatrol({ ...base, thirdParties: [{ ...south(20), kind: 'structure', observedAt: null }] }).holds
-    ).toEqual([])
+    expect(planPatrol({ ...base, thirdParties: [south(40)] }).holds).toEqual([hold(transits)])
+    expect(planPatrol({ ...base, thirdParties: [south(60)] }).holds).toEqual([])
   })
 
   test('a station within 50 m of a person moves to a longer zoom stand-off when the camera allows it', () => {
@@ -299,6 +306,7 @@ describe('flight windows', async () => {
       label: 'jogger on the footway',
       geometry: { type: 'Point', coordinates: joggerAt },
       observedAt: myt('2026-10-20T19:50:00'),
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -306,7 +314,14 @@ describe('flight windows', async () => {
     const [nominal] = planStations({ ...base, camera: zoomDrone.camera }).tasks
     const plan = planPatrol({ ...base, thirdParties: [jogger] })
 
-    expect(plan.holds).toEqual([])
+    // The stations stand off instead of waiting. The transit between the dock and the segment's end by the footway
+    // passes the jogger, so take-off waits (#150). Both flying directions cost about the same, so which transit that is
+    // (out or back) differs between platforms' trigonometry.
+    expect(plan.holds.map((h) => [h.kind, h.segmentId])).toEqual([['separation', null]])
+    const transits = [`from ${dock.name} to ${id}`, `from ${id} to ${dock.name}`]
+    expect(
+      transits.map((t) => plan.holds[0]!.reason.startsWith(`the transit ${t} passes within 50 m of "jogger`))
+    ).toContain(true)
     expect(plan.rejected).toEqual([])
     const flown = plan.tasks[0]!.stations
     const first = nominal!.stations[0]!.pose
@@ -340,16 +355,18 @@ describe('flight windows', async () => {
   })
 
   test('a mapped structure no stand-off clears leaves its nearby stations out of the plan instead of waiting', async () => {
-    const id = 'seg_866518980_7'
+    const id = 'seg_866518980_5'
     const paths = (await readJson(elminaLayerPaths.paths)) as FeatureCollection<LineString, { osm_id: number }>
-    const bridge = paths.features.find((f) => f.properties.osm_id === 926280618)!
-    // The OSM footbridge across the lake at the segment's end, treated as not under the pilot's control.
+    const bridge = paths.features.find((f) => f.properties.osm_id === 926276000)!
+    // The OSM footbridge across the lake by the segment's west end, treated as not under the pilot's control. It is
+    // 180 m from the dock and more than 50 m from every leg flown (the one by the dock grounds every patrol, #150).
     const footbridge: ThirdParty = {
-      id: 'way/926280618',
+      id: 'way/926276000',
       kind: 'structure',
-      label: 'footbridge way/926280618',
+      label: 'footbridge way/926276000',
       geometry: bridge.geometry,
       observedAt: null,
+      headcount: null,
       simulated: false,
       source: 'osm'
     }
@@ -367,7 +384,7 @@ describe('flight windows', async () => {
       {
         segmentId: id,
         code: 'separation_hold',
-        reason: `stations ${tooClose.map((s) => s.id).join(', ')} left out: within 50 m of "footbridge way/926280618" (structure), and no stand-off over the water within the camera's 1× zoom clears it; the rest of the segment is planned`
+        reason: `stations ${tooClose.map((s) => s.id).join(', ')} left out: within 50 m of "footbridge way/926276000" (structure), and no stand-off over the water within the camera's 1× zoom clears it; the rest of the segment is planned`
       }
     ])
     expect(plan.tasks[0]!.stations).toHaveLength(nominal!.stations.length - tooClose.length)

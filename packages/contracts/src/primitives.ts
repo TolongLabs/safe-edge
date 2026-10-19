@@ -35,7 +35,8 @@ export const ID_PREFIXES = {
   notice: 'ntc',
   evidence: 'evd',
   webhook: 'whk',
-  event: 'evt'
+  event: 'evt',
+  thirdPartyReport: 'tpr'
 } as const
 
 const id = (prefix: (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES]) => z.string().regex(new RegExp(`^${prefix}_`))
@@ -66,6 +67,7 @@ export const NoticeId = id('ntc')
 export const EvidenceId = id('evd')
 export const WebhookId = id('whk')
 export const EventId = id('evt')
+export const ThirdPartyReportId = id('tpr')
 
 /** RFC 3339 UTC timestamp, as produced by `Date.prototype.toISOString()`. */
 export const Timestamp = z.iso.datetime()

@@ -23,7 +23,8 @@ const ASSUMED_AUTHORISATION = {
  * 2-minute wait budget for each held segment. `readJson` loads a path from `elminaLayerPaths` (relative to the repo
  * root): the browser fetches it, Bun reads the file. `thirdParties` are mapped people, vessels, vehicles and
  * structures not under the pilot's control that every plan keeps 50 m from; there is no default, so none are left out
- * by accident. Core adds the ones the seed records and the create-plan request reports (the port's `thirdParties`).
+ * by accident. Core adds the ones the seed records, the reports it keeps and the ones the create-plan request reports
+ * (the port's `thirdParties`).
  */
 export async function createElminaPlanner(
   readJson: (path: string) => Promise<unknown>,

@@ -2928,6 +2928,12 @@ components:
               format: date-time
             - type: "null"
           description: When it was seen; null for a mapped structure
+        headcount:
+          anyOf:
+            - type: integer
+              exclusiveMinimum: 0
+            - type: "null"
+          description: "How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it"
         simulated:
           type: boolean
       required:
@@ -2936,6 +2942,7 @@ components:
         - label
         - geometry
         - observedAt
+        - headcount
         - simulated
       additionalProperties: false
     PriorityScore:
@@ -4552,7 +4559,7 @@ components:
           exclusiveMinimum: 0
           description: Agreed with air traffic control
         thirdParties:
-          description: People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller
+          description: People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them (150 m from a person report counting more than 1,000) as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller and keeps them for every plan it makes until this plan's window closes
           type: array
           items:
             $ref: "#/components/schemas/ReportedThirdParty"

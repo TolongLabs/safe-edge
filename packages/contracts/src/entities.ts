@@ -28,6 +28,7 @@ import {
   Source,
   SegmentId,
   TaskId,
+  ThirdPartyReportId,
   Timestamp,
   TownshipId,
   UserId,
@@ -247,24 +248,53 @@ export type ContextSnapshot = z.infer<typeof ContextSnapshot>
 /**
  * A person, vessel, vehicle or structure not under the remote pilot's control, as a create-plan request reports it
  * (core stamps the source). CAR 2016 regulation 143(1)(e)–(g): no flight within 50 m of one, nor within 30 m of any
- * person during take-off or landing, without the Director General's authorisation.
+ * person during take-off or landing, without the Director General's authorisation; (c), (d): nor over or within 150 m
+ * of any assembly in the open air of more than 1,000 persons.
  */
 export const ReportedThirdParty = named(
   'ReportedThirdParty',
-  z.object({
-    id: z.string().min(1),
-    kind: z.enum(['person', 'vessel', 'vehicle', 'structure']),
-    label: z.string().describe('As people should read it, e.g. "3 people on the lakeside footway"'),
-    geometry: z.union([Point, LineString, Polygon]),
-    observedAt: Timestamp.nullable().describe('When it was seen; null for a mapped structure'),
-    simulated: z.boolean()
-  })
+  z
+    .object({
+      id: z.string().min(1),
+      kind: z.enum(['person', 'vessel', 'vehicle', 'structure']),
+      label: z.string().describe('As people should read it, e.g. "3 people on the lakeside footway"'),
+      geometry: z.union([Point, LineString, Polygon]),
+      observedAt: Timestamp.nullable().describe('When it was seen; null for a mapped structure'),
+      headcount: z
+        .number()
+        .int()
+        .positive()
+        .nullable()
+        .describe(
+          'How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it'
+        ),
+      simulated: z.boolean()
+    })
+    .refine((p) => p.kind === 'person' || p.headcount === null, {
+      message: 'Only a person report counts people; a vessel, vehicle or structure has headcount null',
+      path: ['headcount']
+    })
 )
 export type ReportedThirdParty = z.infer<typeof ReportedThirdParty>
 
 /** A third party with its provenance, as the seed records it and the planner port takes it. Not on the REST API. */
 export const ThirdParty = ReportedThirdParty.extend({ source: Source })
 export type ThirdParty = z.infer<typeof ThirdParty>
+
+/**
+ * A third party a create-plan request reported, as core stores it (audited with the request). Every plan core makes
+ * while it counts keeps clear of it, re-plans included: a report describes the flight it came with, so it counts until
+ * that plan's window closes. Not on the REST API: the audit chain carries each one.
+ */
+export const ThirdPartyReport = z.object({
+  id: ThirdPartyReportId,
+  planId: PatrolPlanId.describe('The plan whose request reported it'),
+  thirdParty: ThirdParty.describe('As reported, with the source core stamped from the caller'),
+  reportedAt: Timestamp,
+  validTo: Timestamp.describe("The reporting plan's window end: plans core makes from then on no longer see it"),
+  ...provenance
+})
+export type ThirdPartyReport = z.infer<typeof ThirdPartyReport>
 
 /** Each part is 0–1, or null when its input is stale or missing ("unknown", never zero). */
 export const PriorityScore = named(
@@ -339,7 +369,8 @@ export type PlanHold = z.infer<typeof PlanHold>
 
 /**
  * Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off.
- * `authorisation`: it would fly over or within 150 m of a designated area without the Director General's authorisation.
+ * `authorisation`: it would fly over or within 150 m of a designated area without the Director General's authorisation,
+ * or of an open-air assembly of more than 1,000 persons. `separation_hold`: a structure would be within 50 m of it.
  */
 export const RejectionCode = named(
   'RejectionCode',

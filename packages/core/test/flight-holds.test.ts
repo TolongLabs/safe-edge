@@ -46,6 +46,7 @@ const people: ThirdParty = {
   label: 'people at the water edge',
   geometry: { type: 'Point', coordinates: [101.514434, 3.179979] },
   observedAt: '2026-10-20T21:20:00.000Z',
+  headcount: null,
   simulated: true,
   source: 'fixture'
 }
@@ -59,8 +60,13 @@ describe('PLAN-7: S1 holds through core', () => {
     expect(plan.holds.map((x) => [x.kind, x.segmentId, x.until, x.releasedBy])).toEqual([
       ['weather', null, plan.window.start, null],
       ['lightning', null, '2026-10-21T00:00:00.000Z', null],
+      ['separation', null, null, null],
       ['separation', PATH_SEGMENT, null, null]
     ])
+    // The route flies to segment 9 first, past the seed's path crowd on the footway: take-off waits too (#150).
+    expect(plan.holds[2]!.reason).toStartWith(
+      'the transit from Dock on the park facility roof (assumed site) to seg_866518980_9 passes within 50 m of "S1: people on the lakeside footway"'
+    )
     h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
 
     // 08:30 local: the warning has ended, but after heavy rain the patrol waits for tomorrow's first light.
@@ -80,7 +86,10 @@ describe('PLAN-7: S1 holds through core', () => {
     })
 
     h.setNow(plan.window.start)
-    const patrol = h.call('startPatrol', 'usr_pilot', { body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' } })
+    const start = { body: { planId: plan.id, provider: 'sim' as const, droneId: 'sim-1' } }
+    expect(h.attempt('startPatrol', 'usr_pilot', start)).toMatchObject({ ok: false, rule: 'separation_hold' })
+    const dockClear = h.call('releasePlanHold', 'usr_pilot', { params: { id: plan.id, segmentId: 'dock' } }).data
+    const patrol = h.call('startPatrol', 'usr_pilot', start)
     expect(patrol.data.status).toBe('in_flight')
 
     // At segment 9 the observer sees the edge clear. Only the pilot records it, never the planner or an agent.
@@ -96,7 +105,12 @@ describe('PLAN-7: S1 holds through core', () => {
       status: 'approved',
       approvedBy: 'usr_pilot',
       approvedAt: NOW,
-      holds: [plan.holds[0]!, plan.holds[1]!, { ...plan.holds[2]!, releasedBy: 'usr_pilot', releasedAt: clearAt }]
+      holds: [
+        plan.holds[0]!,
+        plan.holds[1]!,
+        dockClear.holds[2]!,
+        { ...plan.holds[3]!, releasedBy: 'usr_pilot', releasedAt: clearAt }
+      ]
     })
     expect(h.audit().at(-1)).toMatchObject({
       action: 'releasePlanHold',

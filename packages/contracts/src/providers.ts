@@ -171,7 +171,8 @@ export interface WorkOrderProvider {
  * water-level bands. Synchronous, like the rest of core. Core supplies the plan ID and the time, and stores the plan
  * only if it comes back proposed and unapproved. A re-plan request (`request.replan`) also gets the plan it supersedes
  * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`. `thirdParties`
- * are the ones the site records (the seed's) followed by the ones the request reports.
+ * are the ones the site records (the seed's), then the reports core keeps while they count (`ThirdPartyReport`), then
+ * the ones the request reports, each once.
  */
 export type PatrolPlanner = (input: {
   id: string

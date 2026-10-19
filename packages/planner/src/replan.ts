@@ -39,8 +39,9 @@ export function replan(
   const flown = plan.waypoints.findLastIndex((w) => w.segmentId === tasks.at(-1)!.segmentId) + 1
   return buildPlan(next, {
     window: plan.window,
-    // Launch holds stay as the record of why the launch waited; separation holds stay for committed stops only.
-    holds: plan.holds.filter((h) => h.segmentId === null || ids.has(h.segmentId)),
+    // Weather and lightning holds stay as the record of why the launch waited, and separation holds for committed stops.
+    // The dock's separation hold is planned again for the way home.
+    holds: plan.holds.filter((h) => (h.segmentId === null ? h.kind !== 'separation' : ids.has(h.segmentId))),
     replan: record,
     committed: {
       tasks,
