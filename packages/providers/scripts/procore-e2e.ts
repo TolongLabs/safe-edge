@@ -1,10 +1,14 @@
 // `bun run procore:e2e`: the live end-to-end check of the Procore hand-off, the way users reach it. It starts the dev
-// API (`bun run dev` in apps/api, whose script loads the root .env), plays S1 over HTTP with the dev tokens up to the
-// manager's submit, reads the work order's externalRef back, then fetches that Observation from the Procore Developer
-// Sandbox and checks the photo on it is the one the crew uploaded, byte for byte. It needs PROCORE_CLIENT_ID,
+// API (`bun run dev` in apps/api, whose script loads the root .env) on a fresh temporary data directory, so every run
+// starts from the seed. It plays S1 over HTTP with the dev tokens up to the manager's submit, reads the work order's
+// externalRef back, then fetches that Observation from the Procore Developer Sandbox and checks the photo on it is the
+// one the crew uploaded, byte for byte. It carries the repair on: the installer completes it, so the Observation must
+// read ready_for_review, and a reviewer accepts the re-test, so it must read closed. It needs PROCORE_CLIENT_ID,
 // PROCORE_CLIENT_SECRET, PROCORE_COMPANY_ID and PROCORE_PROJECT_ID in .env (scripts/procore-sandbox-wizard.sh writes
 // them). It never runs in CI.
 import { createSafeEdgeClient, elminaSeed } from '@safe-edge/sdk'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import * as z from 'zod'
 import { ensureDevTokens } from '../../../apps/api/src/dev-tokens.ts'
@@ -46,9 +50,10 @@ async function until<T>(what: string, check: () => Promise<T | undefined>): Prom
 }
 
 const port = freePort()
+const dataDir = await mkdtemp(join(tmpdir(), 'safe-edge-procore-e2e-'))
 const dev = Bun.spawn(['bun', 'run', 'dev'], {
   cwd: join(repoRoot, 'apps/api'),
-  env: { ...process.env, PORT: String(port) },
+  env: { ...process.env, PORT: String(port), SAFE_EDGE_DATA_DIR: dataDir },
   stdout: 'ignore',
   stderr: 'inherit',
   detached: true
@@ -71,6 +76,8 @@ try {
   const provider = as('usr_drone_sim')
   const manager = as('usr_manager')
   const engineer = as('usr_engineer')
+  const installer = as('usr_installer')
+  const reviewer = as('usr_reviewer')
   const S1 = elminaSeed.story.s1
   const viewpoint = elminaSeed.segments
     .find((s) => s.id === S1.segmentId)!
@@ -185,6 +192,7 @@ try {
   const ProcoreObservation = z.object({
     id: z.number(),
     name: z.string(),
+    status: z.string(),
     created_at: z.string(),
     attachments: z.array(
       z.object({ id: z.number().optional(), name: z.string().optional(), url: z.string().optional() })
@@ -213,11 +221,43 @@ try {
   }
 
   console.log(`Procore sandbox project ${credentials.projectId}, Observation ${filed.id} "${filed.name}"`)
-  console.log(`  created_at ${filed.created_at}`)
+  console.log(`  created_at ${filed.created_at}, status ${filed.status}`)
   console.log(`  attachment ${attachment.id} ${filename}: sha256 ${downloaded}, the same bytes as ${PHOTO_PATH}`)
   console.log(`  ${observationUrl.href}`)
+
+  // The repair moves the Observation: ready for review once the installer completes it, closed once the re-test passes.
+  const statusBecomes = (status: string) =>
+    until(`Observation ${filed.id} reading ${status}`, async () => {
+      await readWorkOrder()
+      const response = await fetch(observationUrl, { headers: procoreHeaders })
+      if (!response.ok) throw new Error(`GET ${observationUrl.pathname} answered ${response.status}`)
+      const current = ProcoreObservation.parse(await response.json())
+      return current.status === status ? current : undefined
+    })
+  await installer.startWorkOrder({ params: { id: workOrder.id } })
+  await installer.completeWorkOrder({
+    params: { id: workOrder.id },
+    body: { evidence: [], note: 'Panel 4 replaced (Safe Edge procore:e2e, simulated)' }
+  })
+  await statusBecomes('ready_for_review')
+  console.log(`${new Date().toISOString()} ${workOrder.id} completed: Observation ${filed.id} is ready_for_review`)
+  const outcome = await reviewer.recordRetest({
+    body: {
+      workOrderId: workOrder.id,
+      checklist: [
+        { kind: 'saved_view', subjectId: S1.viewpointId, result: 'pass', reason: 'Panel 4 in place', measuredMm: null }
+      ],
+      evidence: [],
+      result: 'accepted',
+      reason: 'Gap closed (simulated)'
+    }
+  })
+  if (outcome.pass?.state !== 'valid') throw new Error(`The accepted re-test left the pass ${outcome.pass?.state}`)
+  await statusBecomes('closed')
+  console.log(`${new Date().toISOString()} re-test accepted: Observation ${filed.id} is closed`)
 } finally {
   // Signal the whole process group, as Ctrl-C in a terminal does; killing only the parent orphans the API.
   process.kill(-dev.pid, 'SIGINT')
   await dev.exited
+  await rm(dataDir, { recursive: true })
 }
