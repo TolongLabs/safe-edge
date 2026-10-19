@@ -10,7 +10,7 @@ import { devTokens } from '../src/tokens.ts'
 const repoRoot = join(import.meta.dir, '../../..')
 export const seed = Seed.parse(await Bun.file(join(repoRoot, 'data/elmina/fixtures/seed.json')).json())
 export const S1 = seed.story.s1
-const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json())
+const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
 
 /** `tok_<role>` for the seeded user holding each role, loaded as dev tokens are, plus an agent token with no scope. */
 const tokens = await devTokens(

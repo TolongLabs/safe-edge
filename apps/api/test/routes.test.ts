@@ -26,10 +26,12 @@ const allowed = (op: OperationSpec): Token =>
 
 test('every operation in the table is served under /v1 and refuses callers the table does not allow, naming the rule', async () => {
   const api = startApi()
+  // Generated from the table, so later rows (#79's two-parameter releasePlanHold) are covered without listing them.
+  expect(httpOperations.map(([id]) => id)).toContain('releasePlanHold')
   const expectedDenials: { action: string; rule: PolicyRule }[] = []
 
   for (const [operationId, op] of httpOperations) {
-    const path = op.path.replace('{id}', 'x_1')
+    const path = op.path.replaceAll(/\{\w+\}/g, 'x_1')
     for (const [token, rule] of refusals(op)) {
       const response = await api.request(op.method, path, { token })
       expect({ operationId, token, status: response.status, body: await response.json() }).toEqual({
@@ -54,7 +56,7 @@ test('every operation in the table is served under /v1 and refuses callers the t
 test('an allowed caller reaches every operation, and its input is checked against the contract schema', async () => {
   const api = startApi()
   for (const [operationId, op] of httpOperations) {
-    const response = await api.request(op.method, op.path.replace('{id}', 'x_1'), {
+    const response = await api.request(op.method, op.path.replaceAll(/\{\w+\}/g, 'x_1'), {
       token: allowed(op),
       ...(op.body ? { body: {} } : {})
     })
