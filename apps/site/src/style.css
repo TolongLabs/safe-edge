@@ -526,11 +526,13 @@ a {
   pointer-events: none;
 }
 
+/* Hidden tips stay out of layout, so a tip near the edge can never widen the page. */
 .bar-tip {
   position: absolute;
   left: 50%;
   bottom: calc(var(--h) + 36px);
   z-index: var(--z-tooltip);
+  display: none;
   width: max-content;
   max-width: 260px;
   padding: 10px 12px;
@@ -544,7 +546,8 @@ a {
   pointer-events: none;
   transition:
     opacity 160ms var(--ease),
-    transform 160ms var(--ease);
+    transform 160ms var(--ease),
+    display 160ms allow-discrete;
 }
 
 .bar:nth-child(-n + 4) .bar-tip {
@@ -560,8 +563,14 @@ a {
 
 .bar button:hover + .bar-tip,
 .bar button:focus-visible + .bar-tip {
+  display: block;
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
 }
 
 .bar:nth-child(-n + 4) button:hover + .bar-tip,
@@ -569,6 +578,28 @@ a {
 .bar:nth-last-child(-n + 4) button:hover + .bar-tip,
 .bar:nth-last-child(-n + 4) button:focus-visible + .bar-tip {
   transform: translateY(0);
+}
+
+/* Bars are too thin on a phone to carry a tip each; the tip spans the chart instead. */
+@media (max-width: 639px) {
+  .bars {
+    position: relative;
+  }
+
+  .bar {
+    position: static;
+  }
+
+  .bars .bar .bar-tip,
+  .bars .bar button:hover + .bar-tip,
+  .bars .bar button:focus-visible + .bar-tip {
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 8px);
+    width: auto;
+    max-width: none;
+    transform: none;
+  }
 }
 
 @media (min-width: 900px) {
