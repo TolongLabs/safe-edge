@@ -1,3 +1,4 @@
+import Anthropic from '@anthropic-ai/sdk'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
@@ -14,6 +15,11 @@ const ids = counterIds()
 // The seed maps no third parties and no observation feeds them yet (DECISIONS #79), so plans see none.
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })
 const core = createCore({ seed, clock, ids, planner })
+
+// The agent acts with its own API token (an agent actor). Claude reads ANTHROPIC_API_KEY; without it, agent calls fail.
+const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
+if (!agentToken) throw new Error('Set SAFE_EDGE_AGENT_TOKEN to the API token the agent acts with (dev_agent in dev)')
+const agent = { claude: new Anthropic(), token: agentToken }
 
 // Accepted findings go to the Procore Developer Sandbox when the PROCORE_* variables are set (the sandbox wizard,
 // scripts/procore-sandbox-wizard.sh, writes them to .env). With none set, work orders stay in Safe Edge.
@@ -37,5 +43,6 @@ export default createApp({
   ids,
   tokens: await devTokens(process.env, seed.users),
   heartbeatMs: 5_000,
+  agent,
   workOrders
 })

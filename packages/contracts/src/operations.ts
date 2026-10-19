@@ -18,6 +18,8 @@ import {
   DecideCandidateRequest,
   DemoResetResult,
   DockList,
+  DraftInboxRequest,
+  DraftMonthlyReportRequest,
   DraftNoticeRequest,
   DroneProfileList,
   EdgeContext,
@@ -25,6 +27,7 @@ import {
   EvidenceUrl,
   FindingList,
   IdParam,
+  InboxDraft,
   ListAuditQuery,
   ListCandidatesQuery,
   ListFindingsQuery,
@@ -32,6 +35,7 @@ import {
   ListPassesQuery,
   ListTasksQuery,
   ListWorkOrdersQuery,
+  MonthlyReportDraft,
   NoticeList,
   PatrolList,
   PatrolPlanList,
@@ -657,7 +661,8 @@ export const operations = {
   askAgent: {
     method: 'post',
     path: '/agent/ask',
-    summary: 'Ask the agent; streams `delta` events, then one `answer` event citing record IDs',
+    summary:
+      'Ask the agent; streams `delta` events, then one `answer` event citing record IDs, or one `stopped` event (AgentStopped) when Claude refuses or cannot finish',
     handledBy: 'api',
     roles: ['manager', 'gm'],
     agentScope: null,
@@ -665,6 +670,34 @@ export const operations = {
     response: AgentAnswer,
     status: 200,
     stream: true,
+    events: []
+  },
+  // The agent's own writes (createWorkOrder, draftNotice) go through the API with the agent's token and emit their
+  // events there, so these two operations list none of their own.
+  draftInbox: {
+    method: 'post',
+    path: '/agent/inbox-drafts',
+    summary:
+      'The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft',
+    handledBy: 'api',
+    roles: ['manager'],
+    agentScope: null,
+    body: DraftInboxRequest,
+    response: InboxDraft,
+    status: 200,
+    events: []
+  },
+  draftMonthlyReport: {
+    method: 'post',
+    path: '/agent/monthly-reports',
+    summary:
+      'The agent drafts the monthly governance report as a notice draft; 502 AgentStopped when Claude refuses or skips the draft',
+    handledBy: 'api',
+    roles: ['gm', 'manager'],
+    agentScope: null,
+    body: DraftMonthlyReportRequest,
+    response: MonthlyReportDraft,
+    status: 200,
     events: []
   },
   streamEvents: {
