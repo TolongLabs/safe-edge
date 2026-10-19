@@ -18,8 +18,10 @@ import {
 import type { Feature, LineString, MultiPolygon, Point, Polygon, Position } from 'geojson'
 import { rankingPriority, scorePriority, type ScoreInputs } from './score.ts'
 import {
+  ASSEMBLY_M,
   closest,
   dockHold,
+  isAssembly,
   keepSeparation,
   nearby,
   SEPARATION_M,
@@ -134,7 +136,10 @@ interface Stop {
   reversed: boolean
 }
 
-/** What keeps a leg out of the route: a zone it may not enter or come near, or a structure within 50 m. */
+/**
+ * What keeps a leg out of the route: a zone it may not enter or come near, a structure within 50 m, or an assembly of
+ * more than 1,000 persons within 150 m.
+ */
 type Blocker = { zone: Geofence } | { party: Nearby }
 
 interface Insertion extends Stop {
@@ -214,17 +219,23 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   // Without an authorisation, a designated area keeps the aircraft 150 m away, as a no-fly zone would.
   const keptFrom = [...noFly, ...(input.authorisation ? [] : designated)]
   // People, vessels and vehicles move away, so a leg near them waits for the pilot or observer to see it clear. A
-  // structure stays put: no leg flies within 50 m of one, and one within 50 m of the dock keeps every patrol on the ground.
+  // structure stays put, and the plan keeps clear of an assembly rather than wait for it to break up: no leg flies within
+  // 50 m of a structure or 150 m of an assembly, and one that close to the dock keeps every patrol on the ground.
   const movable = input.thirdParties.filter((p) => p.kind !== 'structure')
   const structures = input.thirdParties.filter((p) => p.kind === 'structure')
-  const byDock = committed ? [] : nearby([dockAt], structures, SEPARATION_M)
+  const assemblies = input.thirdParties.filter(isAssembly)
+  const keptClear = (path: Position[]) => [
+    ...nearby(path, structures, SEPARATION_M),
+    ...nearby(path, assemblies, ASSEMBLY_M)
+  ]
+  const byDock = committed ? [] : keptClear([dockAt])
   const legBlockers = memo((a: Position, b: Position): Blocker[] => {
     const path = samePosition(a, b) ? point(a) : lineString([a, b])
     return [
       ...keptFrom
         .filter((zone) => within(path, zone, zone.kind === 'designated_area' ? DESIGNATED_AREA_M : 0))
         .map((zone) => ({ zone })),
-      ...nearby(samePosition(a, b) ? [a] : [a, b], structures, SEPARATION_M).map((party) => ({ party }))
+      ...keptClear(samePosition(a, b) ? [a] : [a, b]).map((party) => ({ party }))
     ]
   })
   const legNear = memo((a: Position, b: Position) => nearby(samePosition(a, b) ? [a] : [a, b], movable, SEPARATION_M))
@@ -250,8 +261,13 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
     rejected.push(...open.map((s) => ({ segmentId: s.id, code: 'weather_hold' as const, reason })))
   }
   if (byDock.length > 0) {
-    const reason = `the climb from ${dock.name} is within ${SEPARATION_M} m of ${closest(byDock)}, which waiting would not clear; no patrol can take off or land there`
-    rejected.push(...open.map((s) => ({ segmentId: s.id, code: 'separation_hold' as const, reason })))
+    const { code, reason } = keptOut(
+      byDock.map((party) => ({ party })),
+      `the climb from ${dock.name}`,
+      'enters'
+    )
+    const grounded = `${reason}; no patrol can take off or land there`
+    rejected.push(...open.map((s) => ({ segmentId: s.id, code, reason: grounded })))
   }
   const pending: Candidate[] = []
   for (const task of stationPlan.tasks) {
@@ -609,8 +625,9 @@ function frame(station: Station, footprint: SegmentTask['footprint']) {
 }
 
 /**
- * Why a flight line or transit is out: a no-fly zone it enters or crosses, else the designated areas it comes within
- * 150 m of without an authorisation, else the structures it passes within 50 m of.
+ * Why a flight line, transit or climb is out: a no-fly zone it enters or crosses; else the designated areas it comes
+ * within 150 m of without an authorisation and the assemblies it comes within 150 m of; else the structures it comes
+ * within 50 m of.
  */
 function keptOut(
   blockers: Blocker[],
@@ -618,16 +635,26 @@ function keptOut(
   verb: 'enters' | 'crosses'
 ): { code: 'geofence' | 'authorisation' | 'separation_hold'; reason: string } {
   const zones = blockers.flatMap((b) => ('zone' in b ? [b.zone] : []))
-  const structures = blockers.flatMap((b) => ('party' in b ? [b.party] : []))
+  const parties = blockers.flatMap((b) => ('party' in b ? [b.party] : []))
+  const assemblies = parties.filter((n) => isAssembly(n.party))
   const noFly = zones.filter((z) => z.kind === 'no_fly')
   if (noFly.length > 0) return { code: 'geofence', reason: `${what} ${verb} no-fly zone ${labels(noFly)}` }
-  if (zones.length === 0) {
-    const reason = `${what} passes within ${SEPARATION_M} m of ${closest(structures)}, which waiting would not clear`
-    return { code: 'separation_hold', reason }
-  }
+  const unauthorised = [
+    ...(zones.length > 0
+      ? [
+          `${what} comes within ${DESIGNATED_AREA_M} m of designated area ${labels(zones)} without the Director General's authorisation (CAR 2016 reg. 143(1)(a), (b))`
+        ]
+      : []),
+    ...(assemblies.length > 0
+      ? [
+          `${what} comes within ${ASSEMBLY_M} m of ${closest(assemblies)}, an assembly in the open air of more than 1,000 persons (CAR 2016 reg. 143(1)(c), (d))`
+        ]
+      : [])
+  ]
+  if (unauthorised.length > 0) return { code: 'authorisation', reason: unauthorised.join('; ') }
   return {
-    code: 'authorisation',
-    reason: `${what} comes within ${DESIGNATED_AREA_M} m of designated area ${labels(zones)} without the Director General's authorisation (CAR 2016 reg. 143(1)(a), (b))`
+    code: 'separation_hold',
+    reason: `${what} comes within ${SEPARATION_M} m of ${closest(parties)}, which waiting would not clear`
   }
 }
 

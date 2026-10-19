@@ -57,6 +57,7 @@ describe('the operations table in core', () => {
       label: 'person on the S1 edge',
       geometry: { type: 'Point', coordinates: [101.5124058, 3.1786474] },
       observedAt: '2026-10-24T23:00:00.000Z',
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }

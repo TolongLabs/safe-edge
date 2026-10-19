@@ -247,18 +247,32 @@ export type ContextSnapshot = z.infer<typeof ContextSnapshot>
 /**
  * A person, vessel, vehicle or structure not under the remote pilot's control, as a create-plan request reports it
  * (core stamps the source). CAR 2016 regulation 143(1)(e)–(g): no flight within 50 m of one, nor within 30 m of any
- * person during take-off or landing, without the Director General's authorisation.
+ * person during take-off or landing, without the Director General's authorisation; (c), (d): nor over or within 150 m
+ * of any assembly in the open air of more than 1,000 persons.
  */
 export const ReportedThirdParty = named(
   'ReportedThirdParty',
-  z.object({
-    id: z.string().min(1),
-    kind: z.enum(['person', 'vessel', 'vehicle', 'structure']),
-    label: z.string().describe('As people should read it, e.g. "3 people on the lakeside footway"'),
-    geometry: z.union([Point, LineString, Polygon]),
-    observedAt: Timestamp.nullable().describe('When it was seen; null for a mapped structure'),
-    simulated: z.boolean()
-  })
+  z
+    .object({
+      id: z.string().min(1),
+      kind: z.enum(['person', 'vessel', 'vehicle', 'structure']),
+      label: z.string().describe('As people should read it, e.g. "3 people on the lakeside footway"'),
+      geometry: z.union([Point, LineString, Polygon]),
+      observedAt: Timestamp.nullable().describe('When it was seen; null for a mapped structure'),
+      headcount: z
+        .number()
+        .int()
+        .positive()
+        .nullable()
+        .describe(
+          'How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it'
+        ),
+      simulated: z.boolean()
+    })
+    .refine((p) => p.kind === 'person' || p.headcount === null, {
+      message: 'Only a person report counts people; a vessel, vehicle or structure has headcount null',
+      path: ['headcount']
+    })
 )
 export type ReportedThirdParty = z.infer<typeof ReportedThirdParty>
 

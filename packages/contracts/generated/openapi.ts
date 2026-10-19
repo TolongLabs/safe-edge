@@ -1371,6 +1371,8 @@ export interface components {
             geometry: components["schemas"]["Point"] | components["schemas"]["LineString"] | components["schemas"]["Polygon"];
             /** @description When it was seen; null for a mapped structure */
             observedAt: string | null;
+            /** @description How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it */
+            headcount: number | null;
             simulated: boolean;
         };
         PriorityScore: {

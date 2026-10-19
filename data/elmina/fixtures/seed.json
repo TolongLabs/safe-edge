@@ -2178,6 +2178,7 @@
       "label": "S1: people on the lakeside footway",
       "geometry": { "type": "Point", "coordinates": [101.5144008, 3.1793557] },
       "observedAt": "2026-10-20T21:20:00.000Z",
+      "headcount": null,
       "simulated": true,
       "source": "fixture"
     }

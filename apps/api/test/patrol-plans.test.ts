@@ -2,6 +2,8 @@
 // S1 path crowd, and the separation holds they get wait for the pilot.
 import { describe, expect, test } from 'bun:test'
 import { Patrol, PatrolPlan, type CreatePatrolPlanRequest, type ReportedThirdParty } from '@safe-edge/contracts'
+import { loadElmina } from '@safe-edge/planner'
+import { join } from 'node:path'
 import { S1, seed, startApi } from './support.ts'
 
 const NOT_BEFORE = '2026-10-24T23:30:00.000Z'
@@ -28,6 +30,7 @@ describe('separation holds on API-served plans', () => {
       label: 'person on the S1 edge',
       geometry: { type: 'Point', coordinates: [101.5124058, 3.1786474] },
       observedAt: '2026-10-24T23:00:00.000Z',
+      headcount: null,
       simulated: true
     }
     const created = await api.request('post', '/patrol-plans', {
@@ -100,6 +103,60 @@ describe('separation holds on API-served plans', () => {
   })
 })
 
+describe('assemblies in the open air of more than 1,000 persons', async () => {
+  const elmina = await loadElmina((path) => Bun.file(join(import.meta.dir, '../../..', path)).json())
+  // An event filling Elmina Urban Park (the mapped park polygon), reported with the request: a labelled fixture.
+  const event = (headcount: number | null): ReportedThirdParty => ({
+    id: 'obs_event_urban_park',
+    kind: 'person',
+    label: 'Deepavali open house in Elmina Urban Park',
+    geometry: elmina.designatedAreas.find((a) => a.id === 'way/1309457596')!.geometry as ReportedThirdParty['geometry'],
+    observedAt: '2026-10-24T22:00:00.000Z',
+    headcount,
+    simulated: true
+  })
+  const WEST = 'seg_866518980_5'
+
+  test("a request's headcount over 1,000 keeps the plan 150 m from them (CAR 2016 reg. 143(1)(c), (d))", async () => {
+    const api = startApi()
+    const plan = async (headcount: number | null) => {
+      const created = await api.request('post', '/patrol-plans', {
+        token: 'tok_manager',
+        body: request([WEST, FAR_BANK], [event(headcount)])
+      })
+      expect(created.status).toBe(201)
+      return PatrolPlan.parse(await created.json())
+    }
+    const assembly = await plan(1500)
+    expect(assembly.tasks.map((t) => t.segmentId)).toEqual([FAR_BANK])
+    expect(assembly.rejected).toEqual([
+      {
+        segmentId: WEST,
+        code: 'authorisation',
+        reason: expect.stringContaining(
+          'within 150 m of "Deepavali open house in Elmina Urban Park" (person, 1500 people, seen 2026-10-24T22:00:00.000Z), closest 132 m, an assembly in the open air of more than 1,000 persons (CAR 2016 reg. 143(1)(c), (d))'
+        )
+      }
+    ])
+    // Uncounted, the same people are kept 50 m clear like anyone else, which the west bank already is.
+    expect((await plan(null)).tasks.map((t) => t.segmentId).toSorted()).toEqual([WEST, FAR_BANK].toSorted())
+  })
+
+  test('only a person report counts people: a vehicle with a headcount is invalid input', async () => {
+    const api = startApi()
+    const response = await api.request('post', '/patrol-plans', {
+      token: 'tok_manager',
+      body: request([WEST], [{ ...event(null), kind: 'vehicle', headcount: 40 }])
+    })
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: 'invalid_input',
+      message: expect.stringContaining('Only a person report counts people')
+    })
+  })
+})
+
 describe('the take-off and landing hold on the dock', () => {
   test('a person within 30 m of the dock holds the launch until the pilot records the dock clear', async () => {
     const api = startApi()
@@ -111,6 +168,7 @@ describe('the take-off and landing hold on the dock', () => {
       label: 'person by the dock building',
       geometry: { type: 'Point', coordinates: [dock!.position.lon, dock!.position.lat - 20 / 111_320] },
       observedAt: '2026-10-24T23:00:00.000Z',
+      headcount: null,
       simulated: true
     }
     const json = async (response: Response, status: number) => {

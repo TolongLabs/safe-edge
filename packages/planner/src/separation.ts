@@ -29,6 +29,18 @@ export const SEPARATION_M = 50
 export const TAKEOFF_LANDING_SEPARATION_M = 30
 
 /**
+ * CAR 2016 regulation 143(1)(c), (d): no flight "over any assembly in the open air of more than 1,000 persons" nor
+ * "within 150 metres of any assembly in the open air of more than 1,000 persons" without the Director General's
+ * authorisation. The plan's authorisation covers designated areas only, so the planner keeps 150 m from every one.
+ */
+export const ASSEMBLY_M = 150
+
+/** A person report counting more than 1,000 people: an assembly in the open air (reg. 143(1)(c), (d)). */
+export function isAssembly(party: ThirdParty): boolean {
+  return party.kind === 'person' && party.headcount !== null && party.headcount > 1000
+}
+
+/**
  * A person, vessel, vehicle or structure not under the remote pilot's control: the contracts' `ThirdParty`, whose
  * `source` may also name a map layer (`osm`), like the planner's other geometry inputs.
  */
@@ -183,9 +195,11 @@ export interface DockTransit {
 
 /**
  * How close a third party may come to the climb from the dock and the descent onto it: 30 m for a person (rule (g)
- * read as the moments 50 m gives way to 30 m), 50 m for a vessel, vehicle or structure (rule (e) has no take-off case).
+ * read as the moments 50 m gives way to 30 m), 50 m for a vessel, vehicle or structure (rule (e) has no take-off case),
+ * and 150 m for an assembly of more than 1,000 persons.
  */
 export function climbSeparationM(party: ThirdParty): number {
+  if (isAssembly(party)) return ASSEMBLY_M
   return party.kind === 'person' ? TAKEOFF_LANDING_SEPARATION_M : SEPARATION_M
 }
 
@@ -199,7 +213,7 @@ export function dockHold(dock: Dock, thirdParties: ThirdParty[], transits: DockT
   const byDock = thirdParties
     .map((party) => ({ party, m: distanceTo(at, party.geometry), limitM: climbSeparationM(party) }))
     .filter((n) => n.m < n.limitM)
-  const clauses = [TAKEOFF_LANDING_SEPARATION_M, SEPARATION_M].flatMap((limitM) => {
+  const clauses = [TAKEOFF_LANDING_SEPARATION_M, SEPARATION_M, ASSEMBLY_M].flatMap((limitM) => {
     const close = byDock.filter((n) => n.limitM === limitM)
     if (close.length === 0) return []
     const closestM = Math.min(...close.map((n) => n.m))
@@ -247,7 +261,10 @@ export function closest(nearby: Nearby[]): string {
 
 function named(parties: ThirdParty[]): string {
   return [...new Set(parties)]
-    .map((p) => `"${p.label}" (${p.kind}${p.observedAt ? `, seen ${p.observedAt}` : ''})`)
+    .map(
+      (p) =>
+        `"${p.label}" (${p.kind}${p.headcount === null ? '' : `, ${p.headcount} people`}${p.observedAt ? `, seen ${p.observedAt}` : ''})`
+    )
     .join(', ')
 }
 

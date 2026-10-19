@@ -85,6 +85,7 @@ describe('drone-sim refuses to fly without a human approval', () => {
       label: 'people at the water edge',
       geometry: { type: 'Point', coordinates: [101.514434, 3.179979] },
       observedAt: '2026-10-21T21:50:00.000Z',
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }

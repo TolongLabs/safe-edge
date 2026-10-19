@@ -3,7 +3,7 @@
 import { describe, expect, test } from 'bun:test'
 import { distance } from '@turf/distance'
 import { lineString } from '@turf/helpers'
-import type { FeatureCollection, LineString } from 'geojson'
+import type { FeatureCollection, LineString, Polygon } from 'geojson'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
 import {
   elminaLayerPaths,
@@ -59,6 +59,7 @@ describe('separation over the whole flight', async () => {
       label: 'people on footbridge way/909868199',
       geometry: { type: 'Point', coordinates: [101.5130697, 3.1791843] },
       observedAt: SEEN,
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -115,6 +116,7 @@ describe('separation over the whole flight', async () => {
       label: 'van parked by the dock building',
       geometry: { type: 'Point', coordinates: [dock.position.lon, dock.position.lat - 40 / 111_320] },
       observedAt: SEEN,
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -140,6 +142,7 @@ describe('separation over the whole flight', async () => {
       label: 'footbridge way/926280618',
       geometry: bridge,
       observedAt: null,
+      headcount: null,
       simulated: false,
       source: 'osm'
     }
@@ -154,7 +157,7 @@ describe('separation over the whole flight', async () => {
       [EAST, WEST].map((segmentId) => ({
         segmentId,
         code: 'separation_hold',
-        reason: `the climb from ${dock.name} is within 50 m of "footbridge way/926280618" (structure), closest ${bridgeM.toFixed(0)} m, which waiting would not clear; no patrol can take off or land there`
+        reason: `the climb from ${dock.name} comes within 50 m of "footbridge way/926280618" (structure), closest ${bridgeM.toFixed(0)} m, which waiting would not clear; no patrol can take off or land there`
       }))
     )
   })
@@ -167,6 +170,7 @@ describe('separation over the whole flight', async () => {
       label: `footbridge way/${osmId}`,
       geometry: paths.features.find((f) => f.properties.osm_id === osmId)!.geometry,
       observedAt: null,
+      headcount: null,
       simulated: false,
       source: 'osm'
     })
@@ -204,7 +208,7 @@ describe('separation over the whole flight', async () => {
         segmentId: left,
         code: 'separation_hold',
         reason: expect.stringMatching(
-          /^every straight transit to it passes within 50 m of "footbridge way\/909868199" \(structure\), closest \d+ m, which waiting would not clear$/
+          /^every straight transit to it comes within 50 m of "footbridge way\/909868199" \(structure\), closest \d+ m, which waiting would not clear$/
         )
       }
     ])
@@ -218,6 +222,7 @@ describe('separation over the whole flight', async () => {
       label: 'crane on the west arm bank',
       geometry: { type: 'Point', coordinates: [101.5070877, 3.1767494] },
       observedAt: SEEN,
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -228,8 +233,74 @@ describe('separation over the whole flight', async () => {
       {
         segmentId: 'seg_866518980_18',
         code: 'separation_hold',
-        reason: `its flight line passes within 50 m of "crane on the west arm bank" (structure, seen ${SEEN}), closest 9 m, which waiting would not clear`
+        reason: `its flight line comes within 50 m of "crane on the west arm bank" (structure, seen ${SEEN}), closest 9 m, which waiting would not clear`
       }
     ])
+  })
+
+  test('an assembly in the open air of more than 1,000 persons is kept 150 m clear; 1,000 is not one', () => {
+    // CAR 2016 reg. 143(1)(c), (d): no flight "over any assembly in the open air of more than 1,000 persons" nor "within
+    // 150 metres of" one. A labelled fixture: an event filling Elmina Urban Park (the mapped park polygon), 132 m from
+    // the west bank's nearest station and 334 m from the dock.
+    const park = elmina.designatedAreas.find((a) => a.id === 'way/1309457596')!
+    expect(park.label).toBe('Elmina Urban Park (recreational)')
+    const event = (headcount: number): ThirdParty => ({
+      id: 'obs_event_urban_park',
+      kind: 'person',
+      label: 'Deepavali open house in Elmina Urban Park',
+      geometry: park.geometry as Polygon,
+      observedAt: SEEN,
+      headcount,
+      simulated: true,
+      source: 'fixture'
+    })
+    const ids = [EAST, WEST, 'seg_866518980_7']
+    const clear = planPatrol(input(ids))
+    expect(clear.rejected).toEqual([])
+
+    const kept = planPatrol(input(ids, [event(1500)]))
+    expect(kept.tasks.map((t) => t.segmentId).toSorted()).toEqual([EAST, 'seg_866518980_7'].toSorted())
+    expect(kept.holds).toEqual([])
+    expect(kept.rejected).toEqual([
+      {
+        segmentId: WEST,
+        code: 'authorisation',
+        reason: `its flight line comes within 150 m of "Deepavali open house in Elmina Urban Park" (person, 1500 people, seen ${SEEN}), closest 132 m, an assembly in the open air of more than 1,000 persons (CAR 2016 reg. 143(1)(c), (d))`
+      }
+    ])
+    const ring = lineString((park.geometry as Polygon).coordinates[0]!)
+    for (const w of kept.waypoints) {
+      expect(nearestPointOnLine(ring, [w.lon, w.lat], m).properties.pointDistance).toBeGreaterThanOrEqual(150)
+    }
+
+    // A thousand people is not more than 1,000: they are people like any others, and all of them are far enough off.
+    expect(planPatrol(input(ids, [event(1000)]))).toEqual(clear)
+  })
+
+  test('an assembly within 150 m of the dock grounds every patrol, whatever the authorisation', () => {
+    // A concert crowd on the lakeside footway at S1's path crowd vertex (OSM way/926276001), 147 m from the dock.
+    const concert: ThirdParty = {
+      id: 'obs_concert_footway',
+      kind: 'person',
+      label: 'concert crowd on the lakeside footway',
+      geometry: { type: 'Point', coordinates: [101.5144008, 3.1793557] },
+      observedAt: SEEN,
+      headcount: 1200,
+      simulated: true,
+      source: 'fixture'
+    }
+    const concertM = distance([dock.position.lon, dock.position.lat], concert.geometry.coordinates as number[], m)
+    expect(concertM).toBeLessThan(150)
+    const authorised = { ref: 'test authorisation', simulated: true, source: 'fixture' }
+    const plan = planPatrol({ ...input([EAST, WEST], [concert]), authorisation: authorised })
+    expect(plan.tasks).toEqual([])
+    expect(plan.waypoints).toEqual([])
+    expect(plan.rejected).toEqual(
+      [EAST, WEST].map((segmentId) => ({
+        segmentId,
+        code: 'authorisation',
+        reason: `the climb from ${dock.name} comes within 150 m of "concert crowd on the lakeside footway" (person, 1200 people, seen ${SEEN}), closest ${concertM.toFixed(0)} m, an assembly in the open air of more than 1,000 persons (CAR 2016 reg. 143(1)(c), (d)); no patrol can take off or land there`
+      }))
+    )
   })
 })

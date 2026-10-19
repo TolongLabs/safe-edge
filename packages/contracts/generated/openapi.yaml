@@ -2928,6 +2928,12 @@ components:
               format: date-time
             - type: "null"
           description: When it was seen; null for a mapped structure
+        headcount:
+          anyOf:
+            - type: integer
+              exclusiveMinimum: 0
+            - type: "null"
+          description: "How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it"
         simulated:
           type: boolean
       required:
@@ -2936,6 +2942,7 @@ components:
         - label
         - geometry
         - observedAt
+        - headcount
         - simulated
       additionalProperties: false
     PriorityScore:

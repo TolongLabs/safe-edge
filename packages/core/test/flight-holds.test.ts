@@ -46,6 +46,7 @@ const people: ThirdParty = {
   label: 'people at the water edge',
   geometry: { type: 'Point', coordinates: [101.514434, 3.179979] },
   observedAt: '2026-10-20T21:20:00.000Z',
+  headcount: null,
   simulated: true,
   source: 'fixture'
 }

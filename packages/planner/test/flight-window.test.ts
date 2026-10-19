@@ -113,6 +113,7 @@ describe('flight windows', async () => {
       label: '3 people on the lakeside footway',
       geometry: { type: 'Point', coordinates: [101.514381, 3.180066] },
       observedAt: myt('2026-10-21T05:20:00'),
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -203,6 +204,7 @@ describe('flight windows', async () => {
       label: '3 people on the lakeside footway',
       geometry: { type: 'Point', coordinates: peopleAt },
       observedAt: myt('2026-10-20T19:50:00'),
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -265,6 +267,7 @@ describe('flight windows', async () => {
       label: `person ${m} m south of the dock`,
       geometry: { type: 'Point', coordinates: [dock.position.lon, dock.position.lat - m / 111_320] },
       observedAt: seen,
+      headcount: null,
       simulated: true,
       source: 'fixture'
     })
@@ -303,6 +306,7 @@ describe('flight windows', async () => {
       label: 'jogger on the footway',
       geometry: { type: 'Point', coordinates: joggerAt },
       observedAt: myt('2026-10-20T19:50:00'),
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
@@ -359,6 +363,7 @@ describe('flight windows', async () => {
       label: 'footbridge way/926276000',
       geometry: bridge.geometry,
       observedAt: null,
+      headcount: null,
       simulated: false,
       source: 'osm'
     }
