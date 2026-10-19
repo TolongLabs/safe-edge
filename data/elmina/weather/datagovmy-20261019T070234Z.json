@@ -1,0 +1,176 @@
+{
+  "publisher": "data.gov.my (MET Malaysia)",
+  "licence": "CC BY 4.0 (developer.data.gov.my/faq). Attribute as \"Weather data: MET Malaysia, via data.gov.my\". The API allows 4 requests a minute.",
+  "forecast": {
+    "url": "https://api.data.gov.my/weather/forecast/?filter=Petaling@location__location_name",
+    "retrievedAt": "2026-10-19T07:02:33.954Z",
+    "rows": [
+      {
+        "location": {
+          "location_id": "Ds057",
+          "location_name": "Petaling"
+        },
+        "date": "2026-10-25",
+        "morning_forecast": "Tiada Hujan",
+        "afternoon_forecast": "Ribut petir di beberapa tempat",
+        "night_forecast": "Tiada Hujan",
+        "summary_forecast": "Ribut petir di beberapa tempat",
+        "summary_when": "Petang",
+        "min_temp": 24,
+        "max_temp": 33
+      },
+      {
+        "location": {
+          "location_id": "Ds057",
+          "location_name": "Petaling"
+        },
+        "date": "2026-10-24",
+        "morning_forecast": "Tiada Hujan",
+        "afternoon_forecast": "Ribut petir di beberapa tempat",
+        "night_forecast": "Hujan di beberapa tempat",
+        "summary_forecast": "Ribut petir di beberapa tempat",
+        "summary_when": "Petang dan Malam",
+        "min_temp": 24,
+        "max_temp": 33
+      },
+      {
+        "location": {
+          "location_id": "Ds057",
+          "location_name": "Petaling"
+        },
+        "date": "2026-10-23",
+        "morning_forecast": "Jerebu",
+        "afternoon_forecast": "Ribut petir di beberapa tempat",
+        "night_forecast": "Jerebu",
+        "summary_forecast": "Ribut petir di beberapa tempat",
+        "summary_when": "Sepanjang Hari",
+        "min_temp": 24,
+        "max_temp": 33
+      },
+      {
+        "location": {
+          "location_id": "Ds057",
+          "location_name": "Petaling"
+        },
+        "date": "2026-10-22",
+        "morning_forecast": "Jerebu",
+        "afternoon_forecast": "Ribut petir di beberapa tempat",
+        "night_forecast": "Jerebu",
+        "summary_forecast": "Ribut petir di beberapa tempat",
+        "summary_when": "Sepanjang Hari",
+        "min_temp": 24,
+        "max_temp": 33
+      },
+      {
+        "location": {
+          "location_id": "Ds057",
+          "location_name": "Petaling"
+        },
+        "date": "2026-10-21",
+        "morning_forecast": "Jerebu",
+        "afternoon_forecast": "Ribut petir di beberapa tempat",
+        "night_forecast": "Jerebu",
+        "summary_forecast": "Ribut petir di beberapa tempat",
+        "summary_when": "Sepanjang Hari",
+        "min_temp": 24,
+        "max_temp": 34
+      },
+      {
+        "location": {
+          "location_id": "Ds057",
+          "location_name": "Petaling"
+        },
+        "date": "2026-10-20",
+        "morning_forecast": "Hujan di beberapa tempat",
+        "afternoon_forecast": "Ribut petir di beberapa tempat",
+        "night_forecast": "Jerebu",
+        "summary_forecast": "Ribut petir di beberapa tempat",
+        "summary_when": "Sepanjang Hari",
+        "min_temp": 24,
+        "max_temp": 34
+      },
+      {
+        "location": {
+          "location_id": "Ds057",
+          "location_name": "Petaling"
+        },
+        "date": "2026-10-19",
+        "morning_forecast": "Ribut petir di beberapa tempat",
+        "afternoon_forecast": "Ribut petir di beberapa tempat",
+        "night_forecast": "Jerebu",
+        "summary_forecast": "Ribut petir di beberapa tempat",
+        "summary_when": "Sepanjang Hari",
+        "min_temp": 24,
+        "max_temp": 34
+      }
+    ]
+  },
+  "warnings": {
+    "url": "https://api.data.gov.my/weather/warning/",
+    "retrievedAt": "2026-10-19T07:02:34.729Z",
+    "rows": [
+      {
+        "warning_issue": {
+          "issued": "2026-10-19T12:35:00",
+          "title_bm": "Amaran Ribut Petir",
+          "title_en": "Thunderstorms Warning"
+        },
+        "valid_from": "2026-10-19T12:00:00",
+        "valid_to": "2026-10-19T16:00:00",
+        "heading_en": "THUNDERSTORMS WARNING",
+        "text_en": "Thunderstorms, heavy rain and strong winds are expected over the states of Sarawak: Miri (Miri, Subis and Marudi), Limbang, Bintulu, Mukah (Daro and Tanjung Manis), Kapit (Kapit and Song), Kuching (Kuching), Samarahan (Samarahan) • Sabah: West Coast, Interior, Kudat, Sandakan (Paitan and Telupid), Tawau (Kunak and Semporna) • W.P. Labuan until 4:00 PM; Monday, 19 October 2026.",
+        "instruction_en": null,
+        "heading_bm": "AMARAN RIBUT PETIR",
+        "text_bm": "Ribut petir, hujan lebat dan angin kencang dijangka di negeri Sarawak: Miri (Miri, Subis dan Marudi), Limbang, Bintulu, Mukah (Daro dan Tanjung Manis), Kapit (Kapit dan Song), Kuching (Kuching), Samarahan (Samarahan) • Sabah: Pantai Barat, Pedalaman, Kudat, Sandakan (Paitan dan Telupid), Tawau (Kunak dan Semporna) • W.P. Labuan sehingga 4:00 Petang; Isnin, 19 Oktober 2026.",
+        "instruction_bm": null
+      },
+      {
+        "warning_issue": {
+          "issued": "2026-10-19T13:50:00",
+          "title_bm": "Amaran Angin Kencang dan Laut Bergelora",
+          "title_en": "Strong Winds and Rough Seas Warning"
+        },
+        "valid_from": "2026-10-18T00:00:00",
+        "valid_to": "2026-10-19T00:00:00",
+        "heading_en": "Warning on Strong Wind and Rough Seas",
+        "text_en": "SECTION A: FOR MALAYSIAN WATERS [WITHIN 24 NAUTICAL MILES] 1) LOW HORIZONTAL VISIBILITY WARNING Low horizontal visibility is expected over the waters of Selangor • N. Sembilan • Melaka • Johor • Western Sarawak • Lahad Datu until Monday, 19 October 2026. 2) THUNDERSTORMS WARNING Thunderstorms, heavy rain and strong winds are expected over the waters of Perlis & Kedah • Penang • Perak • Selangor • N. Sembilan • Melaka • Johor • Pahang • Terengganu • Sarawak • Sabah until 6:00 PM; Monday, 19 October 2026. This condition may cause strong winds up to 50 kmph and rough seas with wave height up to 3.5 metres and is dangerous to small boats. SECTION B: FOR SHIPPING 1) THUNDERSTORMS WARNING Thunderstorms, heavy rain and strong winds are expected over the waters of Phuket • Samui • Bunguran • Reef South • Reef North • Condore • Labuan • Palawan • Straits Of Melaka • Tioman • Layang-Layang • Sulu • Sulawesi until 6:00 PM; Monday, 19 October 2026. This condition may cause strong winds up to 50 kmph and rough seas with wave height up to 3.5 metres and is dangerous to small boats.",
+        "instruction_en": "This condition of strong winds and rough seas is dangerous.",
+        "heading_bm": "Amaran Angin kencang dan laut bergelora",
+        "text_bm": "SEKSYEN A: UNTUK PERAIRAN MALAYSIA [DALAM LINGKUNGAN 24 BATU NAUTIKA] 1) AMARAN KETAMPAKAN RENDAH Ketampakan rendah dijangka di kawasan perairan Selangor • N. Sembilan • Melaka • Johor • Sarawak Barat • Lahad Datu sehingga Isnin, 19 Oktober 2026. 2) AMARAN RIBUT PETIR Ribut petir, hujan lebat dan angin kencang dijangka di kawasan perairan Perlis & Kedah • Pulau Pinang • Perak • Selangor • N. Sembilan • Melaka • Johor • Pahang • Terengganu • Sarawak • Sabah sehingga 6:00 Petang; Isnin, 19 Oktober 2026. Keadaan ini boleh menyebabkan angin kencang sehingga 50 kmsj dan laut bergelora dengan ombak mencapai ketinggian 3.5 meter dan berbahaya kepada bot-bot kecil. SEKSYEN B: UNTUK PERKAPALAN 1) AMARAN RIBUT PETIR Ribut petir, hujan lebat dan angin kencang dijangka di kawasan perairan Phuket • Samui • Bunguran • Reef South • Reef North • Condore • Labuan • Palawan • Selat Melaka • Tioman • Layang-Layang • Sulu • Sulawesi sehingga 6:00 Petang; Isnin, 19 Oktober 2026. Keadaan ini boleh menyebabkan angin kencang sehingga 50 kmsj dan laut bergelora dengan ombak mencapai ketinggian 3.5 meter dan berbahaya kepada bot-bot kecil.",
+        "instruction_bm": "Keadaan angin kencang dan laut bergelora ini adalah berbahaya."
+      },
+      {
+        "warning_issue": {
+          "issued": "2026-10-19T10:30:00",
+          "title_bm": "Tiada Nasihat",
+          "title_en": "No Advisory"
+        },
+        "valid_from": null,
+        "valid_to": null,
+        "heading_en": "No Advisory",
+        "text_en": "No Tropical Cyclone system is observed under MMD monitoring region (Latitude: 0-20 North & Longitude: 95-130 East)",
+        "instruction_en": null,
+        "heading_bm": "Tiada Nasihat",
+        "text_bm": "Tiada sistem Siklon Tropika dicerap di dalam kawasan pemantauan MMD (Latitud: 0-20 Utara & Longitud: 95-130 Timur)",
+        "instruction_bm": null
+      },
+      {
+        "warning_issue": {
+          "issued": "2026-10-19T13:50:00",
+          "title_bm": "Amaran Angin Kencang dan Laut Bergelora",
+          "title_en": "Strong Winds and Rough Seas Warning"
+        },
+        "valid_from": "2026-10-19T13:00:00",
+        "valid_to": "2026-10-19T18:00:00",
+        "heading_en": "Warning on Strong Wind and Rough Seas",
+        "text_en": "SECTION A: FOR MALAYSIAN WATERS [WITHIN 24 NAUTICAL MILES] 1) LOW HORIZONTAL VISIBILITY WARNING Low horizontal visibility is expected over the waters of Selangor • N. Sembilan • Melaka • Johor • Western Sarawak • Lahad Datu until Monday, 19 October 2026. 2) THUNDERSTORMS WARNING Thunderstorms, heavy rain and strong winds are expected over the waters of Perlis & Kedah • Penang • Perak • Selangor • N. Sembilan • Melaka • Johor • Pahang • Terengganu • Sarawak • Sabah until 6:00 PM; Monday, 19 October 2026. This condition may cause strong winds up to 50 kmph and rough seas with wave height up to 3.5 metres and is dangerous to small boats. SECTION B: FOR SHIPPING 1) THUNDERSTORMS WARNING Thunderstorms, heavy rain and strong winds are expected over the waters of Phuket • Samui • Bunguran • Reef South • Reef North • Condore • Labuan • Palawan • Straits Of Melaka • Tioman • Layang-Layang • Sulu • Sulawesi until 6:00 PM; Monday, 19 October 2026. This condition may cause strong winds up to 50 kmph and rough seas with wave height up to 3.5 metres and is dangerous to small boats.",
+        "instruction_en": "This condition of strong winds and rough seas is dangerous.",
+        "heading_bm": "Amaran Angin kencang dan laut bergelora",
+        "text_bm": "SEKSYEN A: UNTUK PERAIRAN MALAYSIA [DALAM LINGKUNGAN 24 BATU NAUTIKA] 1) AMARAN KETAMPAKAN RENDAH Ketampakan rendah dijangka di kawasan perairan Selangor • N. Sembilan • Melaka • Johor • Sarawak Barat • Lahad Datu sehingga Isnin, 19 Oktober 2026. 2) AMARAN RIBUT PETIR Ribut petir, hujan lebat dan angin kencang dijangka di kawasan perairan Perlis & Kedah • Pulau Pinang • Perak • Selangor • N. Sembilan • Melaka • Johor • Pahang • Terengganu • Sarawak • Sabah sehingga 6:00 Petang; Isnin, 19 Oktober 2026. Keadaan ini boleh menyebabkan angin kencang sehingga 50 kmsj dan laut bergelora dengan ombak mencapai ketinggian 3.5 meter dan berbahaya kepada bot-bot kecil. SEKSYEN B: UNTUK PERKAPALAN 1) AMARAN RIBUT PETIR Ribut petir, hujan lebat dan angin kencang dijangka di kawasan perairan Phuket • Samui • Bunguran • Reef South • Reef North • Condore • Labuan • Palawan • Selat Melaka • Tioman • Layang-Layang • Sulu • Sulawesi sehingga 6:00 Petang; Isnin, 19 Oktober 2026. Keadaan ini boleh menyebabkan angin kencang sehingga 50 kmsj dan laut bergelora dengan ombak mencapai ketinggian 3.5 meter dan berbahaya kepada bot-bot kecil.",
+        "instruction_bm": "Keadaan angin kencang dan laut bergelora ini adalah berbahaya."
+      }
+    ]
+  },
+  "simulated": false,
+  "source": "provider"
+}

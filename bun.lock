@@ -93,6 +93,10 @@
     },
     "packages/providers": {
       "name": "@safe-edge/providers",
+      "dependencies": {
+        "@safe-edge/contracts": "workspace:*",
+        "zod": "^4.6.7",
+      },
     },
     "packages/scene": {
       "name": "@safe-edge/scene",

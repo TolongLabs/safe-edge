@@ -1,0 +1,40 @@
+{
+  "publisher": "JPS Public Infobanjir",
+  "licence": "Public page; JPS documents no API and no reuse licence. Kept as a timestamped snapshot for the offline demo; the app never calls the site. Times on the page are Malaysia time (UTC+8).",
+  "page": "https://publicinfobanjir.water.gov.my/hujan/data-hujan/?state=SEL&lang=en",
+  "url": "https://publicinfobanjir.water.gov.my/wp-content/themes/shapely/agency/searchresultrainfall.php?state=SEL&district=Petaling&station=ALL&loginStatus=0&language=1",
+  "retrievedAt": "2026-10-19T07:02:34.799Z",
+  "stationId": "27880",
+  "header": [
+    "No.",
+    "Station ID",
+    "Station",
+    "District",
+    "Last Updated",
+    "13/10/2026",
+    "14/10/2026",
+    "15/10/2026",
+    "16/10/2026",
+    "17/10/2026",
+    "18/10/2026",
+    "Rainfall from Midnight (19/10/2026)",
+    "Total 1 Hour (Now)"
+  ],
+  "row": [
+    "12",
+    "",
+    "Rem KTM Sungai Buloh (F2)",
+    "Petaling",
+    "19/10/2026 04:00:00",
+    "47.0",
+    "3.5",
+    "40.5",
+    "13.0",
+    "15.5",
+    "5.0",
+    "0.0",
+    "0.0"
+  ],
+  "simulated": false,
+  "source": "provider"
+}
