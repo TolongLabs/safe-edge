@@ -1,6 +1,7 @@
 import type { Actor, EdgeEvent } from '@safe-edge/contracts'
 import type { Core } from './core.ts'
 import { missedPatrolDue } from './policy.ts'
+import type { ReplanSubscriberOptions } from './replan.ts'
 
 /** The system running the checks a transport schedules, and recording the automation's failures. */
 export const AUTOMATION_ACTOR: Actor = { type: 'system', id: 'core.automation', role: 'system', scopes: [] }
@@ -30,6 +31,18 @@ export function runSchedule(core: Pick<Core, 'dispatch' | 'tick'>, now: string):
     events.push(...missed.events)
   }
   return events
+}
+
+/**
+ * The re-test patrol a completed repair queues when no plan is open: from the township's first dock, with the first
+ * drone it takes, under an assumed 60 m altitude cap (no cap has been agreed with air traffic control; the tests' figure).
+ */
+export function queuedRetest(core: Pick<Core, 'dispatch'>): ReplanSubscriberOptions['retest'] {
+  const docks = core.dispatch('listDocks', AUTOMATION_ACTOR, {})
+  if (!docks.ok) throw new Error(docks.message)
+  const [dock] = docks.data
+  if (dock === undefined || dock.droneProfileIds[0] === undefined) throw new Error('The seed has no dock with a drone')
+  return { dockId: dock.id, droneProfileId: dock.droneProfileIds[0], altitudeCapM: 60 }
 }
 
 /**

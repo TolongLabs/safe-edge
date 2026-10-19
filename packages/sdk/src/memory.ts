@@ -12,6 +12,9 @@ import {
   authorize,
   counterIds,
   createCore,
+  createReplanSubscriber,
+  queuedRetest,
+  recordAutomationFailure,
   Seed,
   type Clock,
   type Core,
@@ -36,7 +39,10 @@ export interface MemoryOptions {
   transport: 'memory'
   /** The seeded user the client acts as; switch with `client.as(userId)`. */
   userId: string
-  /** Needed only by `createPatrolPlan` (see `createElminaPlanner`); core throws without one. */
+  /**
+   * Needed by `createPatrolPlan` (see `createElminaPlanner`) and by re-planning; without one core throws, and a re-plan
+   * a trigger needs is recorded as a failed `runAutomation` on the audit chain.
+   */
   planner?: PatrolPlanner
   /** The scenario clock; the wall clock when absent. */
   clock?: Clock
@@ -47,7 +53,10 @@ export interface MemoryClient extends SafeEdgeClient, Methods<MemoryOperationId>
   readonly actor: Actor
   /** The same demo, acting as another seeded user. */
   as(userId: string): MemoryClient
-  /** Calls `handler` with every event core emits in this demo, whoever acted. Returns the unsubscribe function. */
+  /**
+   * Calls `handler` with every event core emits in this demo, whoever acted, including the re-plans core's re-plan
+   * subscriber makes in reaction (each right after the event that caused it). Returns the unsubscribe function.
+   */
   subscribe(handler: (event: EdgeEvent) => void): () => void
   /**
    * Moves the demo's passes to `now` on the scenario clock (core's `tick`): valid → expiring 30 days before `validTo`,
@@ -63,8 +72,35 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
   const fresh = (): Core => createCore({ seed: elminaSeed, clock, ids: counterIds(), planner })
   const session = { core: fresh() }
   const subscribers = new Set<(event: EdgeEvent) => void>()
+  // Core's re-plan subscriber reacts to every event, as in the API. The demo flies no drone, so an in-flight patrol has
+  // no progress to re-plan from, and that re-plan fails (recorded) rather than re-flying its stops.
+  const replan = createReplanSubscriber({
+    dispatch: (operationId, actor, input) => session.core.dispatch(operationId, actor, input),
+    clock,
+    committedTasks: (patrol) => {
+      throw new Error(`The memory transport flies no drone, so nothing reports ${patrol.id}'s progress`)
+    },
+    retest: queuedRetest(session.core)
+  })
+  // Events published in reaction wait until the event they react to has reached every subscriber.
+  const queue: EdgeEvent[] = []
+  let delivering = false
   const publish = (events: EdgeEvent[]) => {
-    for (const event of events) for (const handler of subscribers) handler(event)
+    queue.push(...events)
+    if (delivering) return events
+    delivering = true
+    try {
+      for (let event = queue.shift(); event !== undefined; event = queue.shift()) {
+        for (const handler of subscribers) handler(event)
+        try {
+          publish(replan.onEvent(event))
+        } catch (error) {
+          recordAutomationFailure(session.core, 'replan', error)
+        }
+      }
+    } finally {
+      delivering = false
+    }
     return events
   }
 

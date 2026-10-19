@@ -3,7 +3,7 @@ import type { EdgeEvent } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
 import { join } from 'node:path'
 import { SafeEdgeApiError, SafeEdgeDeniedError, createElminaPlanner, createSafeEdgeClient } from '../src/index.ts'
-import { S1, playS1toS3 } from './story.ts'
+import { S1, playS1toRepair, playS1toS3 } from './story.ts'
 
 /** A memory client on a scenario clock, as the scenario player (#64) creates it. */
 function startDemo() {
@@ -186,5 +186,59 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
       status: 'approved',
       approvedBy: 'usr_pilot'
     })
+  })
+
+  test('the re-plan subscriber runs in the demo: a confirmed flag and a completed repair re-plan the open plan as the system', async () => {
+    const repoRoot = join(import.meta.dir, '../../..')
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    let now = '2026-10-20T00:00:00.000Z'
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
+    const seen: string[] = []
+    demo.subscribe((event) => seen.push(event.type))
+    const open = await demo.createPatrolPlan({
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds: ['seg_866518980_5'],
+        context: [],
+        notBefore: now,
+        altitudeCapM: 60
+      }
+    })
+
+    const { decision, workOrderId } = await playS1toRepair({ as: (id) => demo.as(id), setNow: (iso) => (now = iso) })
+
+    // Each re-plan is announced right after the event that caused it.
+    expect(seen.slice(seen.indexOf('edge.candidate.decided.v1'))).toEqual([
+      'edge.candidate.decided.v1',
+      'edge.work_order.drafted.v1',
+      'edge.patrol.planned.v1',
+      'edge.work_order.submitted.v1',
+      'edge.repair.completed.v1',
+      'edge.patrol.planned.v1'
+    ])
+    const plans = await demo.listPatrolPlans()
+    expect(plans.map((p) => [p.id, p.replan?.trigger.kind ?? null, p.replan?.supersedes?.planId ?? null])).toEqual([
+      [open.id, null, null],
+      ['plan_2', 'flag_confirmed', open.id],
+      ['plan_3', 'repair_completed', 'plan_2']
+    ])
+    expect(plans[2]!.replan!.trigger).toEqual({
+      kind: 'repair_completed',
+      segmentId: S1.segmentId,
+      findingId: decision.finding!.id,
+      workOrderId
+    })
+    const audit = await demo.listAudit()
+    expect(audit.filter((e) => e.action === 'createPatrolPlan').map((e) => [e.subjectId, e.actor.id])).toEqual([
+      [open.id, 'usr_manager'],
+      ['plan_2', 'core.replan'],
+      ['plan_3', 'core.replan']
+    ])
   })
 })

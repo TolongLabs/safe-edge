@@ -16,6 +16,10 @@ export function createEventHub({
 }) {
   const subscribers = new Set<(event: EdgeEvent) => void>()
   const webhooks = new Map<string, Webhook>()
+  // Events a listener publishes in reaction (a re-plan) wait until the event it reacts to has reached every listener,
+  // so every subscriber sees events in the order they happened.
+  const queue: EdgeEvent[] = []
+  let delivering = false
 
   function fail(id: string, eventId: string, error: string): void {
     const before = webhooks.get(id)!
@@ -52,11 +56,18 @@ export function createEventHub({
       return [...webhooks.values()]
     },
     publish(events: EdgeEvent[]): void {
-      for (const event of events) {
-        for (const listener of subscribers) listener(event)
-        for (const webhook of webhooks.values()) {
-          if (webhook.eventTypes.includes(event.type)) void deliver(webhook, event)
+      queue.push(...events)
+      if (delivering) return
+      delivering = true
+      try {
+        for (let event = queue.shift(); event !== undefined; event = queue.shift()) {
+          for (const listener of subscribers) listener(event)
+          for (const webhook of webhooks.values()) {
+            if (webhook.eventTypes.includes(event.type)) void deliver(webhook, event)
+          }
         }
+      } finally {
+        delivering = false
       }
     }
   }

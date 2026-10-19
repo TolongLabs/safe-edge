@@ -132,7 +132,12 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
   expect((await read(`/candidates/${proposed.id}`)).candidate.status).toBe('candidate')
   expect((await read(`/work-orders/${played.workOrderId}`)).status).toBe('completed')
   expect((await read('/notices')).map((n: { status: string }) => n.status)).toEqual(['draft'])
-  expect((await read('/patrol-plans')).map((p: { status: string }) => p.status)).toEqual(['proposed', 'approved'])
+  // The re-test patrol the completed repair queued, the agent's plan and the plan in flight.
+  expect((await read('/patrol-plans')).map((p: { status: string }) => p.status)).toEqual([
+    'proposed',
+    'proposed',
+    'approved'
+  ])
   expect((await api.pass()).state).toBe('suspended')
 
   // The same requests from the right people go through: only the agent's identity refused them.

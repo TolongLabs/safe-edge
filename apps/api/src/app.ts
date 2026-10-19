@@ -88,7 +88,7 @@ export function createApp({
     onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
   })
   const evidence = createEvidenceStore({ clock, ids })
-  const automation = startAutomation({ core, clock, every, publish: hub.publish })
+  const automation = startAutomation({ core, clock, every, subscribe: hub.subscribe, publish: hub.publish })
   if (workOrders) {
     const provider = workOrders(async (ref) => evidence.bytes(ref))
     forwardWorkOrders({ core, subscribe: hub.subscribe, provider })

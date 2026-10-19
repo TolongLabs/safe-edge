@@ -1,8 +1,8 @@
 // #124: the automation core supports, running inside the API. On the wall clock an injected timer drives it (each test
 // fires it by hand, no sleeps); on the scenario clock each setScenarioClock call runs the same pass.
 import { expect, test } from 'bun:test'
-import { AuditEvent, type EdgeEvent } from '@safe-edge/contracts'
-import { S1, manualTimer, nextEvents, sseFrames, startApi, type Api } from './support.ts'
+import { AuditEvent, PatrolPlan, type CreatePatrolPlanRequest, type EdgeEvent } from '@safe-edge/contracts'
+import { S1, manualTimer, nextEvents, raiseTier2, seed, sseFrames, startApi, type Api } from './support.ts'
 
 /** The seeded passes: S1's is valid to 2027-04-15, `_12` valid to 2026-12-01, `_5` expiring to 2026-11-12. */
 const SOON = 'seg_866518980_12'
@@ -18,6 +18,18 @@ async function json(response: Promise<Response>) {
 
 const auditOf = async (api: Api) =>
   AuditEvent.array().parse(await json(api.request('get', '/audit', { token: 'tok_gm' })))
+
+const plansOf = async (api: Api) =>
+  PatrolPlan.array().parse(await json(api.request('get', '/patrol-plans', { token: 'tok_manager' })))
+
+const planRequest = (segmentIds: string[]): CreatePatrolPlanRequest => ({
+  dockId: 'dock_elmina_roof',
+  droneProfileId: 'drn_assumed',
+  segmentIds,
+  context: [],
+  notBefore: seed.asOf,
+  altitudeCapM: 60
+})
 
 async function subscribe(api: Api) {
   const stream = await api.request('get', '/events', { token: 'tok_manager' })
@@ -81,4 +93,40 @@ test('on the scenario clock, setting the clock runs the same pass instead of a t
     'reportMissedPatrol',
     'reportMissedPatrol'
   ])
+})
+
+test("a confirmed flag re-plans the open plan as the system, streamed right after the manager's decision", async () => {
+  const api = startApi()
+  const open = PatrolPlan.parse(
+    await json(api.request('post', '/patrol-plans', { token: 'tok_manager', body: planRequest([EXPIRING]) }))
+  )
+  const candidate = await json(raiseTier2(api))
+  const frames = await subscribe(api)
+  const decision = await json(
+    api.request('post', `/candidates/${candidate.id}/decision`, {
+      token: 'tok_manager',
+      body: { decision: 'confirm', severity: 'high' }
+    })
+  )
+  const events = await nextEvents(frames, 3)
+  expect(events.map((e) => e.type)).toEqual([
+    'edge.candidate.decided.v1',
+    'edge.work_order.drafted.v1',
+    'edge.patrol.planned.v1'
+  ])
+
+  const [, replanned] = await plansOf(api)
+  expect(replanned).toMatchObject({
+    id: 'plan_2',
+    status: 'proposed',
+    replan: {
+      trigger: { kind: 'flag_confirmed', segmentId: S1.segmentId, findingId: decision.finding.id },
+      supersedes: { planId: open.id, committedTasks: 0 }
+    }
+  })
+  expect(replanned!.tasks.map((t) => t.segmentId).toSorted()).toEqual([S1.segmentId, EXPIRING].toSorted())
+  expect((await auditOf(api)).find((e) => e.subjectId === 'plan_2')).toMatchObject({
+    action: 'createPatrolPlan',
+    actor: { type: 'system', id: 'core.replan' }
+  })
 })
