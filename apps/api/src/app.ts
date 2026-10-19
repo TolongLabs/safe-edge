@@ -9,11 +9,12 @@ import {
   type OperationInput,
   type OperationSpec,
   type Operations,
+  type ScenarioClock,
   type Webhook,
   type WorkOrderProvider
 } from '@safe-edge/contracts'
 import type Anthropic from '@anthropic-ai/sdk'
-import type { Clock, Core, IdGenerator } from '@safe-edge/core'
+import type { Core, IdGenerator } from '@safe-edge/core'
 import type { EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
@@ -22,6 +23,7 @@ import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
 import { createAgent } from './agent.ts'
+import type { ApiClock } from './clock.ts'
 import { createEventHub } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
@@ -29,7 +31,8 @@ import { forwardWorkOrders } from './work-orders.ts'
 
 export interface ApiOptions {
   core: Core
-  clock: Clock
+  /** A scenario clock (one with `set`) serves setScenarioClock; on the wall clock that operation answers 501. */
+  clock: ApiClock
   /** The core's ID generator, shared so API-owned records (evidence, webhooks) get IDs from the same counters. */
   ids: IdGenerator
   /** Opaque bearer token → the Actor it acts as. */
@@ -219,6 +222,17 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
       hub.register(webhook)
       core.recordStored('registerWebhook', c.get('actor'), webhook)
       return c.json(webhook, 201)
+    },
+    setScenarioClock: (c, { body }) => {
+      if (clock.set === undefined) {
+        return fail(c, 501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
+      }
+      const before: ScenarioClock = { id: 'clock', now: clock.now() }
+      clock.set(body.now)
+      // Audited after the move, so the chain shows the change at the time it set.
+      const after: ScenarioClock = { id: 'clock', now: clock.now() }
+      core.recordStored('setScenarioClock', c.get('actor'), after, before)
+      return c.json(after, 200)
     }
   }
 

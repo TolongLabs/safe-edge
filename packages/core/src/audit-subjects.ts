@@ -59,6 +59,7 @@ const AUDIT_SUBJECT: { readonly [K in OperationId]: SubjectField } = {
   streamEvents: null,
   listWebhooks: null,
   registerWebhook: null,
+  setScenarioClock: null,
   resetDemo: null
 }
 

@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
+import { clockFrom } from './clock.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import {
   PROCORE_DEVELOPER_SANDBOX,
@@ -15,7 +16,8 @@ const repoRoot = join(import.meta.dir, '../../..')
 const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
 
 const seed = Seed.parse(await readJson('data/elmina/fixtures/seed.json'))
-const clock = { now: () => new Date().toISOString() }
+// The wall clock, or with SAFE_EDGE_CLOCK=scenario the clock a scenario player sets (refused in production).
+const clock = clockFrom(process.env, seed.asOf)
 const ids = counterIds()
 // The seed maps no third parties and no observation feeds them yet (DECISIONS #79), so plans see none.
 const planner = await createElminaPlanner(readJson, { thirdParties: [] })

@@ -1746,6 +1746,37 @@ paths:
       x-safe-edge-roles:
         - integrator
       x-safe-edge-events: []
+  /scenario/clock:
+    post:
+      operationId: setScenarioClock
+      summary: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+      description: "Roles: system. Agents are refused."
+      tags:
+        - scenario
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetScenarioClockRequest"
+      responses:
+        "200":
+          description: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioClock"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - system
+      x-safe-edge-events: []
 components:
   securitySchemes:
     bearer:
@@ -4915,4 +4946,26 @@ components:
       required:
         - url
         - eventTypes
+      additionalProperties: false
+    SetScenarioClockRequest:
+      type: object
+      properties:
+        now:
+          type: string
+          format: date-time
+      required:
+        - now
+      additionalProperties: false
+    ScenarioClock:
+      type: object
+      properties:
+        id:
+          type: string
+          const: clock
+        now:
+          type: string
+          format: date-time
+      required:
+        - id
+        - now
       additionalProperties: false

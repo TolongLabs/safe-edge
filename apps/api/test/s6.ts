@@ -43,14 +43,14 @@ export const S6_REFUSED = S6.events.filter((event) => event.refusedWith !== unde
 
 export interface Player {
   clientFor(userId: string): SafeEdgeClient
-  setNow(iso: string): void
+  setNow(iso: string): void | Promise<unknown>
 }
 
 /** Plays events in order at their times. A refused event must be refused with its rule; the rest return results. */
 export async function play(player: Player, events: readonly ScenarioEvent[]) {
   const results: unknown[] = []
   for (const event of events) {
-    player.setNow(event.at)
+    await player.setNow(event.at)
     const call = (player.clientFor(event.as)[event.operationId] as (input: unknown) => Promise<unknown>)(event.input)
     if (event.refusedWith === undefined) results.push(await call)
     else await expect(call).rejects.toMatchObject({ status: 403, rule: event.refusedWith })
@@ -62,7 +62,12 @@ export async function play(player: Player, events: readonly ScenarioEvent[]) {
 export function memoryPlayer(): Player {
   let now = seed.asOf
   const client = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager', clock: { now: () => now } })
-  return { clientFor: (userId) => client.as(userId), setNow: (iso) => (now = iso) }
+  return {
+    clientFor: (userId) => client.as(userId),
+    setNow: (iso) => {
+      now = iso
+    }
+  }
 }
 
 /** The API over HTTP, each user calling with its own `tok_<role>` token. */
@@ -77,6 +82,15 @@ export function httpPlayer(api: Api): Player {
     clientFor: (userId) => createSafeEdgeClient({ transport: 'http', baseUrl, token: `tok_${role(userId)}` }),
     setNow: api.setNow
   }
+}
+
+/**
+ * A dev API started with `SAFE_EDGE_CLOCK=scenario`, each user calling with its own token. Before each event the
+ * system user sets the API's scenario clock to the event's time, as a scenario player does.
+ */
+export function scenarioClockPlayer(baseUrl: string, tokenOf: (userId: string) => string): Player {
+  const clientFor = (userId: string) => createSafeEdgeClient({ transport: 'http', baseUrl, token: tokenOf(userId) })
+  return { clientFor, setNow: (now) => clientFor('usr_system').setScenarioClock({ body: { now } }) }
 }
 
 /** Everything a mark-safe would move: passes, findings, tasks, work orders and notices, read as the manager. */
