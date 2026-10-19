@@ -303,7 +303,7 @@ export interface paths {
         };
         /**
          * A candidate with its observations and baseline
-         * @description Roles: manager, engineer, reviewer. Agents need scope `inspection.read`.
+         * @description Roles: manager, engineer, reviewer, system. Agents need scope `inspection.read`.
          */
         get: operations["getCandidate"];
         put?: never;
@@ -562,6 +562,26 @@ export interface paths {
         patch: operations["updateWorkOrder"];
         trace?: never;
     };
+    "/work-orders/{id}/external-ref": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record the external work-order system's record for a work order, once (system only)
+         * @description Roles: system. Agents are refused.
+         */
+        post: operations["setWorkOrderExternalRef"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/work-orders/{id}/submit": {
         parameters: {
             query?: never;
@@ -816,10 +836,50 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Ask the agent; streams `delta` events, then one `answer` event citing record IDs
+         * Ask the agent; streams `delta` events, then one `answer` event citing record IDs, or one `stopped` event (AgentStopped) when Claude refuses or cannot finish
          * @description Roles: manager, gm. Agents are refused.
          */
         post: operations["askAgent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/inbox-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+         * @description Roles: manager. Agents are refused.
+         */
+        post: operations["draftInbox"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/monthly-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The agent drafts the monthly governance report as a notice draft; 502 AgentStopped when Claude refuses or skips the draft
+         * @description Roles: gm, manager. Agents are refused.
+         */
+        post: operations["draftMonthlyReport"];
         delete?: never;
         options?: never;
         head?: never;
@@ -938,7 +998,7 @@ export interface components {
             /** @constant */
             ok: false;
             /** @enum {string} */
-            error: "invalid_input" | "unauthenticated" | "not_found" | "idempotency_conflict" | "not_implemented";
+            error: "invalid_input" | "unauthenticated" | "not_found" | "idempotency_conflict" | "not_implemented" | "agent_stopped";
             message: string;
         };
         User: {
@@ -1167,6 +1227,43 @@ export interface components {
         };
         /** @enum {string} */
         RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
+        ReplanTrigger: {
+            /** @constant */
+            kind: "heavy_rain";
+            /** @description A `rainfall` reading in the JPS heavy (31–60 mm) or very heavy (> 60 mm) band */
+            reading: components["schemas"]["ContextSnapshot"];
+        } | {
+            /** @constant */
+            kind: "weather_warning";
+            /** @description A `weather_warning` or `lightning_warning` in force */
+            warning: components["schemas"]["ContextSnapshot"];
+        } | {
+            /** @constant */
+            kind: "flag_confirmed";
+            segmentId: string;
+            findingId: string;
+        } | {
+            /** @constant */
+            kind: "pass_expiring";
+            segmentId: string;
+            passId: string;
+            /** Format: date-time */
+            validTo: string;
+        } | {
+            /** @constant */
+            kind: "repair_completed";
+            segmentId: string;
+            findingId: string;
+            workOrderId: string;
+        };
+        PlanReplan: {
+            trigger: components["schemas"]["ReplanTrigger"];
+            supersedes: {
+                planId: string;
+                /** @description Leading route stops already flown or in progress; they stay exactly as planned */
+                committedTasks: number;
+            } | null;
+        };
         PatrolPlan: {
             id: string;
             /** Format: date-time */
@@ -1198,6 +1295,8 @@ export interface components {
                 code: components["schemas"]["RejectionCode"];
                 reason: string;
             }[];
+            /** @description null for a plan a person or the agent asked for */
+            replan: components["schemas"]["PlanReplan"] | null;
             approvedBy: string | null;
             approvedAt: string | null;
             simulated: boolean;
@@ -1485,6 +1584,8 @@ export interface components {
             notBefore: string;
             /** @description Agreed with air traffic control */
             altitudeCapM: number;
+            /** @description Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider */
+            replan?: components["schemas"]["PlanReplan"];
         };
         StartPatrolRequest: {
             planId: string;
@@ -1549,6 +1650,9 @@ export interface components {
         UpdateWorkOrderRequest: {
             remedyId?: string | null;
             notes?: string;
+        };
+        SetWorkOrderExternalRefRequest: {
+            externalRef: string;
         };
         SubmitWorkOrderRequest: {
             installerUserId: string;
@@ -1667,6 +1771,49 @@ export interface components {
         };
         AskAgentRequest: {
             question: string;
+        };
+        DraftInboxRequest: {
+            candidateId: string;
+        };
+        InboxDraft: {
+            candidateId: string;
+            /** @description Null while the candidate is not confirmed; no work order then */
+            findingId: string | null;
+            /** @description The agent's summary for the Inbox card */
+            summary: string;
+            /** @description The agent's draft; a person edits and submits it */
+            workOrder: components["schemas"]["WorkOrder"] | null;
+            /** @description Record IDs that tool results returned and the text names, in order of first mention */
+            citations: string[];
+            /** @description True when the text names no record ID from a tool result; show it as uncited */
+            uncited: boolean;
+            /** @description The model that wrote the final turn, after any server-side fallback */
+            model: string;
+            /** @description Every switch to a fallback model during the run; empty when none */
+            fallbacks: {
+                from: string;
+                to: string;
+            }[];
+        };
+        DraftMonthlyReportRequest: {
+            /** @description YYYY-MM */
+            month: string;
+        };
+        /** @description Citations are checked in the notice body */
+        MonthlyReportDraft: {
+            month: string;
+            notice: components["schemas"]["Notice"];
+            /** @description Record IDs that tool results returned and the text names, in order of first mention */
+            citations: string[];
+            /** @description True when the text names no record ID from a tool result; show it as uncited */
+            uncited: boolean;
+            /** @description The model that wrote the final turn, after any server-side fallback */
+            model: string;
+            /** @description Every switch to a fallback model during the run; empty when none */
+            fallbacks: {
+                from: string;
+                to: string;
+            }[];
         };
         RegisterWebhookRequest: {
             /** Format: uri */
@@ -2587,6 +2734,39 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    setWorkOrderExternalRef: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetWorkOrderExternalRefRequest"];
+            };
+        };
+        responses: {
+            /** @description Record the external work-order system's record for a work order, once (system only) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     submitWorkOrder: {
         parameters: {
             query?: never;
@@ -2971,13 +3151,73 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Ask the agent; streams `delta` events, then one `answer` event citing record IDs */
+            /** @description Ask the agent; streams `delta` events, then one `answer` event citing record IDs, or one `stopped` event (AgentStopped) when Claude refuses or cannot finish */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "text/event-stream": string;
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    draftInbox: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftInboxRequest"];
+            };
+        };
+        responses: {
+            /** @description The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxDraft"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    draftMonthlyReport: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftMonthlyReportRequest"];
+            };
+        };
+        responses: {
+            /** @description The agent drafts the monthly governance report as a notice draft; 502 AgentStopped when Claude refuses or skips the draft */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthlyReportDraft"];
                 };
             };
             400: components["responses"]["InvalidInput"];

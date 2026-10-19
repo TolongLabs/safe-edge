@@ -6,16 +6,20 @@
     "packages/*"
   ],
   "scripts": {
+    "agent:live": "SAFE_EDGE_CLAUDE=live bun test apps/api/test/agent.test.ts --timeout 600000",
+    "agent:record": "SAFE_EDGE_CLAUDE=record bun test apps/api/test/agent.test.ts --timeout 600000",
     "build": "bun --filter '@safe-edge/web' build",
     "check:browser": "bun scripts/check-browser.ts",
     "dev": "bun --filter '@safe-edge/*' dev",
     "export:mission": "bun packages/planner/scripts/export-mission.ts",
+    "fetch:weather": "bun packages/providers/scripts/fetch-weather.ts",
     "generate:contracts": "bun packages/contracts/scripts/generate.ts",
     "generate:seed": "bun packages/core/scripts/generate-seed.ts",
     "graph": "graphify update .",
     "lint": "prettier --check .",
     "lint:fix": "prettier --write .",
     "prepare": "husky",
+    "procore:smoke": "bun packages/providers/scripts/procore-smoke.ts",
     "test": "bun test --pass-with-no-tests",
     "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck"
   },

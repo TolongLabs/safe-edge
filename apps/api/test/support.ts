@@ -1,9 +1,10 @@
 // Starts the API the way index.ts does, but on a free port with an injected clock, and calls it over real HTTP.
+import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
 import type { Actor, RaiseCandidateRequest, Role } from '@safe-edge/contracts'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
-import { createApp } from '../src/app.ts'
+import { createApp, type ApiOptions } from '../src/app.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
 
@@ -36,15 +37,24 @@ export interface Exchange {
   body: unknown
 }
 
+/** With `claude`, the API runs its agent with that client and the `tok_agent` token; without it, it has no agent. */
 export function startApi({
   heartbeatMs = 5_000,
-  tokens: tokenTable = tokens
-}: { heartbeatMs?: number; tokens?: ReadonlyMap<string, Actor> } = {}) {
+  tokens: tokenTable = tokens,
+  workOrders,
+  claude
+}: {
+  heartbeatMs?: number
+  tokens?: ReadonlyMap<string, Actor>
+  workOrders?: ApiOptions['workOrders']
+  claude?: Anthropic
+} = {}) {
   let now = seed.asOf
   const clock = { now: () => now }
   const ids = counterIds()
   const core = createCore({ seed, clock, ids, planner })
-  const app = createApp({ core, clock, ids, tokens: tokenTable, heartbeatMs })
+  const agent = claude && { claude, token: 'tok_agent' }
+  const app = createApp({ core, clock, ids, tokens: tokenTable, heartbeatMs, workOrders, agent })
   const log: Exchange[] = []
   const server = Bun.serve({
     port: 0,

@@ -309,6 +309,55 @@ export const RejectionCode = named(
 )
 export type RejectionCode = z.infer<typeof RejectionCode>
 
+/**
+ * Why a route was re-planned (TRD "Patrol planner" step 5). Weather triggers carry the reading or warning that fired
+ * them; the others name the record core changed.
+ */
+export const ReplanTrigger = named(
+  'ReplanTrigger',
+  z.discriminatedUnion('kind', [
+    z.object({
+      kind: z.literal('heavy_rain'),
+      reading: ContextSnapshot.describe('A `rainfall` reading in the JPS heavy (31–60 mm) or very heavy (> 60 mm) band')
+    }),
+    z.object({
+      kind: z.literal('weather_warning'),
+      warning: ContextSnapshot.describe('A `weather_warning` or `lightning_warning` in force')
+    }),
+    z.object({ kind: z.literal('flag_confirmed'), segmentId: SegmentId, findingId: FindingId }),
+    z.object({ kind: z.literal('pass_expiring'), segmentId: SegmentId, passId: PassId, validTo: Timestamp }),
+    z.object({
+      kind: z.literal('repair_completed'),
+      segmentId: SegmentId,
+      findingId: FindingId,
+      workOrderId: WorkOrderId
+    })
+  ])
+)
+export type ReplanTrigger = z.infer<typeof ReplanTrigger>
+
+/**
+ * A re-plan: the trigger, and the plan whose uncommitted stops it replaces. `supersedes` is null for a patrol the
+ * trigger queued when no plan was open (a re-test after a repair).
+ */
+export const PlanReplan = named(
+  'PlanReplan',
+  z.object({
+    trigger: ReplanTrigger,
+    supersedes: z
+      .object({
+        planId: PatrolPlanId,
+        committedTasks: z
+          .number()
+          .int()
+          .nonnegative()
+          .describe('Leading route stops already flown or in progress; they stay exactly as planned')
+      })
+      .nullable()
+  })
+)
+export type PlanReplan = z.infer<typeof PlanReplan>
+
 export const PatrolPlan = named(
   'PatrolPlan',
   z.object({
@@ -332,6 +381,7 @@ export const PatrolPlan = named(
     energyWh: z.number().nonnegative(),
     reserveWh: z.number().nonnegative().describe("Energy left on landing; at least the drone profile's reserve"),
     rejected: z.array(z.object({ segmentId: SegmentId, code: RejectionCode, reason: z.string() })),
+    replan: PlanReplan.nullable().describe('null for a plan a person or the agent asked for'),
     approvedBy: UserId.nullable(),
     approvedAt: Timestamp.nullable(),
     ...provenance

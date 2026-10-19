@@ -205,7 +205,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     },
     completePatrol: { coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }] },
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
-    previewRouteClosure: { remedyIds: [played.remedy.id] }
+    previewRouteClosure: { remedyIds: [played.remedy.id] },
+    setWorkOrderExternalRef: { externalRef: 'procore-observation-1' }
   }
   const ids = {
     'patrol-plans': flying.id,
@@ -270,6 +271,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     body: 'Draft'
   })
   await as('dev_manager', 'post', `/notices/${notice.id}/send`)
+  await as('dev_system', 'post', `/work-orders/${draft.id}/external-ref`, { externalRef: 'procore-observation-1' })
   const plan = await as('dev_manager', 'post', '/patrol-plans', patrolRequest)
   await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
   const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
@@ -342,7 +344,11 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   const notReachable = {
     releasePlanHold: 'needs a separation hold, which the API planner never makes: it sees no third parties (#79)',
     triageImages: 'answers 501 until #74',
-    askAgent: 'answers 501 until #75'
+    // The agent's flows need Claude (apps/api/test/agent.test.ts replays recorded runs). They write only through
+    // the agent's own createWorkOrder and draftNotice calls, made with its token like the ones above.
+    askAgent: 'needs Claude',
+    draftInbox: 'needs Claude',
+    draftMonthlyReport: 'needs Claude'
   }
   expect(new Set(allowed.map((r) => r.operationId))).toEqual(
     new Set(writes.map(([id]) => id).filter((id) => !(id in notReachable)))

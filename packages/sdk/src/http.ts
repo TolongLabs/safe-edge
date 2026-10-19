@@ -16,12 +16,14 @@ export interface HttpOptions {
   baseUrl: string
   /** Bearer token; the API maps it to an Actor. */
   token: string
+  /** The fetch to call the API with; the global fetch when absent. The API's own agent passes its app's fetch. */
+  fetch?: (url: string, init: RequestInit) => Promise<Response>
 }
 
 /** Every core operation, plus the HTTP-only ones that are not streamed (evidence, triage, webhooks). */
 export type HttpClient = SafeEdgeClient & Methods<ApiOperationId>
 
-export function createHttpClient({ baseUrl, token }: HttpOptions): HttpClient {
+export function createHttpClient({ baseUrl, token, fetch = globalThis.fetch }: HttpOptions): HttpClient {
   const call = async (operationId: CoreOperationId | ApiOperationId, input: RawInput, options: CallOptions) => {
     const op: OperationSpec = operations[operationId]
     const path = op.path.replace(/\{(\w+)\}/g, (_, name: string) => encodeURIComponent(String(input.params?.[name])))

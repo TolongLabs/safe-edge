@@ -74,7 +74,14 @@ export const ApiError = named(
   'ApiError',
   z.object({
     ok: z.literal(false),
-    error: z.enum(['invalid_input', 'unauthenticated', 'not_found', 'idempotency_conflict', 'not_implemented']),
+    error: z.enum([
+      'invalid_input',
+      'unauthenticated',
+      'not_found',
+      'idempotency_conflict',
+      'not_implemented',
+      'agent_stopped'
+    ]),
     message: z.string()
   })
 )

@@ -492,7 +492,7 @@ paths:
     get:
       operationId: getCandidate
       summary: A candidate with its observations and baseline
-      description: "Roles: manager, engineer, reviewer. Agents need scope `inspection.read`."
+      description: "Roles: manager, engineer, reviewer, system. Agents need scope `inspection.read`."
       tags:
         - candidates
       parameters:
@@ -519,6 +519,7 @@ paths:
         - manager
         - engineer
         - reviewer
+        - system
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
   /candidates/{id}/decision:
@@ -1015,6 +1016,45 @@ paths:
         - manager
       x-safe-edge-agent-scope: workorder.draft
       x-safe-edge-events: []
+  /work-orders/{id}/external-ref:
+    post:
+      operationId: setWorkOrderExternalRef
+      summary: Record the external work-order system's record for a work order, once (system only)
+      description: "Roles: system. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetWorkOrderExternalRefRequest"
+      responses:
+        "200":
+          description: Record the external work-order system's record for a work order, once (system only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
+      x-safe-edge-events: []
   /work-orders/{id}/submit:
     post:
       operationId: submitWorkOrder
@@ -1462,7 +1502,7 @@ paths:
   /agent/ask:
     post:
       operationId: askAgent
-      summary: Ask the agent; streams `delta` events, then one `answer` event citing record IDs
+      summary: Ask the agent; streams `delta` events, then one `answer` event citing record IDs, or one `stopped` event (AgentStopped) when Claude refuses or cannot finish
       description: "Roles: manager, gm. Agents are refused."
       tags:
         - agent
@@ -1476,7 +1516,7 @@ paths:
               $ref: "#/components/schemas/AskAgentRequest"
       responses:
         "200":
-          description: Ask the agent; streams `delta` events, then one `answer` event citing record IDs
+          description: Ask the agent; streams `delta` events, then one `answer` event citing record IDs, or one `stopped` event (AgentStopped) when Claude refuses or cannot finish
           content:
             text/event-stream:
               schema:
@@ -1490,6 +1530,69 @@ paths:
       x-safe-edge-roles:
         - manager
         - gm
+      x-safe-edge-events: []
+  /agent/inbox-drafts:
+    post:
+      operationId: draftInbox
+      summary: The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+      description: "Roles: manager. Agents are refused."
+      tags:
+        - agent
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DraftInboxRequest"
+      responses:
+        "200":
+          description: The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxDraft"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - manager
+      x-safe-edge-events: []
+  /agent/monthly-reports:
+    post:
+      operationId: draftMonthlyReport
+      summary: The agent drafts the monthly governance report as a notice draft; 502 AgentStopped when Claude refuses or skips the draft
+      description: "Roles: gm, manager. Agents are refused."
+      tags:
+        - agent
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DraftMonthlyReportRequest"
+      responses:
+        "200":
+          description: The agent drafts the monthly governance report as a notice draft; 502 AgentStopped when Claude refuses or skips the draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonthlyReportDraft"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - gm
+        - manager
       x-safe-edge-events: []
   /events:
     get:
@@ -1829,6 +1932,7 @@ components:
             - not_found
             - idempotency_conflict
             - not_implemented
+            - agent_stopped
         message:
           type: string
       required:
@@ -2617,6 +2721,113 @@ components:
         - separation_hold
         - stale_input
         - outside_window
+    ReplanTrigger:
+      oneOf:
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: heavy_rain
+            reading:
+              description: A `rainfall` reading in the JPS heavy (31–60 mm) or very heavy (> 60 mm) band
+              $ref: "#/components/schemas/ContextSnapshot"
+          required:
+            - kind
+            - reading
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: weather_warning
+            warning:
+              description: A `weather_warning` or `lightning_warning` in force
+              $ref: "#/components/schemas/ContextSnapshot"
+          required:
+            - kind
+            - warning
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: flag_confirmed
+            segmentId:
+              type: string
+              pattern: ^seg_
+            findingId:
+              type: string
+              pattern: ^fnd_
+          required:
+            - kind
+            - segmentId
+            - findingId
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: pass_expiring
+            segmentId:
+              type: string
+              pattern: ^seg_
+            passId:
+              type: string
+              pattern: ^pass_
+            validTo:
+              type: string
+              format: date-time
+          required:
+            - kind
+            - segmentId
+            - passId
+            - validTo
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: repair_completed
+            segmentId:
+              type: string
+              pattern: ^seg_
+            findingId:
+              type: string
+              pattern: ^fnd_
+            workOrderId:
+              type: string
+              pattern: ^wo_
+          required:
+            - kind
+            - segmentId
+            - findingId
+            - workOrderId
+          additionalProperties: false
+    PlanReplan:
+      type: object
+      properties:
+        trigger:
+          $ref: "#/components/schemas/ReplanTrigger"
+        supersedes:
+          anyOf:
+            - type: object
+              properties:
+                planId:
+                  type: string
+                  pattern: ^plan_
+                committedTasks:
+                  type: integer
+                  minimum: 0
+                  description: Leading route stops already flown or in progress; they stay exactly as planned
+              required:
+                - planId
+                - committedTasks
+              additionalProperties: false
+            - type: "null"
+      required:
+        - trigger
+        - supersedes
+      additionalProperties: false
     PatrolPlan:
       type: object
       properties:
@@ -2705,6 +2916,11 @@ components:
               - code
               - reason
             additionalProperties: false
+        replan:
+          anyOf:
+            - $ref: "#/components/schemas/PlanReplan"
+            - type: "null"
+          description: null for a plan a person or the agent asked for
         approvedBy:
           anyOf:
             - type: string
@@ -2736,6 +2952,7 @@ components:
         - energyWh
         - reserveWh
         - rejected
+        - replan
         - approvedBy
         - approvedAt
         - simulated
@@ -3734,6 +3951,9 @@ components:
           type: number
           exclusiveMinimum: 0
           description: Agreed with air traffic control
+        replan:
+          description: Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider
+          $ref: "#/components/schemas/PlanReplan"
       required:
         - dockId
         - droneProfileId
@@ -3961,6 +4181,15 @@ components:
             - type: "null"
         notes:
           type: string
+      additionalProperties: false
+    SetWorkOrderExternalRefRequest:
+      type: object
+      properties:
+        externalRef:
+          type: string
+          minLength: 1
+      required:
+        - externalRef
       additionalProperties: false
     SubmitWorkOrderRequest:
       type: object
@@ -4361,6 +4590,121 @@ components:
       required:
         - question
       additionalProperties: false
+    DraftInboxRequest:
+      type: object
+      properties:
+        candidateId:
+          type: string
+          pattern: ^cand_
+      required:
+        - candidateId
+      additionalProperties: false
+    InboxDraft:
+      type: object
+      properties:
+        candidateId:
+          type: string
+          pattern: ^cand_
+        findingId:
+          anyOf:
+            - type: string
+              pattern: ^fnd_
+            - type: "null"
+          description: Null while the candidate is not confirmed; no work order then
+        summary:
+          type: string
+          description: The agent's summary for the Inbox card
+        workOrder:
+          anyOf:
+            - $ref: "#/components/schemas/WorkOrder"
+            - type: "null"
+          description: The agent's draft; a person edits and submits it
+        citations:
+          type: array
+          items:
+            type: string
+          description: Record IDs that tool results returned and the text names, in order of first mention
+        uncited:
+          type: boolean
+          description: True when the text names no record ID from a tool result; show it as uncited
+        model:
+          type: string
+          description: The model that wrote the final turn, after any server-side fallback
+        fallbacks:
+          type: array
+          items:
+            type: object
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+            required:
+              - from
+              - to
+            additionalProperties: false
+          description: Every switch to a fallback model during the run; empty when none
+      required:
+        - candidateId
+        - findingId
+        - summary
+        - workOrder
+        - citations
+        - uncited
+        - model
+        - fallbacks
+      additionalProperties: false
+    DraftMonthlyReportRequest:
+      type: object
+      properties:
+        month:
+          type: string
+          pattern: ^\d{4}-(0[1-9]|1[0-2])$
+          description: YYYY-MM
+      required:
+        - month
+      additionalProperties: false
+    MonthlyReportDraft:
+      type: object
+      properties:
+        month:
+          type: string
+        notice:
+          $ref: "#/components/schemas/Notice"
+        citations:
+          type: array
+          items:
+            type: string
+          description: Record IDs that tool results returned and the text names, in order of first mention
+        uncited:
+          type: boolean
+          description: True when the text names no record ID from a tool result; show it as uncited
+        model:
+          type: string
+          description: The model that wrote the final turn, after any server-side fallback
+        fallbacks:
+          type: array
+          items:
+            type: object
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+            required:
+              - from
+              - to
+            additionalProperties: false
+          description: Every switch to a fallback model during the run; empty when none
+      required:
+        - month
+        - notice
+        - citations
+        - uncited
+        - model
+        - fallbacks
+      additionalProperties: false
+      description: Citations are checked in the notice body
     RegisterWebhookRequest:
       type: object
       properties:
