@@ -7,6 +7,7 @@ import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { testEnv } from '../../../test/spawn.ts'
 import { ensureDevTokens } from '../src/dev-tokens.ts'
 import { S6, play, scenarioClockPlayer } from './s6.ts'
 import { seed } from './support.ts'
@@ -30,7 +31,7 @@ async function serve(entry: string, env: Record<string, string>): Promise<string
   const dataDir = await mkdtemp(join(tmpdir(), 'safe-edge-scenario-api-'))
   const api = Bun.spawn(['bun', entry], {
     cwd: apiDir,
-    env: { ...process.env, SAFE_EDGE_DATA_DIR: dataDir, ...env, PORT: String(port) },
+    env: testEnv({ SAFE_EDGE_DATA_DIR: dataDir, ...env, PORT: String(port) }),
     stdout: 'ignore',
     stderr: 'inherit'
   })
@@ -126,7 +127,7 @@ test('production refuses the scenario clock: it will not start with one, and its
   }
   const refused = Bun.spawn(['bun', 'src/index.ts'], {
     cwd: apiDir,
-    env: { ...process.env, ...production, SAFE_EDGE_CLOCK: 'scenario', PORT: String(freePort()) },
+    env: testEnv({ ...production, SAFE_EDGE_CLOCK: 'scenario', PORT: String(freePort()) }),
     stdout: 'ignore',
     stderr: 'pipe'
   })

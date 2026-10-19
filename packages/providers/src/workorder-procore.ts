@@ -46,7 +46,8 @@ export interface ProcoreConfig extends ProcoreCredentials {
   readEvidence: EvidenceReader
 }
 
-const ENV = {
+/** The variables Procore credentials are read from. */
+export const PROCORE_ENV = {
   clientId: 'PROCORE_CLIENT_ID',
   clientSecret: 'PROCORE_CLIENT_SECRET',
   companyId: 'PROCORE_COMPANY_ID',
@@ -55,8 +56,8 @@ const ENV = {
 
 /** The credentials from `PROCORE_*` variables: null when none is set, an error when only some are. */
 export function readProcoreEnv(env: Record<string, string | undefined>): ProcoreCredentials | null {
-  const missing = Object.values(ENV).filter((name) => !env[name])
-  if (missing.length === Object.keys(ENV).length) return null
+  const missing = Object.values(PROCORE_ENV).filter((name) => !env[name])
+  if (missing.length === Object.keys(PROCORE_ENV).length) return null
   if (missing.length > 0) throw new Error(`Set ${missing.join(', ')} as well, or no PROCORE_* variable at all`)
   const procoreId = (name: string) => {
     const id = Number(env[name])
@@ -64,10 +65,10 @@ export function readProcoreEnv(env: Record<string, string | undefined>): Procore
     return id
   }
   return {
-    clientId: env[ENV.clientId]!,
-    clientSecret: env[ENV.clientSecret]!,
-    companyId: procoreId(ENV.companyId),
-    projectId: procoreId(ENV.projectId)
+    clientId: env[PROCORE_ENV.clientId]!,
+    clientSecret: env[PROCORE_ENV.clientSecret]!,
+    companyId: procoreId(PROCORE_ENV.companyId),
+    projectId: procoreId(PROCORE_ENV.projectId)
   }
 }
 

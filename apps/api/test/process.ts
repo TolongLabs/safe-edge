@@ -1,10 +1,11 @@
 // Runs the API's real entry (src/index.ts) as its own process, the way it is deployed, on a free port. It never loads
-// a .env file (`--no-env-file`) and gets no PROCORE_* variable, so no test run can file real sandbox Observations.
+// a .env file (`--no-env-file`) and gets no credential (testEnv), so no test run can file real sandbox Observations.
 import type { Subprocess } from 'bun'
 import { afterAll } from 'bun:test'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { testEnv } from '../../../test/spawn.ts'
 import { seed } from './support.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -18,13 +19,6 @@ function freePort(): number {
   server.stop(true)
   if (port === undefined) throw new Error('Bun.serve did not report a port')
   return port
-}
-
-/** The environment of the test run, minus Procore credentials and NODE_ENV, which each start sets itself. */
-function baseEnv(): Record<string, string | undefined> {
-  return Object.fromEntries(
-    Object.entries(process.env).filter(([name]) => !name.startsWith('PROCORE_') && name !== 'NODE_ENV')
-  )
 }
 
 const running = new Set<Subprocess>()
@@ -41,14 +35,13 @@ function spawnApi(port: number, env: Record<string, string>) {
   dataDirs.push(dataDir)
   return Bun.spawn(['bun', '--no-env-file', 'apps/api/src/index.ts'], {
     cwd: repoRoot,
-    env: {
-      ...baseEnv(),
+    env: testEnv({
       PORT: String(port),
       SAFE_EDGE_DEV_TOKENS: JSON.stringify(processTokens),
       SAFE_EDGE_AGENT_TOKEN: 'tok_agent',
       SAFE_EDGE_DATA_DIR: dataDir,
       ...env
-    },
+    }),
     stdout: 'ignore',
     stderr: 'pipe'
   })

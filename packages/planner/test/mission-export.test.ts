@@ -5,6 +5,7 @@ import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { demoPlan } from '../scripts/export-mission.ts'
+import { testEnv } from '../../../test/spawn.ts'
 import { exportQgcPlan, exportWpmlKmz } from '../src/export/index.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -332,7 +333,7 @@ describe('mission export of a patrol planned over real Elmina segments', async (
 
   test('`bun run export:mission <dir>` writes both files for the demo plan, stamped in their names', async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'mission-export-'))
-    const run = Bun.spawnSync(['bun', 'run', 'export:mission', outDir], { cwd: repoRoot })
+    const run = Bun.spawnSync(['bun', 'run', 'export:mission', outDir], { cwd: repoRoot, env: testEnv() })
     if (run.exitCode !== 0) throw new Error(run.stderr.toString())
     expect(run.stdout.toString()).toContain('wrote plan_demo-NOT-FLIGHT-READY.kmz and plan_demo-NOT-FLIGHT-READY.plan')
     expect((await readdir(outDir)).toSorted()).toEqual([

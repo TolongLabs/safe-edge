@@ -5,6 +5,7 @@ import { mkdtemp, readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { parse } from 'yaml'
+import { testEnv } from '../../../test/spawn.ts'
 
 // Every row of the TRD "REST API" table. `agentScope` comes from the TRD agent tool table and PLAN.md
 // (null: agents are refused; undefined: the TRD says "any", so not asserted here).
@@ -68,7 +69,9 @@ let outDir: string
 
 beforeAll(async () => {
   outDir = await mkdtemp(join(tmpdir(), 'safe-edge-contracts-'))
-  const run = Bun.spawnSync([process.execPath, join(import.meta.dir, '../scripts/generate.ts'), outDir])
+  const run = Bun.spawnSync([process.execPath, join(import.meta.dir, '../scripts/generate.ts'), outDir], {
+    env: testEnv()
+  })
   if (run.exitCode !== 0) throw new Error(`generate.ts failed:\n${run.stderr.toString()}`)
 })
 

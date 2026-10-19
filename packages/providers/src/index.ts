@@ -7,6 +7,7 @@ export * from './weather-datagovmy.ts'
 export * from './weather-jps.ts'
 export {
   PROCORE_DEVELOPER_SANDBOX,
+  PROCORE_ENV,
   ProcoreWorkOrderProvider,
   readProcoreEnv,
   SAFETY_HAZARD_OBSERVATION_TYPE,
