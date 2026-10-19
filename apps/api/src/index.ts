@@ -52,5 +52,7 @@ export default createApp({
   tokens: await devTokens(process.env, seed.users),
   heartbeatMs: 5_000,
   agent,
-  workOrders
+  workOrders,
+  // On the wall clock the automation (tick, missed patrols) repeats on a timer; a scenario clock runs it when set.
+  every: (ms, run) => void setInterval(() => void run(), ms)
 })

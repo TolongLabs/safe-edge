@@ -256,7 +256,9 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   }
 
   expect((await api.pass()).state).toBe('suspended')
-  expect(await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))).toEqual(validBefore)
+  // No pass became valid. Moving the scenario clock runs the scheduled pass, whose missed patrols may suspend some.
+  const validAfter: { id: string }[] = await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))
+  expect(validAfter.filter((p) => !validBefore.some((b: { id: string }) => b.id === p.id))).toEqual([])
   // The Tier 2 candidates automation raised above hold the pass too, so the manager rejects them as false alarms.
   const raised: { id: string }[] = await json(
     api.request('get', `/candidates?status=candidate&segmentId=${S1.segmentId}`, { token: 'dev_manager' })

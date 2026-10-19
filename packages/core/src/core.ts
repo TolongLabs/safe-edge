@@ -28,8 +28,11 @@ export interface Clock {
   now(): string
 }
 
-/** What the API stores outside core: its operations' records, and its own failed webhook deliveries. */
-export type StoredAction = OperationId | 'deliverWebhook'
+/**
+ * What a transport stores outside core: the API's operations' records, its own failed webhook deliveries, and failed
+ * automation steps (`recordAutomationFailure`).
+ */
+export type StoredAction = OperationId | 'deliverWebhook' | 'runAutomation'
 
 export interface IdGenerator {
   next(prefix: IdPrefix): string
@@ -106,7 +109,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     record: { id: string },
     before: { id: string } | null = null
   ) => {
-    const handledBy = action === 'deliverWebhook' ? 'api' : operations[action].handledBy
+    const handledBy = action === 'deliverWebhook' || action === 'runAutomation' ? 'api' : operations[action].handledBy
     if (handledBy !== 'api') throw new Error(`${action} is handled by ${handledBy}, whose writes core audits itself`)
     openTx(Actor.parse(actor), clock.now()).commitStored(action, record, before)
   }

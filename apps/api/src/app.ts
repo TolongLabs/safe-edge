@@ -24,6 +24,7 @@ import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
 import { createAgent } from './agent.ts'
+import { startAutomation, type Every } from './automation.ts'
 import type { ApiClock } from './clock.ts'
 import { createEventHub } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
@@ -50,6 +51,11 @@ export interface ApiOptions {
    * Without it, those routes answer 501.
    */
   agent?: { claude: Anthropic; token: string }
+  /**
+   * How the API repeats its automation on the wall clock (`setInterval`); required there. A scenario clock runs the
+   * automation each time `setScenarioClock` moves it, so it ignores this.
+   */
+  every?: Every
 }
 
 type Env = { Variables: { actor: Actor } }
@@ -65,7 +71,16 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
   c.json({ ok: false, error, message } satisfies ApiError, status)
 
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
-export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, agent: agentOptions }: ApiOptions) {
+export function createApp({
+  core,
+  clock,
+  ids,
+  tokens,
+  heartbeatMs,
+  workOrders,
+  agent: agentOptions,
+  every
+}: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   // A failed webhook delivery is the API's own write to the webhook, on the audit chain like any other.
   const hub = createEventHub({
@@ -73,6 +88,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
     onFailure: (before, after) => core.recordStored('deliverWebhook', WEBHOOKS, after, before)
   })
   const evidence = createEvidenceStore({ clock, ids })
+  const automation = startAutomation({ core, clock, every, publish: hub.publish })
   if (workOrders) {
     const provider = workOrders(async (ref) => evidence.bytes(ref))
     forwardWorkOrders({ core, subscribe: hub.subscribe, provider })
@@ -242,6 +258,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
       // Audited after the move, so the chain shows the change at the time it set.
       const after: ScenarioClock = { id: 'clock', now: clock.now() }
       core.recordStored('setScenarioClock', c.get('actor'), after, before)
+      automation.clockSet()
       return c.json(after, 200)
     }
   }

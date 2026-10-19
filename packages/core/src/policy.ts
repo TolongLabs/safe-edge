@@ -10,6 +10,7 @@ import {
   type Retest,
   type Route,
   type RouteStatus,
+  type Segment,
   type Tier,
   type User
 } from '@safe-edge/contracts'
@@ -146,3 +147,14 @@ export function openSuspicions(tx: Tx, segmentId: string): string[] {
 /** When a valid pass starts expiring: 30 days before `validTo`. */
 export const expiringFrom = (validTo: string) => Date.parse(validTo) - EXPIRING_WINDOW_DAYS * DAY_MS
 export const DAY = DAY_MS
+
+/**
+ * When a segment's patrol is missed: a whole patrol interval after the last patrol that inspected some of it (`since`),
+ * or after its pass's `validFrom` when that is later, because the re-test that issued the pass was an inspection on site.
+ */
+export function missedPatrolDue(segment: Segment, pass: EdgePass): { since: string; dueMs: number } {
+  const since = [segment.lastPatrolledAt, pass.validFrom]
+    .filter((at) => at !== null)
+    .reduce((a, b) => (Date.parse(a) >= Date.parse(b) ? a : b))
+  return { since, dueMs: Date.parse(since) + segment.patrolIntervalDays * DAY_MS }
+}
