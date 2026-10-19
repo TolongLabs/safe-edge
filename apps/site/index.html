@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Safe Edge · every water edge, fixed and proven</title>
+    <title>Safe Edge · every water edge, closed and proven</title>
     <meta
       name="description"
       content="Safe Edge keeps township water edges closed to children. Drones flag what changed, a named owner fixes it, and a second person proves the fix on site."
     />
-    <meta name="theme-color" content="#0d1d19" />
+    <meta name="theme-color" content="#e6eeea" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,231 +19,491 @@
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <defs>
+        <pattern id="pickets" width="9" height="52" patternUnits="userSpaceOnUse">
+          <rect x="3" width="3" height="52" fill="#1c2925" />
+        </pattern>
+        <pattern id="pickets-night" width="9" height="52" patternUnits="userSpaceOnUse">
+          <rect x="3" width="3" height="52" fill="#4b5d57" />
+        </pattern>
+        <pattern id="pickets-new" width="9" height="52" patternUnits="userSpaceOnUse">
+          <rect x="3" width="3" height="52" fill="#6cc495" />
+        </pattern>
+        <rect id="post" y="758" width="6" height="76" rx="1" fill="#1c2925" />
+        <g id="panel">
+          <rect y="768" width="78" height="4" fill="#1c2925" />
+          <rect y="812" width="78" height="4" fill="#1c2925" />
+          <rect y="768" width="78" height="52" fill="url(#pickets)" />
+        </g>
+        <rect id="post-night" y="758" width="6" height="76" rx="1" fill="#6f7b76" />
+        <g id="panel-night">
+          <rect y="768" width="78" height="4" fill="#4b5d57" />
+          <rect y="812" width="78" height="4" fill="#4b5d57" />
+          <rect y="768" width="78" height="52" fill="url(#pickets-night)" />
+        </g>
+      </defs>
+      <symbol id="i-user-check" viewBox="0 0 256 256">
+        <path
+          d="M152.5,156.54a72,72,0,1,0-89,0,124,124,0,0,0-48.69,35.74,12,12,0,0,0,18.38,15.44C46.88,191.42,71,172,108,172s61.12,19.42,74.81,35.72a12,12,0,1,0,18.38-15.44A123.89,123.89,0,0,0,152.5,156.54ZM60,100a48,48,0,1,1,48,48A48.05,48.05,0,0,1,60,100Zm192.49,36.49-32,32a12,12,0,0,1-17,0l-16-16a12,12,0,0,1,17-17L212,143l23.51-23.52a12,12,0,1,1,17,17Z"
+        />
+      </symbol>
+      <symbol id="i-eye-slash" viewBox="0 0 256 256">
+        <path
+          d="M56.88,31.93A12,12,0,1,0,39.12,48.07l16,17.65C20.67,88.66,5.72,121.58,5,123.13a12.08,12.08,0,0,0,0,9.75c.37.82,9.13,20.26,28.49,39.61C59.37,198.34,92,212,128,212a131.34,131.34,0,0,0,51-10l20.09,22.1a12,12,0,0,0,17.76-16.14ZM128,188c-29.59,0-55.47-10.73-76.91-31.88A130.69,130.69,0,0,1,29.52,128c5.27-9.31,18.79-30.09,42-44.29l90.09,99.1A109.33,109.33,0,0,1,128,188Zm123-55.12c-.36.81-9,20-28,39.16a12,12,0,1,1-17-16.9A130.48,130.48,0,0,0,226.48,128a130.36,130.36,0,0,0-21.57-28.12C183.46,78.73,157.59,68,128,68c-3.35,0-6.7.14-10,.42a12,12,0,1,1-2-23.91c3.93-.34,8-.51,12-.51,36,0,68.63,13.67,94.49,39.52,19.35,19.35,28.11,38.8,28.48,39.61A12.08,12.08,0,0,1,251,132.88Z"
+        />
+      </symbol>
+      <symbol id="i-question" viewBox="0 0 256 256">
+        <path
+          d="M144,180a16,16,0,1,1-16-16A16,16,0,0,1,144,180Zm92-52A108,108,0,1,1,128,20,108.12,108.12,0,0,1,236,128Zm-24,0a84,84,0,1,0-84,84A84.09,84.09,0,0,0,212,128ZM128,64c-24.26,0-44,17.94-44,40v4a12,12,0,0,0,24,0v-4c0-8.82,9-16,20-16s20,7.18,20,16-9,16-20,16a12,12,0,0,0-12,12v8a12,12,0,0,0,23.73,2.56C158.31,137.88,172,122.37,172,104,172,81.94,152.26,64,128,64Z"
+        />
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 256 256">
+        <path
+          d="M125.18,156.94a64,64,0,1,0-82.36,0,100.23,100.23,0,0,0-39.49,32,12,12,0,0,0,19.35,14.2,76,76,0,0,1,122.64,0,12,12,0,0,0,19.36-14.2A100.33,100.33,0,0,0,125.18,156.94ZM44,108a40,40,0,1,1,40,40A40,40,0,0,1,44,108Zm206.1,97.67a12,12,0,0,1-16.78-2.57A76.31,76.31,0,0,0,172,172a12,12,0,0,1,0-24,40,40,0,1,0-10.3-78.67,12,12,0,1,1-6.16-23.19,64,64,0,0,1,57.64,110.8,100.23,100.23,0,0,1,39.49,32A12,12,0,0,1,250.1,205.67Z"
+        />
+      </symbol>
+      <symbol id="i-hourglass" viewBox="0 0 256 256">
+        <path
+          d="M200,75.64V40a20,20,0,0,0-20-20H76A20,20,0,0,0,56,40V76a20.1,20.1,0,0,0,8,16l46,34.5L64,161a20.1,20.1,0,0,0-8,16v36a20,20,0,0,0,20,20H180a20,20,0,0,0,20-20V180.36a20.09,20.09,0,0,0-7.94-15.95L145.9,128l46.16-36.41A20.09,20.09,0,0,0,200,75.64ZM176,44V64H80V44Zm0,165H80V179l48-36,48,37.86Zm0-135.27-48,37.86L80,76V88h96Z"
+        />
+      </symbol>
+      <symbol id="i-device-mobile" viewBox="0 0 256 256">
+        <path
+          d="M176,12H80A28,28,0,0,0,52,40V216a28,28,0,0,0,28,28h96a28,28,0,0,0,28-28V40A28,28,0,0,0,176,12Zm4,204a4,4,0,0,1-4,4H80a4,4,0,0,1-4-4V40a4,4,0,0,1,4-4h96a4,4,0,0,1,4,4ZM144,60a12,12,0,0,1-12,12H124a12,12,0,0,1,0-24h8A12,12,0,0,1,144,60Z"
+        />
+      </symbol>
+      <symbol id="i-arrow-down" viewBox="0 0 256 256">
+        <path
+          d="M208.49,152.49l-72,72a12,12,0,0,1-17,0l-72-72a12,12,0,0,1,17-17L116,187V40a12,12,0,0,1,24,0V187l51.51-51.52a12,12,0,0,1,17,17Z"
+        />
+      </symbol>
+    </svg>
+
     <a class="skip" href="#problem">Skip to the content</a>
 
-    <header class="hero" id="top">
-      <nav class="topbar" aria-label="Main">
-        <a class="wordmark" href="#top" aria-label="Safe Edge, back to top">
-          <img src="/mark-rail.svg" alt="" width="28" height="28" />
-          <span>Safe Edge</span>
-        </a>
-        <a class="topbar-link" href="#start">Open the demo</a>
-      </nav>
-
-      <div class="hero-words" data-reveal>
-        <h1 class="hero-title">SAFE EDGE</h1>
-        <p class="hero-line">
-          Drones flag what changed at Elmina’s lakes, ponds and drains. A named owner fixes it, and a second person
-          proves the fix on site.
-        </p>
+    <header class="topbar" aria-label="Site">
+      <a class="wordmark" href="#top" aria-label="Safe Edge, back to top">
+        <img src="/mark-rail.svg" alt="" width="28" height="28" />
+        <span>Safe Edge</span>
+      </a>
+      <p class="clock" aria-hidden="true">
+        <span class="clock-time">06:42</span>
+        <span class="clock-what">Panel 4 missing</span>
+      </p>
+      <div class="topbar-end">
+        <span class="sim-label">Simulation</span>
+        <a class="button button--ink button--small" href="#start">Open the demo</a>
       </div>
+    </header>
 
-      <div class="folders">
-        <a class="folder folder--1" href="#rules" style="--tab: 70%"><span class="tab">Rules</span></a>
-        <a class="folder folder--2" href="#fix" style="--tab: 48%"><span class="tab">Fix check</span></a>
-        <a class="folder folder--3" href="#loop" style="--tab: 26%"><span class="tab">The loop</span></a>
-        <a class="folder folder--4" href="#problem" style="--tab: 4%"><span class="tab">The problem</span></a>
-        <div class="folder folder--front">
-          <span class="tab tab--front">The Inbox</span>
-          <div class="front-body">
-            <div class="front-copy">
-              <a class="button button--ink" href="#fix">Try the fix check</a>
-              <p class="note">Simulated demo · Elmina, Shah Alam</p>
-            </div>
-            <figure class="front-shot">
+    <main id="main">
+      <section class="hero" id="top" data-time="06:42" data-what="Panel 4 missing" aria-labelledby="hero-title">
+        <div class="hero-words">
+          <h1 id="hero-title" class="hero-title">Every water edge, closed and proven.</h1>
+          <p class="hero-line">
+            Drones flag what changed at Elmina’s lakes, ponds and drains. A named owner fixes it. Someone else proves
+            it.
+          </p>
+          <div class="hero-actions">
+            <a class="button button--ink" href="#loop">Follow one fence for a day</a>
+            <a class="button button--line" href="#fix">Try the fix check</a>
+          </div>
+          <p class="sim"><span class="sim-label">Simulation</span> The demo runs on simulated data.</p>
+        </div>
+
+        <div class="scene" aria-hidden="true">
+          <svg class="scene-art" viewBox="0 0 1600 1000" focusable="false">
+            <g data-depth="0">
+              <rect width="1600" height="1000" fill="#e6eeea" />
+              <rect y="548" width="1600" height="70" fill="#dbe5e0" />
+              <circle class="sun" cx="1120" cy="470" r="62" fill="#fbfcfb" />
+            </g>
+            <g data-depth="0.08" fill="#c2cfc9">
+              <path
+                d="M0 614V596l26-14 26 14v-6l26-14 26 14v-2l26-14 26 14v6l26-14 26 14v-8l26-14 26 14v2l26-14 26 14v-4l26-14 26 14v8l26-14 26 14v-6l26-14 26 14 26-14 26 14v4l26-14 26 14v-10l26-14 26 14v10H640V568h92v-14h56v14h92v46h80V462h64v152h16V506h52v108h198V442h76v172h14V494h56v120h24V534h92v80h46Z"
+              />
+              <rect x="1300" y="452" width="56" height="4" fill="#d3ddd8" />
+              <rect x="1300" y="472" width="56" height="4" fill="#d3ddd8" />
+              <rect x="1300" y="492" width="56" height="4" fill="#d3ddd8" />
+              <rect x="970" y="478" width="44" height="4" fill="#d3ddd8" />
+              <rect x="970" y="498" width="44" height="4" fill="#d3ddd8" />
+            </g>
+            <g data-depth="0.16" fill="#9db8ac">
+              <path
+                d="M0 626c18-16 40-22 62-12 18-18 46-20 66-6 22-14 48-12 64 4 20-16 52-16 70 2 20-12 44-10 60 6 24-18 56-16 74 4 18-10 40-8 54 6 22-16 50-14 66 2 20-14 46-12 62 4 22-18 54-16 72 4 18-12 42-10 58 4 22-14 48-12 64 4 20-16 50-14 66 2 24-16 54-14 70 6 18-12 40-10 56 4 22-14 48-12 62 4 20-16 50-14 68 4 16-10 38-8 52 4 22-16 50-14 64 4 18-12 42-10 58 6 20-12 44-10 58 4V640H0Z"
+              />
+            </g>
+            <g data-depth="0.26">
+              <rect y="632" width="1600" height="230" fill="#aab3af" />
+              <rect y="632" width="1600" height="5" fill="#97a39e" />
+              <g fill="#bcc4c0">
+                <rect x="120" y="668" width="140" height="3" rx="1.5" />
+                <rect x="420" y="702" width="90" height="3" rx="1.5" />
+                <rect x="640" y="660" width="120" height="3" rx="1.5" />
+                <rect x="300" y="752" width="160" height="3" rx="1.5" />
+                <rect x="980" y="690" width="110" height="3" rx="1.5" />
+                <rect x="1400" y="672" width="130" height="3" rx="1.5" />
+                <rect x="1330" y="736" width="90" height="3" rx="1.5" />
+                <rect x="60" y="782" width="120" height="3" rx="1.5" />
+              </g>
+              <g fill="#d6ddd9">
+                <rect x="1076" y="648" width="88" height="5" rx="2.5" />
+                <rect x="1088" y="668" width="64" height="5" rx="2.5" />
+                <rect x="1068" y="690" width="104" height="5" rx="2.5" />
+                <rect x="1096" y="714" width="48" height="5" rx="2.5" />
+                <rect x="1082" y="740" width="76" height="5" rx="2.5" />
+                <rect x="1104" y="768" width="32" height="5" rx="2.5" />
+              </g>
+            </g>
+            <g data-depth="0.4" class="bank">
+              <path d="M0 836c420-14 1180 8 1600-8v172H0Z" fill="#4a7464" />
+              <path d="M0 884c500-14 1100 8 1600-10v34c-500 18-1100-4-1600 10Z" fill="#cfd6d2" />
+              <path d="M0 918c500-14 1100 8 1600-10v92H0Z" fill="#33594d" />
+              <g class="fence">
+                <use href="#post" x="40" />
+                <use href="#post" x="124" />
+                <use href="#post" x="208" />
+                <use href="#post" x="292" />
+                <use href="#post" x="376" />
+                <use href="#post" x="460" />
+                <use href="#post" x="544" />
+                <use href="#post" x="628" />
+                <use href="#post" x="712" />
+                <use href="#post" x="796" />
+                <use href="#post" x="880" />
+                <use href="#post" x="964" />
+                <use href="#post" x="1048" />
+                <use href="#post" x="1132" />
+                <use href="#post" x="1216" />
+                <use href="#post" x="1300" />
+                <use href="#post" x="1384" />
+                <use href="#panel" x="43" />
+                <use href="#panel" x="127" />
+                <use href="#panel" x="211" />
+                <use href="#panel" x="295" />
+                <use href="#panel" x="379" />
+                <use href="#panel" x="463" />
+                <use href="#panel" x="547" />
+                <use href="#panel" x="631" />
+                <use href="#panel" x="715" />
+                <use href="#panel" x="883" />
+                <use href="#panel" x="967" />
+                <use href="#panel" x="1051" />
+                <use href="#panel" x="1135" />
+                <use href="#panel" x="1219" />
+                <use href="#panel" x="1303" />
+              </g>
+              <g class="buoy">
+                <rect x="1478" y="764" width="6" height="72" fill="#1c2925" />
+                <circle cx="1481" cy="782" r="17" fill="none" stroke="#fbfcfb" stroke-width="9" />
+                <circle cx="1481" cy="782" r="17" fill="none" stroke="#1c2925" stroke-width="2" />
+              </g>
+              <g class="playground">
+                <rect x="586" y="930" width="6" height="64" fill="#1c2925" />
+                <rect x="624" y="930" width="6" height="64" fill="#1c2925" />
+                <rect x="586" y="944" width="44" height="4" fill="#1c2925" />
+                <rect x="586" y="962" width="44" height="4" fill="#1c2925" />
+                <rect x="586" y="926" width="76" height="8" rx="2" fill="#1c2925" />
+                <path d="M660 930c40 2 54 50 96 58" fill="none" stroke="#fbfcfb" stroke-width="12" />
+                <path d="M420 996l34-80 34 80M454 916v8" fill="none" stroke="#1c2925" stroke-width="6" />
+                <path d="M454 924v40" stroke="#1c2925" stroke-width="2.5" />
+                <rect x="442" y="962" width="24" height="5" rx="2" fill="#fbfcfb" />
+              </g>
+              <g class="beam">
+                <path d="M826 588h24l50 252H776Z" fill="#fbfcfb" opacity="0.42" />
+              </g>
+              <g class="flag">
+                <rect
+                  class="flag-box"
+                  x="788"
+                  y="748"
+                  width="100"
+                  height="96"
+                  rx="6"
+                  fill="none"
+                  stroke="#b02e28"
+                  stroke-width="3.5"
+                  stroke-dasharray="9 7"
+                />
+                <path class="flag-lead" d="M888 772l18-30" stroke="#b02e28" stroke-width="3" />
+                <g class="flag-tag">
+                  <rect x="898" y="664" width="226" height="80" rx="8" fill="#b02e28" />
+                  <text x="916" y="698" font-size="22" class="tag-strong">Panel 4 missing</text>
+                  <text x="916" y="728" font-size="22" class="tag-meta">LK·S12 · 06:42</text>
+                </g>
+              </g>
+              <g class="drone-at" transform="translate(838 576)">
+                <g class="drone">
+                  <rect x="-58" y="-3" width="116" height="6" rx="3" fill="#1c2925" />
+                  <ellipse cx="-58" cy="-10" rx="30" ry="4" fill="#5d6b66" />
+                  <ellipse cx="58" cy="-10" rx="30" ry="4" fill="#5d6b66" />
+                  <rect x="-61" y="-10" width="6" height="10" fill="#1c2925" />
+                  <rect x="55" y="-10" width="6" height="10" fill="#1c2925" />
+                  <rect x="-22" y="-10" width="44" height="18" rx="6" fill="#1c2925" />
+                  <circle cy="13" r="6" fill="#1c2925" />
+                </g>
+              </g>
+            </g>
+            <g data-depth="0.62" fill="#17302a">
+              <path
+                d="M-40 1000c0-60 30-92 72-96 10-40 56-58 92-38 30-30 86-20 98 22 36 0 62 34 58 70 20 6 30 24 30 42Z"
+              />
+              <path d="M1380 1000c-4-48 24-80 66-80 14-38 64-50 94-22 36-14 70 16 66 54 24 10 34 30 34 48Z" />
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <section class="problem" id="problem" data-time="" aria-labelledby="problem-title">
+        <h2 id="problem-title" class="visually-hidden">Why water edges need an owner</h2>
+        <p class="statement" data-fill>371 children and teens drowned in Malaysia from January 2023 to August 2026.</p>
+        <p class="lead problem-lead">
+          Water edges change after the handover check. Fences break, covers go missing, and nobody walks every edge
+          every week.
+        </p>
+        <p class="source">
+          Fire and Rescue Department figures, reported by
+          <a href="https://www.thestar.com.my/news/nation/2026/10/16/371-youngsters-lost-to-drowning">The Star</a>, 16
+          October 2026.
+        </p>
+
+        <div class="drains">
+          <div class="drains-words">
+            <p class="figure">8 of 21</p>
+            <p class="claim">township drownings began in a drain</p>
+            <p class="body">
+              News reports since January 2023 describe 21 drownings and near-drownings in township water in Selangor and
+              Kuala Lumpur. Each bar is one of them, as tall as the number of people in the water. The 8 in ink began in
+              a drain.
+            </p>
+          </div>
+          <ol class="bars" aria-label="21 incidents, oldest first"></ol>
+        </div>
+      </section>
+
+      <section class="loop" id="loop" aria-labelledby="loop-title">
+        <div class="story">
+          <div class="story-head">
+            <h2 id="loop-title" class="section-title">One fence, one day.</h2>
+            <p class="body">
+              Every repair follows the same loop. Here is one, at Central Park Lake, by the playground.
+            </p>
+          </div>
+          <div class="route" aria-hidden="true"><span class="route-fill"></span></div>
+
+          <article class="step" data-time="06:42" data-what="Panel 4 missing" data-active>
+            <h3 class="step-head">
+              <span class="mark mark--suspended" aria-hidden="true"></span><span class="step-time">06:42</span>
+              <span class="step-title">The drone sees it</span>
+            </h3>
+            <p class="step-body">
+              On the dawn patrol, Edge Watch checks fence panel 4 by the playground. It is gone, so the edge’s pass
+              pauses at once.
+            </p>
+            <figure class="shot">
+              <img
+                src="/shots/map.webp"
+                width="1440"
+                height="900"
+                alt="The Safe Edge map: a simulated drone patrol over Elmina found 3 changes, with the missing fence panel pinned on the lake."
+              />
+            </figure>
+          </article>
+
+          <article class="step" data-time="07:05" data-what="Confirmed">
+            <h3 class="step-head">
+              <span class="mark mark--open" aria-hidden="true"></span><span class="step-time">07:05</span>
+              <span class="step-title">A manager confirms it</span>
+            </h3>
+            <p class="step-body">
+              Farah Hashim compares the photo with April’s and confirms it needs a fix. The work goes to Hafiz Rahman’s
+              crew, due today.
+            </p>
+            <figure class="shot">
               <img
                 src="/shots/inbox.webp"
                 width="1440"
                 height="900"
+                loading="lazy"
                 alt="The Safe Edge Inbox: a drone photo shows fence panel 4 missing at Central Park Lake, beside the photo from 15 April, with the buttons Confirm, Look again and Not a problem."
               />
             </figure>
-          </div>
-        </div>
-      </div>
-    </header>
+          </article>
 
-    <main>
-      <section class="chapter problem" id="problem" aria-labelledby="problem-title">
-        <div class="problem-words" data-reveal>
-          <p class="figure">8 of 21</p>
-          <h2 id="problem-title" class="claim">township drownings began in a drain</h2>
-          <p class="body">
-            News reports since January 2023 describe 21 drownings and near-drownings in township water in Selangor and
-            Kuala Lumpur. Each bar is one of them, as tall as the number of people in the water. The 8 in red began in a
-            drain.
-          </p>
-          <p class="body">
-            Across Malaysia, the Fire and Rescue Department counted 371 child and teen drowning deaths from January 2023
-            to August 2026 (<a href="https://www.thestar.com.my/news/nation/2026/10/16/371-youngsters-lost-to-drowning"
-              >The Star</a
-            >).
-          </p>
-        </div>
-        <ol class="bars" data-ui aria-label="21 incidents, oldest first"></ol>
-      </section>
-
-      <section class="loop" id="loop" aria-labelledby="loop-title">
-        <div class="field field--flag" data-reveal>
-          <h2 id="loop-title" class="loop-title">One fence, one day</h2>
-          <article class="case" data-ui aria-label="The case as the drone raises it">
-            <p class="case-top"><span class="plate">LK·S12</span><span class="case-time">06:42</span></p>
-            <p class="case-title">Fence panel missing</p>
-            <p class="case-meta">Central Park Lake, by the playground</p>
-            <p class="case-state"><span class="mark mark--suspended" aria-hidden="true"></span>Pass paused</p>
-          </article>
-          <p class="clause">First the drone sees it.</p>
-        </div>
-        <div class="field field--confirm" data-reveal>
-          <article class="case" data-ui aria-label="The case after the manager confirms it">
-            <p class="case-top"><span class="plate">LK·S12</span><span class="case-time">07:05</span></p>
-            <p class="case-title">Fence panel missing</p>
-            <p class="case-meta">Confirmed by Farah Hashim</p>
-            <p class="case-meta">Owner: Hafiz Rahman’s crew · due today</p>
-            <p class="case-state"><span class="mark mark--suspended" aria-hidden="true"></span>Pass paused</p>
-          </article>
-          <p class="clause">Then a manager confirms it.</p>
-        </div>
-        <div class="field field--fix" data-reveal>
-          <article class="case" data-ui aria-label="The case while the crew fixes it">
-            <p class="case-top"><span class="plate">LK·S12</span><span class="case-time">15:40</span></p>
-            <p class="case-title">Fence panel missing</p>
-            <ul class="case-checks">
-              <li class="done">New panel 4</li>
-              <li class="done">6 m more fence</li>
-              <li>Re-test on site</li>
-            </ul>
-          </article>
-          <p class="clause">Then a crew fixes it.</p>
-        </div>
-        <div class="field field--pass" data-reveal>
-          <article class="case" data-ui aria-label="The case once someone else has proved the fix">
-            <p class="case-top"><span class="plate">LK·S12</span><span class="case-time">16:05</span></p>
-            <p class="case-title">Fence panel replaced</p>
-            <p class="case-meta">Checked on site by Priya Nair</p>
-            <p class="case-state case-state--valid">
-              <span class="mark mark--valid" aria-hidden="true"></span>Valid to 20 Oct 2027
+          <article class="step" data-time="07:12" data-what="Fix B chosen">
+            <h3 class="step-head">
+              <span class="mark mark--open" aria-hidden="true"></span><span class="step-time">07:12</span>
+              <span class="step-title">Fix Lens checks the fix</span>
+            </h3>
+            <p class="step-body">
+              A new panel alone leaves a way round the fence end. Fix B adds 6 m of fence and closes all 3 ways to the
+              water.
             </p>
+            <figure class="shot">
+              <img
+                src="/shots/fix-lens.webp"
+                width="1440"
+                height="900"
+                loading="lazy"
+                alt="Fix Lens compares two fixes. Fix A, a new panel 4, leaves 1 way to the water open around the fence end. Fix B, a new panel and 6 m of fence, closes all 3."
+              />
+            </figure>
           </article>
-          <p class="clause">Then someone else proves it.</p>
+
+          <article class="step" data-time="16:05" data-what="Checked on site">
+            <h3 class="step-head">
+              <span class="mark mark--open" aria-hidden="true"></span><span class="step-time">16:05</span>
+              <span class="step-title">Someone else proves it</span>
+            </h3>
+            <p class="step-body">
+              The crew finishes at 15:40. Priya Nair, who did not install the fix, checks it on site with a tape and a
+              photo.
+            </p>
+            <figure class="shot shot--phone">
+              <img
+                src="/shots/phone-retest.webp"
+                width="390"
+                height="844"
+                loading="lazy"
+                alt="The phone re-test: Priya Nair, who did not install the repair, answers three checks at the fence and signs the pass."
+              />
+            </figure>
+          </article>
+
+          <article class="step" data-time="16:05" data-what="Pass issued">
+            <h3 class="step-head">
+              <span class="mark mark--valid" aria-hidden="true"></span><span class="step-time">16:05</span>
+              <span class="step-title">The pass comes back</span>
+            </h3>
+            <p class="step-body">
+              The fence holds a pass to 20 October 2027. The next drone check, on 21 October at 06:30, makes sure it
+              stays that way.
+            </p>
+            <figure class="shot">
+              <img
+                src="/shots/pass-issued.webp"
+                width="1440"
+                height="900"
+                loading="lazy"
+                alt="Pass issued: the fence by the playground has a safety pass valid to 20 October 2027, with the day’s timeline from flag to sign-off."
+              />
+            </figure>
+          </article>
+          <p class="note story-note">Screens from the simulated demo.</p>
         </div>
       </section>
 
-      <section class="fix" id="fix" aria-labelledby="fix-title">
-        <div class="fix-in">
-          <div class="fix-input" data-reveal>
-            <p class="fix-lead">Every fix replaces panel 4. Does it also close the way round the fence end?</p>
-            <p class="body">Fix Lens follows each way a child could walk from the playground to the lake.</p>
-            <label class="slider" for="extend">
-              <span>Extend the fence past its end</span>
-              <output id="extend-out" for="extend">0 m</output>
-            </label>
-            <input id="extend" type="range" min="0" max="10" step="1" value="0" />
+      <section class="fix" id="fix" data-time="07:12" data-what="Fix check" aria-labelledby="fix-title">
+        <div class="fix-words">
+          <h2 id="fix-title" class="section-title">Check the fix before you pay.</h2>
+          <p class="lead">Every fix replaces panel 4. Does it also close the way round the fence end?</p>
+          <p class="body">Fix Lens follows each way a child could walk from the playground to the lake.</p>
+          <label class="slider" for="extend">
+            <span>Extend the fence past its end</span>
+            <output id="extend-out" for="extend">0 m</output>
+          </label>
+          <input id="extend" type="range" min="0" max="10" step="1" value="0" />
+        </div>
+        <figure class="plan">
+          <svg viewBox="0 0 520 360" role="img" aria-labelledby="plan-title">
+            <title id="plan-title">
+              Plan of the fence by the playground, with the ways to the water Fix Lens checks
+            </title>
+            <rect width="520" height="360" rx="8" class="plan-grass" />
+            <path d="M0 286 Q130 272 260 288 T520 280 L520 360 L0 360 Z" class="plan-water" />
+            <rect x="36" y="26" width="128" height="58" rx="8" class="plan-play" />
+            <text x="56" y="61" class="plan-label">Playground</text>
+            <text x="22" y="330" class="plan-label">Lake</text>
+            <path d="M30 262 H210 M270 262 H400" class="plan-fence" />
+            <path d="M212 262 H268" class="plan-new" />
+            <path id="ext" d="M402 262 H402" class="plan-new" />
+            <path d="M72 86 L68 246" class="plan-route" />
+            <path d="M60 248 H76" class="plan-stop" />
+            <path d="M118 86 L236 246" class="plan-route" />
+            <path d="M230 248 H246" class="plan-stop" />
+            <path id="r-open" d="M164 52 H455 V304" class="plan-open" />
+            <path id="r-open-head" d="M445 298 L455 316 L465 298 Z" class="plan-open-head" />
+            <path id="r-shut" d="M164 52 H455 V246" class="plan-route plan-shut" />
+            <path id="r-shut-stop" d="M447 248 H463" class="plan-stop plan-shut" />
+            <text x="232" y="330" class="plan-label">New panel 4</text>
+          </svg>
+          <figcaption class="verdict" aria-live="polite">
+            <span class="mark mark--suspended" aria-hidden="true"></span>
+            <span id="verdict-text">Leaves 1 way to the water open, around the fence end</span>
+          </figcaption>
+          <p class="note plan-note">Dashed lines are proposed, not installed.</p>
+        </figure>
+      </section>
+
+      <section class="walk" id="rules" data-time="" aria-labelledby="rules-title">
+        <div class="walk-head">
+          <h2 id="rules-title" class="section-title">Six rules, posted at every edge.</h2>
+          <p class="body">Safe Edge keeps them on every screen, for every flag, on every patrol.</p>
+          <p class="note walk-hint">Swipe or scroll sideways to read all six.</p>
+        </div>
+        <div class="walk-view" tabindex="0" role="region" aria-label="The six rules. Scroll sideways to read them all.">
+          <div class="walk-track">
+            <div class="walk-ground" aria-hidden="true">
+              <i class="ground-water"></i><i class="ground-bank"></i><i class="ground-path"></i
+              ><i class="ground-grass"></i>
+            </div>
+            <ul class="signs">
+              <li class="sign" style="--post: 120px; --w: 360px">
+                <div class="plate">
+                  <svg class="sign-icon" aria-hidden="true"><use href="#i-user-check" /></svg>
+                  <p class="sign-word">People decide.</p>
+                  <p class="sign-fact">Machines can flag, pause and draft. Only a named person confirms or signs.</p>
+                </div>
+              </li>
+              <li class="sign" style="--post: 64px; --w: 330px">
+                <div class="plate">
+                  <svg class="sign-icon" aria-hidden="true"><use href="#i-eye-slash" /></svg>
+                  <p class="sign-word">Edges, not people.</p>
+                  <p class="sign-fact">Frames with people are dropped before storage. No faces, no tracking.</p>
+                </div>
+              </li>
+              <li class="sign" style="--post: 150px; --w: 340px">
+                <div class="plate">
+                  <svg class="sign-icon" aria-hidden="true"><use href="#i-question" /></svg>
+                  <p class="sign-word">Unseen is unknown.</p>
+                  <p class="sign-fact">Glare, canopy or water make a field task, never a pass.</p>
+                </div>
+              </li>
+              <li class="sign" style="--post: 92px; --w: 380px">
+                <div class="plate">
+                  <svg class="sign-icon" aria-hidden="true"><use href="#i-users" /></svg>
+                  <p class="sign-word">Two people per fix.</p>
+                  <p class="sign-fact">Whoever installs a repair cannot accept it.</p>
+                </div>
+              </li>
+              <li class="sign" style="--post: 136px; --w: 320px">
+                <div class="plate">
+                  <svg class="sign-icon" aria-hidden="true"><use href="#i-hourglass" /></svg>
+                  <p class="sign-word">Passes expire.</p>
+                  <p class="sign-fact">12 months at most. Damage or a missed patrol suspends one at once.</p>
+                </div>
+              </li>
+              <li class="sign" style="--post: 76px; --w: 350px">
+                <div class="plate">
+                  <svg class="sign-icon" aria-hidden="true"><use href="#i-device-mobile" /></svg>
+                  <p class="sign-word">The drone is optional.</p>
+                  <p class="sign-fact">Where a drone cannot fly, a phone patrol feeds the same Inbox.</p>
+                </div>
+              </li>
+            </ul>
           </div>
-          <p class="fix-head fix-head--left" aria-hidden="true">Check the fix</p>
-        </div>
-        <div class="fix-out">
-          <figure class="plan" data-ui data-reveal>
-            <svg viewBox="0 0 520 360" role="img" aria-labelledby="plan-title">
-              <title id="plan-title">Plan of the fence by the playground, with the routes Fix Lens checks</title>
-              <rect width="520" height="360" rx="8" class="plan-grass" />
-              <path d="M0 286 Q130 272 260 288 T520 280 L520 360 L0 360 Z" class="plan-water" />
-              <rect x="36" y="26" width="128" height="58" rx="8" class="plan-play" />
-              <text x="56" y="61" class="plan-label">Playground</text>
-              <text x="22" y="330" class="plan-label">Lake</text>
-              <path d="M30 262 H210 M270 262 H400" class="plan-fence" />
-              <path d="M212 262 H268" class="plan-new" />
-              <path id="ext" d="M402 262 H402" class="plan-new" />
-              <path d="M72 86 L68 246" class="plan-route" />
-              <path d="M60 248 H76" class="plan-stop" />
-              <path d="M118 86 L236 246" class="plan-route" />
-              <path d="M230 248 H246" class="plan-stop" />
-              <path id="r-open" d="M164 52 H455 V304" class="plan-open" />
-              <path id="r-open-head" d="M445 298 L455 316 L465 298 Z" class="plan-open-head" />
-              <path id="r-shut" d="M164 52 H455 V246" class="plan-route plan-shut" />
-              <path id="r-shut-stop" d="M447 248 H463" class="plan-stop plan-shut" />
-              <text x="232" y="330" class="plan-label">New panel 4</text>
-            </svg>
-            <figcaption class="verdict" id="verdict" aria-live="polite">
-              <span class="mark mark--suspended" aria-hidden="true"></span>
-              <span id="verdict-text">Leaves 1 way to the water open, around the fence end</span>
-            </figcaption>
-          </figure>
-          <h2 id="fix-title" class="fix-head fix-head--right">
-            <span class="visually-hidden">Check the fix </span>before you pay
-          </h2>
         </div>
       </section>
 
-      <section class="segments" aria-labelledby="segments-note">
-        <div class="marquee" aria-hidden="true">
-          <div class="marquee-track"></div>
-        </div>
-        <p id="segments-note" class="segments-note">
-          The 21 stretches of edge around Central Park Lake in the Elmina simulation. Each one has its own pass, owner
-          and last patrol.
-        </p>
-      </section>
-
-      <section class="rules" id="rules" aria-labelledby="rules-title">
-        <h2 id="rules-title" class="visually-hidden">The rules Safe Edge keeps</h2>
-        <ul class="rule-list">
-          <li class="rule" data-shot="inbox" data-reveal>
-            <span class="rule-word">people decide</span><span class="rule-fact">machines only flag</span>
-          </li>
-          <li class="rule" data-shot="map" data-reveal>
-            <span class="rule-word">edges, not people</span><span class="rule-fact">no faces, no tracking</span>
-          </li>
-          <li class="rule" data-shot="map" data-reveal>
-            <span class="rule-word">unseen is unknown</span><span class="rule-fact">it becomes a field task</span>
-          </li>
-          <li class="rule" data-shot="phone-retest" data-reveal>
-            <span class="rule-word">two people per fix</span><span class="rule-fact">the fixer cannot sign</span>
-          </li>
-          <li class="rule" data-shot="pass-issued" data-reveal>
-            <span class="rule-word">passes expire</span><span class="rule-fact">12 months at most</span>
-          </li>
-          <li class="rule" data-shot="phone-retest" data-reveal>
-            <span class="rule-word">drones optional</span><span class="rule-fact">a phone patrol works too</span>
-          </li>
-        </ul>
-        <figure class="rule-frame" aria-hidden="true">
-          <img src="/shots/inbox.webp" width="1440" height="900" alt="" data-frame />
-        </figure>
-        <figure class="rule-pictures">
-          <img
-            src="/shots/map.webp"
-            width="1440"
-            height="900"
-            loading="lazy"
-            alt="The Safe Edge map: a simulated drone patrol over Elmina found 3 changes, with the missing fence panel pinned on the lake."
-          />
-          <img
-            src="/shots/phone-retest.webp"
-            width="390"
-            height="844"
-            loading="lazy"
-            alt="The phone re-test: Priya Nair, who did not install the repair, answers three checks at the fence and signs the pass."
-          />
-          <img
-            src="/shots/pass-issued.webp"
-            width="1440"
-            height="900"
-            loading="lazy"
-            alt="Pass issued: the fence by the playground has a safety pass valid to 20 October 2027, with the day’s timeline from flag to sign-off."
-          />
-          <figcaption class="note">Screens from the simulated demo.</figcaption>
-        </figure>
-      </section>
-
-      <section class="start" id="start" aria-labelledby="start-title">
-        <div class="start-words" data-reveal>
+      <section class="start" id="start" data-time="" aria-labelledby="start-title">
+        <div class="start-words">
           <h2 id="start-title" class="start-title">Prove every edge.</h2>
           <p class="body">
             The demo runs on simulated data for Elmina. Choose who you are, and it opens on that person’s first screen.
           </p>
         </div>
-        <form class="dialog" data-ui action="/demo/" method="get" data-reveal>
+        <form class="dialog" action="/demo/" method="get">
           <p class="dialog-title">Open the Elmina demo</p>
           <label class="dialog-field">
             <span>Your name</span>
@@ -260,38 +520,152 @@
     </main>
 
     <footer class="footer">
-      <p class="blockmark" aria-label="Safe Edge">
-        <span style="--h: 78%">S</span><span style="--h: 100%">A</span><span style="--h: 64%">F</span
-        ><span style="--h: 88%">E</span><span class="gap"></span><span style="--h: 92%">E</span
-        ><span style="--h: 70%">D</span><span style="--h: 100%">G</span><span style="--h: 82%">E</span>
-      </p>
-      <div class="footer-cols">
-        <nav aria-label="On this page">
-          <p class="footer-head">On this page</p>
-          <a href="#problem">The problem</a>
-          <a href="#loop">The loop</a>
-          <a href="#fix">Fix check</a>
-          <a href="#rules">Rules</a>
-        </nav>
-        <div>
-          <p class="footer-head">The project</p>
-          <p>SDP Hack 2026, Township of Tomorrow</p>
-          <p>Built by TolongLabs</p>
-        </div>
-        <div>
-          <p class="footer-head">Credits</p>
-          <p>Map data © OpenStreetMap contributors (ODbL)</p>
-          <p>Type: Atkinson Hyperlegible Next (SIL OFL)</p>
-          <p>Icons: Phosphor (MIT)</p>
-        </div>
-        <div>
-          <p class="footer-head">Simulated</p>
-          <p>Every flight, photo, person and repair on this page is simulated.</p>
-        </div>
+      <div class="night" aria-hidden="true">
+        <svg class="night-art" viewBox="0 0 1600 440" focusable="false">
+          <rect width="1600" height="440" fill="#0d1d19" />
+          <g fill="#7fa596">
+            <circle cx="785" cy="127" r="1.4" />
+            <circle cx="390" cy="164" r="1.9" />
+            <circle cx="126" cy="187" r="2.0" />
+            <circle cx="657" cy="74" r="2.3" />
+            <circle cx="1052" cy="35" r="1.9" />
+            <circle cx="897" cy="113" r="1.4" />
+            <circle cx="80" cy="198" r="2.6" />
+            <circle cx="193" cy="104" r="2.5" />
+            <circle cx="1075" cy="73" r="1.4" />
+            <circle cx="1577" cy="105" r="1.5" />
+            <circle cx="875" cy="83" r="1.4" />
+            <circle cx="1237" cy="87" r="1.7" />
+            <circle cx="1415" cy="109" r="1.5" />
+            <circle cx="965" cy="96" r="2.3" />
+            <circle cx="721" cy="37" r="1.3" />
+            <circle cx="660" cy="149" r="2.1" />
+            <circle cx="1528" cy="82" r="1.8" />
+            <circle cx="793" cy="103" r="2.4" />
+            <circle cx="433" cy="186" r="2.4" />
+            <circle cx="1549" cy="196" r="2.4" />
+            <circle cx="1196" cy="142" r="2.0" />
+            <circle cx="39" cy="81" r="1.7" />
+            <circle cx="1180" cy="71" r="2.5" />
+            <circle cx="11" cy="88" r="2.0" />
+            <circle cx="706" cy="37" r="2.6" />
+            <circle cx="730" cy="186" r="2.0" />
+            <circle cx="560" cy="44" r="2.3" />
+          </g>
+          <circle cx="380" cy="96" r="34" fill="#e6eeea" />
+          <circle cx="396" cy="86" r="30" fill="#0d1d19" />
+          <path
+            d="M0 316v-14l26-12 26 12v-6l26-12 26 12 26-12 26 12v4l26-12 26 12v-8l26-12 26 12 26-12 26 12v6l26-12 26 12v-4l26-12 26 12V316h106v-40h80v-12h56v12h80v40h80V182h64v134h16V222h52v94h198V164h76v152h14V214h56v102h24V250h92v66Z"
+            fill="#17302a"
+          />
+          <g fill="#f0b06a">
+            <rect x="976" y="200" width="8" height="10" />
+            <rect x="996" y="228" width="8" height="10" />
+            <rect x="976" y="262" width="8" height="10" />
+            <rect x="1016" y="282" width="8" height="10" />
+            <rect x="1062" y="236" width="8" height="10" />
+            <rect x="1078" y="276" width="8" height="10" />
+            <rect x="1306" y="184" width="8" height="10" />
+            <rect x="1330" y="214" width="8" height="10" />
+            <rect x="1306" y="250" width="8" height="10" />
+            <rect x="1346" y="276" width="8" height="10" />
+            <rect x="1396" y="236" width="8" height="10" />
+            <rect x="1480" y="270" width="8" height="10" />
+            <rect x="700" y="292" width="40" height="6" />
+          </g>
+          <path
+            d="M0 326c18-12 40-16 62-8 18-14 46-16 66-4 22-10 48-8 64 4 20-12 52-12 70 2 20-10 44-8 60 4 24-14 56-12 74 4 18-8 40-6 54 4 22-12 50-10 66 2 20-10 46-8 62 4 22-14 54-12 72 4 18-10 42-8 58 4 22-10 48-8 64 4 20-12 50-10 66 2 24-12 54-10 70 4 18-10 40-8 56 4 22-10 48-8 62 4 20-12 50-10 68 4 16-8 38-6 52 4 22-12 50-10 64 4 18-10 42-8 58 4 20-10 44-8 58 4V340H0Z"
+            fill="#112620"
+          />
+          <rect y="336" width="1600" height="80" fill="#1c2925" />
+
+          <g transform="translate(0 -404)">
+            <path d="M0 816c420-10 1180 6 1600-6v34H0Z" fill="#17302a" />
+            <use href="#post-night" x="40" />
+            <use href="#post-night" x="124" />
+            <use href="#post-night" x="208" />
+            <use href="#post-night" x="292" />
+            <use href="#post-night" x="376" />
+            <use href="#post-night" x="460" />
+            <use href="#post-night" x="544" />
+            <use href="#post-night" x="628" />
+            <use href="#post-night" x="712" />
+            <use href="#post-night" x="796" />
+            <use href="#post-night" x="880" />
+            <use href="#post-night" x="964" />
+            <use href="#post-night" x="1048" />
+            <use href="#post-night" x="1132" />
+            <use href="#post-night" x="1216" />
+            <use href="#post-night" x="1300" />
+            <use href="#post-night" x="1384" />
+            <use href="#post-night" x="1450" />
+            <use href="#panel-night" x="43" />
+            <use href="#panel-night" x="127" />
+            <use href="#panel-night" x="211" />
+            <use href="#panel-night" x="295" />
+            <use href="#panel-night" x="379" />
+            <use href="#panel-night" x="463" />
+            <use href="#panel-night" x="547" />
+            <use href="#panel-night" x="631" />
+            <use href="#panel-night" x="715" />
+            <use href="#panel-night" x="883" />
+            <use href="#panel-night" x="967" />
+            <use href="#panel-night" x="1051" />
+            <use href="#panel-night" x="1135" />
+            <use href="#panel-night" x="1219" />
+            <use href="#panel-night" x="1303" />
+            <g class="new-work">
+              <rect x="799" y="768" width="78" height="52" fill="url(#pickets-new)" />
+              <rect x="799" y="768" width="78" height="4" fill="#6cc495" />
+              <rect x="799" y="812" width="78" height="4" fill="#6cc495" />
+              <rect x="1387" y="768" width="66" height="52" fill="url(#pickets-new)" />
+              <rect x="1387" y="768" width="66" height="4" fill="#6cc495" />
+              <rect x="1387" y="812" width="66" height="4" fill="#6cc495" />
+            </g>
+          </g>
+          <g>
+            <rect x="1160" y="300" width="5" height="116" fill="#33594d" />
+            <rect x="1150" y="296" width="25" height="8" rx="3" fill="#e6eeea" />
+          </g>
+          <rect y="414" width="1600" height="26" fill="#17302a" />
+        </svg>
       </div>
-      <div class="footer-end">
-        <p>© 2026 TolongLabs</p>
-        <a class="button button--small" href="#top">Back to top</a>
+
+      <div class="footer-in">
+        <p class="footer-pass">
+          <span class="plate-code">LK·S12</span>
+          <span class="mark mark--valid" aria-hidden="true"></span>
+          <span>Fence by the playground, valid to 20 Oct 2027. The new panel and 6 m of fence are lit in green.</span>
+        </p>
+        <p class="footer-word" aria-label="Safe Edge">SAFE EDGE</p>
+        <div class="footer-cols">
+          <nav aria-label="On this page">
+            <p class="footer-head">On this page</p>
+            <a href="#problem">The problem</a>
+            <a href="#loop">One fence, one day</a>
+            <a href="#fix">Fix check</a>
+            <a href="#rules">The rules</a>
+          </nav>
+          <div>
+            <p class="footer-head">The project</p>
+            <p>SDP Hack 2026, Township of Tomorrow</p>
+            <p>Built by TolongLabs</p>
+          </div>
+          <div>
+            <p class="footer-head">Credits</p>
+            <p>Map data © OpenStreetMap contributors (ODbL)</p>
+            <p>Type: Atkinson Hyperlegible Next (SIL OFL)</p>
+            <p>Icons: Phosphor (MIT)</p>
+          </div>
+          <div>
+            <p class="footer-head">Simulated</p>
+            <p>Every flight, photo, person and repair on this page is simulated.</p>
+          </div>
+        </div>
+        <div class="footer-end">
+          <p>© 2026 TolongLabs</p>
+          <a class="button button--mist button--small" href="#top">Back to top</a>
+        </div>
       </div>
     </footer>
   </body>
