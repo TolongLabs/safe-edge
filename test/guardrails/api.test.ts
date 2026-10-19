@@ -149,7 +149,12 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
   expect((await read(`/candidates/${proposed.id}`)).candidate.status).toBe('candidate')
   expect((await read(`/work-orders/${played.workOrderId}`)).status).toBe('completed')
   expect((await read('/notices')).map((n: { status: string }) => n.status)).toEqual(['draft'])
-  expect((await read('/patrol-plans')).map((p: { status: string }) => p.status)).toEqual(['proposed', 'approved'])
+  // The re-test patrol the completed repair queued, the agent's plan and the plan in flight.
+  expect((await read('/patrol-plans')).map((p: { status: string }) => p.status)).toEqual([
+    'proposed',
+    'proposed',
+    'approved'
+  ])
   expect((await api.pass()).state).toBe('suspended')
 
   // The same requests from the right people go through: only the agent's identity refused them.
@@ -186,7 +191,7 @@ test('a Tier 2 candidate suspends the pass in the same request', async () => {
 })
 
 // Over HTTP, automation reaches core only through these rows. Core's own time path, tick(), only expires passes
-// (packages/core/test/tick.test.ts), and the API exposes no tick.
+// (packages/core/test/tick.test.ts); the API runs it on its timer or clock moves, never on a request.
 test('no system or provider call makes a pass valid, whichever operation it tries', async () => {
   const api = startGuardedApi({
     // Automation tokens mis-issued with the reviewer role: the one-way rule still holds.
@@ -198,10 +203,12 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   const flying = await json(api.request('post', '/patrol-plans', { token: 'dev_manager', body: patrolRequest }))
   await json(api.request('post', `/patrol-plans/${flying.id}/approve`, { token: 'dev_pilot' }))
   api.setNow(flying.window.start)
+  // A MAVLink patrol: the API flies only drone-sim (which the sweep's clock move would land), so this one stays in
+  // flight for the sweep to complete.
   const patrol = await json(
     api.request('post', '/patrols', {
       token: 'dev_pilot',
-      body: { planId: flying.id, provider: 'sim', droneId: 'drn_assumed' }
+      body: { planId: flying.id, provider: 'mavlink', droneId: 'drn_assumed' }
     })
   )
   const notice = await json(
@@ -273,7 +280,9 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   }
 
   expect((await api.pass()).state).toBe('suspended')
-  expect(await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))).toEqual(validBefore)
+  // No pass became valid. Moving the scenario clock runs the scheduled pass, whose missed patrols may suspend some.
+  const validAfter: { id: string }[] = await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))
+  expect(validAfter.filter((p) => !validBefore.some((b: { id: string }) => b.id === p.id))).toEqual([])
   // The Tier 2 candidates automation raised above hold the pass too, so the manager rejects them as false alarms.
   const raised: { id: string }[] = await json(
     api.request('get', `/candidates?status=candidate&segmentId=${S1.segmentId}`, { token: 'dev_manager' })

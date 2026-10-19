@@ -1,5 +1,5 @@
 import type { Candidate, Denial, Finding, NotFound, Task, Tier, WorkOrder } from '@safe-edge/contracts'
-import { DAY, movePass, tierFor } from '../policy.ts'
+import { missedPatrolDue, movePass, tierFor } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
@@ -112,13 +112,10 @@ export const inbox: Handlers<
       const message = `${pass.id} is ${pass.state}; a missed patrol suspends only a valid or expiring pass`
       return tx.deny('invalid_transition', message, segment.id)
     }
-    const since = [segment.lastPatrolledAt, pass.validFrom]
-      .filter((at) => at !== null)
-      .reduce((a, b) => (Date.parse(a) >= Date.parse(b) ? a : b))
+    const { since, dueMs } = missedPatrolDue(segment, pass)
     const days = segment.patrolIntervalDays
-    const due = Date.parse(since) + days * DAY
-    if (Date.parse(tx.now) < due) {
-      const message = `${segment.id} was inspected at ${since}; its ${days}-day patrol is due at ${new Date(due).toISOString()}`
+    if (Date.parse(tx.now) < dueMs) {
+      const message = `${segment.id} was inspected at ${since}; its ${days}-day patrol is due at ${new Date(dueMs).toISOString()}`
       return tx.deny('invalid_transition', message, segment.id)
     }
     const missed: CandidateInput = {

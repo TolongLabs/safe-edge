@@ -26,7 +26,7 @@ import {
   type ThirdParty
 } from './separation.ts'
 import type { Edge, Segment } from './segments.ts'
-import { planStations, type Rejection, type SegmentTask, type Station } from './stations.ts'
+import { planStations, type Rejection, type SegmentTask, type SegmentViewpoint, type Station } from './stations.ts'
 import { flightWindow, weatherBlockers } from './window.ts'
 
 const meters = { units: 'meters' } as const
@@ -78,6 +78,8 @@ export interface PatrolPlanInput extends ScoreInputs {
   /** Camera slant range and forward overlap: see `planStations`. */
   rangeM: number
   forwardOverlap: number
+  /** The segments' fixed viewpoints: the station nearest each carries its ID (see `planStations`). */
+  viewpoints: SegmentViewpoint[]
   /** Flight height above the edge, at most `altitudeCapM`. */
   altitudeM: number
   /** The cap agreed with air traffic control. */
@@ -402,7 +404,7 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
         energyWh += (drone.hoverPowerW * input.separationWaitS) / 3600
       }
       fly(position(station))
-      arrive('station', at, { ...station.pose, viewpointId: null, segmentId })
+      arrive('station', at, { ...station.pose, viewpointId: station.viewpointId, segmentId })
       clockS += assumedEnergyModel.stationHoverS
       energyWh += hoverWh
     }
@@ -433,7 +435,7 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
       ...route.map((stop) => ({
         segmentId: stop.candidate.task.segmentId,
         flightLine: { type: 'LineString', coordinates: ordered(stop, stop.candidate.task.flightLine.coordinates) },
-        stations: ordered(stop, stop.candidate.stations).map((s) => ({ ...s.pose, viewpointId: null })),
+        stations: ordered(stop, stop.candidate.stations).map((s) => ({ ...s.pose, viewpointId: s.viewpointId })),
         priority: stop.candidate.priority,
         energyWh: stop.candidate.energyWh
       }))

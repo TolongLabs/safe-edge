@@ -6,6 +6,7 @@ import { createApp, type ApiOptions } from './app.ts'
 import { clockFrom } from './clock.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import {
+  createDataGovMyClient,
   PROCORE_DEVELOPER_SANDBOX,
   ProcoreWorkOrderProvider,
   readProcoreEnv,
@@ -49,6 +50,17 @@ const workOrders: ApiOptions['workOrders'] =
           readEvidence
         })
 
+// With SAFE_EDGE_WEATHER=datagovmy the API polls data.gov.my's warnings (live, at most 4 requests a minute) and
+// re-plans on those in force for Elmina. Unset, nothing is polled: tests and the offline demo use the saved snapshots.
+const { SAFE_EDGE_WEATHER: weatherSource } = process.env
+if (weatherSource !== undefined && weatherSource !== 'datagovmy') {
+  throw new Error(`SAFE_EDGE_WEATHER is datagovmy or unset, not ${weatherSource}`)
+}
+const weather =
+  weatherSource === 'datagovmy'
+    ? createDataGovMyClient({ fetch, clock: { now: Date.now, sleep: (ms) => Bun.sleep(ms) } })
+    : undefined
+
 // Bun serves the default export on PORT (3000 by default). Its idle timeout is 10 s, so the event stream's heartbeat
 // comes every 5 s.
 export default createApp({
@@ -60,5 +72,9 @@ export default createApp({
   heartbeatMs: 5_000,
   agent,
   workOrders,
-  webhooks: webhookOptions(process.env)
+  webhooks: webhookOptions(process.env),
+  // On the wall clock the automation (drone-sim, tick, missed patrols, weather) repeats on timers; a scenario clock runs
+  // it when set.
+  every: (ms, run) => void setInterval(() => void run(), ms),
+  weather
 })

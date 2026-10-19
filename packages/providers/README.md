@@ -90,11 +90,14 @@ The DJI and MAVLink adapters must apply the same checks before they send any fli
 
 ## Feeding core
 
-Whoever hosts the sim (the API or the scenario player) turns its events into core operations. `packages/providers/test/drone-sim.test.ts` does this end to end over real Elmina segments.
+Whoever hosts the sim turns its events into core operations with `bridgeDrone({ provider, dispatch, actor, publish, onFailure })` (`src/drone-bridge.ts`). The API does this for every patrol a pilot starts with `provider: 'sim'` (`apps/api/src/automation.ts`); `packages/providers/test/drone-sim.test.ts` does it over core alone.
 
-1.  After `approvePatrolPlan`, the pilot calls `startPatrol` with `provider: 'sim'` and `droneId: run.deviceId`. Then dispatch the run on the sim.
-2.  `observation` becomes `recordObservation` (`POST /observations`) as the provider user `usr_drone_sim`, with `patrolId` from core and `capturedAt: at`. Core needs a `viewpointId` from the segment's fixed viewpoints, and #71's planner leaves plan stations unlinked, so match the frame's pose to a viewpoint (within a metre) and skip frames that match none.
+1.  After `approvePatrolPlan` and `startPatrol`, `bridge.fly(patrol)` schedules the plan on the provider and dispatches it with the approval core recorded. A refused dispatch drops the scheduled run and rejects.
+2.  `observation` becomes `recordObservation` (`POST /observations`) as the provider actor, with `patrolId` from core and `capturedAt: at`, when the frame carries a `viewpointId`. The planner gives each fixed viewpoint's ID to the station nearest it, so the frame matches its viewpoint by ID. Other frames only count towards coverage.
 3.  `landed` becomes `completePatrol` with one coverage entry per planned segment. A segment counts as inspected only when every one of its stations was captured; otherwise its whole length is unknown, and core opens a field check for it.
+4.  `bridge.committedTasks(patrol)` is how many route stops the drone has reached (`waypoint` events at stations), which core's re-plan subscriber asks for an in-flight patrol.
+
+The bridge goes on after a write fails and hands the error to `onFailure`; the API records it as a failed `runAutomation` on the audit chain.
 
 ## Sending findings to Procore
 

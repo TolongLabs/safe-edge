@@ -4,9 +4,17 @@ import { describe, expect, test } from 'bun:test'
 import { actorFor } from '@safe-edge/core'
 import type { EdgeEvent } from '@safe-edge/contracts'
 import { startApi as startRealApi, tier2Candidate } from '../../../apps/api/test/support.ts'
-import { SafeEdgeApiError, SafeEdgeDeniedError, createSafeEdgeClient, elminaSeed } from '../src/index.ts'
+import { join } from 'node:path'
+import {
+  SafeEdgeApiError,
+  SafeEdgeDeniedError,
+  createElminaPlanner,
+  createSafeEdgeClient,
+  elminaSeed
+} from '../src/index.ts'
 import { S1, playS1toS3 } from './story.ts'
 
+const repoRoot = join(import.meta.dir, '../../..')
 const tokens = new Map(elminaSeed.users.map((user) => [`tok_${user.id}`, actorFor(user)]))
 const startApi = () => startRealApi({ tokens })
 let api: ReturnType<typeof startApi>
@@ -20,11 +28,21 @@ describe('http transport: the same typed client against the v1 API', () => {
     const overHttp = await playS1toS3({ as: (userId) => httpAs(userId), setNow: api.setNow })
 
     let now = '2026-10-20T00:00:00.000Z'
-    const demo = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager', clock: { now: () => now } })
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
     const inMemory = await playS1toS3({ as: (userId) => demo.as(userId), setNow: (iso) => (now = iso) })
 
     expect(overHttp.retest.pass).toMatchObject({ segmentId: S1.segmentId, state: 'valid', source: 'fixture' })
     expect(overHttp).toEqual(inMemory)
+    // In both, the completed repair queued a re-test patrol of S1, since no plan was open.
+    expect(await httpAs('usr_manager').listPatrolPlans()).toMatchObject([
+      { id: 'plan_1', replan: { trigger: { kind: 'repair_completed', segmentId: S1.segmentId }, supersedes: null } }
+    ])
     expect(await httpAs('usr_gm').listAudit()).toEqual(await demo.listAudit())
     expect(await httpAs('usr_manager').listPasses({ query: { state: 'valid' } })).toEqual(
       await demo.listPasses({ query: { state: 'valid' } })

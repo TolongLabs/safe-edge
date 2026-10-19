@@ -7,7 +7,7 @@ import { length } from '@turf/length'
 import { lineIntersect } from '@turf/line-intersect'
 import { lineOffset } from '@turf/line-offset'
 import { nearestPointOnLine } from '@turf/nearest-point-on-line'
-import type { CameraProfile, CameraStation, PatrolPlan } from '@safe-edge/contracts'
+import type { CameraProfile, CameraStation, PatrolPlan, Viewpoint } from '@safe-edge/contracts'
 import type { LineString, Position } from 'geojson'
 import type { Edge, Segment } from './segments.ts'
 
@@ -27,7 +27,12 @@ export interface Station {
   /** The `[lon, lat]` point on the segment the camera points at. */
   aim: Position
   pose: StationPose
+  /** The segment's fixed viewpoint this station captures, if any. */
+  viewpointId: string | null
 }
+
+/** A segment's fixed viewpoint (the store's `Segment.viewpoints`), which a station captures. */
+export type SegmentViewpoint = Pick<Viewpoint, 'id' | 'pose'> & { segmentId: string }
 
 export interface SegmentTask {
   /** `task_<osmId>_<segment index>` */
@@ -60,6 +65,8 @@ export interface StationPlanInput {
   forwardOverlap: number
   /** Flight height above the water edge. */
   altitudeM: number
+  /** The segments' fixed viewpoints. Each one's ID goes to the station nearest it, which captures it. */
+  viewpoints: SegmentViewpoint[]
 }
 
 export interface StationPlan {
@@ -77,7 +84,8 @@ export function planStations({
   camera,
   rangeM,
   forwardOverlap,
-  altitudeM
+  altitudeM,
+  viewpoints
 }: StationPlanInput): StationPlan {
   const { hfovDeg, vfovDeg } = camera
   if (!(hfovDeg > 0 && hfovDeg < 180 && vfovDeg > 0 && vfovDeg < 180)) {
@@ -122,7 +130,10 @@ export function planStations({
         standOffM,
         footprint,
         spacingM,
-        stations: stationsAlong(segment, flightLine, spacingM, altitudeM)
+        stations: withViewpoints(
+          stationsAlong(segment, flightLine, spacingM, altitudeM),
+          viewpoints.filter((v) => v.segmentId === segment.id)
+        )
       })
     }
   }
@@ -190,7 +201,27 @@ function stationsAlong(segment: Segment, flightLine: LineString, spacingM: numbe
         headingDeg: bearing([lon, lat], aim),
         gimbalPitchDeg: -Math.atan2(altitudeM, distance([lon, lat], aim, meters)) / DEG,
         zoom: 1
-      }
+      },
+      viewpointId: null
     }
   })
+}
+
+/**
+ * Gives each fixed viewpoint's ID to the station nearest it, so the frame taken there is the viewpoint's observation.
+ * The seed's viewpoints are stations planned with the same capture settings, so each falls on a station. Two viewpoints
+ * nearest the same station throw: one frame cannot be both.
+ */
+function withViewpoints(stations: Station[], viewpoints: SegmentViewpoint[]): Station[] {
+  const linked = [...stations]
+  for (const viewpoint of viewpoints) {
+    const awayM = (s: Station) => distance([viewpoint.pose.lon, viewpoint.pose.lat], [s.pose.lon, s.pose.lat], meters)
+    const index = linked.reduce((best, s, i) => (awayM(s) < awayM(linked[best]!) ? i : best), 0)
+    const station = linked[index]!
+    if (station.viewpointId !== null) {
+      throw new Error(`viewpoints ${station.viewpointId} and ${viewpoint.id} are both nearest station ${station.id}`)
+    }
+    linked[index] = { ...station, viewpointId: viewpoint.id }
+  }
+  return linked
 }

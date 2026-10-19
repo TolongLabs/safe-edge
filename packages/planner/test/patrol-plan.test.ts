@@ -34,6 +34,7 @@ describe('patrol plans over real Elmina segments', async () => {
     drone,
     rangeM: 15,
     forwardOverlap: 0.6,
+    viewpoints: [],
     altitudeM: 9,
     altitudeCapM: 60,
     // The window opens at first light next morning and is long enough for every segment.

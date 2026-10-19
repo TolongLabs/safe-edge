@@ -1,21 +1,18 @@
-// drone-sim through the DroneProvider port, wired to core the way a transport would: the plan comes from
+// drone-sim through the DroneProvider port, wired to core by the bridge a transport hosts: the plan comes from
 // `@safe-edge/planner` over real Elmina segments (through its Elmina adapter), the pilot approves it through
 // core's dispatch, the sim flies it, and its observations go back through dispatch (`POST /observations`) until core
 // completes the patrol.
 import { describe, expect, test } from 'bun:test'
 import {
   ProviderEvent,
-  type DispatchSuccess,
   type DroneStatus,
+  type EdgeEvent,
   type Observation,
-  type PatrolPlan,
-  type Pose,
-  type Segment
+  type PatrolPlan
 } from '@safe-edge/contracts'
 import type { ThirdParty } from '@safe-edge/planner'
-import { distance } from '@turf/distance'
 import { plannerWith, seed, startCore } from '../../core/test/support.ts'
-import { ApprovalRequiredError, OutsideWindowError, createDroneSim } from '../src/index.ts'
+import { ApprovalRequiredError, OutsideWindowError, bridgeDrone, createDroneSim } from '../src/index.ts'
 
 // S1 (two fixed viewpoints) and two other lake segments: real Elmina geometry from the seed.
 const SEGMENT_IDS = [seed.story.s1.segmentId, 'seg_866518980_5', 'seg_866518980_6']
@@ -174,80 +171,29 @@ describe('drone-sim honours the plan: its zoom and its window', () => {
 
 type Harness = Awaited<ReturnType<typeof start>>
 
-/** The S1 viewpoint a frame was taken from: same place and height, within a metre. */
-function viewpointAt(segment: Segment, pose: Pose) {
-  return segment.viewpoints.find(
-    (v) =>
-      distance([v.pose.lon, v.pose.lat], [pose.lon, pose.lat], { units: 'meters' }) < 1 &&
-      Math.abs(v.pose.altM - pose.altM) < 1
-  )
-}
-
 /**
- * What a transport hosting the sim does with its events: a frame at a fixed viewpoint becomes an observation on the
- * patrol (core needs the viewpoint), and landing completes the patrol. A segment counts as inspected only when every
- * one of its stations was captured; otherwise its whole length stays unknown.
- */
-function bridge(h: Harness, plan: PatrolPlan, patrolId: string) {
-  const segments = new Map(
-    plan.tasks.map((t) => [
-      t.segmentId,
-      h.call('getSegment', 'usr_manager', { params: { id: t.segmentId } }).data.segment
-    ])
-  )
-  const frames = new Map<string, number>()
-  const recorded: Observation[] = []
-  let completed: DispatchSuccess<'completePatrol'> | null = null
-  h.sim.onEvent((event) => {
-    if (event.type === 'observation') {
-      frames.set(event.segmentId, (frames.get(event.segmentId) ?? 0) + 1)
-      const viewpoint = viewpointAt(segments.get(event.segmentId)!, event.pose)
-      if (!viewpoint) return
-      const { segmentId, captureSource, image, pose, quality, privacyAction, simulated } = event
-      const body = {
-        patrolId,
-        segmentId,
-        viewpointId: viewpoint.id,
-        captureSource,
-        image,
-        pose,
-        quality,
-        privacyAction
-      }
-      recorded.push(
-        h.call('recordObservation', 'usr_drone_sim', { body: { ...body, capturedAt: event.at, simulated } }).data
-      )
-    }
-    if (event.type === 'landed') {
-      const coverage = plan.tasks.map(({ segmentId, stations }) => {
-        const { lengthM } = segments.get(segmentId)!
-        const whole = frames.get(segmentId) === stations.length
-        return { segmentId, inspectedM: whole ? lengthM : 0, unknownM: whole ? 0 : lengthM }
-      })
-      completed = h.call('completePatrol', 'usr_drone_sim', { params: { id: patrolId }, body: { coverage } })
-    }
-  })
-  return { segments, recorded, completed: () => completed! }
-}
-
-/**
- * Plan, approve as the pilot, start the patrol in core, schedule and dispatch it on the sim, then step the shared clock
- * one second at a time, as the scenario player does, until the drone lands. `cancelAfterFrames` cancels mid-flight.
+ * Plan, approve as the pilot, start the patrol in core, and hand it to the bridge, which schedules and dispatches it on
+ * the sim with the approval core recorded. Then step the shared clock one second at a time, as the scenario player
+ * does, until the drone lands. `cancelAfterFrames` cancels mid-flight.
  */
 async function flyApprovedPlan(h: Harness, { cancelAfterFrames }: { cancelAfterFrames?: number } = {}) {
   const approved = h.approve(h.plan().id)
-  const run = await h.sim.schedulePatrol(approved)
   h.setNow(approved.window.start)
   const patrol = h.call('startPatrol', 'usr_pilot', {
-    body: { planId: approved.id, provider: 'sim', droneId: run.deviceId }
+    body: { planId: approved.id, provider: 'sim', droneId: 'sim-1' }
   }).data
-  const link = bridge(h, approved, patrol.id)
-  await h.sim.dispatchPatrol(run.id, {
-    planId: approved.id,
-    approvedBy: approved.approvedBy!,
-    approvedAt: approved.approvedAt!
+  const published: EdgeEvent[] = []
+  const bridge = bridgeDrone({
+    provider: h.sim,
+    dispatch: h.core.dispatch,
+    actor: h.actor('usr_drone_sim'),
+    publish: (events) => published.push(...events),
+    onFailure: (error) => {
+      throw error
+    }
   })
-  let cancelled: { at: string; status: DroneStatus } | null = null
+  const run = await bridge.fly(patrol)
+  let cancelled: { at: string; status: DroneStatus; committed: number } | null = null
   const deadline = Date.parse(approved.window.end)
   for (let t = Date.parse(approved.window.start); !h.events.some((e) => e.type === 'landed');) {
     if (t > deadline) throw new Error('the drone never landed')
@@ -256,17 +202,24 @@ async function flyApprovedPlan(h: Harness, { cancelAfterFrames }: { cancelAfterF
     h.sim.tick()
     const frames = h.events.filter((e) => e.type === 'observation').length
     if (cancelled === null && cancelAfterFrames !== undefined && frames >= cancelAfterFrames) {
-      cancelled = { at: h.now(), status: await h.sim.getStatus(run.deviceId) }
+      const status = await h.sim.getStatus(run.deviceId)
+      cancelled = { at: h.now(), status, committed: bridge.committedTasks(patrol) }
       await h.sim.cancelPatrol(run.id)
     }
   }
-  return { approved, run, patrol, cancelled, ...link }
+  const segments = new Map(approved.tasks.map((t) => [t.segmentId, h.segment(t.segmentId).segment]))
+  const recorded = h
+    .audit()
+    .filter((e) => e.action === 'recordObservation')
+    .map((e) => e.after as Observation)
+  const completed = () => h.call('listPatrols', 'usr_manager', {}).data.find((p) => p.id === patrol.id)!
+  return { approved, run, patrol, cancelled, published, segments, recorded, completed }
 }
 
 describe('drone-sim flies an approved plan and feeds core', () => {
   test("it flies the planner's route on the planner's timeline, and its observations complete the patrol", async () => {
     const h = await start()
-    const { approved, patrol, segments, recorded, completed } = await flyApprovedPlan(h)
+    const { approved, patrol, segments, recorded, published, completed } = await flyApprovedPlan(h)
     const waypoints = approved.waypoints
     expect(approved.tasks.map((t) => t.segmentId).toSorted()).toEqual(SEGMENT_IDS.toSorted())
 
@@ -287,10 +240,17 @@ describe('drone-sim flies an approved plan and feeds core', () => {
     expect(battery.every((e, i) => e.remainingWh < (battery[i - 1]?.remainingWh ?? Infinity))).toBe(true)
     expect(battery.at(-1)!.remainingWh).toBeGreaterThan(h.drone.reserveWh)
 
-    // One frame per camera station, in route order; S1's two fixed viewpoints became observations on the patrol.
+    // One frame per camera station, in route order. The planner gave S1's first and last stations its two fixed
+    // viewpoints' IDs; the frames carry them, and those two frames became observations on the patrol.
     const frames: (string | null)[] = h.events.flatMap((e) => (e.type === 'observation' ? [e.segmentId] : []))
     expect(frames).toEqual(waypoints.filter((w) => w.kind === 'station').map((w) => w.segmentId))
     const s1 = seed.story.s1.segmentId
+    const s1Stations = approved.tasks.find((t) => t.segmentId === s1)!.stations.map((s) => s.viewpointId)
+    expect([s1Stations[0], s1Stations.at(-1)].toSorted()).toEqual(['vp_866518980_11_1', 'vp_866518980_11_2'])
+    expect(s1Stations.slice(1, -1).every((id) => id === null)).toBe(true)
+    expect(
+      approved.tasks.filter((t) => t.segmentId !== s1).flatMap((t) => t.stations.map((s) => s.viewpointId))
+    ).toEqual(approved.tasks.filter((t) => t.segmentId !== s1).flatMap((t) => t.stations.map(() => null)))
     expect(recorded.map((o) => [o.segmentId, o.viewpointId, o.patrolId]).toSorted()).toEqual(
       segments
         .get(s1)!
@@ -305,16 +265,16 @@ describe('drone-sim flies an approved plan and feeds core', () => {
 
     // Landing, delivered on the next clock step, completed the patrol in core: every segment fully seen, no field checks.
     const done = completed()
-    expect(done.data).toMatchObject({ id: patrol.id, status: 'completed', completedAt: h.now() })
+    expect(done).toMatchObject({ id: patrol.id, status: 'completed', completedAt: h.now() })
     expect(Date.parse(h.now()) - Date.parse(landed.at)).toBeLessThan(1000)
-    expect(done.data.coverage).toEqual(
+    expect(done.coverage).toEqual(
       approved.tasks.map((t) => ({
         segmentId: t.segmentId,
         inspectedM: segments.get(t.segmentId)!.lengthM,
         unknownM: 0
       }))
     )
-    expect(done.events.map((e) => e.type)).toEqual(['edge.patrol.completed.v1'])
+    expect(published.map((e) => e.type)).toEqual(['edge.patrol.completed.v1'])
     expect(h.call('listTasks', 'usr_manager', { query: { status: 'open' } }).data).toEqual([])
     expect(await h.sim.getStatus('sim-1')).toMatchObject({ state: 'docked', runId: null, pose: landed.pose })
   })
@@ -331,6 +291,8 @@ describe('drone-sim flies an approved plan and feeds core', () => {
     const h = await start()
     const { approved, run, patrol, cancelled, completed } = await flyApprovedPlan(h, { cancelAfterFrames: 1 })
     expect(cancelled!.status).toMatchObject({ state: 'in_flight', runId: run.id })
+    // The first frame was the first stop's, so the bridge reports that stop committed when a re-plan asks.
+    expect(cancelled!.committed).toBe(1)
     expect(cancelled!.status.batteryWh).toBeLessThan(h.drone.usableBatteryWh)
 
     const after = h.events.filter((e) => Date.parse(e.at) > Date.parse(cancelled!.at))
@@ -345,8 +307,8 @@ describe('drone-sim flies an approved plan and feeds core', () => {
     expect(Date.parse(landed.at)).toBeLessThan(Date.parse(approved.waypoints.at(-1)!.eta))
 
     // Nothing was fully seen, so every planned segment is unknown, never inspected, and gets a field check.
-    expect(completed().data).toMatchObject({ id: patrol.id, status: 'completed' })
-    expect(completed().data.coverage.every((c) => c.inspectedM === 0 && c.unknownM > 0)).toBe(true)
+    expect(completed()).toMatchObject({ id: patrol.id, status: 'completed' })
+    expect(completed().coverage.every((c) => c.inspectedM === 0 && c.unknownM > 0)).toBe(true)
     const checks = h.call('listTasks', 'usr_manager', { query: { status: 'open' } }).data
     expect(checks.map((t) => [t.kind, t.segmentId]).toSorted()).toEqual(
       approved.tasks.map((t) => ['field_check', t.segmentId]).toSorted()

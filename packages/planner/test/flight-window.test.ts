@@ -57,6 +57,7 @@ describe('flight windows', async () => {
     drone,
     rangeM: 15,
     forwardOverlap: 0.6,
+    viewpoints: [],
     altitudeM: 9,
     altitudeCapM: 60,
     notBefore: now,
