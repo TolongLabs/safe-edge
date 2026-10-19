@@ -89,6 +89,41 @@ describe('PLAN-6: a plan flies only after a pilot approves it', () => {
   })
 })
 
+describe('PLAN-4: a plan a re-plan superseded never flies', () => {
+  test('it can be neither approved nor started; the re-plan needs its own approval', () => {
+    const h = startCore()
+    const replanOf = (planId: string): CreatePatrolPlanRequest['replan'] => ({
+      trigger: {
+        kind: 'pass_expiring',
+        segmentId: 'seg_866518980_5',
+        passId: 'pass_866518980_5',
+        validTo: '2026-11-15T00:00:00.000Z'
+      },
+      supersedes: { planId, committedTasks: 0 }
+    })
+    h.call('createPatrolPlan', 'usr_manager', { body: request })
+    h.call('approvePatrolPlan', 'usr_pilot', { params: { id: 'plan_1' } })
+    h.call('createPatrolPlan', 'usr_manager', { body: request })
+    const replanned = h.call('createPatrolPlan', 'usr_system', { body: { ...request, replan: replanOf('plan_1') } })
+    h.call('createPatrolPlan', 'usr_system', { body: { ...request, replan: replanOf('plan_2') } })
+
+    const approve = h.attempt('approvePatrolPlan', 'usr_pilot', { params: { id: 'plan_2' } })
+    expect(approve).toMatchObject({ ok: false, rule: 'plan_superseded', message: expect.stringContaining('plan_4') })
+    expect(lastAudit(h)).toMatchObject({ action: 'approvePatrolPlan', subjectId: 'plan_2', rule: 'plan_superseded' })
+    h.setNow(replanned.data.window.start)
+    const start = h.attempt('startPatrol', 'usr_pilot', {
+      body: { planId: 'plan_1', provider: 'sim', droneId: 'sim-1' }
+    })
+    expect(start).toMatchObject({ ok: false, rule: 'plan_superseded', message: expect.stringContaining('plan_3') })
+    expect(lastAudit(h)).toMatchObject({ action: 'startPatrol', subjectId: 'plan_1', rule: 'plan_superseded' })
+    expect(h.call('listPatrols', 'usr_manager', {}).data).toEqual([])
+
+    h.call('approvePatrolPlan', 'usr_pilot', { params: { id: 'plan_3' } })
+    const patrol = h.call('startPatrol', 'usr_pilot', { body: { planId: 'plan_3', provider: 'sim', droneId: 'sim-1' } })
+    expect(patrol.data).toMatchObject({ planId: 'plan_3', status: 'in_flight' })
+  })
+})
+
 describe('WATCH-3: unknown coverage stays unknown', () => {
   test('unknown stretches and unreported segments create field checks and never count as inspected', () => {
     const h = startCore()

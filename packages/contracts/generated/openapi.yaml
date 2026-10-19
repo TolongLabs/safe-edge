@@ -223,7 +223,7 @@ paths:
   /patrol-plans/{id}/approve:
     post:
       operationId: approvePatrolPlan
-      summary: Allow the plan to fly
+      summary: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
       description: "Roles: pilot. Agents are refused."
       tags:
         - patrol-plans
@@ -237,7 +237,7 @@ paths:
         - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
-          description: Allow the plan to fly
+          description: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
           content:
             application/json:
               schema:
@@ -311,7 +311,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: startPatrol
-      summary: Start a patrol from an approved plan
+      summary: Start a patrol from an approved plan that no re-plan superseded
       description: "Roles: pilot. Agents are refused. Emits edge.patrol.started.v1."
       tags:
         - patrols
@@ -325,7 +325,7 @@ paths:
               $ref: "#/components/schemas/StartPatrolRequest"
       responses:
         "201":
-          description: Start a patrol from an approved plan
+          description: Start a patrol from an approved plan that no re-plan superseded
           content:
             application/json:
               schema:
@@ -1943,6 +1943,7 @@ components:
         - invalid_transition
         - remedy_not_approved
         - plan_not_approved
+        - plan_superseded
         - weather_hold
         - invalid_coverage
     Denial:

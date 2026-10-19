@@ -176,7 +176,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Allow the plan to fly
+         * Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
          * @description Roles: pilot. Agents are refused.
          */
         post: operations["approvePatrolPlan"];
@@ -220,7 +220,7 @@ export interface paths {
         get: operations["listPatrols"];
         put?: never;
         /**
-         * Start a patrol from an approved plan
+         * Start a patrol from an approved plan that no re-plan superseded
          * @description Roles: pilot. Agents are refused. Emits edge.patrol.started.v1.
          */
         post: operations["startPatrol"];
@@ -1007,7 +1007,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "weather_hold" | "invalid_coverage";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "invalid_coverage";
         Denial: {
             /** @constant */
             ok: false;
@@ -2124,7 +2124,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Allow the plan to fly */
+            /** @description Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2205,7 +2205,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Start a patrol from an approved plan */
+            /** @description Start a patrol from an approved plan that no re-plan superseded */
             201: {
                 headers: {
                     [name: string]: unknown;

@@ -212,7 +212,7 @@ export const operations = {
   approvePatrolPlan: {
     method: 'post',
     path: '/patrol-plans/{id}/approve',
-    summary: 'Allow the plan to fly',
+    summary: 'Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)',
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,
@@ -247,7 +247,7 @@ export const operations = {
   startPatrol: {
     method: 'post',
     path: '/patrols',
-    summary: 'Start a patrol from an approved plan',
+    summary: 'Start a patrol from an approved plan that no re-plan superseded',
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,

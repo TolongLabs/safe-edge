@@ -11,6 +11,7 @@ import {
   type Task
 } from '@safe-edge/contracts'
 import { canonicalJson } from '../audit.ts'
+import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
 /**
@@ -54,7 +55,7 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     const previous = supersedes && tx.get('patrolPlans', supersedes.planId)
     if (supersedes && !previous) return tx.notFound(`No patrol plan ${supersedes.planId}`)
     if (supersedes && previous) {
-      const next = tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === previous.id)
+      const next = supersededBy(tx, previous)
       if (next) return tx.deny('invalid_transition', `${previous.id} was already re-planned as ${next.id}`, previous.id)
       if (supersedes.committedTasks > previous.tasks.length) {
         const message = `${previous.id} has ${previous.tasks.length} stops, so ${supersedes.committedTasks} cannot be committed`
@@ -98,6 +99,9 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (!plan) return tx.notFound(`No patrol plan ${params.id}`)
     if (plan.status !== 'proposed')
       return tx.deny('invalid_transition', `${plan.id} is already ${plan.status}`, plan.id)
+    const next = supersededBy(tx, plan)
+    if (next)
+      return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; approve that instead`, plan.id)
     const approved = { ...plan, status: 'approved' as const, approvedBy: tx.actor.id, approvedAt: tx.now }
     tx.put('patrolPlans', approved)
     return ok(approved)
@@ -128,6 +132,8 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (plan.status !== 'approved') {
       return tx.deny('plan_not_approved', `${plan.id} needs a pilot's approval before it can fly`, plan.id)
     }
+    const next = supersededBy(tx, plan)
+    if (next) return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; fly that instead`, plan.id)
     // Weather and lightning holds stop the launch until they end; separation holds wait at their segment in flight.
     const launchHolds = plan.holds.filter(
       (h) => h.segmentId === null && h.until !== null && Date.parse(tx.now) < Date.parse(h.until)
@@ -219,3 +225,7 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     return ok(observation)
   }
 })
+
+/** The re-plan that replaced `plan`, if any. A superseded plan is never approved or flown. */
+const supersededBy = (tx: Tx, plan: PatrolPlan) =>
+  tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === plan.id)

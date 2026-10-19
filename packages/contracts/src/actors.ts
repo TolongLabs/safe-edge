@@ -60,6 +60,7 @@ export const PolicyRule = named(
     'invalid_transition',
     'remedy_not_approved',
     'plan_not_approved',
+    'plan_superseded',
     'weather_hold',
     'invalid_coverage'
   ])
