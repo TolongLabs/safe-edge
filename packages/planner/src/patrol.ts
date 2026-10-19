@@ -344,13 +344,13 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   if (dockHold) holds.push(dockHold)
 
   // A held stop waits at the last waypoint before its first station that is too close, where the drone is clear of them.
-  const waitsBefore = new Map<string, string>()
+  const waitsBefore = new Set<string>()
   for (const stop of route) {
     const { candidate } = stop
     if (candidate.waiting.length === 0) continue
     const waitingIds = new Set(candidate.waiting.map((w) => w.station.id))
     const first = ordered(stop, candidate.stations).find((s) => waitingIds.has(s.id))!
-    waitsBefore.set(first.id, candidate.task.segmentId)
+    waitsBefore.add(first.id)
     holds.push(
       separationHold(candidate.task.segmentId, candidate.waiting, { waitS: input.separationWaitS, before: first })
     )
@@ -414,10 +414,8 @@ export function buildPlan(input: PatrolPlanInput, start: RouteStart): PatrolPlan
   }
   const ground = [...dockAt, dock.position.altM]
   // What the authorisation covers on this route; without one, the route keeps 150 m from every designated area.
-  const routeLine = lineString(waypoints.length > 0 ? waypoints.map((w) => [w.lon, w.lat]) : [dockAt, dockAt])
-  const overflown = input.authorisation
-    ? designated.filter((zone) => waypoints.length > 0 && within(routeLine, zone, DESIGNATED_AREA_M))
-    : []
+  const routeLine = input.authorisation && waypoints.length > 0 && lineString(waypoints.map((w) => [w.lon, w.lat]))
+  const overflown = routeLine ? designated.filter((zone) => within(routeLine, zone, DESIGNATED_AREA_M)) : []
 
   return PatrolPlan.parse({
     id: input.id,
