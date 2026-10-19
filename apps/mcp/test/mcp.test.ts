@@ -1,26 +1,10 @@
 // The MCP server over stdio, driven by the official MCP client, against the real API on a free port.
-import { afterAll, expect, test } from 'bun:test'
-import { Client } from '@modelcontextprotocol/client'
-import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
-import { join } from 'node:path'
+import { expect, test } from 'bun:test'
 import { S1, raiseTier2, startApi, type Api } from '../../api/test/support.ts'
-
-const clients: Client[] = []
-afterAll(() => Promise.all(clients.map((client) => client.close())))
+import { connectMcp } from './support.ts'
 
 /** Spawns the MCP server the way a local client does: `bun apps/mcp/src/index.ts`, with the API URL and agent token. */
-async function connect(api: Api, token: string, mode: 'legacy' | { pin: string } = { pin: '2026-07-28' }) {
-  const client = new Client({ name: 'safe-edge-it', version: '0.0.0' }, { versionNegotiation: { mode } })
-  clients.push(client)
-  const transport = new StdioClientTransport({
-    command: process.execPath,
-    args: [join(import.meta.dir, '../src/index.ts')],
-    env: { SAFE_EDGE_API_URL: new URL('/v1', api.url).href, SAFE_EDGE_AGENT_TOKEN: token },
-    stderr: 'pipe'
-  })
-  await client.connect(transport)
-  return client
-}
+const connect = (api: Api, token: string, mode?: 'legacy' | { pin: string }) => connectMcp(api.url, token, mode)
 
 test('the server speaks protocol revision 2026-07-28 and refuses a legacy handshake', async () => {
   const api = startApi()
@@ -108,9 +92,23 @@ test('draft_work_order creates a draft, and the same agent token is refused an a
   })
 })
 
-test('the API, not the MCP server, enforces scope: a token without edge.read gets a tool error naming the rule', async () => {
-  const client = await connect(startApi(), 'tok_agent_unscoped')
-  const result = await client.callTool({ name: 'list_expiring_passes', arguments: { days: 30 } })
+test('the API, not the MCP server, enforces scope: a token without finding.propose gets a tool error naming the rule', async () => {
+  const client = await connect(startApi(), 'tok_agent_read_only')
+  const result = await client.callTool({
+    name: 'propose_finding',
+    arguments: {
+      segmentId: S1.segmentId,
+      observationIds: [],
+      inventoryItemId: null,
+      itemStatus: null,
+      class: 'worn_path',
+      score: 0.5,
+      uncertainty: 'high',
+      gridCell: null,
+      rationale: 'A worn path leads to the bank',
+      model: 'claude-opus-5-5'
+    }
+  })
 
   expect(result.isError).toBe(true)
   expect(result.content).toEqual([{ type: 'text', text: expect.stringContaining('403, rule scope_missing') }])

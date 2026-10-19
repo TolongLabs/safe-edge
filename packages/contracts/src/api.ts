@@ -447,5 +447,12 @@ export const ListPassesQuery = z.object({
   state: PassState.optional(),
   expiresWithinDays: z.coerce.number().int().positive().optional()
 })
-export const ListAuditQuery = z.object({ subject: z.string().optional() })
+export const ListAuditQuery = z.object({
+  subject: z
+    .string()
+    .optional()
+    .describe(
+      "A record's events and those of records on a segment. Only the unfiltered list, oldest first, is a chain."
+    )
+})
 export const ListNoticesQuery = z.object({ status: z.enum(['draft', 'sent']).optional() })

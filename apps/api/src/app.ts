@@ -88,8 +88,9 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
     await next()
   })
 
-  // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). Server
-  // errors are not kept, so a retry runs again. In memory, like the core.
+  // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). The caller
+  // is the whole actor, role and scopes included: a replay skips the access check, so another token of the same person
+  // must not share it. Server errors are not kept, so a retry runs again. In memory, like the core.
   const replays = new Map<
     string,
     { fingerprint: string; response?: { status: number; headers: Headers; body: string } }
@@ -97,7 +98,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
   const idempotency = createMiddleware<Env>(async (c, next) => {
     const key = c.req.header('idempotency-key')
     if (key === undefined) return next()
-    const scope = JSON.stringify([c.get('actor').id, c.req.method, c.req.path, key])
+    const scope = JSON.stringify([c.get('actor'), c.req.method, c.req.path, key])
     const fingerprint = new Bun.CryptoHasher('sha256').update(await c.req.text()).digest('hex')
     const seen = replays.get(scope)
     if (seen && seen.fingerprint !== fingerprint) {
@@ -131,7 +132,11 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
   const noAgent = (c: Context) => fail(c, 501, 'not_implemented', 'This API instance runs without the agent')
 
   const apiHandlers: ApiHandlers = {
-    uploadEvidence: (c, { body }) => c.json(evidence.put(body, c.get('actor')), 201),
+    uploadEvidence: (c, { body }) => {
+      const ref = evidence.put(body, c.get('actor'))
+      core.recordStored('uploadEvidence', c.get('actor'), ref)
+      return c.json(ref, 201)
+    },
     getEvidenceUrl: (c, { params }) => {
       const url = evidence.url(params.id, c.req.url)
       return url ? c.json(url, 200) : fail(c, 404, 'not_found', `No evidence ${params.id}`)
@@ -197,6 +202,7 @@ export function createApp({ core, clock, ids, tokens, heartbeatMs, workOrders, a
     registerWebhook: (c, { body }) => {
       const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: c.get('actor').id, createdAt: clock.now() }
       hub.register(webhook)
+      core.recordStored('registerWebhook', c.get('actor'), webhook)
       return c.json(webhook, 201)
     }
   }
