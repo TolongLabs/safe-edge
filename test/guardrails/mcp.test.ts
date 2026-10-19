@@ -1,9 +1,9 @@
 // #57: the guardrails, met the way an agent meets them: the MCP server over stdio, launched as apps/mcp/mcp.json does
-// with the committed agent dev token, driven by the official MCP client, against the real API on a free port.
+// with the stage's agent token, driven by the official MCP client, against the real API on a free port.
 // TRD "Testing" item 3, PRD MCP-3. The HTTP side is in api.test.ts.
 import { expect, test } from 'bun:test'
 import { connectMcp, runMcpToExit } from '../../apps/mcp/test/support.ts'
-import { answer, denied, json, raiseTier2, startGuardedApi } from './support.ts'
+import { answer, denied, json, playS1toRepair, startGuardedApi } from './support.ts'
 
 // Spawning the server is the slow part under load; every wait below is on an event, never a sleep.
 const SPAWN_TIMEOUT_MS = 30_000
@@ -33,17 +33,17 @@ test(
       tools.filter((t) => !t.annotations?.readOnlyHint && !/^(propose|draft)_/.test(t.name)).map((t) => t.name)
     ).toEqual([])
 
-    // A person confirms the drone's Tier 2 candidate, which opens a finding; the agent drafts its work order.
-    const candidate = await json(raiseTier2(api, 'dev_drone_sim'))
-    const decision = await json(
-      api.request('post', `/candidates/${candidate.id}/decision`, {
-        token: 'dev_manager',
-        body: { decision: 'confirm', severity: 'high' }
+    // S1's repair fails its re-test, which reopens the finding with no open work order; the agent drafts the next.
+    const played = await playS1toRepair(api.stage)
+    await json(
+      api.request('post', '/retests', {
+        token: 'dev_reviewer',
+        body: { ...played.retest, result: 'rejected', reason: 'Panel 4 still loose' }
       })
     )
     const drafted = await client.callTool({
       name: 'draft_work_order',
-      arguments: { findingId: decision.finding.id, notes: 'Replace fence panel 4 by the playground path' }
+      arguments: { findingId: played.decision.finding!.id, notes: 'Refit fence panel 4 by the playground path' }
     })
     expect(drafted.isError).toBeFalsy()
     const { workOrder } = drafted.structuredContent as { workOrder: { id: string } }

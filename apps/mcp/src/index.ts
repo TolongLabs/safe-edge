@@ -7,7 +7,7 @@ import { createServer } from './server.ts'
 const env = z
   .object({
     SAFE_EDGE_API_URL: z.url().describe("The API's /v1 base, e.g. http://localhost:3000/v1"),
-    SAFE_EDGE_AGENT_TOKEN: z.string().min(1).describe("The agent's bearer token, e.g. the dev token dev_agent")
+    SAFE_EDGE_AGENT_TOKEN: z.string().min(1).describe("The agent's bearer token; in dev, `bun run dev:token usr_agent`")
   })
   .parse(process.env)
 

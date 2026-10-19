@@ -526,10 +526,77 @@ paths:
         - system
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
+  /damage-reports:
+    post:
+      operationId: reportDamage
+      summary: "A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass"
+      description: "Roles: crew, manager. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1."
+      tags:
+        - damage-reports
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportDamageRequest"
+      responses:
+        "201":
+          description: "A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - crew
+        - manager
+      x-safe-edge-events:
+        - edge.candidate.raised.v1
+        - edge.pass.suspended.v1
+  /segments/{id}/missed-patrol:
+    post:
+      operationId: reportMissedPatrol
+      summary: "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass"
+      description: "Roles: system. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1."
+      tags:
+        - segments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^seg_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
+      x-safe-edge-events:
+        - edge.candidate.raised.v1
+        - edge.pass.suspended.v1
   /candidates/{id}/decision:
     post:
       operationId: decideCandidate
-      summary: Confirm, reject (with reason) or recapture
+      summary: Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
       description: "Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1."
       tags:
         - candidates
@@ -549,7 +616,7 @@ paths:
               $ref: "#/components/schemas/DecideCandidateRequest"
       responses:
         "200":
-          description: Confirm, reject (with reason) or recapture
+          description: Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
           content:
             application/json:
               schema:
@@ -567,6 +634,45 @@ paths:
       x-safe-edge-events:
         - edge.candidate.decided.v1
         - edge.work_order.drafted.v1
+  /candidates/{id}/agent-summary:
+    post:
+      operationId: recordAgentSummary
+      summary: Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+      description: People are refused. Agents need scope `finding.propose`.
+      tags:
+        - candidates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^cand_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordAgentSummaryRequest"
+      responses:
+        "200":
+          description: Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: []
+      x-safe-edge-agent-scope: finding.propose
+      x-safe-edge-events: []
   /findings:
     get:
       operationId: listFindings
@@ -921,7 +1027,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: createWorkOrder
-      summary: Create a draft from a finding and a remedy
+      summary: "Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one"
       description: "Roles: manager. Agents need scope `workorder.draft`. Emits edge.work_order.drafted.v1."
       tags:
         - work-orders
@@ -934,8 +1040,14 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateWorkOrderRequest"
       responses:
+        "200":
+          description: The finding's open draft, unchanged (confirming a candidate drafts one); nothing was created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
         "201":
-          description: Create a draft from a finding and a remedy
+          description: "Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one"
           content:
             application/json:
               schema:
@@ -1618,7 +1730,7 @@ paths:
   /agent/inbox-drafts:
     post:
       operationId: draftInbox
-      summary: The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+      summary: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
       description: "Roles: manager. Agents are refused."
       tags:
         - agent
@@ -1632,7 +1744,7 @@ paths:
               $ref: "#/components/schemas/DraftInboxRequest"
       responses:
         "200":
-          description: The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+          description: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
           content:
             application/json:
               schema:
@@ -1643,6 +1755,12 @@ paths:
           $ref: "#/components/responses/Unauthenticated"
         "403":
           $ref: "#/components/responses/Denied"
+        "502":
+          description: Claude refused, or finished without the draft the workflow asked for; the summary is not stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentStopped"
       x-safe-edge-roles:
         - manager
       x-safe-edge-events: []
@@ -1674,6 +1792,12 @@ paths:
           $ref: "#/components/responses/Unauthenticated"
         "403":
           $ref: "#/components/responses/Denied"
+        "502":
+          description: Claude refused, or finished without saving exactly one monthly report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentStopped"
       x-safe-edge-roles:
         - gm
         - manager
@@ -1749,6 +1873,37 @@ paths:
           $ref: "#/components/responses/Denied"
       x-safe-edge-roles:
         - integrator
+      x-safe-edge-events: []
+  /scenario/clock:
+    post:
+      operationId: setScenarioClock
+      summary: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+      description: "Roles: system. Agents are refused."
+      tags:
+        - scenario
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetScenarioClockRequest"
+      responses:
+        "200":
+          description: Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioClock"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - system
       x-safe-edge-events: []
 components:
   securitySchemes:
@@ -2221,6 +2376,16 @@ components:
             - type: string
               pattern: ^pass_
             - type: "null"
+        patrolIntervalDays:
+          type: integer
+          exclusiveMinimum: 0
+          description: How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later
+        lastPatrolledAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+          description: When a completed patrol last inspected some of the segment
         simulated:
           type: boolean
         source:
@@ -2236,6 +2401,8 @@ components:
         - expectedInventory
         - baselineId
         - passId
+        - patrolIntervalDays
+        - lastPatrolledAt
         - simulated
         - source
       additionalProperties: false
@@ -3317,6 +3484,18 @@ components:
         - water_level_change
         - text_in_image
         - other
+        - missed_patrol
+    ReportedClass:
+      type: string
+      enum:
+        - inventory_item
+        - worn_path
+        - bank_change
+        - vegetation
+        - floating_debris
+        - water_level_change
+        - text_in_image
+        - other
     Uncertainty:
       type: string
       enum:
@@ -3330,6 +3509,38 @@ components:
         - confirmed
         - rejected
         - needs_recapture
+    AgentSummary:
+      type: object
+      properties:
+        label:
+          type: string
+          const: ai_suggestion
+          description: "Show it as an AI suggestion: no person has checked it"
+        text:
+          type: string
+          minLength: 1
+        citations:
+          type: array
+          items:
+            type: string
+          description: "Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited"
+        model:
+          type: string
+          minLength: 1
+          description: The model the Claude API reported serving the run, never the model's own words
+        draftedBy:
+          $ref: "#/components/schemas/ActorRef"
+        draftedAt:
+          type: string
+          format: date-time
+      required:
+        - label
+        - text
+        - citations
+        - model
+        - draftedBy
+        - draftedAt
+      additionalProperties: false
     Candidate:
       type: object
       properties:
@@ -3356,12 +3567,13 @@ components:
         class:
           $ref: "#/components/schemas/CandidateClass"
         tier:
-          description: "Assigned by core: 2 for a missing or changed safety item, 3 for not visible, else 1"
+          description: "Assigned by core: 2 for a missing or changed safety item, a damage report or a missed patrol, 3 for not visible, else 1"
           $ref: "#/components/schemas/Tier"
         score:
           type: number
           minimum: 0
           maximum: 1
+          description: Detection score; 1 for a damage report or a missed patrol, which a person saw or core counted
         uncertainty:
           anyOf:
             - $ref: "#/components/schemas/Uncertainty"
@@ -3399,6 +3611,11 @@ components:
           type:
             - string
             - "null"
+        agentSummary:
+          anyOf:
+            - $ref: "#/components/schemas/AgentSummary"
+            - type: "null"
+          description: Null until the agent summarises it; a new summary replaces the last
         simulated:
           type: boolean
         source:
@@ -3422,6 +3639,7 @@ components:
         - decidedBy
         - decidedAt
         - decisionReason
+        - agentSummary
         - simulated
         - source
       additionalProperties: false
@@ -4340,7 +4558,7 @@ components:
             - $ref: "#/components/schemas/ItemStatus"
             - type: "null"
         class:
-          $ref: "#/components/schemas/CandidateClass"
+          $ref: "#/components/schemas/ReportedClass"
         score:
           type: number
           minimum: 0
@@ -4373,6 +4591,48 @@ components:
         - gridCell
         - rationale
         - model
+        - simulated
+      additionalProperties: false
+    ReportDamageRequest:
+      type: object
+      properties:
+        segmentId:
+          type: string
+          pattern: ^seg_
+        observationIds:
+          type: array
+          items:
+            type: string
+            pattern: ^obs_
+          description: Photos of the damage the reporter recorded on this segment (POST /observations); may be empty
+        inventoryItemId:
+          anyOf:
+            - type: string
+              pattern: ^item_
+            - type: "null"
+          description: The damaged expected item, when it is one
+        itemStatus:
+          anyOf:
+            - type: string
+              enum:
+                - missing
+                - changed
+            - type: "null"
+        class:
+          $ref: "#/components/schemas/ReportedClass"
+        rationale:
+          type: string
+          minLength: 1
+          description: What the reporter saw
+        simulated:
+          type: boolean
+      required:
+        - segmentId
+        - observationIds
+        - inventoryItemId
+        - itemStatus
+        - class
+        - rationale
         - simulated
       additionalProperties: false
     DecideCandidateRequest:
@@ -4909,6 +5169,55 @@ components:
       required:
         - question
       additionalProperties: false
+    AgentStopped:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: string
+          const: agent_stopped
+        message:
+          type: string
+        stopReason:
+          type: string
+          description: Claude's stop_reason for the last turn
+        category:
+          description: The refusal category, when Claude refused
+          type:
+            - string
+            - "null"
+        model:
+          type: string
+      required:
+        - ok
+        - error
+        - message
+        - stopReason
+        - category
+        - model
+      additionalProperties: false
+    RecordAgentSummaryRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        citations:
+          type: array
+          items:
+            type: string
+          description: "Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited"
+        model:
+          type: string
+          minLength: 1
+          description: The model the Claude API reported serving the run, never the model's own words
+      required:
+        - text
+        - citations
+        - model
+      additionalProperties: false
     DraftInboxRequest:
       type: object
       properties:
@@ -4937,7 +5246,7 @@ components:
           anyOf:
             - $ref: "#/components/schemas/WorkOrder"
             - type: "null"
-          description: The agent's draft; a person edits and submits it
+          description: "The finding's open draft: the one confirming made, which the agent's draft request returns unchanged, or the agent's own when the finding had none open. A person edits and submits it"
         citations:
           type: array
           items:
@@ -5038,4 +5347,26 @@ components:
       required:
         - url
         - eventTypes
+      additionalProperties: false
+    SetScenarioClockRequest:
+      type: object
+      properties:
+        now:
+          type: string
+          format: date-time
+      required:
+        - now
+      additionalProperties: false
+    ScenarioClock:
+      type: object
+      properties:
+        id:
+          type: string
+          const: clock
+        now:
+          type: string
+          format: date-time
+      required:
+        - id
+        - now
       additionalProperties: false

@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from './app.ts'
+import { clockFrom } from './clock.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import {
   PROCORE_DEVELOPER_SANDBOX,
@@ -15,7 +16,8 @@ const repoRoot = join(import.meta.dir, '../../..')
 const readJson = (path: string) => Bun.file(join(repoRoot, path)).json()
 
 const seed = Seed.parse(await readJson('data/elmina/fixtures/seed.json'))
-const clock = { now: () => new Date().toISOString() }
+// The wall clock, or with SAFE_EDGE_CLOCK=scenario the clock a scenario player sets (refused in production).
+const clock = clockFrom(process.env, seed.asOf)
 const ids = counterIds()
 // Observed third parties reach plans through core: the seed's (S1's path crowd) and each create-plan request's. Mapped
 // structures such as buildings arrive with #59's Overpass extract; the research extract maps none.
@@ -24,7 +26,7 @@ const core = createCore({ seed, clock, ids, planner })
 
 // The agent acts with its own API token (an agent actor). Claude reads ANTHROPIC_API_KEY; without it, agent calls fail.
 const agentToken = process.env.SAFE_EDGE_AGENT_TOKEN
-if (!agentToken) throw new Error('Set SAFE_EDGE_AGENT_TOKEN to the API token the agent acts with (dev_agent in dev)')
+if (!agentToken) throw new Error('Set SAFE_EDGE_AGENT_TOKEN to the API token the agent acts with (bun run dev sets it)')
 const agent = { claude: new Anthropic(), token: agentToken }
 
 // Accepted findings go to the Procore Developer Sandbox when the PROCORE_* variables are set (the sandbox wizard,

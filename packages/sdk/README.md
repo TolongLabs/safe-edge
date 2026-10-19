@@ -9,6 +9,7 @@ Contents:
 1.  [Events and Reset demo](#events-and-reset-demo)
 1.  [Patrol plans in demo mode](#patrol-plans-in-demo-mode)
 1.  [The http transport](#the-http-transport)
+1.  [Streams over HTTP: Ask and events](#streams-over-http-ask-and-events)
 1.  [Errors](#errors)
 
 ## Demo mode: the memory transport
@@ -52,7 +53,7 @@ await demo.resetDemo() // the seed again, an empty audit chain, ID counters from
 await demo.tick('2026-11-01T02:00:00.000Z') // passes move to expiring and expired on the scenario clock
 ```
 
-- `subscribe` hears every event core emits in this demo, whichever user acted. It is memory-only for now: the http client does not yet read the API's `GET /v1/events` stream.
+- `subscribe` hears every event core emits in this demo, whichever user acted. Over HTTP, read `GET /v1/events` with `streamEvents` instead (see [Streams over HTTP](#streams-over-http-ask-and-events)).
 - `resetDemo` restores the seed for every client made with `as`, and subscribers stay subscribed. It emits no event, so refetch what the screen shows after calling it. The agent user cannot reset.
 - `tick(now)` runs core's time-driven pass moves (S4's expiring passes): valid to expiring 30 days before `validTo`, then to expired. The system acts, whichever user the client is, so a tick never makes a pass valid. Subscribers get the `edge.pass.expiring.v1` and `edge.pass.expired.v1` events, and `tick` returns them. It is memory-only: the HTTP API exposes no tick.
 
@@ -80,7 +81,31 @@ await api.uploadEvidence({ body: { mediaType: 'image/jpeg', dataBase64, captured
 
 - Every request sends `Authorization: Bearer <token>`; the API maps the token to a user.
 - Every write sends a fresh `Idempotency-Key`. To retry a write safely, pass your own and reuse it: `api.draftNotice(input, { idempotencyKey })`.
-- The http client also has the HTTP-only operations (`uploadEvidence`, `getEvidenceUrl`, `triageImages`, `registerWebhook`) and lacks `resetDemo`. Responses are checked against the contract.
+- The http client also has the HTTP-only operations (`uploadEvidence`, `getEvidenceUrl`, `triageImages`, `registerWebhook`, `setScenarioClock`, and the agent's `draftInbox` and `draftMonthlyReport`) and lacks `resetDemo`. Responses are checked against the contract.
+- To replay a scenario against a dev API started with `SAFE_EDGE_CLOCK=scenario`, set its clock to each event's time as the system user before the event: `system.setScenarioClock({ body: { now: event.at } })`. Records then carry the scenario's times, as they do with the memory transport's `clock`. An API on the wall clock, as production always is, answers 501.
+
+## Streams over HTTP: Ask and events
+
+The two streamed operations are http-client methods too. Each resolves once the API has accepted the request, so a refusal or bad input throws there as a typed error, and then yields parsed events:
+
+```ts
+const hangUp = new AbortController()
+const reply = await api.askAgent({ body: { question: 'Which passes expire in 30 days?' } }, { signal: hangUp.signal })
+for await (const part of reply) {
+  if (part.event === 'delta')
+    append(part.data.text) // text as the agent writes it
+  else if (part.event === 'answer')
+    show(part.data) // AgentAnswer: replaces the deltas, with citations and model
+  else showStopped(part.data) // AgentStopped: Claude refused or could not finish
+}
+
+const events = await api.streamEvents() // subscribed now: act after this
+for await (const event of events) handle(event) // EdgeEvent CloudEvents, as subscribe gives them
+```
+
+- `askAgent` ends after one `answer` or one `stopped`. An `error` event (the run failed on the server) throws.
+- To hang up, abort `signal` or leave the `for await` loop early. Hanging up on `askAgent` cancels the agent's Claude run on the server, so close the stream when the Ask panel closes.
+- `streamEvents` never ends on its own: abort its `signal` or leave the loop when the screen goes away. It has no replay, so events emitted before it resolved are not sent.
 
 ## Errors
 

@@ -20,7 +20,8 @@ export type OperationOutput<K extends OperationId> = z.output<Operations[K]['res
 
 export type DispatchSuccess<K extends CoreOperationId> = {
   ok: true
-  status: Operations[K]['status']
+  /** The operation's `status`, or 200 when it answered with an existing record (listed in its `responses`). */
+  status: Operations[K]['status'] | 200
   data: OperationOutput<K>
   /** The CloudEvents this call emitted, for the transport to publish (SSE, webhooks, memory subscribers). */
   events: EdgeEvent[]

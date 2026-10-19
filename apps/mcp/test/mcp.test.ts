@@ -56,7 +56,7 @@ test('list_expiring_passes for 30 days answers with pass and segment IDs', async
   })
 })
 
-test('draft_work_order creates a draft, and the same agent token is refused an approval over REST, naming the rule', async () => {
+test("draft_work_order on a confirmed finding gives back the draft confirming made, never a second, and the agent's token cannot submit it", async () => {
   const api = startApi()
   const client = await connect(api, 'tok_agent')
   const candidate = await (await raiseTier2(api)).json()
@@ -72,17 +72,11 @@ test('draft_work_order creates a draft, and the same agent token is refused an a
     arguments: { findingId: decision.finding.id, notes: 'Replace fence panel 4 by the playground path' }
   })
   expect(result.isError).toBeFalsy()
-  const { workOrder } = result.structuredContent as { workOrder: { id: string } }
-  const stored = await (await api.request('get', `/work-orders/${workOrder.id}`, { token: 'tok_manager' })).json()
-  expect(stored).toMatchObject({
-    id: workOrder.id,
-    findingId: decision.finding.id,
-    status: 'draft',
-    draftedBy: { type: 'agent', id: 'usr_agent' },
-    notes: 'Replace fence panel 4 by the playground path'
-  })
+  expect(result.structuredContent).toEqual({ workOrder: decision.workOrder })
+  const listed = await (await api.request('get', '/work-orders', { token: 'tok_manager' })).json()
+  expect(listed.filter((w: { findingId: string }) => w.findingId === decision.finding.id)).toEqual([decision.workOrder])
 
-  const submit = await api.request('post', `/work-orders/${workOrder.id}/submit`, {
+  const submit = await api.request('post', `/work-orders/${decision.workOrder.id}/submit`, {
     token: 'tok_agent',
     body: { installerUserId: 'usr_installer', dueAt: '2026-10-27T00:00:00.000Z' }
   })

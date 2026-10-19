@@ -314,6 +314,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/damage-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass
+         * @description Roles: crew, manager. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1.
+         */
+        post: operations["reportDamage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/segments/{id}/missed-patrol": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass
+         * @description Roles: system. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1.
+         */
+        post: operations["reportMissedPatrol"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/candidates/{id}/decision": {
         parameters: {
             query?: never;
@@ -324,10 +364,30 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Confirm, reject (with reason) or recapture
+         * Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
          * @description Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1.
          */
         post: operations["decideCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/candidates/{id}/agent-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion
+         * @description People are refused. Agents need scope `finding.propose`.
+         */
+        post: operations["recordAgentSummary"];
         delete?: never;
         options?: never;
         head?: never;
@@ -528,7 +588,7 @@ export interface paths {
         get: operations["listWorkOrders"];
         put?: never;
         /**
-         * Create a draft from a finding and a remedy
+         * Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one
          * @description Roles: manager. Agents need scope `workorder.draft`. Emits edge.work_order.drafted.v1.
          */
         post: operations["createWorkOrder"];
@@ -896,7 +956,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+         * The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
          * @description Roles: manager. Agents are refused.
          */
         post: operations["draftInbox"];
@@ -964,6 +1024,26 @@ export interface paths {
          * @description Roles: integrator. Agents are refused.
          */
         post: operations["registerWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scenario/clock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501)
+         * @description Roles: system. Agents are refused.
+         */
+        post: operations["setScenarioClock"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1100,6 +1180,10 @@ export interface components {
             expectedInventory: components["schemas"]["InventoryItem"][];
             baselineId: string | null;
             passId: string | null;
+            /** @description How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later */
+            patrolIntervalDays: number;
+            /** @description When a completed patrol last inspected some of the segment */
+            lastPatrolledAt: string | null;
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
@@ -1421,11 +1505,28 @@ export interface components {
         };
         Tier: 1 | 2 | 3;
         /** @enum {string} */
-        CandidateClass: "inventory_item" | "worn_path" | "bank_change" | "vegetation" | "floating_debris" | "water_level_change" | "text_in_image" | "other";
+        CandidateClass: "inventory_item" | "worn_path" | "bank_change" | "vegetation" | "floating_debris" | "water_level_change" | "text_in_image" | "other" | "missed_patrol";
+        /** @enum {string} */
+        ReportedClass: "inventory_item" | "worn_path" | "bank_change" | "vegetation" | "floating_debris" | "water_level_change" | "text_in_image" | "other";
         /** @enum {string} */
         Uncertainty: "low" | "medium" | "high";
         /** @enum {string} */
         CandidateStatus: "candidate" | "confirmed" | "rejected" | "needs_recapture";
+        AgentSummary: {
+            /**
+             * @description Show it as an AI suggestion: no person has checked it
+             * @constant
+             */
+            label: "ai_suggestion";
+            text: string;
+            /** @description Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited */
+            citations: string[];
+            /** @description The model the Claude API reported serving the run, never the model's own words */
+            model: string;
+            draftedBy: components["schemas"]["ActorRef"];
+            /** Format: date-time */
+            draftedAt: string;
+        };
         Candidate: {
             id: string;
             segmentId: string;
@@ -1433,8 +1534,9 @@ export interface components {
             inventoryItemId: string | null;
             itemStatus: components["schemas"]["ItemStatus"] | null;
             class: components["schemas"]["CandidateClass"];
-            /** @description Assigned by core: 2 for a missing or changed safety item, 3 for not visible, else 1 */
+            /** @description Assigned by core: 2 for a missing or changed safety item, a damage report or a missed patrol, 3 for not visible, else 1 */
             tier: components["schemas"]["Tier"];
+            /** @description Detection score; 1 for a damage report or a missed patrol, which a person saw or core counted */
             score: number;
             uncertainty: components["schemas"]["Uncertainty"] | null;
             gridCell: string | null;
@@ -1448,6 +1550,8 @@ export interface components {
             decidedBy: string | null;
             decidedAt: string | null;
             decisionReason: string | null;
+            /** @description Null until the agent summarises it; a new summary replaces the last */
+            agentSummary: components["schemas"]["AgentSummary"] | null;
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
@@ -1717,12 +1821,24 @@ export interface components {
             observationIds: string[];
             inventoryItemId: string | null;
             itemStatus: components["schemas"]["ItemStatus"] | null;
-            class: components["schemas"]["CandidateClass"];
+            class: components["schemas"]["ReportedClass"];
             score: number;
             uncertainty: components["schemas"]["Uncertainty"] | null;
             gridCell: string | null;
             rationale: string;
             model: string | null;
+            simulated: boolean;
+        };
+        ReportDamageRequest: {
+            segmentId: string;
+            /** @description Photos of the damage the reporter recorded on this segment (POST /observations); may be empty */
+            observationIds: string[];
+            /** @description The damaged expected item, when it is one */
+            inventoryItemId: string | null;
+            itemStatus: ("missing" | "changed") | null;
+            class: components["schemas"]["ReportedClass"];
+            /** @description What the reporter saw */
+            rationale: string;
             simulated: boolean;
         };
         DecideCandidateRequest: {
@@ -1886,6 +2002,25 @@ export interface components {
         AskAgentRequest: {
             question: string;
         };
+        AgentStopped: {
+            /** @constant */
+            ok: false;
+            /** @constant */
+            error: "agent_stopped";
+            message: string;
+            /** @description Claude's stop_reason for the last turn */
+            stopReason: string;
+            /** @description The refusal category, when Claude refused */
+            category: string | null;
+            model: string;
+        };
+        RecordAgentSummaryRequest: {
+            text: string;
+            /** @description Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited */
+            citations: string[];
+            /** @description The model the Claude API reported serving the run, never the model's own words */
+            model: string;
+        };
         DraftInboxRequest: {
             candidateId: string;
         };
@@ -1895,7 +2030,7 @@ export interface components {
             findingId: string | null;
             /** @description The agent's summary for the Inbox card */
             summary: string;
-            /** @description The agent's draft; a person edits and submits it */
+            /** @description The finding's open draft: the one confirming made, which the agent's draft request returns unchanged, or the agent's own when the finding had none open. A person edits and submits it */
             workOrder: components["schemas"]["WorkOrder"] | null;
             /** @description Record IDs that tool results returned and the text names, in order of first mention */
             citations: string[];
@@ -1933,6 +2068,16 @@ export interface components {
             /** Format: uri */
             url: string;
             eventTypes: components["schemas"]["EventType"][];
+        };
+        SetScenarioClockRequest: {
+            /** Format: date-time */
+            now: string;
+        };
+        ScenarioClock: {
+            /** @constant */
+            id: "clock";
+            /** Format: date-time */
+            now: string;
         };
     };
     responses: {
@@ -2445,6 +2590,64 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    reportDamage: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportDamageRequest"];
+            };
+        };
+        responses: {
+            /** @description A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Candidate"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    reportMissedPatrol: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Candidate"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
     decideCandidate: {
         parameters: {
             query?: never;
@@ -2463,13 +2666,46 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Confirm, reject (with reason) or recapture */
+            /** @description Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition) */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["CandidateDecision"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    recordAgentSummary: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordAgentSummaryRequest"];
+            };
+        };
+        responses: {
+            /** @description Store the agent's Inbox summary on a candidate, replacing the last; agents only, so a person's words are never labelled an AI suggestion */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Candidate"];
                 };
             };
             400: components["responses"]["InvalidInput"];
@@ -2776,7 +3012,16 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Create a draft from a finding and a remedy */
+            /** @description The finding's open draft, unchanged (confirming a candidate drafts one); nothing was created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            /** @description Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -3361,7 +3606,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft */
+            /** @description The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary, and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3373,6 +3618,15 @@ export interface operations {
             400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
+            /** @description Claude refused, or finished without the draft the workflow asked for; the summary is not stored */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentStopped"];
+                };
+            };
         };
     };
     draftMonthlyReport: {
@@ -3403,6 +3657,15 @@ export interface operations {
             400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
+            /** @description Claude refused, or finished without saving exactly one monthly report */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentStopped"];
+                };
+            };
         };
     };
     streamEvents: {
@@ -3472,6 +3735,36 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Webhook"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    setScenarioClock: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetScenarioClockRequest"];
+            };
+        };
+        responses: {
+            /** @description Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScenarioClock"];
                 };
             };
             400: components["responses"]["InvalidInput"];

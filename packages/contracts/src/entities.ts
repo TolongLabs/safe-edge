@@ -92,6 +92,14 @@ export const Segment = named(
     expectedInventory: z.array(InventoryItem),
     baselineId: BaselineId.nullable(),
     passId: PassId.nullable(),
+    patrolIntervalDays: z
+      .number()
+      .int()
+      .positive()
+      .describe(
+        "How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later"
+      ),
+    lastPatrolledAt: Timestamp.nullable().describe('When a completed patrol last inspected some of the segment'),
     ...provenance
   })
 )
@@ -503,9 +511,19 @@ export const OTHER_CHANGE_CLASSES = [
   'other'
 ] as const
 
-/** `inventory_item` for expected-inventory results; the rest are the triage "other changes" classes. */
-export const CandidateClass = named('CandidateClass', z.enum(['inventory_item', ...OTHER_CHANGE_CLASSES]))
+/**
+ * `inventory_item` for expected-inventory results, the triage "other changes" classes, and `missed_patrol`, which only
+ * core raises (POST /segments/{id}/missed-patrol).
+ */
+export const CandidateClass = named(
+  'CandidateClass',
+  z.enum(['inventory_item', ...OTHER_CHANGE_CLASSES, 'missed_patrol'])
+)
 export type CandidateClass = z.infer<typeof CandidateClass>
+
+/** The classes a caller may raise or report: every class but `missed_patrol`. */
+export const ReportedClass = named('ReportedClass', CandidateClass.exclude(['missed_patrol']))
+export type ReportedClass = z.infer<typeof ReportedClass>
 
 export const Uncertainty = named('Uncertainty', z.enum(['low', 'medium', 'high']))
 export type Uncertainty = z.infer<typeof Uncertainty>
@@ -516,6 +534,24 @@ export const CandidateStatus = named(
 )
 export type CandidateStatus = z.infer<typeof CandidateStatus>
 
+/** The agent's summary on a candidate's Inbox card (PRD INBOX-1), stored by `POST /agent/inbox-drafts`. */
+export const AgentSummary = named(
+  'AgentSummary',
+  z.object({
+    label: z.literal('ai_suggestion').describe('Show it as an AI suggestion: no person has checked it'),
+    text: z.string().min(1),
+    citations: z
+      .array(z.string())
+      .describe(
+        "Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited"
+      ),
+    model: z.string().min(1).describe("The model the Claude API reported serving the run, never the model's own words"),
+    draftedBy: ActorRef,
+    draftedAt: Timestamp
+  })
+)
+export type AgentSummary = z.infer<typeof AgentSummary>
+
 export const Candidate = named(
   'Candidate',
   z.object({
@@ -525,8 +561,14 @@ export const Candidate = named(
     inventoryItemId: InventoryItemId.nullable(),
     itemStatus: ItemStatus.nullable(),
     class: CandidateClass,
-    tier: Tier.describe('Assigned by core: 2 for a missing or changed safety item, 3 for not visible, else 1'),
-    score: z.number().min(0).max(1),
+    tier: Tier.describe(
+      'Assigned by core: 2 for a missing or changed safety item, a damage report or a missed patrol, 3 for not visible, else 1'
+    ),
+    score: z
+      .number()
+      .min(0)
+      .max(1)
+      .describe('Detection score; 1 for a damage report or a missed patrol, which a person saw or core counted'),
     uncertainty: Uncertainty.nullable(),
     gridCell: z
       .string()
@@ -545,6 +587,9 @@ export const Candidate = named(
     decidedBy: UserId.nullable(),
     decidedAt: Timestamp.nullable(),
     decisionReason: z.string().nullable(),
+    agentSummary: AgentSummary.nullable().describe(
+      'Null until the agent summarises it; a new summary replaces the last'
+    ),
     ...provenance
   })
 )
