@@ -1,3 +1,10 @@
+export {
+  AUTOMATION_ACTOR,
+  queuedRetest,
+  recordAutomationFailure,
+  runSchedule,
+  type AutomationStep
+} from './automation.ts'
 export { canonicalJson, verifyAuditChain, GENESIS_HASH, POLICY_VERSION, type AuditChainCheck } from './audit.ts'
 export { counterIds, createCore, type Clock, type Core, type CoreOptions, type IdGenerator } from './core.ts'
 export type { PatrolPlanner } from '@safe-edge/contracts'

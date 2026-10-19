@@ -21,7 +21,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { APIUserAbortError } from '@anthropic-ai/sdk'
 import { counterIds, createCore, type Core, type Seed } from '@safe-edge/core'
 import { Database } from 'bun:sqlite'
-import type { EvidenceReader } from '@safe-edge/providers'
+import type { DataGovMyClient, EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
 import { createMiddleware } from 'hono/factory'
@@ -29,6 +29,7 @@ import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
 import { createAgent } from './agent.ts'
+import { startAutomation, type Every } from './automation.ts'
 import type { ApiClock } from './clock.ts'
 import { createEventHub, newWebhookSecret, type WebhookOptions } from './events.ts'
 import { createEvidenceStore } from './evidence.ts'
@@ -63,6 +64,13 @@ export interface ApiOptions {
   agent?: { claude: Anthropic; token: string }
   /** Where webhooks may point and how failed deliveries are retried. */
   webhooks: WebhookOptions
+  /**
+   * How the API repeats its automation on the wall clock (`setInterval`); required there. A scenario clock runs the
+   * automation each time `setScenarioClock` moves it, so it ignores this.
+   */
+  every?: Every
+  /** data.gov.my, polled for warnings that re-plan open plans (wall clock only). Without it, nothing is polled. */
+  weather?: DataGovMyClient
 }
 
 type Env = { Variables: { actor: Actor } }
@@ -87,7 +95,9 @@ export function createApp({
   heartbeatMs,
   workOrders,
   agent: agentOptions,
-  webhooks
+  webhooks,
+  every,
+  weather
 }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   // Every change to the API's state goes through a journaled command, so a restart replays it (journal.ts). Core and
@@ -129,6 +139,16 @@ export function createApp({
   const forwarder =
     workOrders &&
     forwardWorkOrders({ core, subscribe: hub.subscribe, provider: workOrders(async (ref) => evidence.bytes(ref)) })
+  // Its writes go through the journaled core, each its own entry, so a restart replays them like any request's.
+  const automation = startAutomation({
+    core,
+    clock,
+    scenario: baseClock.set !== undefined,
+    every,
+    weather,
+    subscribe: hub.subscribe,
+    publish: hub.publish
+  })
   /** Core operations the API acts on once they succeed, besides publishing their events. */
   const afterDispatch: { [K in CoreOperationId]?: (data: OperationOutput<K>) => void } = {
     // A person cleared a failed hand-off; the API resumes it from the step that failed.
@@ -305,7 +325,10 @@ export function createApp({
       if (baseClock.set === undefined) {
         return fail(c, 501, 'not_implemented', 'This API runs on the wall clock; dev runs set SAFE_EDGE_CLOCK=scenario')
       }
-      return c.json(setScenarioClock(c.get('actor'), body.now), 200)
+      const moved = setScenarioClock(c.get('actor'), body.now)
+      // After the journaled move, so each write the automation makes is its own entry and replays once.
+      automation.clockSet()
+      return c.json(moved, 200)
     }
   }
 

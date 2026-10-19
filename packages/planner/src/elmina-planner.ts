@@ -48,6 +48,7 @@ export async function createElminaPlanner(
       drone: droneProfile,
       rangeM: 15,
       forwardOverlap: 0.6,
+      viewpoints: segments.flatMap((s) => s.viewpoints.map((v) => ({ id: v.id, pose: v.pose, segmentId: s.id }))),
       altitudeM: Math.min(9, request.altitudeCapM),
       altitudeCapM: request.altitudeCapM,
       notBefore: request.notBefore,

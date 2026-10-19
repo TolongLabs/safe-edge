@@ -1,7 +1,7 @@
 // Plans a demo patrol over the real Elmina water edges and writes it as a DJI WPML KMZ and a QGroundControl .plan,
 // both stamped "not flight-ready", for opening in DJI Pilot 2 or QGroundControl.
 // Usage: bun run export:mission <outDir>
-import { Dock, DroneProfile, EdgePass, ThirdParty, type ContextSnapshot } from '@safe-edge/contracts'
+import { Dock, DroneProfile, EdgePass, Segment, ThirdParty, type ContextSnapshot } from '@safe-edge/contracts'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { NOT_FLIGHT_READY, exportQgcPlan, exportWpmlKmz } from '../src/export/index.ts'
@@ -37,6 +37,7 @@ export async function demoPlan(readJson: (path: string) => Promise<unknown>) {
     droneProfiles: unknown[]
     passes: unknown[]
     thirdParties: unknown[]
+    segments: unknown[]
   }
   const dock = Dock.parse(seed.docks[0])
   const drone = DroneProfile.parse(seed.droneProfiles[0])
@@ -52,6 +53,9 @@ export async function demoPlan(readJson: (path: string) => Promise<unknown>) {
     drone,
     rangeM: 15,
     forwardOverlap: 0.6,
+    viewpoints: seed.segments
+      .map((s) => Segment.parse(s))
+      .flatMap((s) => s.viewpoints.map((v) => ({ id: v.id, pose: v.pose, segmentId: s.id }))),
     altitudeM: 9,
     altitudeCapM: 60,
     notBefore: NOW,

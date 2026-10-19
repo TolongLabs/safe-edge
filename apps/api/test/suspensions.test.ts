@@ -1,9 +1,9 @@
 // #123 over HTTP: a damage report and a missed patrol each suspend the pass in one request, stream
 // edge.pass.suspended.v1 and land on the audit chain, and neither makes a pass valid. Core-level: packages/core/test/suspensions.test.ts.
 import { expect, test } from 'bun:test'
-import { AuditEvent, EdgeEvent, EdgePass, type ReportDamageRequest } from '@safe-edge/contracts'
+import { AuditEvent, EdgePass, type ReportDamageRequest } from '@safe-edge/contracts'
 import { actorFor } from '@safe-edge/core'
-import { S1, seed, sseFrames, startApi, type Api } from './support.ts'
+import { S1, nextEvents, seed, sseFrames, startApi, type Api } from './support.ts'
 
 const S1_PASS = 'pass_866518980_11'
 const SOON = 'seg_866518980_12'
@@ -32,18 +32,6 @@ const passOf = async (api: Api, segmentId: string, token = 'tok_manager') =>
 
 const auditOf = async (api: Api, token = 'tok_gm') =>
   AuditEvent.array().parse((await answer(api.request('get', '/audit', { token }))).body)
-
-/** The CloudEvents the stream carries next, skipping heartbeats. */
-async function nextEvents(frames: ReturnType<typeof sseFrames>, count: number): Promise<EdgeEvent[]> {
-  const events: EdgeEvent[] = []
-  while (events.length < count) {
-    const frame = await frames.next()
-    if (frame.startsWith(':')) continue
-    const data = frame.split('\n').find((line) => line.startsWith('data: '))!
-    events.push(EdgeEvent.parse(JSON.parse(data.slice('data: '.length))))
-  }
-  return events
-}
 
 test("the crew's damage report and the system's missed-patrol report each suspend a pass in one request, streamed and audited", async () => {
   const api = startApi({ heartbeatMs: 1_000 })

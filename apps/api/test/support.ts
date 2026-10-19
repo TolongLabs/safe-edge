@@ -1,11 +1,12 @@
 // Starts the API the way index.ts does, but on a free port with a scenario clock, and calls it over real HTTP.
 import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
-import type { Actor, RaiseCandidateRequest, Role } from '@safe-edge/contracts'
+import { EdgeEvent, type Actor, type RaiseCandidateRequest, type Role } from '@safe-edge/contracts'
 import { Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from '../src/app.ts'
-import { scenarioClock } from '../src/clock.ts'
+import type { Every } from '../src/automation.ts'
+import { scenarioClock, type ApiClock } from '../src/clock.ts'
 import type { WebhookOptions } from '../src/events.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
@@ -34,13 +35,20 @@ export interface Exchange {
   body: unknown
 }
 
-/** With `claude`, the API runs its agent with that client and the `tok_agent` token; without it, it has no agent. */
+/**
+ * With `claude`, the API runs its agent with that client and the `tok_agent` token; without it, it has no agent. The
+ * clock is a scenario clock (`setNow` sets it directly, without the automation a `setScenarioClock` call runs), unless
+ * the test passes a clock without `set` and a timer, as on the wall clock.
+ */
 export function startApi({
   heartbeatMs = 5_000,
   tokens: tokenTable = tokens,
   workOrders,
   claude,
-  webhooks: { origins = [], allowLoopback = true, retryDelaysMs = [] } = {}
+  webhooks: { origins = [], allowLoopback = true, retryDelaysMs = [] } = {},
+  clock = scenarioClock(seed.asOf),
+  every,
+  weather
 }: {
   heartbeatMs?: number
   /** Loopback webhooks allowed and no retries by default, so a failed delivery is final at once. */
@@ -48,8 +56,10 @@ export function startApi({
   tokens?: ReadonlyMap<string, Actor>
   workOrders?: ApiOptions['workOrders']
   claude?: Anthropic
+  clock?: ApiClock
+  every?: Every
+  weather?: ApiOptions['weather']
 } = {}) {
-  const clock = scenarioClock(seed.asOf)
   const agent = claude && { claude, token: 'tok_agent' }
   const app = createApp({
     seed,
@@ -60,7 +70,9 @@ export function startApi({
     heartbeatMs,
     workOrders,
     agent,
-    webhooks: { origins, allowLoopback, retryDelaysMs }
+    webhooks: { origins, allowLoopback, retryDelaysMs },
+    every,
+    weather
   })
   const log: Exchange[] = []
   const server = Bun.serve({
@@ -101,7 +113,10 @@ export function startApi({
     request,
     /** Every request the server answered, in order. */
     log,
-    setNow: clock.set
+    setNow: (iso: string) => {
+      if (clock.set === undefined) throw new Error('This test API runs on a clock the test moves itself')
+      clock.set(iso)
+    }
   }
 }
 
@@ -143,5 +158,28 @@ export function sseFrames(body: ReadableStream<Uint8Array>) {
       return frame
     },
     cancel: () => reader.cancel()
+  }
+}
+
+/** The CloudEvents the stream carries next, skipping heartbeats. */
+export async function nextEvents(frames: ReturnType<typeof sseFrames>, count: number): Promise<EdgeEvent[]> {
+  const events: EdgeEvent[] = []
+  while (events.length < count) {
+    const frame = await frames.next()
+    if (frame.startsWith(':')) continue
+    const data = frame.split('\n').find((line) => line.startsWith('data: '))!
+    events.push(EdgeEvent.parse(JSON.parse(data.slice('data: '.length))))
+  }
+  return events
+}
+
+/** An `every` the test fires by hand: `fire()` runs each job once, in the order the API set them, as if its interval passed. */
+export function manualTimer() {
+  const jobs: (() => void | Promise<void>)[] = []
+  return {
+    every: ((_ms, run) => void jobs.push(run)) satisfies Every,
+    fire: async () => {
+      for (const run of jobs) await run()
+    }
   }
 }
