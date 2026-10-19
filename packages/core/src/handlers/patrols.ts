@@ -10,18 +10,21 @@ import {
   type SegmentCoverage,
   type Task
 } from '@safe-edge/contracts'
+import { canonicalJson } from '../audit.ts'
 import { ok, type Handlers } from './handler.ts'
 
 /**
  * The planning port. Core never imports `@safe-edge/planner`; whoever creates the core passes an adapter over its
  * `planPatrol` (#71), which holds what the store does not: planner geometry, capture settings, geofences and
  * water-level bands. Synchronous, like the rest of core. Core supplies the plan ID and the time, and stores the plan
- * only if it comes back proposed and unapproved.
+ * only if it comes back proposed and unapproved. A re-plan request (`request.replan`) also gets the plan it supersedes
+ * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`.
  */
 export type PatrolPlanner = (input: {
   id: string
   now: string
   request: CreatePatrolPlanRequest
+  previous: PatrolPlan | null
   dock: Dock
   droneProfile: DroneProfile
   segments: Segment[]
@@ -44,6 +47,17 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
       if (!segment) return tx.notFound(`No segment ${id}`)
       segments.push(segment)
     }
+    const supersedes = body.replan?.supersedes ?? null
+    const previous = supersedes && tx.get('patrolPlans', supersedes.planId)
+    if (supersedes && !previous) return tx.notFound(`No patrol plan ${supersedes.planId}`)
+    if (supersedes && previous) {
+      const next = tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === previous.id)
+      if (next) return tx.deny('invalid_transition', `${previous.id} was already re-planned as ${next.id}`, previous.id)
+      if (supersedes.committedTasks > previous.tasks.length) {
+        const message = `${previous.id} has ${previous.tasks.length} stops, so ${supersedes.committedTasks} cannot be committed`
+        return tx.deny('invalid_transition', message, previous.id)
+      }
+    }
     if (planner === undefined) throw new Error('createPatrolPlan needs a planner: pass one to createCore({ planner })')
     const ids = new Set(body.segmentIds)
     const id = tx.id('plan')
@@ -53,6 +67,7 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
         id,
         now: tx.now,
         request: body,
+        previous: previous ?? null,
         dock,
         droneProfile,
         segments,
@@ -62,6 +77,9 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     )
     if (plan.id !== id || plan.status !== 'proposed' || plan.approvedBy !== null || plan.approvedAt !== null) {
       throw new Error(`The planner must return ${id} proposed and unapproved; it returned ${plan.id} ${plan.status}`)
+    }
+    if (canonicalJson(plan.replan) !== canonicalJson(body.replan ?? null)) {
+      throw new Error(`The planner must record the requested re-plan on ${id}`)
     }
     tx.put('patrolPlans', plan)
     tx.emit('edge.patrol.planned.v1', {

@@ -1,5 +1,5 @@
 import type { PatrolPlanner } from '@safe-edge/core'
-import { loadElmina, planPatrol, splitEdges, type ThirdParty } from '@safe-edge/planner'
+import { loadElmina, planPatrol, replan, splitEdges, type PatrolPlanInput, type ThirdParty } from '@safe-edge/planner'
 
 /**
  * The planner port over #71's `planPatrol` for the Elmina seed, the same adapter core's tests use. It holds what the
@@ -21,8 +21,8 @@ export async function createElminaPlanner(
     return segment
   }
 
-  return ({ id, now, request, dock, droneProfile, segments, passes, findings }) =>
-    planPatrol({
+  return ({ id, now, request, previous, dock, droneProfile, segments, passes, findings }) => {
+    const input: PatrolPlanInput = {
       id,
       now,
       edges: elmina.edges,
@@ -45,5 +45,10 @@ export async function createElminaPlanner(
       })),
       context: request.context,
       waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 }
-    })
+    }
+    // A re-plan keeps the committed stops of the plan it supersedes (DECISIONS #72).
+    if (!request.replan) return planPatrol(input)
+    const committedTasks = request.replan.supersedes?.committedTasks ?? 0
+    return replan(previous, { committedTasks }, input, request.replan.trigger)
+  }
 }

@@ -1141,6 +1141,43 @@ export interface components {
         };
         /** @enum {string} */
         RejectionCode: "battery" | "geofence" | "flight_line" | "weather_hold" | "separation_hold" | "stale_input" | "outside_window";
+        ReplanTrigger: {
+            /** @constant */
+            kind: "heavy_rain";
+            /** @description A `rainfall` reading in the JPS heavy (31–60 mm) or very heavy (> 60 mm) band */
+            reading: components["schemas"]["ContextSnapshot"];
+        } | {
+            /** @constant */
+            kind: "weather_warning";
+            /** @description A `weather_warning` or `lightning_warning` in force */
+            warning: components["schemas"]["ContextSnapshot"];
+        } | {
+            /** @constant */
+            kind: "flag_confirmed";
+            segmentId: string;
+            findingId: string;
+        } | {
+            /** @constant */
+            kind: "pass_expiring";
+            segmentId: string;
+            passId: string;
+            /** Format: date-time */
+            validTo: string;
+        } | {
+            /** @constant */
+            kind: "repair_completed";
+            segmentId: string;
+            findingId: string;
+            workOrderId: string;
+        };
+        PlanReplan: {
+            trigger: components["schemas"]["ReplanTrigger"];
+            supersedes: {
+                planId: string;
+                /** @description Leading route stops already flown or in progress; they stay exactly as planned */
+                committedTasks: number;
+            } | null;
+        };
         PatrolPlan: {
             id: string;
             /** Format: date-time */
@@ -1172,6 +1209,8 @@ export interface components {
                 code: components["schemas"]["RejectionCode"];
                 reason: string;
             }[];
+            /** @description null for a plan a person or the agent asked for */
+            replan: components["schemas"]["PlanReplan"] | null;
             approvedBy: string | null;
             approvedAt: string | null;
             simulated: boolean;
@@ -1458,6 +1497,8 @@ export interface components {
             notBefore: string;
             /** @description Agreed with air traffic control */
             altitudeCapM: number;
+            /** @description Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider */
+            replan?: components["schemas"]["PlanReplan"];
         };
         StartPatrolRequest: {
             planId: string;

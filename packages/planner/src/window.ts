@@ -73,6 +73,45 @@ function sunAt(ms: number) {
   return { declination: Math.asin(Math.sin(obliquity) * Math.sin(apparentLong)), equationOfTimeMin }
 }
 
+/** When a rain reading stops counting: its `validTo`, or `MAX_INPUT_AGE_H.rainfall` hours after it was observed. */
+export function rainEnds(reading: ContextSnapshot): number {
+  return reading.validTo
+    ? Date.parse(reading.validTo)
+    : Date.parse(reading.observedAt) + MAX_INPUT_AGE_H.rainfall * HOUR_MS
+}
+
+/** The latest `rainfall` reading observed by `t`, if it still counts at `t`. */
+export function rainAt(context: ContextSnapshot[], t: number): ContextSnapshot | null {
+  const latest = context
+    .filter((c) => c.kind === 'rainfall' && Date.parse(c.observedAt) <= t)
+    .reduce<ContextSnapshot | null>((a, r) => (a && a.observedAt >= r.observedAt ? a : r), null)
+  return latest && t < rainEnds(latest) ? latest : null
+}
+
+/**
+ * What stops the drone flying at `t`: the rain reading that counts, when it is above the dock's limit, and every
+ * lightning warning in force.
+ */
+export function weatherBlockers(context: ContextSnapshot[], rainLimitMmPerH: number, t: number): ContextSnapshot[] {
+  checkWeather(context)
+  const reading = rainAt(context, t)
+  return [
+    ...(reading && reading.value! > rainLimitMmPerH ? [reading] : []),
+    ...context.filter(
+      (w) => w.kind === 'lightning_warning' && Date.parse(w.observedAt) <= t && t < Date.parse(w.validTo!)
+    )
+  ]
+}
+
+function checkWeather(context: ContextSnapshot[]): void {
+  for (const c of context) {
+    if (c.kind === 'rainfall' && c.value === null)
+      throw new Error(`rainfall reading observed at ${c.observedAt} has no value`)
+    if (c.kind === 'lightning_warning' && c.validTo === null)
+      throw new Error(`lightning warning observed at ${c.observedAt} has no validTo, so it never ends`)
+  }
+}
+
 export interface WindowInput {
   /** The sun is calculated for the dock's position. */
   at: Position
@@ -100,30 +139,11 @@ export interface FlightWindow {
  * JPS "heavy" band) in the 24 hours before a launch, the launch must come from a morning that is dry from first light.
  */
 export function flightWindow({ at, notBefore, windowMinutes, rainLimitMmPerH, context }: WindowInput): FlightWindow {
+  checkWeather(context)
   const rain = context.filter((c) => c.kind === 'rainfall')
-  for (const r of rain)
-    if (r.value === null) throw new Error(`rainfall reading observed at ${r.observedAt} has no value`)
   const warnings = context.filter((c) => c.kind === 'lightning_warning')
-  for (const w of warnings) {
-    if (w.validTo === null)
-      throw new Error(`lightning warning observed at ${w.observedAt} has no validTo, so it never ends`)
-  }
   const ms = Date.parse
-  const rainEnds = (r: ContextSnapshot) =>
-    r.validTo ? ms(r.validTo) : ms(r.observedAt) + MAX_INPUT_AGE_H.rainfall * HOUR_MS
-  const rainAt = (t: number) => {
-    const latest = rain
-      .filter((r) => ms(r.observedAt) <= t)
-      .reduce<ContextSnapshot | null>((a, r) => (a && a.observedAt >= r.observedAt ? a : r), null)
-    return latest && t < rainEnds(latest) ? latest : null
-  }
-  const blockers = (t: number) => {
-    const reading = rainAt(t)
-    return [
-      ...(reading && reading.value! > rainLimitMmPerH ? [reading] : []),
-      ...warnings.filter((w) => ms(w.observedAt) <= t && t < ms(w.validTo!))
-    ]
-  }
+  const blockers = (t: number) => weatherBlockers(context, rainLimitMmPerH, t)
   const heavyBefore = (t: number) =>
     rain.find(
       (r) => r.value! > HEAVY_RAIN_MM_PER_H && t - HEAVY_RAIN_LOOKBACK_MS <= ms(r.observedAt) && ms(r.observedAt) <= t

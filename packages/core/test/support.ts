@@ -14,7 +14,7 @@ import {
   type RetestCheck
 } from '@safe-edge/contracts'
 import { join } from 'node:path'
-import { loadElmina, planPatrol, splitEdges, type ThirdParty } from '@safe-edge/planner'
+import { loadElmina, planPatrol, replan, splitEdges, type PatrolPlanInput, type ThirdParty } from '@safe-edge/planner'
 import { actorFor, counterIds, createCore, type PatrolPlanner, type Seed } from '../src/index.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -36,8 +36,8 @@ const plannerSegments = splitEdges({ ...elmina, maxBendDeg: 40, pointObstruction
  */
 export const plannerWith =
   ({ thirdParties }: { thirdParties: ThirdParty[] }): PatrolPlanner =>
-  ({ id, now, request, dock, droneProfile, segments, passes, findings }) =>
-    planPatrol({
+  ({ id, now, request, previous, dock, droneProfile, segments, passes, findings }) => {
+    const input: PatrolPlanInput = {
       id,
       now,
       edges: elmina.edges,
@@ -61,7 +61,11 @@ export const plannerWith =
       })),
       context: request.context,
       waterLevelBands: { alertM: 2, warningM: 2.5, dangerM: 3 }
-    })
+    }
+    if (!request.replan) return planPatrol(input)
+    const committedTasks = request.replan.supersedes?.committedTasks ?? 0
+    return replan(previous, { committedTasks }, input, request.replan.trigger)
+  }
 
 export const elminaPlanner = plannerWith({ thirdParties: [] })
 
