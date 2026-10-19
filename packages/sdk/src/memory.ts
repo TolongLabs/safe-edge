@@ -80,7 +80,8 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
     committedTasks: (patrol) => {
       throw new Error(`The memory transport flies no drone, so nothing reports ${patrol.id}'s progress`)
     },
-    retest: queuedRetest(session.core)
+    retest: queuedRetest(session.core),
+    onFailure: (error) => recordAutomationFailure(session.core, 'replan', error)
   })
   // Events published in reaction wait until the event they react to has reached every subscriber.
   const queue: EdgeEvent[] = []

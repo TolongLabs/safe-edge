@@ -23,7 +23,10 @@ const subscriberFor = (h: Harness) =>
     dispatch: h.core.dispatch,
     clock: { now: h.now },
     committedTasks: () => COMMITTED,
-    retest: RETEST
+    retest: RETEST,
+    onFailure: (error) => {
+      throw error
+    }
   })
 
 /**

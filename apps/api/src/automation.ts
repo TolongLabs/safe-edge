@@ -107,7 +107,8 @@ export function startAutomation({
     dispatch: core.dispatch,
     clock,
     committedTasks: drone.committedTasks,
-    retest: queuedRetest(core)
+    retest: queuedRetest(core),
+    onFailure: (error) => recordAutomationFailure(core, 'replan', error)
   })
   subscribe((event) => {
     attempt('replan', () => publish(replan.onEvent(event)))

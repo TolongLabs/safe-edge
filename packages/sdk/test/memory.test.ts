@@ -242,6 +242,52 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
     ])
   })
 
+  test('the demo flies no drone, so an in-flight patrol fails its own re-plan only: the other open plan is re-planned', async () => {
+    const repoRoot = join(import.meta.dir, '../../..')
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    let now = '2026-10-20T00:00:00.000Z'
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
+    const request = (segmentIds: string[]) => ({
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds,
+        context: [],
+        notBefore: now,
+        altitudeCapM: 60
+      }
+    })
+    const flying = await demo.createPatrolPlan(request(['seg_866518980_5']))
+    await demo.as('usr_pilot').approvePatrolPlan({ params: { id: flying.id } })
+    now = flying.window.start
+    const patrol = await demo
+      .as('usr_pilot')
+      .startPatrol({ body: { planId: flying.id, provider: 'sim', droneId: 'sim-1' } })
+    const waiting = await demo.createPatrolPlan(request(['seg_866518980_6']))
+
+    await playS1toRepair({ as: (id) => demo.as(id), setNow: (iso) => (now = iso) })
+
+    // Both triggers (the confirmed flag, then the repair) re-plan the waiting plan, and fail on the flying one.
+    const plans = await demo.listPatrolPlans()
+    expect(plans.map((p) => [p.id, p.replan?.trigger.kind ?? null, p.replan?.supersedes?.planId ?? null])).toEqual([
+      [flying.id, null, null],
+      [waiting.id, null, null],
+      ['plan_3', 'flag_confirmed', waiting.id],
+      ['plan_4', 'repair_completed', 'plan_3']
+    ])
+    const failures = await demo.listAudit({ query: { subject: 'automation' } })
+    const failed = `${flying.id} was not re-planned: The memory transport flies no drone, so nothing reports ${patrol.id}'s progress`
+    expect(failures.map((e) => e.after)).toEqual([
+      { id: 'automation', step: 'replan', error: failed },
+      { id: 'automation', step: 'replan', error: failed }
+    ])
+  })
+
   test('a recapture opens a task the Inbox reads from listTasks, and the open plan is re-planned to fly its segment', async () => {
     const repoRoot = join(import.meta.dir, '../../..')
     const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })

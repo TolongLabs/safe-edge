@@ -26,6 +26,11 @@ export interface ReplanSubscriberOptions {
   committedTasks(patrol: Patrol, plan: PatrolPlan): number
   /** The dock, drone and altitude cap of the re-test patrol a repair queues when no plan is open. */
   retest: Pick<CreatePatrolPlanRequest, 'dockId' | 'droneProfileId' | 'altitudeCapM'>
+  /**
+   * Receives each plan that could not be re-planned (an in-flight patrol whose progress no drone reports) and a re-test
+   * that could not be queued. The other plans of the trigger are re-planned all the same.
+   */
+  onFailure(error: Error): void
 }
 
 export interface ReplanSubscriber {
@@ -41,7 +46,8 @@ export interface ReplanSubscriber {
 /**
  * Turns re-plan triggers into `createPatrolPlan` calls (TRD "Patrol planner" step 5). Every open plan (not superseded,
  * not yet flown to the end) is re-planned from its committed stops, considering its segments plus the trigger's. When
- * no plan is open, a completed repair queues a re-test patrol of its segment. Each call returns the events to publish.
+ * no plan is open, a completed repair queues a re-test patrol of its segment. Each plan is re-planned on its own: one that
+ * fails goes to `onFailure` and the rest go ahead. Each call returns the events of every write it made, to publish.
  * A weather trigger a plan already holds in its context does not re-plan it again. Re-plans come back proposed, so a
  * pilot approves each before it flies.
  */
@@ -49,7 +55,8 @@ export function createReplanSubscriber({
   dispatch,
   clock,
   committedTasks,
-  retest
+  retest,
+  onFailure
 }: ReplanSubscriberOptions): ReplanSubscriber {
   const call = <K extends CoreOperationId>(op: K, input: OperationInput<K>): DispatchSuccess<K> => {
     const result = dispatch(op, REPLAN_ACTOR, input)
@@ -71,20 +78,28 @@ export function createReplanSubscriber({
       trigger.kind === 'heavy_rain' ? trigger.reading : trigger.kind === 'weather_warning' ? trigger.warning : null
 
     const events: EdgeEvent[] = []
+    const attempt = (failed: string, write: () => EdgeEvent[]) => {
+      try {
+        events.push(...write())
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        onFailure(new Error(`${failed}: ${message}`, { cause: error }))
+      }
+    }
     for (const { plan: current, patrol } of open) {
       if (snapshot && current.context.some((c) => sameSnapshot(c, snapshot))) continue
-      const committed = patrol ? committedTasks(patrol, current) : 0
-      const flown = new Set(current.tasks.slice(0, committed).map((t) => t.segmentId))
-      const segmentIds = [
-        ...new Set([
-          ...current.tasks.map((t) => t.segmentId),
-          ...current.rejected.map((r) => r.segmentId),
-          ...(segmentId ? [segmentId] : [])
-        ])
-      ]
-      if (segmentIds.every((id) => flown.has(id))) continue
-      events.push(
-        ...plan({
+      attempt(`${current.id} was not re-planned`, () => {
+        const committed = patrol ? committedTasks(patrol, current) : 0
+        const flown = new Set(current.tasks.slice(0, committed).map((t) => t.segmentId))
+        const segmentIds = [
+          ...new Set([
+            ...current.tasks.map((t) => t.segmentId),
+            ...current.rejected.map((r) => r.segmentId),
+            ...(segmentId ? [segmentId] : [])
+          ])
+        ]
+        if (segmentIds.every((id) => flown.has(id))) return []
+        return plan({
           dockId: current.dockId,
           droneProfileId: current.droneProfileId,
           segmentIds,
@@ -93,11 +108,11 @@ export function createReplanSubscriber({
           altitudeCapM: current.altitudeCapM,
           replan: { trigger, supersedes: { planId: current.id, committedTasks: committed } }
         })
-      )
+      })
     }
     if (open.length === 0 && trigger.kind === 'repair_completed') {
-      events.push(
-        ...plan({
+      attempt(`No re-test of ${trigger.segmentId} was queued`, () =>
+        plan({
           ...retest,
           segmentIds: [trigger.segmentId],
           context: [],
