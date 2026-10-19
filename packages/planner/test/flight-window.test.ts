@@ -314,11 +314,14 @@ describe('flight windows', async () => {
     const [nominal] = planStations({ ...base, camera: zoomDrone.camera }).tasks
     const plan = planPatrol({ ...base, thirdParties: [jogger] })
 
-    // The stations stand off instead of waiting. The transit from the dock passes the jogger, so take-off waits (#150).
+    // The stations stand off instead of waiting. The transit between the dock and the segment's end by the footway
+    // passes the jogger, so take-off waits (#150). Both flying directions cost about the same, so which transit that is
+    // (out or back) differs between platforms' trigonometry.
     expect(plan.holds.map((h) => [h.kind, h.segmentId])).toEqual([['separation', null]])
-    expect(plan.holds[0]!.reason).toStartWith(
-      `the transit from ${dock.name} to ${id} passes within 50 m of "jogger on the footway"`
-    )
+    const transits = [`from ${dock.name} to ${id}`, `from ${id} to ${dock.name}`]
+    expect(
+      transits.map((t) => plan.holds[0]!.reason.startsWith(`the transit ${t} passes within 50 m of "jogger`))
+    ).toContain(true)
     expect(plan.rejected).toEqual([])
     const flown = plan.tasks[0]!.stations
     const first = nominal!.stations[0]!.pose
