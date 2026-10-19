@@ -171,7 +171,7 @@ Example prompts in that shape:
 ## Labelling generated footage
 
 Safe Edge shows real patrols beside simulated ones, and a misleading claim
-would disqualify the team ([PRODUCT.md principle 7](/PRODUCT.md#product-principles)).
+would disqualify the team ([PRODUCT.md principle 7](/docs/PRODUCT.md#product-principles)).
 So every generated clip carries a visible "Generated footage" label or the
 SIMULATION badge for its whole length, whether or not Gemini's mark is
 removed. A generated clip never stands in for patrol, site or repair

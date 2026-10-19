@@ -69,5 +69,5 @@ The [video pipeline](video-pipeline.md) covers generating a clip in Gemini, enco
 
 ## See also
 
-- [PRODUCT.md](/PRODUCT.md): users, principles and the platform
+- [PRODUCT.md](/docs/PRODUCT.md): users, principles and the platform
 - [TRD: Three.js simulation](/docs/TRD.md#threejs-simulation)
