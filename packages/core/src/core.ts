@@ -42,11 +42,11 @@ export interface Core {
   /** The single entry point both transports call: access check, command, events, audit. */
   dispatch: Dispatch
   /**
-   * The operations-table access check alone, for a transport that must refuse before it validates input or that serves
-   * the operation itself (`handledBy: 'api'`). A refusal is appended to the audit chain, as `dispatch` does; `input` only
-   * names the refused record.
+   * The operations-table access check (`authorize`) alone, with a refusal appended to the audit chain as `dispatch` does.
+   * For a transport that refuses before it validates input, or that serves the operation itself (`handledBy: 'api'`).
+   * `input` only names the refused record.
    */
-  authorize(operationId: OperationId, actor: Actor, input?: { params?: unknown; body?: unknown }): Denial | null
+  checkAccess(operationId: OperationId, actor: Actor, input?: { params?: unknown; body?: unknown }): Denial | null
   /**
    * Time-driven pass moves: valid → expiring 30 days before `validTo`, and → expired at `validTo`. Acts as the system,
    * which the one-way rule never lets make a pass valid. Returns the events to publish.
@@ -75,7 +75,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   const handlers: Handlers = { ...reads, ...patrolHandlers(planner), ...inbox, ...fixLens, ...work, ...notices }
   const openTx = (actor: Actor, now: string) => new Tx(state, actor, now, (prefix) => ids.next(prefix), seed.townshipId)
 
-  const check = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {
+  const checkAccess = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {
     const who = Actor.parse(actor)
     const refused = authorize(operationId, operations[operationId], who)
     if (refused) openTx(who, clock.now()).commitDenial(operationId, refused.rule, defaultSubject(operationId, input))
@@ -93,7 +93,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     const tx = openTx(who, clock.now())
     const raw = (input ?? {}) as { params?: unknown; query?: unknown; body?: unknown }
 
-    const refused = check(operationId, who, raw)
+    const refused = checkAccess(operationId, who, raw)
     if (refused) return refused
 
     const parsed = {
@@ -148,7 +148,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     return structuredClone(tx.events)
   }
 
-  return { dispatch: dispatch as Dispatch, authorize: check, tick }
+  return { dispatch: dispatch as Dispatch, checkAccess, tick }
 }
 
 /** The record a refused call was about, from its input; the operation itself when there is none. */

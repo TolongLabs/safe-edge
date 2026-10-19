@@ -3,13 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run --hot src/index.ts",
+    "dev": "SAFE_EDGE_DEV_TOKENS_FILE=../../data/elmina/fixtures/dev-tokens.json bun run --hot src/index.ts",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@safe-edge/contracts": "workspace:*",
     "@safe-edge/core": "workspace:*",
-    "@safe-edge/planner": "workspace:*",
+    "@safe-edge/sdk": "workspace:*",
     "hono": "^4.13.13",
     "zod": "^4.6.7"
   }

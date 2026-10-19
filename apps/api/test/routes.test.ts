@@ -2,7 +2,7 @@
 import { expect, test } from 'bun:test'
 import { AuditEvent, Role, operations, type OperationSpec, type PolicyRule } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
-import { startApi, type Token } from './support.ts'
+import { S1, raiseTier2, startApi, type Token } from './support.ts'
 
 const httpOperations = (Object.entries(operations) as [string, OperationSpec][]).filter(
   ([, op]) => op.handledBy !== 'memory'
@@ -73,5 +73,65 @@ test('an allowed caller reaches every operation, and its input is checked agains
       expect({ operationId, status: response.status }).toEqual({ operationId, status: op.status })
       op.response.parse(await response.json())
     }
+  }
+})
+
+test('a transition the state machine refuses is 403 naming the rule, and the refusal is on the audit chain', async () => {
+  const api = startApi()
+  const candidate = (await (await raiseTier2(api)).json()) as { id: string }
+  const confirmed = await api.request('post', `/candidates/${candidate.id}/decision`, {
+    token: 'tok_manager',
+    body: { decision: 'confirm', severity: 'high' }
+  })
+  expect(confirmed.status).toBe(200)
+  const { workOrder } = (await confirmed.json()) as { workOrder: { id: string } }
+
+  // The draft has no engineer-approved remedy yet.
+  const submitted = await api.request('post', `/work-orders/${workOrder.id}/submit`, {
+    token: 'tok_manager',
+    body: { installerUserId: 'usr_installer', dueAt: '2026-10-24T09:00:00.000Z' }
+  })
+  expect(submitted.status).toBe(403)
+  expect(await submitted.json()).toEqual({ ok: false, rule: 'remedy_not_approved', message: expect.any(String) })
+  const audit = AuditEvent.array().parse(await (await api.request('get', '/audit', { token: 'tok_gm' })).json())
+  expect(audit.at(-1)).toMatchObject({
+    action: 'submitWorkOrder',
+    subjectId: workOrder.id,
+    decision: 'denied',
+    rule: 'remedy_not_approved',
+    actor: { id: 'usr_manager' }
+  })
+})
+
+test('a request without a known API token is 401, and demo-mode tokens are rejected', async () => {
+  const api = startApi()
+  const cases: [string | undefined, RegExp][] = [
+    [undefined, /Authorization: Bearer/],
+    ['tok_nobody', /Unknown bearer token/],
+    ['demo_usr_manager', /Demo-mode tokens work only in the in-browser demo/]
+  ]
+  for (const [token, message] of cases) {
+    const response = await api.request('get', '/segments', token === undefined ? {} : { token })
+    expect(response.status).toBe(401)
+    expect(response.headers.get('www-authenticate')).toBe('Bearer')
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: 'unauthenticated',
+      message: expect.stringMatching(message)
+    })
+  }
+})
+
+test('triage (#74) and the agent (#75) are reserved: their contract schemas check the body, then 501', async () => {
+  const api = startApi()
+  const image = { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ' }
+  const reserved: [string, unknown][] = [
+    ['/triage/images', { segmentId: S1.segmentId, viewpointId: S1.viewpointId, baseline: image, current: image }],
+    ['/agent/ask', { question: 'Which passes expire in the next 30 days?' }]
+  ]
+  for (const [path, body] of reserved) {
+    const response = await api.request('post', path, { token: 'tok_manager', body })
+    expect({ path, status: response.status }).toEqual({ path, status: 501 })
+    expect(await response.json()).toEqual({ ok: false, error: 'not_implemented', message: expect.any(String) })
   }
 })

@@ -4,13 +4,13 @@ import type { Role } from '@safe-edge/contracts'
 import { counterIds, createCore, Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp } from '../src/app.ts'
-import { elminaPlanner } from '../src/planner.ts'
+import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
 export const seed = Seed.parse(await Bun.file(join(repoRoot, 'data/elmina/fixtures/seed.json')).json())
 export const S1 = seed.story.s1
-const planner = await elminaPlanner((path) => Bun.file(join(repoRoot, path)).json())
+const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json())
 
 /** `tok_<role>` for the seeded user holding each role, loaded as dev tokens are, plus an agent token with no scope. */
 const tokens = await devTokens(
@@ -54,3 +54,22 @@ export function startApi({ heartbeatMs = 5_000 }: { heartbeatMs?: number } = {})
 }
 
 export type Api = ReturnType<typeof startApi>
+
+/** S1: the drone reports fence panel 4 missing, a Tier 2 candidate on a segment whose pass is valid. */
+export const raiseTier2 = (api: Api) =>
+  api.request('post', '/candidates', {
+    token: 'tok_provider',
+    body: {
+      segmentId: S1.segmentId,
+      observationIds: [],
+      inventoryItemId: S1.inventoryItemId,
+      itemStatus: 'missing',
+      class: 'inventory_item',
+      score: 0.9,
+      uncertainty: 'low',
+      gridCell: 'B3',
+      rationale: 'Fence panel 4 is missing by the playground path',
+      model: null,
+      simulated: true
+    }
+  })

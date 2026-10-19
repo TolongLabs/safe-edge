@@ -1,0 +1,13 @@
+{
+  "dev_manager": "usr_manager",
+  "dev_engineer": "usr_engineer",
+  "dev_reviewer": "usr_reviewer",
+  "dev_installer": "usr_installer",
+  "dev_pilot": "usr_pilot",
+  "dev_gm": "usr_gm",
+  "dev_crew": "usr_crew",
+  "dev_integrator": "usr_integrator",
+  "dev_agent": "usr_agent",
+  "dev_system": "usr_system",
+  "dev_drone_sim": "usr_drone_sim"
+}

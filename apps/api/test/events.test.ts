@@ -1,37 +1,19 @@
 // Core's events reach subscribers over server-sent events and webhooks as CloudEvents.
-import { expect, test } from 'bun:test'
-import { EdgeEvent } from '@safe-edge/contracts'
-import { S1, startApi, type Api } from './support.ts'
-
-/** S1: the drone reports fence panel 4 missing, a Tier 2 candidate on a segment whose pass is valid. */
-const raiseTier2 = (api: Api) =>
-  api.request('post', '/candidates', {
-    token: 'tok_provider',
-    body: {
-      segmentId: S1.segmentId,
-      observationIds: [],
-      inventoryItemId: S1.inventoryItemId,
-      itemStatus: 'missing',
-      class: 'inventory_item',
-      score: 0.9,
-      uncertainty: 'low',
-      gridCell: 'B3',
-      rationale: 'Fence panel 4 is missing by the playground path',
-      model: null,
-      simulated: true
-    }
-  })
+import { afterAll, expect, test } from 'bun:test'
+import { EdgeEvent, Webhook } from '@safe-edge/contracts'
+import { S1, raiseTier2, seed, startApi } from './support.ts'
 
 /** Reads server-sent event frames (blank-line separated) as they arrive. */
 function sseFrames(body: ReadableStream<Uint8Array>) {
-  const reader = body.pipeThrough(new TextDecoderStream()).getReader()
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
   let buffer = ''
   return {
     async next(): Promise<string> {
       while (!buffer.includes('\n\n')) {
         const { done, value } = await reader.read()
         if (done) throw new Error('the event stream closed')
-        buffer += value
+        buffer += decoder.decode(value, { stream: true })
       }
       const end = buffer.indexOf('\n\n')
       const frame = buffer.slice(0, end)
@@ -85,5 +67,47 @@ test('GET /v1/events streams the CloudEvents of a Tier 2 candidate between heart
         simulated: true
       }
     ]
+  ])
+})
+
+test('POST /v1/webhooks registers an integrator endpoint, and each subscribed event is POSTed to it as a CloudEvent', async () => {
+  const deliveries: { contentType: string | null; event: EdgeEvent }[] = []
+  const { promise: delivered, resolve } = Promise.withResolvers<void>()
+  const receiver = Bun.serve({
+    port: 0,
+    async fetch(request) {
+      deliveries.push({
+        contentType: request.headers.get('content-type'),
+        event: EdgeEvent.parse(await request.json())
+      })
+      resolve()
+      return new Response(null, { status: 204 })
+    }
+  })
+  afterAll(() => receiver.stop(true))
+
+  const api = startApi()
+  const url = new URL('/hooks/safe-edge', receiver.url).href
+  const registered = await api.request('post', '/webhooks', {
+    token: 'tok_integrator',
+    body: { url, eventTypes: ['edge.pass.suspended.v1'] }
+  })
+  expect(registered.status).toBe(201)
+  expect(Webhook.parse(await registered.json())).toEqual({
+    id: expect.stringMatching(/^whk_/),
+    url,
+    eventTypes: ['edge.pass.suspended.v1'],
+    createdBy: 'usr_integrator',
+    createdAt: seed.asOf
+  })
+
+  const raised = await raiseTier2(api)
+  expect(raised.status).toBe(201)
+  await delivered
+  expect(deliveries).toEqual([
+    {
+      contentType: 'application/cloudevents+json',
+      event: expect.objectContaining({ type: 'edge.pass.suspended.v1', subject: `segments/${S1.segmentId}` })
+    }
   ])
 })

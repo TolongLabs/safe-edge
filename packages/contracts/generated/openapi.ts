@@ -1585,6 +1585,7 @@ export interface components {
             mediaType: "image/jpeg" | "image/png" | "image/webp";
             dataBase64: string;
             capturedAt: string | null;
+            simulated: boolean;
         };
         EvidenceUrl: {
             url: string;

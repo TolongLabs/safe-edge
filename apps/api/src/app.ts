@@ -6,7 +6,8 @@ import {
   type OperationId,
   type OperationInput,
   type OperationSpec,
-  type Operations
+  type Operations,
+  type Webhook
 } from '@safe-edge/contracts'
 import type { Clock, Core, IdGenerator } from '@safe-edge/core'
 import { Hono, type Context } from 'hono'
@@ -15,6 +16,7 @@ import { streamSSE } from 'hono/streaming'
 import type { ContentfulStatusCode } from 'hono/utils/http-status'
 import * as z from 'zod'
 import { createEventHub } from './events.ts'
+import { createEvidenceStore } from './evidence.ts'
 import { DEMO_TOKEN_PREFIX } from './tokens.ts'
 
 export interface ApiOptions {
@@ -38,10 +40,18 @@ const fail = (c: Context, status: ContentfulStatusCode, error: ApiError['error']
   c.json({ ok: false, error, message } satisfies ApiError, status)
 
 /** The v1 REST API: one route per row of the operations table. Core's policy decides every access. */
-export function createApp({ core, tokens, heartbeatMs }: ApiOptions) {
+export function createApp({ core, clock, ids, tokens, heartbeatMs }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   const hub = createEventHub()
+  const evidence = createEvidenceStore({ clock, ids })
   app.get('/health', (c) => c.json({ status: 'ok' }))
+  // Where getEvidenceUrl points. The signed query is the credential, so it takes no bearer token.
+  app.get('/evidence/:id/content', (c) => {
+    const { expires, signature } = c.req.query()
+    const file = expires && signature ? evidence.read(c.req.param('id'), expires, signature) : undefined
+    if (file === undefined) return fail(c, 401, 'unauthenticated', 'The evidence link is invalid or has expired')
+    return c.body(file.bytes, 200, { 'content-type': file.ref.mediaType })
+  })
 
   const authenticate = createMiddleware<Env>(async (c, next) => {
     const unauthenticated = (message: string) =>
@@ -57,9 +67,39 @@ export function createApp({ core, tokens, heartbeatMs }: ApiOptions) {
     await next()
   })
 
+  // Writes replay by caller, method, path and Idempotency-Key (draft-ietf-httpapi-idempotency-key-header). Server
+  // errors are not kept, so a retry runs again. In memory, like the core.
+  const replays = new Map<
+    string,
+    { fingerprint: string; response?: { status: number; headers: Headers; body: string } }
+  >()
+  const idempotency = createMiddleware<Env>(async (c, next) => {
+    const key = c.req.header('idempotency-key')
+    if (key === undefined) return next()
+    const scope = JSON.stringify([c.get('actor').id, c.req.method, c.req.path, key])
+    const fingerprint = new Bun.CryptoHasher('sha256').update(await c.req.text()).digest('hex')
+    const seen = replays.get(scope)
+    if (seen && seen.fingerprint !== fingerprint) {
+      return fail(c, 422, 'idempotency_conflict', 'This Idempotency-Key was already used with a different body')
+    }
+    if (seen?.response) return new Response(seen.response.body, seen.response)
+    if (seen) return fail(c, 409, 'idempotency_conflict', 'A request with this Idempotency-Key is still running')
+
+    replays.set(scope, { fingerprint })
+    await next()
+    if (c.res.status >= 500) replays.delete(scope)
+    else {
+      const response = { status: c.res.status, headers: new Headers(c.res.headers), body: await c.res.clone().text() }
+      replays.set(scope, { fingerprint, response })
+    }
+  })
+
   const apiHandlers: ApiHandlers = {
-    uploadEvidence: (c) => fail(c, 501, 'not_implemented', 'todo'),
-    getEvidenceUrl: (c) => fail(c, 501, 'not_implemented', 'todo'),
+    uploadEvidence: (c, { body }) => c.json(evidence.put(body, c.get('actor')), 201),
+    getEvidenceUrl: (c, { params }) => {
+      const url = evidence.url(params.id, c.req.url)
+      return url ? c.json(url, 200) : fail(c, 404, 'not_found', `No evidence ${params.id}`)
+    },
     triageImages: (c) => fail(c, 501, 'not_implemented', 'Claude vision triage arrives with #74'),
     askAgent: (c) => fail(c, 501, 'not_implemented', 'The scoped agent arrives with #75'),
     streamEvents: (c) =>
@@ -76,7 +116,11 @@ export function createApp({ core, tokens, heartbeatMs }: ApiOptions) {
           await stream.write(': heartbeat\n\n')
         }
       }),
-    registerWebhook: (c) => fail(c, 501, 'not_implemented', 'todo')
+    registerWebhook: (c, { body }) => {
+      const webhook: Webhook = { id: ids.next('whk'), ...body, createdBy: c.get('actor').id, createdAt: clock.now() }
+      hub.register(webhook)
+      return c.json(webhook, 201)
+    }
   }
 
   const serve = (operationId: OperationId, op: OperationSpec) => async (c: Context<Env>) => {
@@ -85,7 +129,7 @@ export function createApp({ core, tokens, heartbeatMs }: ApiOptions) {
     const raw = { params: c.req.param(), query: c.req.query(), body }
 
     // Policy before validation, so a refused caller learns nothing about the input and the refusal is audited.
-    const refused = core.authorize(operationId, actor, {
+    const refused = core.checkAccess(operationId, actor, {
       params: raw.params,
       body: body === NOT_JSON ? undefined : body
     })
@@ -110,7 +154,10 @@ export function createApp({ core, tokens, heartbeatMs }: ApiOptions) {
 
   for (const [operationId, op] of Object.entries(operations) as [OperationId, OperationSpec][]) {
     if (op.handledBy === 'memory') continue
-    app.on(op.method.toUpperCase(), op.path.replaceAll(/\{(\w+)\}/g, ':$1'), authenticate, serve(operationId, op))
+    const path = op.path.replaceAll(/\{(\w+)\}/g, ':$1')
+    // A streamed response cannot be stored for replay, so streams skip the idempotency middleware.
+    if (op.method === 'get' || op.stream) app.on(op.method.toUpperCase(), path, authenticate, serve(operationId, op))
+    else app.on(op.method.toUpperCase(), path, authenticate, idempotency, serve(operationId, op))
   }
   return app
 }
