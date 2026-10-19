@@ -1413,7 +1413,7 @@ export interface components {
             uncertainty: components["schemas"]["Uncertainty"] | null;
             gridCell: string | null;
             rationale: string;
-            /** @description The model that proposed it; null for scripted or human input */
+            /** @description The model that proposed it, as the model API reported serving the turn (never the model's own words); null for scripted or human input, or when the caller cannot see the model (an MCP client) */
             model: string | null;
             status: components["schemas"]["CandidateStatus"];
             raisedBy: components["schemas"]["ActorRef"];

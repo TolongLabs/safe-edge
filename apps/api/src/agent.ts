@@ -42,8 +42,8 @@ type Finished = { ok: true; text: string; calls: ToolCall[]; model: string; fall
 
 export interface AgentOptions {
   claude: Anthropic
-  /** Tool context: a client holding the agent's token, and the API clock. */
-  context: AgentToolContext
+  /** Tool context: a client holding the agent's token, and the API clock. The served model comes from each run. */
+  context: Omit<AgentToolContext, 'model'>
 }
 
 export function createAgent({ claude, context }: AgentOptions) {
@@ -54,6 +54,13 @@ export function createAgent({ claude, context }: AgentOptions) {
     onText: (text: string) => Promise<void> = async () => {}
   ): Promise<Finished> {
     const calls: ToolCall[] = []
+    // The model the API reports serving the turn whose tool calls run next (after any fallback). The runner runs a
+    // turn's tools only after this loop's body has read that turn's final message.
+    let served: string | undefined
+    const model = () => {
+      if (served === undefined) throw new Error('A tool ran before Claude answered')
+      return served
+    }
     const runner = claude.beta.messages.toolRunner({
       model: AGENT_MODEL,
       max_tokens: 64_000,
@@ -65,7 +72,7 @@ export function createAgent({ claude, context }: AgentOptions) {
       // growing tool loop.
       system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
       cache_control: { type: 'ephemeral' },
-      tools: claudeTools(context, calls),
+      tools: claudeTools({ ...context, model }, calls),
       messages: [{ role: 'user', content: prompt }],
       max_iterations: MAX_TURNS,
       stream: true
@@ -77,6 +84,7 @@ export function createAgent({ claude, context }: AgentOptions) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') await onText(event.delta.text)
       }
       last = await stream.finalMessage()
+      served = last.model
       for (const block of last.content) {
         if (block.type === 'fallback') fallbacks.push({ from: block.from.model, to: block.to.model })
       }

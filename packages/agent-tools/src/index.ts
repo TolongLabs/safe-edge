@@ -33,6 +33,11 @@ export interface AgentToolContext {
   client: SafeEdgeClient
   /** The current time as an ISO string, for finding ages and the default patrol start. */
   now: () => string
+  /**
+   * The model that served the turn calling the tool, as the model API reported it; proposals carry it, never the
+   * model's own words. Null when the caller cannot see it: an MCP client runs a model the server never learns.
+   */
+  model: () => string | null
 }
 
 export interface AgentTool<I extends z.ZodObject = z.ZodObject, O extends z.ZodObject = z.ZodObject> {
@@ -209,16 +214,16 @@ const proposeFinding = tool({
     "Adds a candidate to the manager's review queue. The API assigns the tier; only a person can confirm it as a finding.",
   scope: 'finding.propose',
   readOnly: false,
-  input: RaiseCandidateRequest.omit({ simulated: true }).extend({
+  input: RaiseCandidateRequest.omit({ simulated: true, model: true }).extend({
     score: z.number().min(0).max(1).describe('Your confidence, 0 to 1'),
-    rationale: z.string().min(1).describe('What you saw and why, citing observation IDs'),
-    model: z.string().min(1).describe('The model making this proposal, e.g. claude-opus-5-5')
+    rationale: z.string().min(1).describe('What you saw and why, citing observation IDs')
   }),
   output: z.object({ candidate: Candidate }),
-  async run({ client }, input) {
-    // A proposal about a simulated (fixture) segment is itself simulated; the caller does not choose the label.
+  async run({ client, model }, input) {
+    // A proposal about a simulated (fixture) segment is itself simulated, and it names the model that served the
+    // turn; the caller chooses neither label.
     const { segment } = await client.getSegment({ params: { id: input.segmentId } })
-    const candidate = await client.raiseCandidate({ body: { ...input, simulated: segment.simulated } })
+    const candidate = await client.raiseCandidate({ body: { ...input, model: model(), simulated: segment.simulated } })
     return { candidate }
   }
 })

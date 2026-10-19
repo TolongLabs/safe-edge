@@ -491,7 +491,12 @@ export const Candidate = named(
       .regex(/^[A-D][1-4]$/)
       .nullable(),
     rationale: z.string(),
-    model: z.string().nullable().describe('The model that proposed it; null for scripted or human input'),
+    model: z
+      .string()
+      .nullable()
+      .describe(
+        "The model that proposed it, as the model API reported serving the turn (never the model's own words); null for scripted or human input, or when the caller cannot see the model (an MCP client)"
+      ),
     status: CandidateStatus,
     raisedBy: ActorRef,
     raisedAt: Timestamp,
