@@ -11,7 +11,7 @@ import { join } from 'node:path'
 import { ensureDevTokens } from '../src/dev-tokens.ts'
 import { refusedStart, startApiProcess } from './process.ts'
 import { S6, play, scenarioClockPlayer } from './s6.ts'
-import { seed, startApi } from './support.ts'
+import { S1, seed, startApi } from './support.ts'
 
 /** ISO timestamps anywhere in a record's new state that its old state did not hold: the times a write stamped. */
 function stampedTimes(before: unknown, after: unknown): string[] {
@@ -73,6 +73,57 @@ test("replayed against the dev API in scenario mode, S6's records and audit even
     expect(await records).toEqual([expect.objectContaining({ createdAt: setupConfirm })])
   }
 })
+
+test("bun run dev starts on the scenario clock and says so: S1's pass opens valid on any day, and the seed's missed patrols fall due when the clock reaches them", async () => {
+  // #147: the seed describes 20 October, with every segment last patrolled on 16 October and patrolled weekly. On the
+  // wall clock, a dev API started from 23 October on would suspend every valid pass, S1's included, within a minute.
+  const env = { XDG_STATE_HOME: await mkdtemp(join(tmpdir(), 'safe-edge-scenario-')) }
+  afterAll(() => rm(env.XDG_STATE_HOME, { recursive: true }))
+  const api = await startApiProcess(env, 'dev')
+  expect(await api.printedLine('Clock: ')).toBe(
+    "Clock: scenario: it starts at the seed's 2026-10-20T00:00:00.000Z (or where the last run left it) and moves " +
+      'only when the system user sets it (POST /v1/scenario/clock). SAFE_EDGE_CLOCK=wall runs on the wall clock.'
+  )
+  const { tokenOf } = await ensureDevTokens(env)
+  const as = (userId: string) =>
+    createSafeEdgeClient({ transport: 'http', baseUrl: `${api.url}/v1`, token: tokenOf(userId) })
+  const system = as('usr_system')
+  const manager = as('usr_manager')
+  const s1Pass = () => manager.getPass({ params: { id: `pass_${S1.segmentId.slice('seg_'.length)}` } })
+  expect(await s1Pass()).toMatchObject({ state: 'valid', stateReason: null })
+
+  // Moving the clock runs the scheduled pass. A moment before the patrol falls due, it finds nothing missed; the clock
+  // it moved from was the seed's date, whatever today is.
+  await system.setScenarioClock({ body: { now: '2026-10-23T00:59:59.999Z' } })
+  expect(await s1Pass()).toMatchObject({ state: 'valid', stateReason: null })
+  expect((await manager.listAudit({})).map(({ action, before }) => ({ action, before }))).toEqual([
+    { action: 'setScenarioClock', before: { id: 'clock', now: seed.asOf } }
+  ])
+
+  // A week after the last patrol, it reports S1's missed patrol and suspends the pass.
+  await system.setScenarioClock({ body: { now: '2026-10-23T01:00:00.000Z' } })
+  const missed = (await manager.listCandidates({})).find(
+    (c) => c.segmentId === S1.segmentId && c.class === 'missed_patrol'
+  )
+  expect(missed).toBeDefined()
+  expect(await s1Pass()).toMatchObject({
+    state: 'suspended',
+    stateReason: `Missed patrol ${missed!.id} awaiting review`
+  })
+}, 30_000)
+
+test('bun run dev runs on the wall clock with SAFE_EDGE_CLOCK=wall, and says so', async () => {
+  const env = { XDG_STATE_HOME: await mkdtemp(join(tmpdir(), 'safe-edge-scenario-')) }
+  afterAll(() => rm(env.XDG_STATE_HOME, { recursive: true }))
+  const api = await startApiProcess({ ...env, SAFE_EDGE_CLOCK: 'wall' }, 'dev')
+  expect(await api.printedLine('Clock: ')).toBe('Clock: wall.')
+  const { tokenOf } = await ensureDevTokens(env)
+  const system = createSafeEdgeClient({ transport: 'http', baseUrl: `${api.url}/v1`, token: tokenOf('usr_system') })
+  await expect(system.setScenarioClock({ body: { now: '2026-10-23T01:00:00.000Z' } })).rejects.toMatchObject({
+    status: 501,
+    error: 'not_implemented'
+  })
+}, 30_000)
 
 test('production refuses the scenario clock: it will not start with one, and its wall clock cannot be set', async () => {
   const production = {

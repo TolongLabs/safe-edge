@@ -387,7 +387,15 @@ export function createApp({
     else app.on(op.method.toUpperCase(), path, authenticate, idempotency, serve(operationId, op))
   }
   // Every command is registered by now, so the journal can rebuild the state the last process left.
-  journal.replay()
+  const last = journal.replay()
+  // A scenario clock starts at the seed's date. Behind a store a wall-clock run wrote later, its writes would go on the
+  // audit chain before ones already there.
+  if (baseClock.set !== undefined && last !== null && Date.parse(last) > Date.parse(clock.now())) {
+    throw new Error(
+      `${store} holds writes up to ${last}, after the scenario clock's ${clock.now()}: start with ` +
+        'SAFE_EDGE_CLOCK=wall, or move it away to start again from the seed'
+    )
+  }
   return app
 }
 

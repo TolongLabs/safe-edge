@@ -15,7 +15,7 @@ Contents:
 
 - Credentials: the four `PROCORE_*` variables in the gitignored root `.env`, written by `scripts/procore-sandbox-wizard.sh`. No credential is checked in or printed; the sandbox project ID this page shows is not one.
 - Command: `bun run procore:e2e` ([`procore-e2e.ts`](/packages/providers/scripts/procore-e2e.ts)) from the repo root. It refuses to run in CI and fails when any `PROCORE_*` variable is missing.
-- API: the script starts `bun run dev` in `apps/api` on a free port. That script loads the root `.env` with `--env-file` and served the seeded core to the dev tokens then committed (`dev_<name>` for `usr_<name>`), on the wall clock. Since #129 it serves this machine's generated dev tokens instead, and the script takes each person's from `apps/api/src/dev-tokens.ts`.
+- API: the script starts `bun run dev` in `apps/api` on a free port. That script loads the root `.env` with `--env-file` and served the seeded core to the dev tokens then committed (`dev_<name>` for `usr_<name>`), on the wall clock. Since #129 it serves this machine's generated dev tokens instead, and the script takes each person's from `apps/api/src/dev-tokens.ts`. Since #147 it starts on the scenario clock, at the seed's date.
 - Photo: [`data/elmina/scenarios/s6-vandalised-sign.png`](/data/elmina/scenarios/s6-vandalised-sign.png), a 72,948-byte PNG, sha256 `9ea49766287640e0504847442a83448466890cb954e75ce115d75c750918c5c5`. The repo has no real site photo; this simulated drone frame of `seg_866518980_11`, the S1 segment, is the only photo-like image of it.
 
 ## Run
