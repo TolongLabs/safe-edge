@@ -129,6 +129,34 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
     expect(seen.length).toBe(8)
   })
 
+  test('tick(now) moves passes as the system, for S4: subscribers see each pass start expiring', async () => {
+    const { demo } = startDemo()
+    const seen: EdgeEvent[] = []
+    demo.subscribe((event) => seen.push(event))
+    // pass_866518980_12 is valid to 2026-12-01T02:00Z, so it starts expiring 30 days earlier.
+    const events = await demo.as('usr_gm').tick('2026-11-01T02:00:00.000Z')
+    expect(events.map((e): unknown[] => [e.type, e.data])).toEqual([
+      [
+        'edge.pass.expiring.v1',
+        {
+          passId: 'pass_866518980_12',
+          segmentId: 'seg_866518980_12',
+          validTo: '2026-12-01T02:00:00.000Z',
+          simulated: true
+        }
+      ]
+    ])
+    expect(seen).toEqual(events)
+    expect(await demo.getPass({ params: { id: 'pass_866518980_12' } })).toMatchObject({ state: 'expiring' })
+    // Whoever's client asks, the move is the system's, on the audit chain.
+    expect((await demo.listAudit()).at(-1)).toMatchObject({
+      action: 'tick',
+      subjectId: 'pass_866518980_12',
+      actor: { type: 'system', id: 'core.tick', role: 'system' },
+      after: { state: 'expiring' }
+    })
+  })
+
   test('with the Elmina planner injected, a planned patrol is proposed and only the pilot can approve it', async () => {
     // The browser fetches the layers; here Bun reads them from the repo.
     const repoRoot = join(import.meta.dir, '../../..')

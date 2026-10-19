@@ -48,6 +48,12 @@ export interface MemoryClient extends SafeEdgeClient, Methods<MemoryOperationId>
   as(userId: string): MemoryClient
   /** Calls `handler` with every event core emits in this demo, whoever acted. Returns the unsubscribe function. */
   subscribe(handler: (event: EdgeEvent) => void): () => void
+  /**
+   * Moves the demo's passes to `now` on the scenario clock (core's `tick`): valid → expiring 30 days before `validTo`,
+   * then → expired. The system acts, whichever user this client is, so it never makes a pass valid. Subscribers get
+   * the events, which are also returned.
+   */
+  tick(now: string): Promise<EdgeEvent[]>
 }
 
 const wallClock: Clock = { now: () => new Date().toISOString() }
@@ -56,6 +62,10 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
   const fresh = (): Core => createCore({ seed: elminaSeed, clock, ids: counterIds(), planner })
   const session = { core: fresh() }
   const subscribers = new Set<(event: EdgeEvent) => void>()
+  const publish = (events: EdgeEvent[]) => {
+    for (const event of events) for (const handler of subscribers) handler(event)
+    return events
+  }
 
   const clientFor = (actor: Actor): MemoryClient => {
     const call = async (operationId: CoreOperationId, input: RawInput) => {
@@ -66,7 +76,7 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
           ? new SafeEdgeDeniedError(result.rule, result.message)
           : new SafeEdgeApiError(404, result.error, result.message)
       }
-      for (const event of result.events) for (const handler of subscribers) handler(event)
+      publish(result.events)
       return result.data
     }
     return {
@@ -79,6 +89,7 @@ export function createMemoryClient({ userId, planner, clock = wallClock }: Memor
         session.core = fresh()
         return { reset: true }
       },
+      tick: async (now) => publish(session.core.tick(now)),
       actor,
       as: (id) => clientFor(actorOf(id)),
       subscribe: (handler) => {
