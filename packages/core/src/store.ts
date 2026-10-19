@@ -204,7 +204,8 @@ export class Tx {
   /** The record a handler refused to change, for the denial's audit event. */
   deniedSubject: string | undefined
 
-  deny(rule: PolicyRule, message: string, subjectId?: string): Denial {
+  /** A refusal of a change to `subjectId`, the record the denial's audit event names. */
+  deny(rule: PolicyRule, message: string, subjectId: string): Denial {
     this.deniedSubject = subjectId
     return { ok: false, rule, message }
   }

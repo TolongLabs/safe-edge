@@ -18,6 +18,7 @@ import { notices } from './handlers/notices.ts'
 import { patrolHandlers } from './handlers/patrols.ts'
 import { reads } from './handlers/reads.ts'
 import { work } from './handlers/work.ts'
+import { refusedSubject } from './audit-subjects.ts'
 import { authorize, expiringFrom, movePass } from './policy.ts'
 import { Seed } from './seed.ts'
 import { Tx, createState, type IdPrefix } from './store.ts'
@@ -88,7 +89,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   const checkAccess = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {
     const who = Actor.parse(actor)
     const refused = authorize(operationId, operations[operationId], who)
-    if (refused) openTx(who, clock.now()).commitDenial(operationId, refused.rule, defaultSubject(operationId, input))
+    if (refused) openTx(who, clock.now()).commitDenial(operationId, refused.rule, refusedSubject(operationId, input))
     return refused
   }
 
@@ -124,8 +125,10 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     } as OperationInput<K>
     const result = (handlers[operationId] as Handlers[K])(tx, parsed)
     if (!result.ok) {
-      if ('rule' in result)
-        tx.commitDenial(operationId, result.rule, tx.deniedSubject ?? defaultSubject(operationId, raw))
+      if ('rule' in result) {
+        if (tx.deniedSubject === undefined) throw new Error(`${operationId} denied ${result.rule} without tx.deny`)
+        tx.commitDenial(operationId, result.rule, tx.deniedSubject)
+      }
       return result
     }
 
@@ -170,16 +173,6 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   }
 
   return { dispatch: dispatch as Dispatch, checkAccess, recordStored, tick }
-}
-
-/** The record a refused call was about, from its input; the operation itself when there is none. */
-function defaultSubject(operationId: string, input: { params?: unknown; body?: unknown }): string {
-  const params = (input.params ?? {}) as { id?: unknown }
-  const body = (input.body ?? {}) as Record<string, unknown>
-  const subject = [params.id, body.workOrderId, body.findingId, body.planId, body.segmentId].find(
-    (v): v is string => typeof v === 'string'
-  )
-  return subject ?? operationId
 }
 
 /** Fails loudly on a seed whose records point at nothing. Every segment carries a pass (never issued = `none`). */
