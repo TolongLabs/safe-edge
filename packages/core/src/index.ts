@@ -1,6 +1,6 @@
 export { canonicalJson, verifyAuditChain, GENESIS_HASH, POLICY_VERSION, type AuditChainCheck } from './audit.ts'
 export { counterIds, createCore, type Clock, type Core, type CoreOptions, type IdGenerator } from './core.ts'
 export type { PatrolPlanner } from './handlers/patrols.ts'
-export { actorFor } from './policy.ts'
+export { actorFor, authorize } from './policy.ts'
 export { Seed } from './seed.ts'
 export type { IdPrefix } from './store.ts'
