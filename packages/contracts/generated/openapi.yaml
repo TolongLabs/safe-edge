@@ -522,10 +522,77 @@ paths:
         - system
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
+  /damage-reports:
+    post:
+      operationId: reportDamage
+      summary: "A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass"
+      description: "Roles: crew, manager. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1."
+      tags:
+        - damage-reports
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportDamageRequest"
+      responses:
+        "201":
+          description: "A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - crew
+        - manager
+      x-safe-edge-events:
+        - edge.candidate.raised.v1
+        - edge.pass.suspended.v1
+  /segments/{id}/missed-patrol:
+    post:
+      operationId: reportMissedPatrol
+      summary: "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass"
+      description: "Roles: system. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1."
+      tags:
+        - segments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^seg_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
+      x-safe-edge-events:
+        - edge.candidate.raised.v1
+        - edge.pass.suspended.v1
   /candidates/{id}/decision:
     post:
       operationId: decideCandidate
-      summary: Confirm, reject (with reason) or recapture
+      summary: Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
       description: "Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1."
       tags:
         - candidates
@@ -545,7 +612,7 @@ paths:
               $ref: "#/components/schemas/DecideCandidateRequest"
       responses:
         "200":
-          description: Confirm, reject (with reason) or recapture
+          description: Confirm, reject (with reason) or recapture; a missed patrol cannot be confirmed (invalid_transition)
           content:
             application/json:
               schema:
@@ -2200,6 +2267,16 @@ components:
             - type: string
               pattern: ^pass_
             - type: "null"
+        patrolIntervalDays:
+          type: integer
+          exclusiveMinimum: 0
+          description: How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later
+        lastPatrolledAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+          description: When a completed patrol last inspected some of the segment
         simulated:
           type: boolean
         source:
@@ -2215,6 +2292,8 @@ components:
         - expectedInventory
         - baselineId
         - passId
+        - patrolIntervalDays
+        - lastPatrolledAt
         - simulated
         - source
       additionalProperties: false
@@ -3234,6 +3313,18 @@ components:
         - water_level_change
         - text_in_image
         - other
+        - missed_patrol
+    ReportedClass:
+      type: string
+      enum:
+        - inventory_item
+        - worn_path
+        - bank_change
+        - vegetation
+        - floating_debris
+        - water_level_change
+        - text_in_image
+        - other
     Uncertainty:
       type: string
       enum:
@@ -3273,12 +3364,13 @@ components:
         class:
           $ref: "#/components/schemas/CandidateClass"
         tier:
-          description: "Assigned by core: 2 for a missing or changed safety item, 3 for not visible, else 1"
+          description: "Assigned by core: 2 for a missing or changed safety item, a damage report or a missed patrol, 3 for not visible, else 1"
           $ref: "#/components/schemas/Tier"
         score:
           type: number
           minimum: 0
           maximum: 1
+          description: Detection score; 1 for a damage report or a missed patrol, which a person saw or core counted
         uncertainty:
           anyOf:
             - $ref: "#/components/schemas/Uncertainty"
@@ -4217,7 +4309,7 @@ components:
             - $ref: "#/components/schemas/ItemStatus"
             - type: "null"
         class:
-          $ref: "#/components/schemas/CandidateClass"
+          $ref: "#/components/schemas/ReportedClass"
         score:
           type: number
           minimum: 0
@@ -4250,6 +4342,48 @@ components:
         - gridCell
         - rationale
         - model
+        - simulated
+      additionalProperties: false
+    ReportDamageRequest:
+      type: object
+      properties:
+        segmentId:
+          type: string
+          pattern: ^seg_
+        observationIds:
+          type: array
+          items:
+            type: string
+            pattern: ^obs_
+          description: Photos of the damage the reporter recorded on this segment (POST /observations); may be empty
+        inventoryItemId:
+          anyOf:
+            - type: string
+              pattern: ^item_
+            - type: "null"
+          description: The damaged expected item, when it is one
+        itemStatus:
+          anyOf:
+            - type: string
+              enum:
+                - missing
+                - changed
+            - type: "null"
+        class:
+          $ref: "#/components/schemas/ReportedClass"
+        rationale:
+          type: string
+          minLength: 1
+          description: What the reporter saw
+        simulated:
+          type: boolean
+      required:
+        - segmentId
+        - observationIds
+        - inventoryItemId
+        - itemStatus
+        - class
+        - rationale
         - simulated
       additionalProperties: false
     DecideCandidateRequest:
