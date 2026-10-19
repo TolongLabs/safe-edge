@@ -1,0 +1,13 @@
+{
+  "name": "@safe-edge/site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "vite": "^8.3.4"
+  }
+}
