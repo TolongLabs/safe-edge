@@ -11,12 +11,6 @@
   },
   "dependencies": {
     "@safe-edge/contracts": "workspace:*",
-    "@stdlib/math-base-special-acos": "0.2.4",
-    "@stdlib/math-base-special-asin": "0.2.4",
-    "@stdlib/math-base-special-atan2": "0.3.1",
-    "@stdlib/math-base-special-cos": "0.3.1",
-    "@stdlib/math-base-special-sin": "0.3.1",
-    "@stdlib/math-base-special-tan": "0.3.1",
     "@turf/along": "7.4.0",
     "@turf/bearing": "7.4.0",
     "@turf/boolean-clockwise": "7.4.0",

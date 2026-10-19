@@ -109,7 +109,7 @@ function standOffs(station: Station, { water, altitudeM, rangeM, maxZoom }: Sepa
         altM: altitudeM,
         headingDeg: bearing([lon, lat], station.aim),
         gimbalPitchDeg: -Math.atan2(altitudeM, outM) / DEG,
-        zoom: Math.max(1, Math.sqrt(outM ** 2 + altitudeM ** 2) / rangeM)
+        zoom: Math.max(1, Math.hypot(outM, altitudeM) / rangeM)
       }
     })
   }
