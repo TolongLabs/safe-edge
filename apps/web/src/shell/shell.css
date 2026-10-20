@@ -1,0 +1,450 @@
+/* Shell: top bar, profile menu, rail. */
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 64px;
+  padding: var(--space-2) var(--space-5);
+}
+.topbar .titles {
+  margin-right: auto;
+}
+.topbar h1 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 600;
+}
+.topbar .context {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.simulation {
+  padding: 2px var(--space-2);
+  border: 1.5px solid var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.profile {
+  background: var(--bg-surface);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--bg-rail);
+  color: var(--text-on-rail);
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+.profile .name {
+  font-weight: 500;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-small);
+}
+.profile .role {
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+}
+
+/* Rail */
+.rail {
+  display: flex;
+  flex: 0 0 232px;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 232px;
+  padding: var(--space-3);
+  border-radius: var(--radius-island);
+  background: var(--bg-rail);
+  color: var(--text-on-rail);
+  overflow: hidden;
+  transition:
+    flex-basis 250ms ease,
+    width 250ms ease;
+}
+.rail.collapsed {
+  flex-basis: 72px;
+  width: 72px;
+}
+.rail ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.rail .logo,
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-3) 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-on-rail);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.rail .logo {
+  min-height: 56px;
+  margin-bottom: var(--space-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.rail .logo svg,
+.rail-item svg {
+  flex: none;
+}
+.rail-item .tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+}
+.rail-item[aria-current='page'] .tile {
+  background: var(--bg-rail);
+  color: var(--text-on-rail);
+}
+.rail .logo:hover,
+.rail-item:hover {
+  background: var(--bg-rail-hover);
+}
+.rail-item[aria-current='page'] {
+  background: var(--text-on-rail);
+  color: var(--bg-rail);
+}
+.rail .count {
+  margin-left: auto;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--text-on-rail);
+  color: var(--bg-rail);
+  font-size: var(--fs-small);
+  line-height: 20px;
+  font-weight: 700;
+}
+.rail-item[aria-current='page'] .count {
+  background: var(--bg-rail);
+  color: var(--text-on-rail);
+}
+.rail :focus-visible {
+  box-shadow:
+    0 0 0 2px var(--bg-rail),
+    0 0 0 4px var(--text-on-rail);
+}
+
+/* Profile menu */
+.rail .logo .arrow {
+  display: none;
+}
+.rail .logo:hover .arrow,
+.rail .logo:focus-visible .arrow {
+  display: block;
+}
+.rail .logo:hover .mark,
+.rail .logo:focus-visible .mark {
+  display: none;
+}
+.rail .logo .mark {
+  flex: none;
+  width: 30px;
+  height: 30px;
+}
+.rail .logo .label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.rail .logo .sub {
+  color: var(--text-on-rail-muted);
+  font-size: var(--fs-small);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.rail.collapsed .label,
+.rail.collapsed .count {
+  /* hidden to the eye, still read as the link's name */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.profile-wrap {
+  position: relative;
+}
+.menu {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 340px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  box-shadow: var(--elevation-2);
+}
+.menu-who {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+}
+.menu-who span {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+}
+.menu h2 {
+  padding: var(--space-2) var(--space-2) 0;
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-item:hover {
+  background: var(--bg-sunken);
+}
+.menu-item[aria-current='true'] {
+  background: var(--accent-subtle);
+  font-weight: 600;
+}
+.menu-item .role {
+  margin-left: auto;
+  font-size: var(--fs-small);
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+.avatar.small {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+}
+.seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1.5px solid var(--accent-default);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.seg button {
+  min-height: 40px;
+  border: 0;
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-weight: 600;
+}
+.seg button[aria-pressed='true'] {
+  background: var(--accent-default);
+  color: var(--text-on-accent);
+}
+.menu-item.reset {
+  border-top: 1px solid var(--border-default);
+  border-radius: 0;
+  margin-top: var(--space-1);
+}
+
+/* Phone top bar (DESIGN.md: Rail Green bar with back, title, subtitle and a more button, each target 44 x 44) */
+.app.phone {
+  gap: 0;
+  min-height: 100dvh;
+  padding: 0;
+}
+.frame.phone {
+  gap: 0;
+}
+.frame.phone > .detail {
+  border-radius: 0;
+}
+.topbar.phone-bar {
+  position: relative;
+  flex-wrap: nowrap;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-rail);
+  color: var(--text-on-rail);
+}
+.phone-bar .titles {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.phone-bar h1 {
+  font-size: var(--fs-body);
+  line-height: var(--lh-small);
+}
+.phone-bar .context {
+  overflow: hidden;
+  color: var(--text-on-rail-muted);
+  font-size: var(--fs-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phone-bar .simulation {
+  border-color: var(--text-on-rail);
+}
+.icon-btn {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.icon-btn:hover {
+  background: var(--bg-rail-hover);
+}
+.phone-bar :focus-visible {
+  box-shadow:
+    0 0 0 2px var(--bg-rail),
+    0 0 0 4px var(--text-on-rail);
+}
+.phone-bar .menu {
+  right: var(--space-2);
+  width: min(340px, calc(100vw - 2 * var(--space-2)));
+  max-height: calc(100dvh - 72px);
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+.phone-bar .profile-wrap {
+  position: static;
+}
+
+.detail.center {
+  align-items: center;
+  justify-content: center;
+}
+.frame > .detail {
+  flex: 1;
+}
+.empty-state.left {
+  align-items: flex-start;
+  max-width: 520px;
+  text-align: left;
+  gap: var(--space-3);
+}
+.icon-tile {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+.empty-state .address {
+  font-size: var(--fs-small);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .app:not(.phone) {
+    flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
+  }
+  .frame {
+    flex: none;
+  }
+  .topbar.island {
+    flex-wrap: wrap;
+  }
+  .topbar.island .titles {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .profile .name,
+  .profile .role {
+    display: none;
+  }
+  .topbar.island .profile {
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+  }
+  /* The profile button sits left of the title on a phone, so the menu spans the screen instead of hanging off it. */
+  .topbar.island .menu {
+    position: fixed;
+    top: 64px;
+    right: var(--space-2);
+    left: var(--space-2);
+    width: auto;
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
+  }
+  .rail {
+    flex: none;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    padding: var(--space-2);
+    overflow-x: auto;
+  }
+  .rail.collapsed {
+    width: 100%;
+  }
+  .rail .logo {
+    min-height: 44px;
+    margin: 0;
+    padding: 0 var(--space-1);
+  }
+  .rail .logo .label {
+    display: none;
+  }
+  .rail ul {
+    flex-direction: row;
+    gap: 0;
+  }
+  .rail-item {
+    gap: var(--space-1);
+    padding: 0 var(--space-1);
+  }
+}
