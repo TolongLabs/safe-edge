@@ -59,7 +59,7 @@ async function otherPeopleAct(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto('demo/')
   await expect(card(page, S1).getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
 })
 

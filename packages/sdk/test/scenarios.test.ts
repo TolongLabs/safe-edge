@@ -125,6 +125,55 @@ describe('SIM-5: the scenario player plays S1 to S6 on the memory transport', ()
   })
 })
 
+describe('the story plays S1 to S3', () => {
+  /** The story: S3 with S1 and S2 played visibly before it. */
+  const story = (options: Partial<Parameters<typeof createScenarioPlayer>[0]> = {}) =>
+    createScenarioPlayer({
+      scenarios: elminaScenarios,
+      id: 's3',
+      from: 's1',
+      planner,
+      frames: () => () => {},
+      ...options
+    })
+
+  test('the story starts at S1 and ends at S3 with every captioned event played', async () => {
+    const player = await story()
+    expect([player.start, player.end]).toEqual(['2026-10-20T21:30:00.000Z', '2026-10-22T08:30:00.000Z'])
+    await player.seek(player.end)
+    const chapters = player.played.flatMap((p) => (p.event.story ? [p.event.story.chapter] : []))
+    expect(chapters.filter((c, i) => c !== chapters[i - 1])).toEqual(['spot', 'confirm', 'fix', 'prove'])
+    const pass = (await player.client.listPasses({})).find((p) => p.segmentId === S1_SEGMENT)
+    expect(pass?.state).toBe('valid')
+    expect(pass?.validTo).not.toBeNull()
+  })
+
+  test('holdOnStory stops on each caption', async () => {
+    let frame: (elapsedMs: number) => void = () => {}
+    const player = await story({ speed: 8, holdOnStory: true, frames: (onFrame) => ((frame = onFrame), () => {}) })
+    const captioned = elminaScenarios
+      .filter((s) => ['s1', 's2', 's3'].includes(s.id))
+      .flatMap((s) => s.events.filter((e) => e.story).map((e) => e.at))
+    const stops: string[] = []
+    while (player.now < player.end) {
+      player.play()
+      while (player.playing) {
+        const spent = new Promise<void>((done) => {
+          const off = player.subscribe(() => (off(), done()))
+        })
+        frame(1_000)
+        await spent
+        await new Promise((ready) => setTimeout(ready))
+      }
+      if (player.now < player.end) stops.push(player.now)
+    }
+    // The storm's caption is at the story's start, so the reset plays it before playback: it needs no hold.
+    expect(captioned).toHaveLength(12)
+    expect(stops).toEqual(captioned.filter((at) => at > player.start))
+    expect(stops).toHaveLength(11)
+  })
+})
+
 describe('SIM-9: playback keeps the flight at flight speed', () => {
   test('a slow frame on the ground stops at take-off, so S1 flies at 8× however long frames take', async () => {
     let frame: (elapsedMs: number) => void = () => {}
@@ -151,6 +200,9 @@ describe('SIM-9: playback keeps the flight at flight speed', () => {
     expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:30.000Z', true])
     await step(1_000)
     expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:38.000Z', true])
+    // A minute between frames, as after a hidden tab, moves the story on by one frame's worth, not a minute's.
+    await step(60_000)
+    expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:46.000Z', true])
   })
 })
 

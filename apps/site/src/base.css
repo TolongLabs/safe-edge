@@ -1,0 +1,217 @@
+/* Tokens come from docs/DESIGN.md, shared by the landing page and the sign-in page: colour, type, spacing and buttons. */
+:root {
+  --night: #0d1d19;
+  --rail: #17302a;
+  --rail-hover: #24443b;
+  --rail-muted: #9fb5ac;
+  --sky: #e6eeea;
+  --mineral: #e7ebe8;
+  --island: #fbfcfb;
+  --ink: #1c2925;
+  --moss: #5d6b66;
+  --hairline: #cfd6d2;
+  --sage: #c9d9d1;
+  --slate: #aab3af;
+  --bar: #b4bdb8;
+  --valid: #237446;
+  --valid-night: #6cc495;
+  --red: #b02e28;
+  --amber: #94500e;
+  --amber-tint: #fbeedd;
+
+  --t-hero: clamp(36px, min(5.4vw, 8.4svh), 84px);
+  --t-section: clamp(34px, 4.6vw, 72px);
+  --t-statement: clamp(24px, 2.5vw, 36px);
+  --t-step: clamp(20px, 1.7vw, 26px);
+  --t-lead: clamp(19px, 1.5vw, 23px);
+  --t-body: 18px;
+  --t-small: 15px;
+
+  --margin: clamp(16px, 3vw, 48px);
+  --gutter: clamp(32px, 4vw, 72px);
+  --chapter: clamp(96px, 14svh, 168px);
+  --radius: 8px;
+  --island-radius: 16px;
+  --bar-h: 56px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --focus: var(--rail-hover);
+  --lift: 0 4px 12px rgb(22 27 26 / 0.1), 0 1px 2px rgb(22 27 26 / 0.06);
+
+  --z-raised: 1;
+  --z-sticky: 30;
+  --z-skip: 40;
+  --z-tooltip: 50;
+
+  font-family: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
+  font-size: var(--t-body);
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--night);
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.lenis) {
+    scroll-behavior: smooth;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+[id] {
+  scroll-margin-top: calc(var(--bar-h) + 24px);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--sage);
+  color: var(--ink);
+}
+
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip {
+  position: fixed;
+  left: var(--margin);
+  top: -100px;
+  z-index: var(--z-skip);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--island);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.skip:focus {
+  top: 12px;
+}
+
+.body {
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+.lead {
+  max-width: 34ch;
+  font-size: var(--t-lead);
+  font-weight: 600;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+
+.note {
+  font-size: var(--t-small);
+  color: var(--moss);
+}
+
+.section-title {
+  font-size: var(--t-section);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+/* Buttons: one shape on the whole page, the brand's 8 px corner, always on a solid fill. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 180ms var(--ease),
+    color 180ms var(--ease),
+    transform 180ms var(--ease);
+}
+
+.button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.button--ink {
+  background: var(--rail);
+  color: var(--island);
+}
+
+.button--ink:hover {
+  background: var(--rail-hover);
+}
+
+.button--line {
+  border-color: var(--rail);
+  background: var(--island);
+  color: var(--rail);
+}
+
+.button--line:hover {
+  background: var(--sky);
+}
+
+.button--mist {
+  background: var(--sky);
+  color: var(--rail);
+}
+
+.button--mist:hover {
+  background: var(--island);
+}
+
+.button--small {
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: var(--t-small);
+}

@@ -13,6 +13,9 @@ export type Played =
 
 export interface ScenarioPlayer {
   readonly scenario: Scenario
+  /** The span played: from the start of `from` (or the scenario's own start) to the scenario's end. */
+  readonly start: string
+  readonly end: string
   /** The demo the scenario plays on. `reset` and a backward seek replace it. */
   readonly client: MemoryClient
   /** Where playback is: the time a seek last reached. */
@@ -21,7 +24,7 @@ export interface ScenarioPlayer {
   readonly played: readonly Played[]
   /** Plays on to `iso`; a time before `now` resets and replays to it. Resolves with what it played. */
   seek(iso: string): Promise<Played[]>
-  /** Back to the scenario's start: a fresh demo, with the scenarios it continues from played through. */
+  /** Back to `start`: a fresh demo, with the scenarios before it played through. */
   reset(): Promise<void>
   /**
    * Plays in real time until `pause` or the scenario's end: `speed` scenario seconds a second with a drone in the air,
@@ -48,6 +51,10 @@ export interface ScenarioPlayerOptions {
   speed?: number
   /** Real-time frames for `play`; animation frames by default. Returns the function that stops them. */
   frames?: (onFrame: (elapsedMs: number) => void) => () => void
+  /** A scenario this one continues from, to play visibly from its start; those before it still play silently. */
+  from?: Scenario['id']
+  /** With true, `play` stops right after each event with a story caption, so it can be read; `play` again goes on. */
+  holdOnStory?: boolean
 }
 
 /** The fixed step the clock ticks at while a drone is in the air, in scenario milliseconds. */
@@ -56,6 +63,8 @@ export const FLIGHT_STEP_MS = 200
 export const GROUND_STEP_MS = 600_000
 /** On the ground, real-time playback runs at least this fast (two scenario hours a second), so holds pass quickly. */
 export const GROUND_PLAYBACK_RATE = 7_200
+/** One frame spends at most this much real time: a longer gap (a hidden tab, a stall) is a pause, not a jump. */
+export const MAX_FRAME_MS = 1_000
 
 /**
  * Plays a scenario on the SDK's memory transport with a deterministic, fixed-step clock. The clock ticks the demo only
@@ -66,7 +75,14 @@ export const GROUND_PLAYBACK_RATE = 7_200
 export async function createScenarioPlayer(options: ScenarioPlayerOptions): Promise<ScenarioPlayer> {
   const scenario = byId(options.scenarios, options.id)
   const chain = continuesFrom(options.scenarios, scenario)
-  const start = Date.parse(scenario.start)
+  const shownFrom =
+    options.from === undefined || options.from === options.id
+      ? chain.length
+      : chain.findIndex((s) => s.id === options.from)
+  if (shownFrom < 0) throw new Error(`${options.id} does not continue from ${options.from}`)
+  const silent = chain.slice(0, shownFrom)
+  const shown = [...chain.slice(shownFrom), scenario]
+  const start = Date.parse(shown[0]!.start)
   const end = Date.parse(scenario.end)
   const frames = options.frames ?? animationFrames
   const listeners = new Set<() => void>()
@@ -109,9 +125,10 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
 
   /**
    * Ticks every grid point up to `to`, running each event at its own time on the way. With `untilTakeoff`, it stops
-   * at the event that puts a drone in the air, so playback can slow to flight speed from there.
+   * at the event that puts a drone in the air, so playback can slow to flight speed from there; with `untilStory`, at
+   * the next event with a story caption.
    */
-  const advance = async (to: number, untilTakeoff = false) => {
+  const advance = async (to: number, { untilTakeoff = false, untilStory = false } = {}) => {
     const done: Played[] = []
     for (;;) {
       const step = airborne > 0 ? FLIGHT_STEP_MS : GROUND_STEP_MS
@@ -119,8 +136,9 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
       const next = queue[0] ? Date.parse(queue[0].at) : Infinity
       if (next <= Math.min(grid, to)) {
         clock = next
-        done.push(await run(queue.shift()!))
-        if (untilTakeoff && airborne > 0) break
+        const event = queue.shift()!
+        done.push(await run(event))
+        if ((untilTakeoff && airborne > 0) || (untilStory && event.story)) break
         continue
       }
       if (grid > to) break
@@ -144,15 +162,15 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
       if (event.type === 'edge.patrol.completed.v1') airborne--
     })
     played = []
-    // The scenarios this one continues from, played through to their ends, then this one's setup and events.
-    for (const before of chain) {
+    // The scenarios before the shown ones, played through to their ends, then the shown ones' setup and events.
+    for (const before of silent) {
       clock = Date.parse(before.start)
       queue = timeline(before)
       await advance(Date.parse(before.end))
     }
     clock = Math.max(clock, start)
     position = start
-    queue = timeline(scenario)
+    queue = shown.flatMap(timeline).toSorted((a, b) => Date.parse(a.at) - Date.parse(b.at))
     await advance(start)
   }
   await reset()
@@ -175,6 +193,8 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
 
   return {
     scenario,
+    start: new Date(start).toISOString(),
+    end: new Date(end).toISOString(),
     get client() {
       return client
     },
@@ -193,13 +213,13 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
       }),
     play() {
       if (stopFrames) return
-      if (position >= end) void seek(scenario.start)
+      if (position >= end) void seek(new Date(start).toISOString())
       // Frames add up the real time that passed; one seek at a time spends it, from wherever playback is by then, so a
       // frame queued before a pause or a scrub never moves the clock afterwards.
       let owedMs = 0
       let seeking = false
       stopFrames = frames((elapsedMs) => {
-        owedMs += elapsedMs
+        owedMs += Math.min(elapsedMs, MAX_FRAME_MS)
         if (seeking) return
         seeking = true
         void serial(async () => {
@@ -209,9 +229,10 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
           const rate = grounded ? Math.max(speed, GROUND_PLAYBACK_RATE) : speed
           const target = Math.min(position + owedMs * rate, end)
           owedMs = 0
-          await advance(target, grounded)
-          position = Math.max(position, grounded && airborne > 0 ? clock : target)
-          if (position >= end) {
+          const done = await advance(target, { untilTakeoff: grounded, untilStory: options.holdOnStory })
+          const held = options.holdOnStory === true && done.at(-1)?.event.story !== undefined
+          position = Math.max(position, held || (grounded && airborne > 0) ? clock : target)
+          if (position >= end || held) {
             stopFrames?.()
             stopFrames = null
           }

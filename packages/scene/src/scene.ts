@@ -51,8 +51,13 @@ export interface ElminaScene {
   placeDrone(drone: DronePlacement): FlightState
   /** Redraws the segments in new pass states, keyed by segment ID; segments left out keep theirs. */
   setPassStates(states: Record<string, PassState>): void
-  /** Replaces the simulated markers: candidate pins, dropped-frame ticks and unknown stretches, each labelled. */
-  setMarkers(markers: SceneMarkers): void
+  /**
+   * Replaces the simulated markers: candidate pins, dropped-frame ticks and unknown stretches, each labelled. With
+   * `current`, markers it does not name wear a compact "simulated" chip.
+   */
+  setMarkers(markers: SceneMarkers, options?: { current?: ReadonlySet<string> }): void
+  /** Moves the camera to look at a segment from `distanceM` away (420 m by default), without selecting it. */
+  focus(segmentId: string, options?: { distanceM?: number }): void
   /** With `true`, the camera moves to the drone and then keeps it in view as it flies. */
   followDrone(follow: boolean): void
   /** Holds the camera on a shot, re-placed every frame, with the user's controls off; null hands the camera back. */
@@ -155,12 +160,12 @@ export function createElminaScene(
   }
 
   let markers: ReturnType<typeof buildMarkers> | null = null
-  const setMarkers = (next: SceneMarkers) => {
+  const setMarkers = (next: SceneMarkers, { current }: { current?: ReadonlySet<string> } = {}) => {
     if (markers) {
       scene.remove(...markers.objects)
       markers.dispose()
     }
-    markers = buildMarkers(next, { itemPositions: assets.itemPositions, segments })
+    markers = buildMarkers(next, { itemPositions: assets.itemPositions, segments, ...(current && { current }) })
     for (const o of markers.objects) {
       o.traverse((child) => {
         if ('material' in child && child.material instanceof LineMaterial) {
@@ -207,6 +212,22 @@ export function createElminaScene(
   }
   setControlMode('orbit')
 
+  const focusOn = (segment: SegmentView, distanceM: number) => {
+    // The canvas says which segment the camera is on, as it says its pixel ratio.
+    renderer.domElement.dataset.focus = segment.id
+    const [x, z] = segmentMidpoint(segment)
+    const offset = camera.position.clone().sub(active.target).setLength(distanceM)
+    for (const c of Object.values(controls)) c.target.set(x, 0, z)
+    camera.position.set(x, 0, z).add(offset)
+    active.update()
+  }
+  const focus = (segmentId: string, { distanceM = FOCUS_DISTANCE_M } = {}) => {
+    const segment = segments.find((s) => s.id === segmentId)
+    if (!segment) throw new Error(`No segment ${segmentId} in this scene`)
+    following = false
+    focusOn(segment, distanceM)
+  }
+
   // The selected segment gets a dark outline under its ribbon.
   const outlineMaterial = new LineMaterial({ color: 0x1c2925, linewidth: 14, worldUnits: true, depthWrite: false })
   let outline: LineSegments2 | null = null
@@ -219,6 +240,7 @@ export function createElminaScene(
     const segment = segments.find((s) => s.id === segmentId)
     if (segmentId !== null && !segment) throw new Error(`No segment ${segmentId} in this scene`)
     if (!segment) return
+    if (focus) focusOn(segment, distanceM)
     const positions: number[] = []
     const line = segment.geometry.coordinates
     for (let i = 1; i < line.length; i++) {
@@ -231,13 +253,6 @@ export function createElminaScene(
     outline.renderOrder = objects.length
     outlineMaterial.resolution.set(container.clientWidth, container.clientHeight)
     scene.add(outline)
-    if (focus) {
-      const [x, z] = segmentMidpoint(segment)
-      const offset = camera.position.clone().sub(active.target).setLength(distanceM)
-      for (const c of Object.values(controls)) c.target.set(x, 0, z)
-      camera.position.set(x, 0, z).add(offset)
-      active.update()
-    }
   }
 
   const setCameraShot = (next: CameraShot | null) => {
@@ -393,6 +408,7 @@ export function createElminaScene(
     placeDrone,
     followDrone,
     setCameraShot,
+    focus,
     setPassStates,
     setMarkers,
     setConditions,

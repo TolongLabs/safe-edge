@@ -1,0 +1,184 @@
+/* The sign-in page: the brand on park green beside the form. Below 768 px the brand becomes a band above it. */
+.signin {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  min-height: 100svh;
+  background: var(--island);
+}
+
+.signin-brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 32px var(--margin) 0;
+  overflow: hidden;
+  background: var(--rail);
+  color: var(--sage);
+}
+
+.signin-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--island);
+}
+
+.signin-pitch {
+  display: grid;
+  gap: 12px;
+}
+
+.signin-line {
+  max-width: 14ch;
+  font-size: var(--t-section);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--island);
+}
+
+.signin-meta {
+  font-size: var(--t-small);
+  color: var(--rail-muted);
+}
+
+.signin-art {
+  width: calc(100% + 2 * var(--margin));
+  max-width: none;
+  height: clamp(180px, 34svh, 360px);
+  margin: 0 calc(-1 * var(--margin));
+  border-radius: var(--island-radius) var(--island-radius) 0 0;
+  object-fit: cover;
+  object-position: center bottom;
+}
+
+.signin-main {
+  display: grid;
+  grid-template-columns: min(100%, 400px);
+  align-content: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 32px var(--margin);
+}
+
+.signin-back {
+  justify-self: start;
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--moss);
+  text-underline-offset: 3px;
+}
+
+.signin-back:hover {
+  color: var(--ink);
+}
+
+.signin-card {
+  display: grid;
+  gap: 16px;
+}
+
+.signin-title {
+  font-size: var(--t-step);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.signin-field {
+  display: grid;
+  gap: 6px;
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+/* Accounts are closed in the prototype: the fields show what is coming, and refuse the pointer. */
+.signin-field:has(input:disabled) {
+  cursor: not-allowed;
+}
+
+.signin-field input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1.5px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--sky);
+  font: inherit;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.signin-field input:disabled {
+  cursor: not-allowed;
+  color: var(--moss);
+}
+
+.signin-field input::placeholder {
+  color: var(--moss);
+}
+
+.signin-note {
+  font-size: var(--t-small);
+  color: var(--moss);
+}
+
+.signin-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--t-small);
+  color: var(--moss);
+}
+
+.signin-or::before,
+.signin-or::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--hairline);
+}
+
+.signin-guest {
+  width: 100%;
+}
+
+/* On a touch screen the two links are full-size targets too. */
+@media (pointer: coarse) {
+  .signin-word,
+  .signin-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 767px) {
+  .signin {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .signin-brand {
+    gap: 20px;
+    padding-top: 20px;
+  }
+
+  .signin-line {
+    max-width: 18ch;
+    font-size: var(--t-step);
+  }
+
+  .signin-art {
+    height: 120px;
+  }
+
+  .signin-main {
+    align-content: start;
+  }
+}

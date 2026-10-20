@@ -93,7 +93,7 @@
       </p>
       <div class="topbar-end">
         <span class="sim-label">Simulation</span>
-        <a class="button button--ink button--small" href="#start">Open the demo</a>
+        <a class="button button--ink button--small" href="/sign-in">Open the demo</a>
       </div>
     </header>
 
@@ -495,28 +495,6 @@
           </div>
         </div>
       </section>
-
-      <section class="start" id="start" data-time="" aria-labelledby="start-title">
-        <div class="start-words">
-          <h2 id="start-title" class="start-title">Prove every edge.</h2>
-          <p class="body">
-            The demo runs on simulated data for Elmina. Choose who you are, and it opens on that person’s first screen.
-          </p>
-        </div>
-        <form class="dialog" action="/demo/" method="get">
-          <p class="dialog-title">Open the Elmina demo</p>
-          <label class="dialog-field">
-            <span>Your name</span>
-            <input name="name" type="text" value="Farah Hashim" autocomplete="name" />
-          </label>
-          <fieldset class="dialog-choice">
-            <legend>Open it as</legend>
-            <label><input type="radio" name="as" value="manager" checked /> Park manager</label>
-            <label><input type="radio" name="as" value="reviewer" /> Reviewer, on a phone</label>
-          </fieldset>
-          <button class="button button--ink" type="submit">Open the demo</button>
-        </form>
-      </section>
     </main>
 
     <footer class="footer">
@@ -637,7 +615,10 @@
           <span class="mark mark--valid" aria-hidden="true"></span>
           <span>Fence by the playground, valid to 20 Oct 2027. The new panel and 6 m of fence are lit in green.</span>
         </p>
-        <p class="footer-word" aria-label="Safe Edge">SAFE EDGE</p>
+        <div class="footer-lead">
+          <p class="footer-word" aria-label="Safe Edge">SAFE EDGE</p>
+          <a class="button button--mist" href="/sign-in">Open the demo</a>
+        </div>
         <div class="footer-cols">
           <nav aria-label="On this page">
             <p class="footer-head">On this page</p>

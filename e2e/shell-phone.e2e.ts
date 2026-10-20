@@ -3,7 +3,7 @@ import { expect, test } from './fixtures'
 test.use({ viewport: { width: 390, height: 844 } })
 
 test('AC160-1 the phone screens use the phone top bar and no rail', async ({ page }) => {
-  await page.goto('/#/capture')
+  await page.goto('demo/#/capture')
   const bar = page.getByRole('banner')
   await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0)
   await expect(bar.getByRole('heading', { level: 1, name: 'Capture' })).toBeVisible()
@@ -18,7 +18,7 @@ test('AC160-1 the phone screens use the phone top bar and no rail', async ({ pag
 })
 
 test('AC160-1 at 390 px all three rail items stay on screen', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('demo/')
   await expect(page.getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
   const rail = page.getByRole('navigation', { name: 'Main' })
   for (const name of ['Inbox', 'Map', 'Passes']) {

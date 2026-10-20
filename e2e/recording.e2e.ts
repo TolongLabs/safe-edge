@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises'
 // Capture needs `getDisplayMedia`, which headless Chromium does not support, so the recording half skips there.
 
 test('recording mode records S6 to a WebM file', async ({ page }) => {
-  await page.goto('scene.html?scenario=s6&record')
+  await page.goto('demo/scene.html?scenario=s6&record')
   const record = page.getByRole('button', { name: 'Record', exact: true })
   await expect(record).toBeVisible({ timeout: 90_000 })
   // The camera follows the path, so the camera controls and the time slider are gone.

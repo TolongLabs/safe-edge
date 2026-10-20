@@ -3,6 +3,10 @@ import * as z from 'zod'
 
 const operationIds = Object.keys(operations) as [OperationId, ...OperationId[]]
 
+/** The scene's story, S1 to S3, in four chapters: a change spotted, confirmed, fixed and proven. */
+export const StoryChapter = z.enum(['spot', 'confirm', 'fix', 'prove'])
+export type StoryChapter = z.infer<typeof StoryChapter>
+
 /**
  * One timed call in a scenario: who acts, which operation, its input. IDs made by earlier calls count from 1 after a
  * reset (`plan_1`, `cand_1`, …), so a scenario names them as literals. An event with `refusedWith` must be refused under
@@ -34,7 +38,9 @@ export const ScenarioEvent = z.object({
     body: z.unknown().optional()
   }),
   refusedWith: PolicyRule.optional(),
-  note: z.string().min(1)
+  note: z.string().min(1),
+  /** The story's caption for this moment: one plain sentence for a newcomer, shown in place of the note. */
+  story: z.object({ chapter: StoryChapter, caption: z.string().min(1).max(120) }).optional()
 })
 export type ScenarioEvent = z.infer<typeof ScenarioEvent>
 

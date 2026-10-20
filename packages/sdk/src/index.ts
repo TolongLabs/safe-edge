@@ -11,11 +11,12 @@ export {
   FLIGHT_STEP_MS,
   GROUND_PLAYBACK_RATE,
   GROUND_STEP_MS,
+  MAX_FRAME_MS,
   type Played,
   type ScenarioPlayer,
   type ScenarioPlayerOptions
 } from './player.ts'
-export { rainAt, Scenario, ScenarioEvent, WeatherStep } from './scenario.ts'
+export { rainAt, Scenario, ScenarioEvent, StoryChapter, WeatherStep } from './scenario.ts'
 export { elminaRainfall, elminaScenarios } from './scenarios.ts'
 
 /**

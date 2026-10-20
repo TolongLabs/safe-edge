@@ -1,31 +1,50 @@
 import {
   createElminaScene,
-  type ControlMode,
   type ElminaLayers,
   type EdgeAssetView,
   type ElminaScene as Scene,
   type SegmentView
 } from '@safe-edge/scene'
+import { elminaScenarios, type Scenario } from '@safe-edge/sdk'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import buildingsUrl from '../../../data/elmina/osm/buildings.geojson?url'
 import parksUrl from '../../../data/elmina/osm/parks.geojson?url'
 import pathsUrl from '../../../data/elmina/osm/paths.geojson?url'
 import waterUrl from '../../../data/elmina/osm/water.geojson?url'
 import seedUrl from '../../../data/elmina/fixtures/seed.json?url'
-import { Legend } from './Legend.tsx'
-import { ScenarioPanel } from './ScenarioPanel.tsx'
+import { ControlsHint } from './ControlsHint.tsx'
+import { DetailsMenu } from './DetailsMenu.tsx'
+import { LoadingCard, type LoadState } from './LoadingCard.tsx'
 import { SegmentCard } from './SegmentCard.tsx'
+import { StoryCard } from './StoryCard.tsx'
+import { usePlayback, type PlaybackMode } from './usePlayback.ts'
 
 const layerUrls = { water: waterUrl, parks: parksUrl, paths: pathsUrl, buildings: buildingsUrl }
-/** `?record` opens recording mode: the camera follows a fixed path and the user's camera controls are off. */
-const recording = new URLSearchParams(location.search).has('record')
+/** What inline styles cannot say: a shorter badge on narrow screens, and tap-sized controls on touch screens. */
+const sceneCss = `
+.sim-short { display: none }
+@media (max-width: 640px) { .sim-long { display: none } .sim-short { display: inline } }
+[data-testid="elmina-scene"] { --tap: 32px }
+@media (pointer: coarse) { [data-testid="elmina-scene"] { --tap: 44px } }
+`
 
-async function loadLayers(): Promise<ElminaLayers> {
+const query = new URLSearchParams(location.search)
+/** `?record` opens recording mode: the camera follows a fixed path and the user's camera controls are off. */
+const recording = query.has('record')
+/** `?scenario=<id>` plays one scenario from the details menu; otherwise the scene tells the story. */
+const linkedScenario = elminaScenarios.find((s) => s.id === query.get('scenario'))?.id as Scenario['id'] | undefined
+
+/** The four OSM layers and the seed: what the loading card counts. */
+const LOAD_TOTAL = Object.keys(layerUrls).length + 1
+
+async function loadLayers(onLoaded: () => void): Promise<ElminaLayers> {
   const entries = await Promise.all(
     Object.entries(layerUrls).map(async ([name, url]) => {
       const response = await fetch(url)
       if (!response.ok) throw new Error(`${name} layer answered ${response.status}`)
-      return [name, await response.json()] as const
+      const layer = await response.json()
+      onLoaded()
+      return [name, layer] as const
     })
   )
   return Object.fromEntries(entries) as unknown as ElminaLayers
@@ -46,10 +65,11 @@ interface SeedSlice {
   passes: Array<{ id: string; state: SegmentView['state']; validTo: string | null }>
 }
 
-async function loadSegments(): Promise<{ segments: SegmentView[]; assets: EdgeAssetView[] }> {
+async function loadSegments(onLoaded: () => void): Promise<{ segments: SegmentView[]; assets: EdgeAssetView[] }> {
   const response = await fetch(seedUrl)
   if (!response.ok) throw new Error(`seed answered ${response.status}`)
   const seed = (await response.json()) as SeedSlice
+  onLoaded()
   const byId = <T extends { id: string }>(list: T[]) => new Map(list.map((x) => [x.id, x]))
   const users = byId(seed.users)
   const assets = byId(seed.assets)
@@ -78,19 +98,28 @@ async function loadSegments(): Promise<{ segments: SegmentView[]; assets: EdgeAs
   return { segments, assets: modelled }
 }
 
-/** The Elmina base scene from the OSM extract, with a switch between orbit and map controls. */
+/** The Elmina base scene from the OSM extract, behind a loading card until its layers and seed arrive. */
 export function ElminaScene() {
   const container = useRef<HTMLDivElement>(null)
   const scene = useRef<Scene>(null)
-  const [status, setStatus] = useState<'loading' | 'ready' | Error>('loading')
-  const [mode, setMode] = useState<ControlMode>('orbit')
+  const [status, setStatus] = useState<{ loaded: number } | 'ready' | Error>({ loaded: 0 })
+  // Retry bumps the attempt, which runs the load again.
+  const [attempt, setAttempt] = useState(0)
   const [segments, setSegments] = useState<SegmentView[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [ready, setReady] = useState<Scene | null>(null)
+  const [mode, setMode] = useState<PlaybackMode>(() =>
+    linkedScenario ? { kind: 'scenario', id: linkedScenario } : { kind: 'story' }
+  )
 
   useEffect(() => {
     let disposed = false
-    Promise.all([loadLayers(), loadSegments()])
+    let failed = false
+    let loaded = 0
+    // A layer that arrives after another failed must not cover the error with progress.
+    const onLoaded = () => !disposed && !failed && setStatus({ loaded: ++loaded })
+    setStatus({ loaded: 0 })
+    Promise.all([loadLayers(onLoaded), loadSegments(onLoaded)])
       .then(([layers, { segments: views, assets }]) => {
         if (disposed) return
         scene.current = createElminaScene(container.current!, layers, {
@@ -101,7 +130,6 @@ export function ElminaScene() {
         setSegments(views)
         setReady(scene.current)
         // ?segment=<id>[&distance=<m>] opens the scene on one segment, for links from the Inbox and for recordings.
-        const query = new URLSearchParams(location.search)
         const linked = query.get('segment')
         if (linked) {
           const distance = query.get('distance')
@@ -110,13 +138,16 @@ export function ElminaScene() {
         }
         setStatus('ready')
       })
-      .catch((error: Error) => setStatus(error))
+      .catch((error: Error) => {
+        failed = true
+        if (!disposed) setStatus(error)
+      })
     return () => {
       disposed = true
       scene.current?.dispose()
       scene.current = null
     }
-  }, [])
+  }, [attempt])
 
   const selectedSegment = segments.find((s) => s.id === selected)
   // The card shows the pass the scenario has reached, not the seed's.
@@ -130,22 +161,32 @@ export function ElminaScene() {
       ),
     []
   )
+  const playback = usePlayback(ready, mode, { recording, onPasses, keepCamera: query.has('segment') })
 
-  const toggle = () => {
-    const next = mode === 'orbit' ? 'map' : 'orbit'
-    scene.current?.setControlMode(next)
-    setMode(next)
-  }
+  const load: LoadState | null =
+    status === 'ready'
+      ? null
+      : status instanceof Error
+        ? { kind: 'error', message: status.message, onRetry: () => setAttempt((a) => a + 1) }
+        : { kind: 'loading', loaded: status.loaded, total: LOAD_TOTAL }
 
   return (
-    <div ref={container} style={{ position: 'relative', width: '100%', height: '100dvh' }} data-testid="elmina-scene">
-      {status === 'loading' && <p>Loading the Elmina map…</p>}
-      {status instanceof Error && <p role="alert">The Elmina map did not load: {status.message}</p>}
-      {status === 'ready' && !recording && (
-        <button type="button" onClick={toggle} style={{ position: 'absolute', top: 8, left: 8 }}>
-          {mode === 'orbit' ? 'Orbit controls' : 'Map controls'}: switch to {mode === 'orbit' ? 'map' : 'orbit'}
-        </button>
-      )}
+    <div
+      ref={container}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100dvh',
+        overflow: 'hidden',
+        // Controls outside the cards inherit the design font from here.
+        font: '14px/20px "Atkinson Hyperlegible Next", system-ui, sans-serif',
+        color: '#1c2925'
+      }}
+      data-testid="elmina-scene"
+    >
+      <style>{sceneCss}</style>
+      {load && <LoadingCard state={load} />}
+      {status === 'ready' && <ControlsHint hidden={recording} />}
       {status === 'ready' && (
         <p
           role="note"
@@ -166,11 +207,20 @@ export function ElminaScene() {
             whiteSpace: 'nowrap'
           }}
         >
-          Simulation · every flight, photo, flag and repair here
+          <span className="sim-long">Simulation · every flight, photo, flag and repair here</span>
+          <span className="sim-short">Simulation</span>
         </p>
       )}
-      {status === 'ready' && <Legend />}
-      {status === 'ready' && ready && <ScenarioPanel scene={ready} onPasses={onPasses} recording={recording} />}
+      {status === 'ready' && ready && mode.kind === 'story' && <StoryCard playback={playback} recording={recording} />}
+      {status === 'ready' && ready && !(recording && mode.kind === 'story') && (
+        <DetailsMenu
+          playback={playback}
+          mode={mode}
+          onMode={setMode}
+          recording={recording}
+          defaultOpen={mode.kind === 'scenario'}
+        />
+      )}
       {selectedSegment && (
         <SegmentCard
           segment={selectedSegment}
