@@ -122,12 +122,11 @@ for (const section of document.querySelectorAll<HTMLElement>('main > section[dat
   })
 }
 
-// The footer waits under the page when it fits on screen, and the page lifts off it.
+// On wider screens the footer waits under the page, a whole screen tall, and the page lifts off it.
 const footer = need<HTMLElement>('.footer')
 const fitFooter = () => {
-  const fits = footer.offsetHeight <= window.innerHeight - 24 && window.matchMedia('(min-width: 900px)').matches
   root.style.setProperty('--footer-h', `${footer.offsetHeight}px`)
-  root.classList.toggle('has-reveal', fits)
+  root.classList.toggle('has-reveal', window.matchMedia('(min-width: 900px)').matches)
 }
 fitFooter()
 new ResizeObserver(() => {
@@ -136,9 +135,9 @@ new ResizeObserver(() => {
 }).observe(footer)
 window.addEventListener('resize', fitFooter)
 // It only shows once the page starts to lift, so it never sits as hidden text under the sections above.
-const start = need<HTMLElement>('.start')
+const page = need<HTMLElement>('main')
 const showFooter = () =>
-  footer.toggleAttribute('data-shown', start.getBoundingClientRect().bottom < window.innerHeight + 1)
+  footer.toggleAttribute('data-shown', page.getBoundingClientRect().bottom < window.innerHeight + 1)
 window.addEventListener('scroll', showFooter, { passive: true })
 showFooter()
 
@@ -292,7 +291,7 @@ motion.add(
       yPercent: 24,
       ease: 'none',
       scrollTrigger: {
-        trigger: '.start',
+        trigger: 'main',
         start: 'bottom bottom',
         end: () => `+=${footer.offsetHeight}`,
         scrub: true,
