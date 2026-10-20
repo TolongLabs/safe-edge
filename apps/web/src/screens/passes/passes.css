@@ -1,0 +1,256 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.board .panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+.board h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 600;
+}
+.board .hint {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.board .table-island {
+  flex: none;
+}
+.board .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+.table-scroll {
+  max-height: 560px;
+  overflow: auto;
+}
+.banner-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.board .banner + .btn {
+  color: var(--text-primary);
+}
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.table-scroll th,
+.table-scroll td {
+  padding: 6px var(--space-3);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-default);
+}
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.table-scroll tbody th {
+  font-weight: 600;
+}
+.table-scroll .plate {
+  margin-left: var(--space-1);
+  padding: 1px 6px;
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+}
+.board .head .btn {
+  white-space: nowrap;
+}
+.pass-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  background: var(--state-unknown-bg);
+  color: var(--state-unknown-fg);
+}
+.pass-badge.suspended {
+  background: var(--state-suspended-bg);
+  color: var(--state-suspended-fg);
+}
+.pass-badge.valid {
+  background: var(--state-valid-bg);
+  color: var(--state-valid-fg);
+}
+.pass-badge.expiring {
+  background: var(--state-expiring-bg);
+  color: var(--state-expiring-fg);
+}
+.pass-badge.expired {
+  background: var(--state-expired-bg);
+  color: var(--state-expired-fg);
+}
+.reason-line {
+  display: block;
+  color: var(--text-secondary);
+  font-size: max(12px, var(--fs-small));
+  line-height: var(--lh-small);
+}
+.lower {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  flex: none;
+}
+.board .slot {
+  background: transparent;
+  border: 1.5px dashed var(--border-strong);
+}
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.drafted-by {
+  align-self: flex-start;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  font-weight: 700;
+  font-size: var(--fs-dense);
+}
+.notice-body {
+  white-space: pre-wrap;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.compose label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-weight: 600;
+}
+.compose textarea {
+  width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  font: inherit;
+}
+.overdue-line {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.board .skeleton i {
+  height: 48px;
+}
+.print-sheet {
+  display: none;
+}
+@media (max-width: 600px) {
+  .board .head {
+    flex-direction: column;
+  }
+  .table-scroll {
+    max-height: none;
+  }
+  .table-scroll thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .table-scroll table,
+  .table-scroll tbody,
+  .table-scroll tr,
+  .table-scroll th,
+  .table-scroll td {
+    display: block;
+  }
+  .table-scroll tr {
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .table-scroll th,
+  .table-scroll td {
+    padding: 2px 0;
+    border: 0;
+  }
+  .table-scroll .pass-badge {
+    white-space: normal;
+  }
+  .table-scroll td[data-label] {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .table-scroll td[data-label]::before {
+    content: attr(data-label);
+    color: var(--text-secondary);
+    font-size: var(--fs-small);
+  }
+}
+@media (max-width: 1100px) {
+  .lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media print {
+  .rail,
+  .topbar,
+  .board > :not(.lower),
+  .board .lower > :not(:has(.print-sheet)) {
+    display: none !important;
+  }
+  .board,
+  .board .lower,
+  .board .lower > :has(.print-sheet),
+  .frame,
+  .app {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+  .board .lower > :has(.print-sheet) > :not(.print-sheet) {
+    display: none !important;
+  }
+  .board .lower,
+  .board .lower > :has(.print-sheet),
+  .board > .lower {
+    display: block;
+  }
+  .print-sheet {
+    display: block;
+    /* System colours with the light scheme: black on white whatever the theme, and no raw colour. */
+    color-scheme: light;
+    color: CanvasText;
+    background: Canvas;
+  }
+}
