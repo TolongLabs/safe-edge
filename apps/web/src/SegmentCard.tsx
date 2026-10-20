@@ -74,7 +74,7 @@ export function SegmentCard({ segment, onClose }: { segment: SegmentView; onClos
       style={{
         position: 'absolute',
         left: 12,
-        bottom: 12,
+        top: 56,
         width: 'min(340px, calc(100% - 24px))',
         padding: 20,
         borderRadius: 12,
