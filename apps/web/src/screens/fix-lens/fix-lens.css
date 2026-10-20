@@ -1,0 +1,549 @@
+/* Fix Lens (colours come from the tokens in app.css only). */
+.fl-steps {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fl-steps button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+  font: 500 var(--fs-body) / var(--lh-body) var(--font-sans);
+  cursor: pointer;
+}
+.fl-steps button[aria-current='step'] {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.fl-step-n,
+.fl-num {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--bg-sunken);
+  font-size: var(--fs-dense);
+  font-weight: 600;
+  flex: none;
+}
+[aria-current='step'] .fl-step-n,
+.fl-num {
+  background: var(--accent-default);
+  color: var(--text-on-accent);
+}
+.fl-question {
+  font-size: var(--fs-h1);
+  line-height: var(--lh-h1);
+  font-weight: 600;
+}
+.fl-sent .fl-question {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+}
+.fl-sent .fl-card h3 {
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.fl-muted,
+.fl-help {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.fl-mark {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+  flex: 1;
+}
+.fl-reason {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+}
+/* The action bar sits at the bottom of the island. */
+.fl-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: auto;
+  padding-top: var(--space-4);
+}
+.fl-right,
+.fl-left {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.fl-card {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.fl-card h2,
+.fl-card h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: 600;
+}
+.fl-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.fl-list li {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+.fl-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.fl-form label,
+.fl-form legend,
+.fl-inline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--fs-dense);
+  font-weight: 500;
+}
+.fl-form fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.fl-form label.fl-check {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 400;
+}
+.fl-form input,
+.fl-form select,
+.fl-inline input,
+.fl-inline select {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+}
+.fl-form input[type='checkbox'],
+.fl-form input[type='radio'],
+.fl-options input[type='radio'] {
+  min-height: 0;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent-default);
+  color-scheme: light dark;
+}
+:root[data-theme='light'] .fl-form input,
+:root[data-theme='light'] .fl-options input {
+  color-scheme: light;
+}
+:root[data-theme='dark'] .fl-form input,
+:root[data-theme='dark'] .fl-options input {
+  color-scheme: dark;
+}
+.fl-pair > *,
+.fl-triple > *,
+.fl-unit {
+  min-width: 0;
+}
+.fl-pair,
+.fl-triple {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: 1fr 1fr;
+}
+.fl-triple {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+.fl-unit {
+  display: flex;
+}
+.fl-unit input {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+.fl-unit span {
+  display: grid;
+  place-items: center;
+  min-width: 48px;
+  border: 1px solid var(--border-strong);
+  border-left: 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+}
+
+/* The photo and the boxes laid on it */
+.fl-photo {
+  margin: 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+.fl-frame {
+  position: relative;
+}
+.fl-frame.markable {
+  cursor: crosshair;
+}
+.fl-frame .sample-image svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.fl-box {
+  position: absolute;
+  border: 2px solid var(--accent-default);
+  outline: 2px solid var(--bg-raised);
+  border-radius: var(--radius-sm);
+}
+.fl-box.right .fl-plate {
+  left: auto;
+  right: -2px;
+}
+.fl-box.dashed {
+  border-style: dashed;
+  border-color: var(--text-primary);
+  outline: 0;
+}
+.fl-plate {
+  position: absolute;
+  bottom: 100%;
+  left: -2px;
+  white-space: nowrap;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent-default);
+  color: var(--text-on-accent);
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  font-weight: 600;
+}
+.fl-box.dashed .fl-plate {
+  background: var(--text-primary);
+  color: var(--bg-surface);
+}
+.fl-photo figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-dense);
+}
+.fl-cap-row {
+  display: flex;
+  justify-content: space-between;
+}
+.fl-cap-sample {
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+}
+
+/* Step 2 */
+.fl-compare,
+.fl-sent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: var(--space-4);
+}
+.fl-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: var(--space-5);
+}
+.fl-option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+.fl-option.chosen {
+  border: 2px solid var(--accent-default);
+}
+.fl-option-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 600;
+  cursor: pointer;
+}
+.fl-plan {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+.fl-ground {
+  fill: var(--accent-subtle);
+}
+.fl-lake {
+  fill: var(--scene-water);
+}
+.fl-fence {
+  stroke: var(--text-primary);
+  stroke-width: 6;
+}
+.fl-fence.proposed {
+  stroke-dasharray: 7 5;
+}
+.fl-feature {
+  fill: var(--state-expiring-bg);
+  stroke: var(--state-expiring-fg);
+  stroke-width: 1.5;
+}
+.fl-text {
+  fill: var(--text-primary);
+  font: 600 14px var(--font-sans);
+}
+.fl-text.small {
+  font-size: 12px;
+  font-weight: 500;
+}
+.fl-text.open {
+  fill: var(--danger-text);
+}
+.fl-text.open,
+.fl-text.muted {
+  paint-order: stroke;
+  stroke: var(--accent-subtle);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.fl-text.muted {
+  fill: var(--state-unknown-fg);
+}
+.fl-route {
+  fill: none;
+  stroke-width: 3;
+}
+.fl-route.closed {
+  stroke: var(--state-unknown-fg);
+  stroke-dasharray: 8 6;
+}
+.fl-route.unknown {
+  stroke: var(--state-unknown-fg);
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+}
+.fl-route.open {
+  stroke: var(--danger-default);
+}
+.fl-open-fill {
+  fill: var(--danger-default);
+}
+.fl-legend {
+  display: none;
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.fl-tick {
+  stroke: var(--text-primary);
+  stroke-width: 3;
+}
+.fl-stop {
+  stroke: var(--state-unknown-fg);
+  stroke-width: 4;
+}
+.fl-ring {
+  fill: none;
+  stroke: var(--state-unknown-fg);
+  stroke-width: 2;
+}
+.fl-result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}
+.fl-result.closed {
+  color: var(--state-valid-fg);
+}
+.fl-result.open {
+  color: var(--danger-text);
+}
+.fl-result.unknown {
+  color: var(--state-unknown-fg);
+}
+.fl-propose summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.fl-inline {
+  flex-direction: column;
+}
+
+/* Step 3 */
+.fl-three {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+.fl-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--fs-dense);
+}
+.fl-table th,
+.fl-table td {
+  text-align: left;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-default);
+}
+.fl-table th {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+.fl-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--fs-dense);
+}
+.fl-facts dt {
+  color: var(--text-secondary);
+}
+.fl-facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+.fl-findings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.fl-findings a {
+  color: var(--text-link);
+  font-weight: 600;
+}
+/* Loading and the banners that name who does a step */
+.fl-skel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.fl-skel i {
+  display: block;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+}
+.fl-lock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.fl-lock svg {
+  flex: none;
+}
+@media (max-width: 600px) {
+  .fl-steps {
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+  }
+  .fl-steps button:not([aria-current='step']) .fl-step-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  /* The drawing's text would render near 6 px here; the legend line under it carries the same facts. */
+  .fl-option svg .fl-text,
+  .fl-option svg .fl-feature {
+    display: none;
+  }
+  .fl-legend {
+    display: block;
+  }
+  /* On a small photo the plates show only the opening's number; the list beside it names each one. */
+  .fl-plate-word {
+    display: none;
+  }
+  .fl-pair,
+  .fl-triple {
+    grid-template-columns: 1fr;
+  }
+  .fl-question {
+    font-size: var(--fs-h2);
+    line-height: var(--lh-h2);
+  }
+  .fl-card,
+  .fl-option {
+    padding: var(--space-4);
+  }
+  .fl-bar > .btn,
+  .fl-inline {
+    width: 100%;
+  }
+  .fl-inline select,
+  .fl-inline input {
+    width: 100%;
+  }
+}
+@media (max-width: 900px) {
+  .fl-mark {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fl-unit:has(input[aria-invalid='true']) input,
+.fl-unit:has(input[aria-invalid='true']) span {
+  border: 2px solid var(--danger-text);
+}
+.fl-unit:has(input[aria-invalid='true']) span {
+  border-left: 0;
+}
+.fl-error {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  color: var(--danger-text);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.fl-error svg {
+  flex: none;
+}
