@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in · Safe Edge</title>
+    <meta name="description" content="Open the simulated Safe Edge demo for Elmina as a guest." />
+    <meta name="theme-color" content="#17302a" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap"
+    />
+    <script type="module" src="/src/sign-in.ts"></script>
+  </head>
+  <body class="signin">
+    <aside class="signin-brand" aria-label="Safe Edge">
+      <a class="signin-word" href="/">
+        <img src="/mark-rail.svg" alt="" width="28" height="28" />
+        <span>Safe Edge</span>
+      </a>
+      <div class="signin-pitch">
+        <p class="signin-line">Every water edge, closed and proven.</p>
+        <p class="signin-meta">Elmina · simulated data</p>
+      </div>
+      <img class="signin-art" src="/dawn.svg" alt="" />
+    </aside>
+
+    <main class="signin-main">
+      <a class="signin-back" href="/">← Back to Safe Edge</a>
+      <section class="signin-card" aria-labelledby="signin-title">
+        <h1 id="signin-title" class="signin-title">Sign in</h1>
+        <label class="signin-field">
+          <span>Email</span>
+          <input type="email" name="email" placeholder="name@sdp.com.my" autocomplete="off" disabled />
+        </label>
+        <label class="signin-field">
+          <span>Password</span>
+          <input type="password" name="password" placeholder="••••••••" autocomplete="off" disabled />
+        </label>
+        <p class="signin-note">Accounts open after the pilot.</p>
+        <p class="signin-or"><span>or</span></p>
+        <button class="button button--ink signin-guest" type="button">Sign in as Guest</button>
+        <p class="signin-note">Opens the Elmina demo on simulated data.</p>
+      </section>
+    </main>
+  </body>
+</html>

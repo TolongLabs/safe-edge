@@ -1,4 +1,5 @@
 import 'lenis/dist/lenis.css'
+import './base.css'
 import './style.css'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'

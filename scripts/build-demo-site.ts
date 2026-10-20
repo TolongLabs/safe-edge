@@ -28,6 +28,7 @@ await Bun.write(
     {
       version: 3,
       routes: [
+        { src: '^/sign-in/?$', dest: '/sign-in.html' },
         // The app's own index is a placeholder until the Edge Inbox lands, so /demo/ opens the Elmina scene.
         { src: '^/demo/?$', dest: '/demo/scene.html' },
         { handle: 'filesystem' }
