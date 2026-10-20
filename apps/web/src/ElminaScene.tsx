@@ -5,6 +5,7 @@ import {
   type ElminaScene as Scene,
   type SegmentView
 } from '@safe-edge/scene'
+import { elminaScenarios, type Scenario } from '@safe-edge/sdk'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import buildingsUrl from '../../../data/elmina/osm/buildings.geojson?url'
 import parksUrl from '../../../data/elmina/osm/parks.geojson?url'
@@ -12,14 +13,18 @@ import pathsUrl from '../../../data/elmina/osm/paths.geojson?url'
 import waterUrl from '../../../data/elmina/osm/water.geojson?url'
 import seedUrl from '../../../data/elmina/fixtures/seed.json?url'
 import { ControlsHint } from './ControlsHint.tsx'
-import { Legend } from './Legend.tsx'
+import { DetailsMenu } from './DetailsMenu.tsx'
 import { LoadingCard, type LoadState } from './LoadingCard.tsx'
-import { ScenarioPanel } from './ScenarioPanel.tsx'
 import { SegmentCard } from './SegmentCard.tsx'
+import { StoryCard } from './StoryCard.tsx'
+import { usePlayback, type PlaybackMode } from './usePlayback.ts'
 
 const layerUrls = { water: waterUrl, parks: parksUrl, paths: pathsUrl, buildings: buildingsUrl }
+const query = new URLSearchParams(location.search)
 /** `?record` opens recording mode: the camera follows a fixed path and the user's camera controls are off. */
-const recording = new URLSearchParams(location.search).has('record')
+const recording = query.has('record')
+/** `?scenario=<id>` plays one scenario from the details menu; otherwise the scene tells the story. */
+const linkedScenario = elminaScenarios.find((s) => s.id === query.get('scenario'))?.id as Scenario['id'] | undefined
 
 /** The four OSM layers and the seed: what the loading card counts. */
 const LOAD_TOTAL = Object.keys(layerUrls).length + 1
@@ -95,6 +100,9 @@ export function ElminaScene() {
   const [segments, setSegments] = useState<SegmentView[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [ready, setReady] = useState<Scene | null>(null)
+  const [mode, setMode] = useState<PlaybackMode>(() =>
+    linkedScenario ? { kind: 'scenario', id: linkedScenario } : { kind: 'story' }
+  )
 
   useEffect(() => {
     let disposed = false
@@ -114,7 +122,6 @@ export function ElminaScene() {
         setSegments(views)
         setReady(scene.current)
         // ?segment=<id>[&distance=<m>] opens the scene on one segment, for links from the Inbox and for recordings.
-        const query = new URLSearchParams(location.search)
         const linked = query.get('segment')
         if (linked) {
           const distance = query.get('distance')
@@ -146,6 +153,7 @@ export function ElminaScene() {
       ),
     []
   )
+  const playback = usePlayback(ready, mode, { recording, onPasses })
 
   const load: LoadState | null =
     status === 'ready'
@@ -155,7 +163,16 @@ export function ElminaScene() {
         : { kind: 'loading', loaded: status.loaded, total: LOAD_TOTAL }
 
   return (
-    <div ref={container} style={{ position: 'relative', width: '100%', height: '100dvh' }} data-testid="elmina-scene">
+    <div
+      ref={container}
+      style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}
+      data-testid="elmina-scene"
+    >
+      <style>
+        {
+          '.sim-short { display: none } @media (max-width: 640px) { .sim-long { display: none } .sim-short { display: inline } }'
+        }
+      </style>
       {load && <LoadingCard state={load} />}
       {status === 'ready' && <ControlsHint hidden={recording} />}
       {status === 'ready' && (
@@ -178,11 +195,20 @@ export function ElminaScene() {
             whiteSpace: 'nowrap'
           }}
         >
-          Simulation · every flight, photo, flag and repair here
+          <span className="sim-long">Simulation · every flight, photo, flag and repair here</span>
+          <span className="sim-short">Simulation</span>
         </p>
       )}
-      {status === 'ready' && <Legend />}
-      {status === 'ready' && ready && <ScenarioPanel scene={ready} onPasses={onPasses} recording={recording} />}
+      {status === 'ready' && ready && mode.kind === 'story' && <StoryCard playback={playback} recording={recording} />}
+      {status === 'ready' && ready && !(recording && mode.kind === 'story') && (
+        <DetailsMenu
+          playback={playback}
+          mode={mode}
+          onMode={setMode}
+          recording={recording}
+          defaultOpen={mode.kind === 'scenario'}
+        />
+      )}
       {selectedSegment && (
         <SegmentCard
           segment={selectedSegment}

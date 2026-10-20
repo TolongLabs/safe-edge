@@ -1,5 +1,5 @@
 import type { CameraShot } from '@safe-edge/scene'
-import { elminaSeed, type Scenario } from '@safe-edge/sdk'
+import { elminaSeed } from '@safe-edge/sdk'
 
 /** The recording's frame rate: each frame moves the scenario on by exactly this fraction of a second of playback. */
 export const RECORDING_FPS = 30
@@ -9,13 +9,13 @@ const STORY_SEGMENT = elminaSeed.story.s1.segmentId
 
 /**
  * The recording's fixed camera path. On the ground the camera sweeps a third of a circle around the story segment over
- * the scenario; in the air it rides behind and above the drone. The shot depends only on the scenario's time and the
- * drone, so every take frames the same.
+ * the span played; in the air it rides behind and above the drone. The shot depends only on the scenario's time and
+ * the drone, so every take frames the same.
  */
-export function recordingShot(scenario: Scenario, now: string, airborne: boolean): CameraShot {
+export function recordingShot(span: { start: string; end: string }, now: string, airborne: boolean): CameraShot {
   if (airborne) return { target: 'drone', distanceM: 110, bearingDeg: 200, pitchDeg: 28 }
-  const start = Date.parse(scenario.start)
-  const progress = (Date.parse(now) - start) / (Date.parse(scenario.end) - start)
+  const start = Date.parse(span.start)
+  const progress = (Date.parse(now) - start) / (Date.parse(span.end) - start)
   return { target: { segmentId: STORY_SEGMENT }, distanceM: 520, bearingDeg: 150 + 120 * progress, pitchDeg: 35 }
 }
 

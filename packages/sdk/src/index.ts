@@ -15,7 +15,7 @@ export {
   type ScenarioPlayer,
   type ScenarioPlayerOptions
 } from './player.ts'
-export { rainAt, Scenario, ScenarioEvent, WeatherStep } from './scenario.ts'
+export { rainAt, Scenario, ScenarioEvent, StoryChapter, WeatherStep } from './scenario.ts'
 export { elminaRainfall, elminaScenarios } from './scenarios.ts'
 
 /**

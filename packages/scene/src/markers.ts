@@ -36,17 +36,22 @@ const UNKNOWN_REACH_M = 12
 /** Tier 2 is a missing or changed safety item; Tier 3 is unknown; Tier 1 is a change to review. Shape carries it too. */
 const tierColours = { 1: 0x94500e, 2: 0xb02e28, 3: 0x5d6b66 } as const
 
-/** A small solid chip, as the design system's tags: the label every simulated thing in the scene wears. */
-export function labelChip(text: string): CSS2DObject {
+/**
+ * A small solid chip, as the design system's tags: the label every simulated thing in the scene wears. A compact chip
+ * says only "simulated", in muted text, for a marker the current moment is not about.
+ */
+export function labelChip(text: string, { compact = false } = {}): CSS2DObject {
   const chip = document.createElement('div')
-  chip.textContent = text
+  chip.textContent = compact ? 'simulated' : text
   Object.assign(chip.style, {
-    padding: '2px 8px',
+    padding: compact ? '0 6px' : '2px 8px',
     borderRadius: '4px',
     border: '1px solid #cfd6d2',
     background: '#fbfcfb',
-    color: '#1c2925',
-    font: '600 12px/16px "Atkinson Hyperlegible Next", system-ui, sans-serif',
+    color: compact ? '#5d6b66' : '#1c2925',
+    font: compact
+      ? '400 11px/16px "Atkinson Hyperlegible Next", system-ui, sans-serif'
+      : '600 12px/16px "Atkinson Hyperlegible Next", system-ui, sans-serif',
     whiteSpace: 'nowrap',
     pointerEvents: 'none'
   })
@@ -66,8 +71,14 @@ const scenePoint = (lon: number, lat: number, altM = 0) => {
  */
 export function buildMarkers(
   markers: SceneMarkers,
-  { itemPositions, segments }: { itemPositions: Map<string, Vector3>; segments: SegmentView[] }
+  {
+    itemPositions,
+    segments,
+    current
+  }: { itemPositions: Map<string, Vector3>; segments: SegmentView[]; current?: ReadonlySet<string> }
 ): { objects: Object3D[]; dispose(): void } {
+  // Without `current`, every chip is full; with it, only the markers it names.
+  const compact = (id: string) => ({ compact: current !== undefined && !current.has(id) })
   const segment = (id: string) => {
     const found = segments.find((s) => s.id === id)
     if (!found) throw new Error(`No segment ${id} in this scene to mark`)
@@ -97,7 +108,7 @@ export function buildMarkers(
     group.name = `pin ${pin.id} (simulated)`
     group.add(new Mesh(new CylinderGeometry(0.25, 0.25, PIN_HEIGHT_M).translate(0, PIN_HEIGHT_M / 2, 0), material))
     group.add(new Mesh(head.translate(0, PIN_HEIGHT_M + HEAD_M / 2, 0), material))
-    const label = labelChip(`${pin.label} · simulated`)
+    const label = labelChip(`${pin.label} · simulated`, compact(pin.id))
     label.position.set(0, PIN_HEIGHT_M + HEAD_M * 1.4, 0)
     group.add(label)
     group.position.copy(placeOf(pin.segmentId, pin.itemId))
@@ -109,7 +120,7 @@ export function buildMarkers(
     group.name = `dropped frame ${frame.id} (simulated)`
     const tick = new Mesh(new BoxGeometry(0.6, 6, 0.6), new MeshLambertMaterial({ color: 0x5d6b66 }))
     group.add(tick)
-    const label = labelChip(`${frame.label} · simulated`)
+    const label = labelChip(`${frame.label} · simulated`, compact(frame.id))
     label.position.set(0, 4, 0)
     group.add(label)
     group.position.copy(scenePoint(frame.pose.lon, frame.pose.lat, frame.pose.altM))
@@ -133,7 +144,7 @@ export function buildMarkers(
     hatch.name = `unknown ${unknown.id} (simulated)`
     // Draw over the pass-state ribbons, which lie lower on the same edge.
     hatch.renderOrder = 1_000
-    const label = labelChip(`${unknown.label} · simulated`)
+    const label = labelChip(`${unknown.label} · simulated`, compact(unknown.id))
     label.position.copy(points[Math.floor(points.length / 2)]!).setY(3)
     hatch.add(label)
     objects.push(hatch)
