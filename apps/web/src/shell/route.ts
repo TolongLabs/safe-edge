@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { startsAtRetest } from '../store'
 
 export type Route =
   | { name: 'inbox' }
@@ -22,7 +23,11 @@ export function parseRoute(hash: string): Route {
   if (rest.length > 0) return { name: 'notFound' }
   switch (head) {
     case undefined:
-      return id === undefined ? { name: 'inbox' } : { name: 'notFound' }
+      return id === undefined
+        ? startsAtRetest()
+          ? { name: 'retest', workOrderId: null }
+          : { name: 'inbox' }
+        : { name: 'notFound' }
     case 'inbox':
       return id === undefined ? { name: 'inbox' } : { name: 'notFound' }
     case 'passes':

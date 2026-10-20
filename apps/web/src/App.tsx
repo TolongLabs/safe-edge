@@ -72,7 +72,10 @@ function RouteView({ route }: { route: Route }) {
     }
     case 'retest': {
       const { workOrderId } = route
-      return workOrderId ? (
+      // A flag to clear is checked by the screen itself: the work-order guard would not find it.
+      return workOrderId?.startsWith('cand_') ? (
+        <Retest key={workOrderId} workOrderId={workOrderId} />
+      ) : workOrderId ? (
         <Guard
           key={workOrderId}
           title="Repair check"

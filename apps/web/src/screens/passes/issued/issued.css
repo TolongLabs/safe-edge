@@ -1,0 +1,144 @@
+/* Pass issued: hero on the left, the loop timeline on Sunken Grey on the right (DESIGN.md, Layout). */
+.pi-main {
+  padding: var(--space-12);
+}
+.pi-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: center;
+  min-height: 100%;
+}
+.pi-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 460px;
+  justify-self: center;
+}
+.pi-hero h3 {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.pi-seal {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--state-valid-bg);
+  color: var(--state-valid-fg);
+}
+.pi-seal.not-valid {
+  background: var(--state-unknown-bg);
+  color: var(--state-unknown-fg);
+}
+.pi-title {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+}
+.pi-place {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+}
+.pi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-dense);
+  font-weight: 600;
+}
+.pi-badge.valid {
+  background: var(--state-valid-bg);
+  color: var(--state-valid-fg);
+}
+.pi-badge.not-valid {
+  background: var(--state-unknown-bg);
+  color: var(--state-unknown-fg);
+}
+.pi-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+.pi-badge.not-valid .pi-dot {
+  background: none;
+  border: 2px solid currentColor;
+}
+.pi-ways {
+  color: var(--text-secondary);
+}
+.pi-routes {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+.pi-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+.pi-timeline-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--bg-sunken);
+}
+.pi-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pi-timeline li {
+  display: grid;
+  grid-template-columns: 7rem 18px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+}
+.pi-time {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  font-weight: 600;
+}
+.pi-mark {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 2px solid var(--text-primary);
+  border-radius: var(--radius-full);
+  box-sizing: border-box;
+}
+.pi-mark.last {
+  background: var(--state-valid-fg);
+  border-color: var(--state-valid-fg);
+}
+.pi-who {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+}
+@media (max-width: 900px) {
+  .pi-main {
+    padding: var(--space-4);
+  }
+  .pi-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .pi-hero {
+    max-width: none;
+  }
+  .pi-timeline li {
+    grid-template-columns: 3.5rem 18px minmax(0, 1fr);
+  }
+}
