@@ -29,7 +29,7 @@ test.describe('on a computer', () => {
     await page.goto('sign-in')
     await page.getByRole('button', { name: 'Sign in as Guest' }).click()
     await expect(page).toHaveURL(/\/demo\/\?as=manager$/)
-    await expect(page.locator('canvas')).toBeVisible({ timeout: 90_000 })
+    await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible()
   })
 })
 

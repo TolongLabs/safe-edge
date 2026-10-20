@@ -233,7 +233,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
 const NAV: { href: string; route: string; label: string; Icon: Icon; note?: string }[] = [
   { href: '#/inbox', route: 'inbox', label: 'Inbox', Icon: Tray },
   {
-    href: '/scene.html',
+    href: 'scene.html', // relative: the demo site serves the app under /demo/
     route: 'map',
     label: 'Map',
     Icon: MapTrifold,

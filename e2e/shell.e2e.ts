@@ -16,7 +16,7 @@ const confirmS1 = async (page: Page) => {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto('demo/')
   await expect(page.getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
 })
 
@@ -30,7 +30,7 @@ test('AC160-1 rail links, current page and the Map link', async ({ page }) => {
   await rail.getByRole('link', { name: /Inbox/ }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible()
   const map = rail.getByRole('link', { name: 'Map' })
-  await expect(map).toHaveAttribute('href', '/scene.html')
+  await expect(map).toHaveAttribute('href', 'scene.html')
   await expect(map).toHaveAttribute('title', /seed and the scenario player, not this session/)
   await expect(page.getByRole('banner').getByText('Simulation', { exact: true })).toBeVisible()
 })
@@ -50,21 +50,21 @@ test('AC160-1 the rail collapses and expands by keyboard', async ({ page }) => {
 })
 
 test('AC160-2 deep links open the same screen after a reload', async ({ page }) => {
-  await page.goto('/#/passes')
+  await page.goto('demo/#/passes')
   await expect(page.getByRole('heading', { level: 1, name: 'Passes' })).toBeVisible()
   await page.reload()
   await expect(page.getByRole('heading', { level: 1, name: 'Passes' })).toBeVisible()
-  await page.goto('/#/fix-lens/fnd_missing')
+  await page.goto('demo/#/fix-lens/fnd_missing')
   await expect(page.getByRole('heading', { name: 'Not in this demo session' })).toBeVisible()
   await page.reload()
   await expect(page.getByRole('heading', { name: 'Not in this demo session' })).toBeVisible()
   await page.getByRole('link', { name: 'Back to Inbox' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible()
-  await page.goto('/#/nowhere')
+  await page.goto('demo/#/nowhere')
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
   // The bare list routes stay routes (not "Page not found") whatever a later task puts on them.
   for (const hash of ['#/fix-lens', '#/retest', '#/capture']) {
-    await page.goto(`/${hash}`)
+    await page.goto(`demo/${hash}`)
     await expect(page.getByRole('banner').getByRole('heading', { level: 1 })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Page not found' })).toHaveCount(0)
     expect(page.url()).toMatch(new RegExp(`${hash}$`))
@@ -73,7 +73,7 @@ test('AC160-2 deep links open the same screen after a reload', async ({ page }) 
 
 test('AC160-2 a malformed address shows Page not found inside the shell', async ({ page }) => {
   for (const hash of ['#/fix-lens/%E0%A4%A', '#/passes/%']) {
-    await page.goto(`/${hash}`)
+    await page.goto(`demo/${hash}`)
     await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
     await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible()
   }
@@ -81,13 +81,13 @@ test('AC160-2 a malformed address shows Page not found inside the shell', async 
 
 test('AC160-2 an id that is not shaped like any record shows Not in this demo session', async ({ page }) => {
   for (const hash of ['#/passes/abc', '#/fix-lens/abc', '#/retest/abc', '#/capture/abc', '#/passes/%25']) {
-    await page.goto(`/${hash}`)
+    await page.goto(`demo/${hash}`)
     await expect(page.getByRole('heading', { name: 'Not in this demo session' })).toBeVisible()
   }
 })
 
 test('AC160-2 phone routes use the phone top bar and no rail', async ({ page }) => {
-  await page.goto('/#/capture')
+  await page.goto('demo/#/capture')
   await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0)
   await expect(page.getByRole('heading', { level: 1, name: 'Capture' })).toBeVisible()
 })
