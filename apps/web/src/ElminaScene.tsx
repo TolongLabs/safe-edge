@@ -161,7 +161,7 @@ export function ElminaScene() {
       ),
     []
   )
-  const playback = usePlayback(ready, mode, { recording, onPasses })
+  const playback = usePlayback(ready, mode, { recording, onPasses, keepCamera: query.has('segment') })
 
   const load: LoadState | null =
     status === 'ready'

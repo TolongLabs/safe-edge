@@ -142,9 +142,12 @@ export function usePlayback(
   mode: PlaybackMode,
   {
     recording,
-    onPasses
+    onPasses,
+    keepCamera = false
   }: {
     recording: boolean
+    /** True when a link already put the camera on a segment: the story then starts without moving it. */
+    keepCamera?: boolean
     /** The demo's passes after every change, for the screens beside the scene. */
     onPasses: (passes: Array<{ segmentId: string; state: PassState; validTo: string | null }>) => void
   }
@@ -190,7 +193,7 @@ export function usePlayback(
     setFlight(null)
     setCurrent(null)
     scene.showFlight(null)
-    if (story && !recording) scene.focus(STORY_SEGMENT, { distanceM: STORY_DISTANCE_M })
+    if (story && !recording && !keepCamera) scene.focus(STORY_SEGMENT, { distanceM: STORY_DISTANCE_M })
 
     loadPlanner()
       .then((planner) =>
@@ -343,7 +346,7 @@ export function usePlayback(
       if (recording) scene.setCameraShot(null)
     }
     // `mode` is read through `key`, so a new mode object for the same scenario keeps the player.
-  }, [key, scene, onPasses, recording])
+  }, [key, scene, onPasses, recording, keepCamera])
 
   return {
     player,

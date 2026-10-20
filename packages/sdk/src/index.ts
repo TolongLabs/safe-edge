@@ -11,6 +11,7 @@ export {
   FLIGHT_STEP_MS,
   GROUND_PLAYBACK_RATE,
   GROUND_STEP_MS,
+  MAX_FRAME_MS,
   type Played,
   type ScenarioPlayer,
   type ScenarioPlayerOptions

@@ -63,6 +63,8 @@ export const FLIGHT_STEP_MS = 200
 export const GROUND_STEP_MS = 600_000
 /** On the ground, real-time playback runs at least this fast (two scenario hours a second), so holds pass quickly. */
 export const GROUND_PLAYBACK_RATE = 7_200
+/** One frame spends at most this much real time: a longer gap (a hidden tab, a stall) is a pause, not a jump. */
+export const MAX_FRAME_MS = 1_000
 
 /**
  * Plays a scenario on the SDK's memory transport with a deterministic, fixed-step clock. The clock ticks the demo only
@@ -217,7 +219,7 @@ export async function createScenarioPlayer(options: ScenarioPlayerOptions): Prom
       let owedMs = 0
       let seeking = false
       stopFrames = frames((elapsedMs) => {
-        owedMs += elapsedMs
+        owedMs += Math.min(elapsedMs, MAX_FRAME_MS)
         if (seeking) return
         seeking = true
         void serial(async () => {

@@ -213,6 +213,8 @@ export function createElminaScene(
   setControlMode('orbit')
 
   const focusOn = (segment: SegmentView, distanceM: number) => {
+    // The canvas says which segment the camera is on, as it says its pixel ratio.
+    renderer.domElement.dataset.focus = segment.id
     const [x, z] = segmentMidpoint(segment)
     const offset = camera.position.clone().sub(active.target).setLength(distanceM)
     for (const c of Object.values(controls)) c.target.set(x, 0, z)

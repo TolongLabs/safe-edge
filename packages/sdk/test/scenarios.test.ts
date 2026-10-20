@@ -200,6 +200,9 @@ describe('SIM-9: playback keeps the flight at flight speed', () => {
     expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:30.000Z', true])
     await step(1_000)
     expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:38.000Z', true])
+    // A minute between frames, as after a hidden tab, moves the story on by one frame's worth, not a minute's.
+    await step(60_000)
+    expect([player.now, player.airborne]).toEqual(['2026-10-21T22:36:46.000Z', true])
   })
 })
 

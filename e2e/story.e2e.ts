@@ -127,6 +127,12 @@ test('details hold the old controls', async ({ page }) => {
   expect(options.filter((o) => /^S[1-6],/.test(o))).toHaveLength(6)
 })
 
+test('a segment link keeps the camera on that segment', async ({ page }) => {
+  await open(page, 'demo/scene.html?segment=seg_866518980_5&distance=200')
+  await expect(story(page).getByRole('button', { name: /^Play the story/ })).toBeEnabled({ timeout: 90_000 })
+  await expect(page.locator('canvas[data-focus]')).toHaveAttribute('data-focus', 'seg_866518980_5')
+})
+
 test('a scenario link opens details, not the story', async ({ page }) => {
   await open(page, 'demo/scene.html?scenario=s4')
   const details = page.getByRole('region', { name: 'Details' })
