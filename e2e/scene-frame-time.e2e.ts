@@ -15,7 +15,7 @@ async function flightFrameTimes(page: Page): Promise<number[]> {
   page.on('console', (m) => {
     if (/WebGLProgram: Shader Error|WebGL context could not be created/.test(m.text())) glErrors.push(m.text())
   })
-  await page.goto('scene.html?scenario=s1')
+  await page.goto('demo/scene.html?scenario=s1')
   const play = page.getByRole('button', { name: 'Play', exact: true })
   await expect(play).toBeEnabled({ timeout: 90_000 })
   const renderer = await page.evaluate(() => {
