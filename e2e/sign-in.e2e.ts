@@ -45,7 +45,7 @@ test.describe('on a phone', () => {
   test('its links are full-size touch targets', async ({ page }) => {
     await page.goto('sign-in')
     for (const link of await page.getByRole('link').all())
-      expect((await link.boundingBox())!.height, await link.textContent()).toBeGreaterThanOrEqual(44)
+      expect((await link.boundingBox())!.height, (await link.textContent()) ?? '').toBeGreaterThanOrEqual(44)
   })
 
   test('the two panes stack', async ({ page }) => {

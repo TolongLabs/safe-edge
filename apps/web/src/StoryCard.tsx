@@ -23,11 +23,15 @@ const clock = new Intl.DateTimeFormat('en-GB', {
 })
 const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
+// Above the controls strip, which takes two lines on the narrowest phones.
+const BOTTOM = 56
+
 const card: CSSProperties = {
   position: 'absolute',
-  bottom: 48,
+  bottom: BOTTOM,
   boxSizing: 'border-box',
   display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
   gap: 12,
   padding: 16,
   borderRadius: 12,
@@ -72,7 +76,7 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
       <button
         type="button"
         onClick={() => setStage('intro')}
-        style={{ ...button(true), position: 'absolute', left: 12, bottom: 48 }}
+        style={{ ...button(true), position: 'absolute', left: 12, bottom: BOTTOM }}
       >
         Play the story
       </button>
@@ -132,7 +136,16 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <ol
           aria-label="Chapters"
-          style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: 0, padding: 0, listStyle: 'none' }}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            flex: '1 1 auto',
+            minWidth: 0,
+            gap: 6,
+            margin: 0,
+            padding: 0,
+            listStyle: 'none'
+          }}
         >
           {chapters.map((c, i) => {
             const on = c.id === chapter
@@ -175,7 +188,7 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
           key="caption"
           data-testid="caption"
           aria-live="polite"
-          style={{ margin: 0, fontSize: 16, lineHeight: '22px', fontWeight: 600 }}
+          style={{ margin: 0, fontSize: 16, lineHeight: '22px', fontWeight: 600, overflowWrap: 'anywhere' }}
         >
           {story?.caption}
         </p>

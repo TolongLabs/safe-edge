@@ -143,6 +143,37 @@ test('Play again starts over', async ({ page }) => {
   await expect(page.getByText('Fence panel 4 missing')).toHaveCount(0)
 })
 
+test.describe('on a 320 px phone', () => {
+  test.use({ viewport: { width: 320, height: 640 }, isMobile: true, hasTouch: true })
+
+  test('the story card holds its longest caption, its chapters and the controls strip', async ({ page }) => {
+    await open(page)
+    await play(page)
+    await story(page).getByRole('button', { name: 'Pause' }).click()
+    // The schema's longest caption, 120 characters, with an unbroken 28-letter word in it.
+    await caption(page).evaluate((el) => (el.textContent = `${'W'.repeat(28)} ${'a'.repeat(4)} `.padEnd(120, 'x')))
+    const card = (await story(page).boundingBox())!
+    const inside = async (box: { x: number; y: number; width: number; height: number } | null) => {
+      expect(box!.x).toBeGreaterThanOrEqual(card.x - 0.5)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(card.x + card.width + 0.5)
+    }
+    await inside(await caption(page).boundingBox())
+    expect(await caption(page).evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+    for (const chip of await page.getByRole('list', { name: 'Chapters' }).getByRole('listitem').all())
+      await inside(await chip.boundingBox())
+    const hint = (await page.getByText(/Drag to rotate/).boundingBox())!
+    expect(hint.y).toBeGreaterThanOrEqual(card.y + card.height)
+  })
+
+  test('every control uses the design font', async ({ page }) => {
+    await open(page)
+    const fonts = await page
+      .getByRole('button')
+      .evaluateAll((buttons) => buttons.map((b) => getComputedStyle(b).fontFamily))
+    for (const font of fonts) expect(font).toContain('Atkinson Hyperlegible Next')
+  })
+})
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
 
@@ -150,7 +181,7 @@ test.describe('on a phone', () => {
     await open(page)
     for (const control of await page.getByRole('button').all()) {
       if (!(await control.isVisible())) continue
-      expect((await control.boundingBox())!.height, await control.textContent()).toBeGreaterThanOrEqual(44)
+      expect((await control.boundingBox())!.height, (await control.textContent()) ?? '').toBeGreaterThanOrEqual(44)
     }
   })
 

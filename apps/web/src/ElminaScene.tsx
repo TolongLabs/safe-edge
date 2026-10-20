@@ -173,7 +173,15 @@ export function ElminaScene() {
   return (
     <div
       ref={container}
-      style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100dvh',
+        overflow: 'hidden',
+        // Controls outside the cards inherit the design font from here.
+        font: '14px/20px "Atkinson Hyperlegible Next", system-ui, sans-serif',
+        color: '#1c2925'
+      }}
       data-testid="elmina-scene"
     >
       <style>{sceneCss}</style>
