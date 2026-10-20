@@ -1,38 +1,11 @@
 // S6 from its scenario fixture (data/elmina/scenarios/s6-text-in-image.json), played through an SDK client: the
 // HTTP one against the API, or the memory one the scene's scenario player (#64) drives.
 import { expect } from 'bun:test'
-import { PolicyRule, Timestamp, UserId, operations, type CoreOperationId } from '@safe-edge/contracts'
-import { createSafeEdgeClient, type SafeEdgeClient } from '@safe-edge/sdk'
+import { Scenario, createSafeEdgeClient, type SafeEdgeClient, type ScenarioEvent } from '@safe-edge/sdk'
 import { join } from 'node:path'
-import * as z from 'zod'
 import { seed, type Api } from './support.ts'
 
-const coreOperationIds = Object.entries(operations)
-  .filter(([, op]) => op.handledBy === 'core')
-  .map(([id]) => id) as [CoreOperationId, ...CoreOperationId[]]
-
-/** One timed call: who acts, which operation, its input. IDs made by earlier events count from 1 after a reset. */
-const ScenarioEvent = z.object({
-  at: Timestamp,
-  type: z.enum(['candidate', 'decision', 'observation', 'attempt']),
-  as: UserId,
-  operationId: z.enum(coreOperationIds),
-  input: z.object({ params: z.record(z.string(), z.string()).optional(), body: z.unknown().optional() }),
-  refusedWith: PolicyRule.optional(),
-  note: z.string().min(1)
-})
-export type ScenarioEvent = z.infer<typeof ScenarioEvent>
-
-const Scenario = z.object({
-  id: z.string(),
-  title: z.string(),
-  summary: z.string(),
-  simulated: z.literal(true),
-  source: z.literal('scenario'),
-  signText: z.string(),
-  setup: z.array(ScenarioEvent),
-  events: z.array(ScenarioEvent)
-})
+export type { ScenarioEvent }
 
 export const repoRoot = join(import.meta.dir, '../../..')
 export const S6 = Scenario.parse(await Bun.file(join(repoRoot, 'data/elmina/scenarios/s6-text-in-image.json')).json())
@@ -43,15 +16,16 @@ export const S6_REFUSED = S6.events.filter((event) => event.refusedWith !== unde
 
 export interface Player {
   clientFor(userId: string): SafeEdgeClient
-  setNow(iso: string): void
+  setNow(iso: string): void | Promise<unknown>
 }
 
 /** Plays events in order at their times. A refused event must be refused with its rule; the rest return results. */
 export async function play(player: Player, events: readonly ScenarioEvent[]) {
   const results: unknown[] = []
   for (const event of events) {
-    player.setNow(event.at)
-    const call = (player.clientFor(event.as)[event.operationId] as (input: unknown) => Promise<unknown>)(event.input)
+    await player.setNow(event.at)
+    const client = player.clientFor(event.as) as unknown as Record<string, (input: unknown) => Promise<unknown>>
+    const call = client[event.operationId]!(event.input)
     if (event.refusedWith === undefined) results.push(await call)
     else await expect(call).rejects.toMatchObject({ status: 403, rule: event.refusedWith })
   }
@@ -62,7 +36,12 @@ export async function play(player: Player, events: readonly ScenarioEvent[]) {
 export function memoryPlayer(): Player {
   let now = seed.asOf
   const client = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager', clock: { now: () => now } })
-  return { clientFor: (userId) => client.as(userId), setNow: (iso) => (now = iso) }
+  return {
+    clientFor: (userId) => client.as(userId),
+    setNow: (iso) => {
+      now = iso
+    }
+  }
 }
 
 /** The API over HTTP, each user calling with its own `tok_<role>` token. */
@@ -77,6 +56,15 @@ export function httpPlayer(api: Api): Player {
     clientFor: (userId) => createSafeEdgeClient({ transport: 'http', baseUrl, token: `tok_${role(userId)}` }),
     setNow: api.setNow
   }
+}
+
+/**
+ * A dev API started with `SAFE_EDGE_CLOCK=scenario`, each user calling with its own token. Before each event the
+ * system user sets the API's scenario clock to the event's time, as a scenario player does.
+ */
+export function scenarioClockPlayer(baseUrl: string, tokenOf: (userId: string) => string): Player {
+  const clientFor = (userId: string) => createSafeEdgeClient({ transport: 'http', baseUrl, token: tokenOf(userId) })
+  return { clientFor, setNow: (now) => clientFor('usr_system').setScenarioClock({ body: { now } }) }
 }
 
 /** Everything a mark-safe would move: passes, findings, tasks, work orders and notices, read as the manager. */

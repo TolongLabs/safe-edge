@@ -12,5 +12,14 @@
     "skipLibCheck": true,
     "types": ["bun"]
   },
-  "include": ["scripts", "test", "apps/*/test", "packages/*/test", "packages/*/scripts", "apps/web/vite.config.ts"]
+  "include": [
+    "scripts",
+    "test",
+    "apps/*/test",
+    "packages/*/test",
+    "packages/*/scripts",
+    "apps/web/vite.config.ts",
+    "e2e",
+    "playwright.config.ts"
+  ]
 }

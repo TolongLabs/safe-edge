@@ -2,8 +2,14 @@ import { describe, expect, test } from 'bun:test'
 import type { EdgeEvent } from '@safe-edge/contracts'
 import { verifyAuditChain } from '@safe-edge/core'
 import { join } from 'node:path'
-import { SafeEdgeApiError, SafeEdgeDeniedError, createElminaPlanner, createSafeEdgeClient } from '../src/index.ts'
-import { S1, playS1toS3 } from './story.ts'
+import {
+  SafeEdgeApiError,
+  SafeEdgeDeniedError,
+  createElminaPlanner,
+  createSafeEdgeClient,
+  elminaSeed
+} from '../src/index.ts'
+import { S1, playS1toRepair, playS1toS3 } from './story.ts'
 
 /** A memory client on a scenario clock, as the scenario player (#64) creates it. */
 function startDemo() {
@@ -129,28 +135,33 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
     expect(seen.length).toBe(8)
   })
 
-  test('tick(now) moves passes as the system, for S4: subscribers see each pass start expiring', async () => {
-    const { demo } = startDemo()
+  test('tick(now) runs the scheduled pass as the system, for S4: subscribers see each pass start expiring', async () => {
+    const { demo, stage } = startDemo()
     const seen: EdgeEvent[] = []
     demo.subscribe((event) => seen.push(event))
     // pass_866518980_12 is valid to 2026-12-01T02:00Z, so it starts expiring 30 days earlier.
+    stage.setNow('2026-11-01T02:00:00.000Z')
     const events = await demo.as('usr_gm').tick('2026-11-01T02:00:00.000Z')
-    expect(events.map((e): unknown[] => [e.type, e.data])).toEqual([
-      [
-        'edge.pass.expiring.v1',
-        {
-          passId: 'pass_866518980_12',
-          segmentId: 'seg_866518980_12',
-          validTo: '2026-12-01T02:00:00.000Z',
-          simulated: true
-        }
-      ]
-    ])
+    expect(events[0]).toMatchObject({
+      type: 'edge.pass.expiring.v1',
+      data: {
+        passId: 'pass_866518980_12',
+        segmentId: 'seg_866518980_12',
+        validTo: '2026-12-01T02:00:00.000Z',
+        simulated: true
+      }
+    })
+    // By then every seeded patrol interval has run out, so each pass still standing gets a missed patrol, as the API's
+    // scheduled pass does.
+    expect(events.slice(1).map((e) => [e.type, 'segmentId' in e.data ? e.data.segmentId : null])).toEqual(
+      ['seg_866518980_5', S1.segmentId, 'seg_866518980_12'].flatMap((segmentId) => [
+        ['edge.candidate.raised.v1', segmentId],
+        ['edge.pass.suspended.v1', segmentId]
+      ])
+    )
     expect(seen).toEqual(events)
-    expect(await demo.getPass({ params: { id: 'pass_866518980_12' } })).toMatchObject({ state: 'expiring' })
     // Whoever's client asks, the move is the system's, on the audit chain.
-    expect((await demo.listAudit()).at(-1)).toMatchObject({
-      action: 'tick',
+    expect((await demo.listAudit()).find((e) => e.action === 'tick')).toMatchObject({
       subjectId: 'pass_866518980_12',
       actor: { type: 'system', id: 'core.tick', role: 'system' },
       after: { state: 'expiring' }
@@ -186,5 +197,225 @@ describe('memory transport: the core in the browser on the labelled seed', () =>
       status: 'approved',
       approvedBy: 'usr_pilot'
     })
+  })
+
+  test('the re-plan subscriber runs in the demo: a confirmed flag and a completed repair re-plan the open plan as the system', async () => {
+    const repoRoot = join(import.meta.dir, '../../..')
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    let now = '2026-10-20T00:00:00.000Z'
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
+    const seen: string[] = []
+    demo.subscribe((event) => seen.push(event.type))
+    const open = await demo.createPatrolPlan({
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds: ['seg_866518980_5'],
+        context: [],
+        notBefore: now,
+        altitudeCapM: 60
+      }
+    })
+
+    const { decision, workOrderId } = await playS1toRepair({ as: (id) => demo.as(id), setNow: (iso) => (now = iso) })
+
+    // Each re-plan is announced right after the event that caused it.
+    expect(seen.slice(seen.indexOf('edge.candidate.decided.v1'))).toEqual([
+      'edge.candidate.decided.v1',
+      'edge.work_order.drafted.v1',
+      'edge.patrol.planned.v1',
+      'edge.work_order.submitted.v1',
+      'edge.repair.completed.v1',
+      'edge.patrol.planned.v1'
+    ])
+    const plans = await demo.listPatrolPlans()
+    expect(plans.map((p) => [p.id, p.replan?.trigger.kind ?? null, p.replan?.supersedes?.planId ?? null])).toEqual([
+      [open.id, null, null],
+      ['plan_2', 'flag_confirmed', open.id],
+      ['plan_3', 'repair_completed', 'plan_2']
+    ])
+    expect(plans[2]!.replan!.trigger).toEqual({
+      kind: 'repair_completed',
+      segmentId: S1.segmentId,
+      findingId: decision.finding!.id,
+      workOrderId
+    })
+    const audit = await demo.listAudit()
+    expect(audit.filter((e) => e.action === 'createPatrolPlan').map((e) => [e.subjectId, e.actor.id])).toEqual([
+      [open.id, 'usr_manager'],
+      ['plan_2', 'core.replan'],
+      ['plan_3', 'core.replan']
+    ])
+  })
+
+  test("the demo flies drone-sim: a flag confirmed in flight re-plans from the drone's stops, and the approved re-plan flies", async () => {
+    const repoRoot = join(import.meta.dir, '../../..')
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    let now = '2026-10-20T00:00:00.000Z'
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
+    const step = async (iso: string) => {
+      now = iso
+      return demo.tick(iso)
+    }
+    const seen: string[] = []
+    demo.subscribe((event) => seen.push(event.type))
+    const pilot = demo.as('usr_pilot')
+    const proposed = await demo.createPatrolPlan({
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds: ['seg_866518980_5', 'seg_866518980_6'],
+        context: [],
+        notBefore: now,
+        altitudeCapM: 60
+      }
+    })
+    const flying = await pilot.approvePatrolPlan({ params: { id: proposed.id } })
+    now = flying.window.start
+    const patrol = await pilot.startPatrol({ body: { planId: flying.id, provider: 'sim', droneId: 'sim-1' } })
+    // The drone reaches its first stop.
+    const firstStop = flying.waypoints.find((w) => w.kind === 'station')!
+    await step(firstStop.eta)
+
+    // The drone's report on S1 is confirmed: core re-plans the patrol in flight from the stop the drone reached.
+    const candidate = await demo.as('usr_drone_sim').raiseCandidate({
+      body: {
+        segmentId: S1.segmentId,
+        observationIds: [],
+        inventoryItemId: S1.inventoryItemId,
+        itemStatus: 'missing',
+        class: 'inventory_item',
+        score: 0.9,
+        uncertainty: 'low',
+        gridCell: 'B3',
+        rationale: 'Fence panel 4 is missing by the playground path',
+        model: null,
+        simulated: true
+      }
+    })
+    await demo.decideCandidate({ params: { id: candidate.id }, body: { decision: 'confirm', severity: 'high' } })
+    const replanned = (await demo.listPatrolPlans()).find((p) => p.replan?.supersedes?.planId === flying.id)!
+    expect(replanned.replan!.supersedes).toEqual({ planId: flying.id, committedTasks: 1 })
+    expect(replanned.tasks[0]).toEqual(flying.tasks[0])
+    expect(replanned.tasks.map((t) => t.segmentId)).toContain(S1.segmentId)
+
+    // The pilot approves it; the drone flies its stops and lands on its timeline.
+    await pilot.approvePatrolPlan({ params: { id: replanned.id } })
+    const landing = await step(new Date(Date.parse(replanned.waypoints.at(-1)!.eta) + 1000).toISOString())
+    expect(landing.map((e) => e.type)).toEqual(['edge.patrol.completed.v1'])
+    const done = await demo.getPatrol({ params: { id: patrol.id } })
+    expect(done).toMatchObject({ status: 'completed', planId: replanned.id })
+    expect(done.coverage).toEqual(
+      replanned.tasks.map((t) => ({
+        segmentId: t.segmentId,
+        inspectedM: elminaSeed.segments.find((s) => s.id === t.segmentId)!.lengthM,
+        unknownM: 0
+      }))
+    )
+    const observed = (await demo.listAudit({ query: { subject: S1.segmentId } }))
+      .filter((e) => e.action === 'recordObservation' && e.actor.id === 'usr_drone_sim')
+      .map((e) => e.after as { patrolId: string; viewpointId: string })
+    expect(observed.map((o) => [o.patrolId, o.viewpointId]).toSorted()).toEqual([
+      [patrol.id, 'vp_866518980_11_1'],
+      [patrol.id, 'vp_866518980_11_2']
+    ])
+    // Nothing failed: the drone reported its progress, which the demo's re-plan read.
+    expect(await demo.listAudit({ query: { subject: 'automation' } })).toEqual([])
+    expect(seen).toContain('edge.patrol.completed.v1')
+  })
+
+  test('a recapture opens a task the Inbox reads from listTasks, and the open plan is re-planned to fly its segment', async () => {
+    const repoRoot = join(import.meta.dir, '../../..')
+    const planner = await createElminaPlanner((path) => Bun.file(join(repoRoot, path)).json(), { thirdParties: [] })
+    const now = '2026-10-20T00:00:00.000Z'
+    const demo = createSafeEdgeClient({
+      transport: 'memory',
+      userId: 'usr_manager',
+      planner,
+      clock: { now: () => now }
+    })
+    const seen: string[] = []
+    demo.subscribe((event) => seen.push(event.type))
+    const open = await demo.createPatrolPlan({
+      body: {
+        dockId: 'dock_elmina_roof',
+        droneProfileId: 'drn_assumed',
+        segmentIds: ['seg_866518980_5'],
+        context: [],
+        notBefore: now,
+        altitudeCapM: 60
+      }
+    })
+    const { segment } = await demo.getSegment({ params: { id: S1.segmentId } })
+    const frame = await demo.as('usr_drone_sim').recordObservation({
+      body: {
+        patrolId: null,
+        segmentId: S1.segmentId,
+        viewpointId: S1.viewpointId,
+        captureSource: 'drone',
+        image: null,
+        pose: segment.viewpoints.find((v) => v.id === S1.viewpointId)!.pose,
+        capturedAt: now,
+        quality: { sharpness: 0.31, alignmentResidualPx: 9.5, occlusion: 0.4 },
+        privacyAction: 'none',
+        simulated: true
+      }
+    })
+    const candidate = await demo.as('usr_drone_sim').raiseCandidate({
+      body: {
+        segmentId: S1.segmentId,
+        observationIds: [frame.id],
+        inventoryItemId: null,
+        itemStatus: null,
+        class: 'bank_change',
+        score: 0.55,
+        uncertainty: 'high',
+        gridCell: 'B3',
+        rationale: 'The bank may have slumped',
+        model: null,
+        simulated: true
+      }
+    })
+    seen.length = 0
+    await demo.decideCandidate({
+      params: { id: candidate.id },
+      body: { decision: 'recapture', reason: 'Too blurred to judge the bank' }
+    })
+
+    expect(await demo.as('usr_crew').listTasks({ query: { status: 'open' } })).toEqual([
+      {
+        id: 'task_1',
+        kind: 'recapture',
+        segmentId: S1.segmentId,
+        viewpointId: S1.viewpointId,
+        candidateId: candidate.id,
+        findingId: null,
+        assigneeUserId: 'usr_manager',
+        status: 'open',
+        reason: 'Too blurred to judge the bank',
+        dueAt: null,
+        createdAt: now,
+        simulated: true,
+        source: 'user'
+      }
+    ])
+    // The next patrol includes the viewpoint: the open plan is re-planned with the segment, as the system.
+    expect(seen).toEqual(['edge.candidate.decided.v1', 'edge.patrol.planned.v1'])
+    const replanned = (await demo.listPatrolPlans()).at(-1)!
+    expect(replanned.replan).toEqual({
+      trigger: { kind: 'recapture_requested', segmentId: S1.segmentId, candidateId: candidate.id },
+      supersedes: { planId: open.id, committedTasks: 0 }
+    })
+    expect(replanned.tasks.map((t) => t.segmentId).toSorted()).toEqual([S1.segmentId, 'seg_866518980_5'].toSorted())
   })
 })

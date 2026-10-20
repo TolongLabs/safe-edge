@@ -1,6 +1,6 @@
 # Safe Edge TRD
 
-How the team builds Safe Edge in five days: architecture, data model, interfaces, the AI layer, the drone integration and the Three.js simulation. Product intent is in [`PRODUCT.md`](/PRODUCT.md); scope and acceptance tests are in the [PRD](/docs/PRD.md). Every version and API below comes from the fact-checked [drone integration research](/docs/research/drone-integration.md); check the linked docs again before you code against them.
+How the team builds Safe Edge in five days: architecture, data model, interfaces, the AI layer, the drone integration and the Three.js simulation. Product intent is in [`PRODUCT.md`](/docs/PRODUCT.md); scope and acceptance tests are in the [PRD](/docs/PRD.md). Every version and API below comes from the fact-checked [drone integration research](/docs/research/drone-integration.md); check the linked docs again before you code against them.
 
 Contents:
 
@@ -117,7 +117,10 @@ e2e/                    Playwright tests
 | Contracts           | OpenAPI 3.1, AsyncAPI 3.0, CloudEvents 1.0 envelopes                  | `openapi-typescript@7.13.0` for types ([SDK research][sdk])    |
 | MCP                 | Official TypeScript server SDK, spec revision 2026-07-28              | `@modelcontextprotocol/server@2.3.1` ([agent research][agent]) |
 | AI                  | Anthropic TypeScript SDK, `claude-opus-5-5`                           | `@anthropic-ai/sdk`, latest stable                             |
+| API state           | `bun:sqlite` journal, idempotency and webhook retries (`apps/api`)    | Built into Bun                                                 |
+| Webhooks            | Standard Webhooks 1.0.0 signatures; reference library in tests        | `standardwebhooks@1.1.1`                                       |
 | Tests               | Playwright end-to-end; `bun test` integration tests over HTTP and MCP | Latest stable                                                  |
+| Mission check (CI)  | uv runs the MAVSDK QGroundControl importer on the exported `.plan`    | `mavsdk==4.0.6`, uv via `astral-sh/setup-uv` v10.3.0           |
 
 [geodata]: /docs/research/drone-integration/threejs-geodata.md
 [planning]: /docs/research/drone-integration/mission-planning.md
@@ -194,7 +197,7 @@ Base path `/v1`, JSON, described in `packages/contracts/openapi.yaml`. Bearer to
 | `GET /events`                       | any                    | Server-sent events                                                    |
 | `POST /webhooks`                    | integrator             | Register a webhook endpoint                                           |
 
-Every write accepts an `Idempotency-Key` header. Forbidden transitions return `403` with the policy rule that blocked them.
+Every write accepts an `Idempotency-Key` header; a retry with the key within 24 hours replays the first answer (see [Security and privacy](#security-and-privacy)). Forbidden transitions return `403` with the policy rule that blocked them.
 
 ## Events
 
@@ -216,6 +219,7 @@ export interface DroneProvider {
   getStatus(deviceId: string): Promise<DroneStatus>
   schedulePatrol(plan: PatrolPlan): Promise<PatrolRun>
   dispatchPatrol(runId: string, approval: HumanApproval): Promise<void>
+  updatePatrol(runId: string, plan: PatrolPlan, approval: HumanApproval): Promise<void>
   cancelPatrol(runId: string): Promise<void>
   onEvent(handler: (event: ProviderEvent) => void): () => void
 }
@@ -232,12 +236,12 @@ export interface EvidenceStore {
 }
 ```
 
-| Adapter             | Hackathon status | Maps to                                                                                                                                                                                   |
-| ------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `drone-sim`         | Real             | The scene engine's flight model and scenario events                                                                                                                                       |
-| `drone-dji-cloud`   | Typed stub       | DJI Cloud API: dock binding on `/requests`, wayline tasks (`flighttask_prepare`, `flighttask_execute`, method names snippet-only, verify first), `live_start_push`, media upload callback |
-| `drone-mavlink`     | Typed stub       | MAVLink mission upload (`MISSION_COUNT`, `MISSION_REQUEST_INT`, `MISSION_ITEM_INT`, `MISSION_ACK`) through a small server-side bridge; PX4 SITL only if a teammate already runs it        |
-| `workorder-procore` | P2 sandbox       | Procore Observations: `POST /rest/v1.0/observations/items` plus the upload flow. API-created observations do not notify assignees automatically.                                          |
+| Adapter             | Hackathon status | Maps to                                                                                                                                                                                                                            |
+| ------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `drone-sim`         | Real             | The scene engine's flight model and scenario events. Waits in flight at unreleased separation holds; follows approved re-plans in flight. Lives in its host process: an API restart completes its in-flight patrols as interrupted |
+| `drone-dji-cloud`   | Typed stub       | DJI Cloud API: dock binding on `/requests`, wayline tasks (`flighttask_prepare`, `flighttask_execute`, method names snippet-only, verify first), `live_start_push`, media upload callback                                          |
+| `drone-mavlink`     | Typed stub       | MAVLink mission upload (`MISSION_COUNT`, `MISSION_REQUEST_INT`, `MISSION_ITEM_INT`, `MISSION_ACK`) through a small server-side bridge; PX4 SITL only if a teammate already runs it                                                 |
+| `workorder-procore` | P2 sandbox       | Procore Observations: `POST /rest/v1.0/observations/items` plus the upload flow. API-created observations do not notify assignees automatically.                                                                                   |
 
 ## Patrol planner
 
@@ -246,7 +250,7 @@ Follows the [planning research][planning].
 1.  **Tasks.** Project edge geometry to local metres, split segments at bends, obstructions and ownership changes, and offset a flight line by the camera stand-off with Turf `lineOffset`. Space stations by the footprint and the forward overlap: footprint width = 2 × range × tan(HFOV ÷ 2), spacing = footprint length × (1 − overlap). Stand-off and pitch come from the chosen camera, not from fixed numbers.
 2.  **Score.** `priority = 0.25 × expiry + 0.35 × reviewedFlag + 0.25 × rain + 0.15 × waterLevel`, each in 0 to 1. Rain bins follow the JPS one-hour categories (light 1–10 mm, moderate 11–30 mm, heavy 31–60 mm, very heavy above 60 mm). A stale or missing input becomes `unknown` and asks for review. The weights are a hypothesis to tune with SDP.
 3.  **Route.** Greedy insertion: add the feasible task with the highest added priority per added watt-hour, keep a return path to a dock with a reserve, and treat geofences (no-fly areas, homes and playgrounds as no-capture zones) as hard constraints. Re-order only uncommitted stops. Cost is O(k·n²) for k drones and n tasks.
-4.  **Flight window and separation.** A plan carries a window (first light by default), an altitude cap from air traffic control and a weather gate: no launch above the dock's 2 mm/h rain limit or during a lightning warning, and a preference for the next dry morning after heavy rain. A station whose stand-off would pass within 50 m of people, vehicles or structures not under the pilot's control (CAR 2016 regulation 143) waits for a clear pass or moves to a longer zoom stand-off; the pilot or observer confirms the path is clear.
+4.  **Flight window and separation.** A plan carries a window (first light by default), an altitude cap from air traffic control and a weather gate: no launch above the dock's 2 mm/h rain limit or during a lightning warning, and a preference for the next dry morning after heavy rain. The whole flight keeps CAR 2016 regulation 143's distances from people, vehicles and structures not under the pilot's control: 50 m at stations, along flight lines and on transits, 30 m from people during the climb from the dock and the descent onto it, and 150 m from an open-air assembly of more than 1,000 persons. A station waits for a clear pass or moves to a longer zoom stand-off; a stop whose transit passes people waits for them; the dock holds take-off while its climb or transits are not clear; nothing flies within reach of a structure or an assembly. The pilot or observer confirms the path is clear. Third parties a plan request reports count for every plan until that plan's window closes.
 5.  **Re-plan triggers.** A JPS heavy-rain reading or a data.gov.my warning, a newly confirmed flag, a pass within 30 days of expiry, a damage report, or a completed repair (which queues a re-test patrol).
 6.  **Export.** DJI WPML KMZ (`wpmz/template.kml`, `wpmz/waylines.wpml`) and QGroundControl `.plan` JSON, both stamped "not flight-ready". The battery model in the simulation is a stated assumption until an aircraft is chosen.
 7.  **Phone patrols.** The same tasks render as a walking checklist of fixed viewpoints for the crew, ordered along the path network.
@@ -395,6 +399,10 @@ P2 only: 3DTilesRendererJS 0.5.3 with `GoogleCloudAuthPlugin`, a key restricted 
 - Stored evidence never shows people (see the [privacy research][privacy] for the eleven pilot rules).
 - Demo tokens work only in demo mode. The API rejects them.
 - Every state change is in the hash-chained audit log, including refused attempts.
+- The API keeps its state in `$SAFE_EDGE_DATA_DIR/api.sqlite`, unencrypted: the command journal holds every webhook's signing secret and uploaded evidence, and the idempotency table keeps each answer replayed by key, a webhook registration's secret included. The API sets the directory to 0700 on every start, one that already existed included, so only its OS user can read them.
+- Idempotency keys expire: an answer is kept for 24 hours of wall-clock time after it was given (`SAFE_EDGE_IDEMPOTENCY_RETENTION_SECONDS`, default `86400`), then pruned, and a request with that key runs as a new one. A write's answer commits in the same SQLite transaction as the journal entries it made, so a crash cannot keep the write without the answer that stops a retry repeating it.
+- Webhooks reach only the origins in `SAFE_EDGE_WEBHOOK_ORIGINS` (loopback too in development and test). The API checks the list at registration and again before every delivery attempt, retries included: a webhook whose origin has left the list gets nothing more, and each refused delivery is recorded as its final failure. A failed delivery's retry waits in the store with its due time, so it outlives a restart; a first attempt in flight at a crash is lost.
+- A journal moved to another operating system may refuse to start: replay re-runs the planner, whose trigonometry comes from the platform's maths library and differs in the last bit between macOS and Linux, and a replayed result that differs from the recorded one stops the start.
 - Dependencies: no AGPL or GPL models; record every model and asset licence in `docs/licences.md`.
 
 [privacy]: /docs/research/drone-integration/privacy.md
@@ -412,8 +420,8 @@ The [project conventions](/docs/references/project-conventions.md) rule out unit
 
 ## Deployment
 
-- **Public demo link:** a static build of `apps/web` in demo mode on Vercel. It works without the API.
-- **Local stack:** `bun run dev` starts the API, the MCP server and the web app against the same core, for the recorded S5 and real-photo segments.
+- **Public demo link:** a static build of `apps/web` in demo mode on Vercel. It works without the API. It is live at <https://safe-edge-two.vercel.app>: the landing page at `/` and the demo at `/demo/`. `bun run build:demo-site <dir>` builds it, and the script's header gives the deploy commands.
+- **Local stack:** `bun run dev` starts the API, the MCP server and the web app against the same core, for the recorded S5 and real-photo segments. The API runs on the scenario clock and prints so: it starts at the seed's date (20 October) and moves only when the system user sets it, which also runs the automation (drone-sim, tick, missed patrols). So the stack opens in the seed's state on any day. `SAFE_EDGE_CLOCK=wall` runs it on the wall clock, with the automation on timers, as real fieldwork needs for its records' times. On the wall clock, from 23 October the seed's weekly patrols are missed, so the first scheduled pass suspends every valid or expiring pass, S1's included.
 - **Later:** the API on a serverless host and the MCP server over protected HTTP. The 2026-07-28 revision is stateless, which suits that model.
 
 ## Build order
@@ -439,6 +447,6 @@ The [project conventions](/docs/references/project-conventions.md) rule out unit
 
 ## See also
 
-- [`PRODUCT.md`](/PRODUCT.md) and the [PRD](/docs/PRD.md)
+- [`PRODUCT.md`](/docs/PRODUCT.md) and the [PRD](/docs/PRD.md)
 - [Drone integration research](/docs/research/drone-integration.md): CAAM rules, privacy, hardware and cost, detection, mission planning, drone SDKs, AI perception, the agent layer, Three.js and geodata, prior art
 - [Safe Edge pitch and Fix Lens design](/docs/research/shortlist/safe-edge.md)

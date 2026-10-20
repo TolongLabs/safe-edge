@@ -62,9 +62,11 @@ export const PolicyRule = named(
     'plan_not_approved',
     'plan_superseded',
     'weather_hold',
+    'separation_hold',
     'outside_window',
     'invalid_coverage',
-    'every_item_reported'
+    'every_item_reported',
+    'clock_backwards'
   ])
 )
 export type PolicyRule = z.infer<typeof PolicyRule>

@@ -1,10 +1,18 @@
 // #57: the guardrails, met the way an integrator meets them: the real v1 API on a free port, over HTTP, with the
-// committed dev tokens. One test per "Done when" bullet (TRD "Testing" item 2, PRD MCP-3); the MCP side is in
+// stage's own dev tokens. One test per "Done when" bullet (TRD "Testing" item 2, PRD MCP-3); the MCP side is in
 // mcp.test.ts. The same rules at core level: packages/core/test/guardrails.test.ts.
 import { afterAll, expect, test } from 'bun:test'
-import { Role, type Denial, type OperationId } from '@safe-edge/contracts'
+import {
+  operations,
+  Role,
+  type Denial,
+  type OperationId,
+  type OperationSpec,
+  type ReportedThirdParty
+} from '@safe-edge/contracts'
 import {
   answer,
+  claude,
   denied,
   devTokenForRole,
   httpOperations,
@@ -20,6 +28,20 @@ import {
   startGuardedApi,
   tier2Candidate
 } from './support.ts'
+
+/** A segment whose pass is expiring, and when its patrol is missed: a whole 7-day interval after the seed's last patrol. */
+const EXPIRING = 'seg_866518980_5'
+const MISSED_PATROL_DUE = '2026-10-23T01:00:00.000Z'
+/** Someone standing on S1's water edge (a vertex of its seed geometry), as a plan request reports them: a fixture. */
+const PERSON_ON_S1 = {
+  id: 'obs_person_s1',
+  kind: 'person',
+  label: 'person on the S1 edge',
+  geometry: { type: 'Point', coordinates: [101.5124058, 3.1786474] },
+  observedAt: '2026-10-22T21:45:00.000Z',
+  headcount: null,
+  simulated: true
+} satisfies ReportedThirdParty
 
 test('the installer cannot accept their own work: 403 role_forbidden, and 403 two_person_rule even with a reviewer token', async () => {
   // A small township where one person installs and reviews: usr_installer also holds a reviewer token.
@@ -96,7 +118,8 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     patrols: patrol.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
-    tasks: played.decision.tasks[0]!.id
+    tasks: played.decision.tasks[0]!.id,
+    segments: S1.segmentId
   }
   // The four named actions send exactly what a person sends. Policy runs before validation, so for the rest an empty
   // body changes nothing about the answer.
@@ -128,7 +151,12 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
   expect((await read(`/candidates/${proposed.id}`)).candidate.status).toBe('candidate')
   expect((await read(`/work-orders/${played.workOrderId}`)).status).toBe('completed')
   expect((await read('/notices')).map((n: { status: string }) => n.status)).toEqual(['draft'])
-  expect((await read('/patrol-plans')).map((p: { status: string }) => p.status)).toEqual(['proposed', 'approved'])
+  // The re-test patrol the completed repair queued, the agent's plan and the plan in flight.
+  expect((await read('/patrol-plans')).map((p: { status: string }) => p.status)).toEqual([
+    'proposed',
+    'proposed',
+    'approved'
+  ])
   expect((await api.pass()).state).toBe('suspended')
 
   // The same requests from the right people go through: only the agent's identity refused them.
@@ -165,7 +193,7 @@ test('a Tier 2 candidate suspends the pass in the same request', async () => {
 })
 
 // Over HTTP, automation reaches core only through these rows. Core's own time path, tick(), only expires passes
-// (packages/core/test/tick.test.ts), and the API exposes no tick.
+// (packages/core/test/tick.test.ts); the API runs it on its timer or clock moves, never on a request.
 test('no system or provider call makes a pass valid, whichever operation it tries', async () => {
   const api = startGuardedApi({
     // Automation tokens mis-issued with the reviewer role: the one-way rule still holds.
@@ -177,10 +205,12 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   const flying = await json(api.request('post', '/patrol-plans', { token: 'dev_manager', body: patrolRequest }))
   await json(api.request('post', `/patrol-plans/${flying.id}/approve`, { token: 'dev_pilot' }))
   api.setNow(flying.window.start)
+  // A MAVLink patrol: the API flies only drone-sim (which the sweep's clock move would land), so this one stays in
+  // flight for the sweep to complete.
   const patrol = await json(
     api.request('post', '/patrols', {
       token: 'dev_pilot',
-      body: { planId: flying.id, provider: 'sim', droneId: 'drn_assumed' }
+      body: { planId: flying.id, provider: 'mavlink', droneId: 'drn_assumed' }
     })
   )
   const notice = await json(
@@ -220,8 +250,13 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
     setWorkOrderExternalRef: { externalRef: 'procore-observation-1' },
-    recordWorkOrderExternalError: { message: 'Procore answered 503' }
+    recordWorkOrderExternalError: { step: 'createFinding', message: 'Procore answered 503' },
+    reportMissedPatrol: undefined, // no body
+    setScenarioClock: { now: MISSED_PATROL_DUE } // the test API's clock is a scenario clock; time stays put
   })
+  // S1's pass is already suspended, so the missed patrol goes to an expiring pass once its patrol interval has run out.
+  const paths: Partial<Record<OperationId, string>> = { reportMissedPatrol: `/segments/${EXPIRING}/missed-patrol` }
+  api.setNow(MISSED_PATROL_DUE)
   const ids = {
     'patrol-plans': flying.id,
     patrols: patrol.id,
@@ -244,7 +279,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
         continue
       }
       if (!(operationId in sent)) throw new Error(`No ${role} request for ${operationId}`)
-      const response = await api.request(op.method, pathFor(op, ids), { token, body: sent[operationId] })
+      const path = paths[operationId] ?? pathFor(op, ids)
+      const response = await api.request(op.method, path, { token, body: sent[operationId] })
       expect({ token, operationId, ok: response.ok }).toEqual({ token, operationId, ok: true })
     }
   }
@@ -255,10 +291,12 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   }
 
   expect((await api.pass()).state).toBe('suspended')
-  expect(await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))).toEqual(validBefore)
+  // No pass became valid. Moving the scenario clock runs the scheduled pass, whose missed patrols may suspend some.
+  const validAfter: { id: string }[] = await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))
+  expect(validAfter.filter((p) => !validBefore.some((b: { id: string }) => b.id === p.id))).toEqual([])
   // The Tier 2 candidates automation raised above hold the pass too, so the manager rejects them as false alarms.
   const raised: { id: string }[] = await json(
-    api.request('get', '/candidates?status=candidate', { token: 'dev_manager' })
+    api.request('get', `/candidates?status=candidate&segmentId=${S1.segmentId}`, { token: 'dev_manager' })
   )
   expect(raised).toHaveLength(2)
   for (const { id } of raised) {
@@ -283,7 +321,9 @@ test('no system or provider call makes a pass valid, whichever operation it trie
 test('every write, refused or allowed, is on the audit chain, and GET /v1/audit verifies when re-hashed independently', async () => {
   const receiver = Bun.serve({ port: 0, fetch: () => new Response(null, { status: 204 }) })
   afterAll(() => receiver.stop(true))
-  const api = startGuardedApi()
+  // The agent's flows run on Claude replayed from a recording of this sweep (`bun run agent:record` re-records it).
+  const recording = claude('guardrail-audit-sweep')
+  const api = startGuardedApi({}, { claude: recording.client })
   const as = (token: string, method: string, path: string, body?: unknown) =>
     json(api.request(method, path, { token, body }))
 
@@ -300,10 +340,31 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   })
   await as('dev_manager', 'post', `/notices/${notice.id}/send`)
   await as('dev_system', 'post', `/work-orders/${draft.id}/external-ref`, { externalRef: 'procore-observation-1' })
-  await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, { message: 'Procore answered 503' })
-  const plan = await as('dev_manager', 'post', '/patrol-plans', patrolRequest)
+  await as('dev_system', 'post', `/work-orders/${draft.id}/external-error`, {
+    step: 'createFinding',
+    message: 'Procore answered 503'
+  })
+  await as('dev_manager', 'post', `/work-orders/${draft.id}/external-retry`)
+  // Someone on S1's edge, reported with the plan request (#125): the plan holds S1 until the pilot sees the path clear,
+  // and the dock, since they are beside the transit from S1 back to it (#150).
+  const plan = await as('dev_manager', 'post', '/patrol-plans', { ...patrolRequest, thirdParties: [PERSON_ON_S1] })
+  expect(plan.holds).toMatchObject([
+    { kind: 'separation', segmentId: null, releasedBy: null },
+    { kind: 'separation', segmentId: S1.segmentId, releasedBy: null }
+  ])
   await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/approve`)
+  const release = `/patrol-plans/${plan.id}/holds/${S1.segmentId}/release`
+  // Only the pilot records it: the agent and every other role are refused, naming the rule.
+  for (const role of Role.options.filter((r) => r !== 'pilot')) {
+    const refused = await answer(api.request('post', release, { token: devTokenForRole(role) }))
+    expect({ role, ...refused }).toEqual({ role, ...denied(role === 'agent' ? 'agents_draft_only' : 'role_forbidden') })
+  }
+  await as('dev_pilot', 'post', release)
+  await as('dev_pilot', 'post', `/patrol-plans/${plan.id}/holds/dock/release`)
+  // The plan's window opened before S3's re-test, and the scenario clock moves forward only (clock_backwards): the
+  // harness puts it back unaudited, and the system sets it to the time it shows through the operation.
   api.setNow(plan.window.start)
+  await as('dev_system', 'post', '/scenario/clock', { now: plan.window.start })
   const patrol = await as('dev_pilot', 'post', '/patrols', { planId: plan.id, provider: 'sim', droneId: 'drn_assumed' })
   await as('dev_drone_sim', 'post', `/patrols/${patrol.id}/complete`, {
     coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }]
@@ -319,8 +380,26 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     eventTypes: ['edge.pass.issued.v1']
   })
   await as('dev_manager', 'post', `/segments/${S1.segmentId}/route-closure`, { remedyIds: [played.remedy.id] })
-  // A false alarm after S3: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+  // The other suspensions: damage the walk crew saw, and a patrol interval that ran out.
+  const damage = await as('dev_crew', 'post', '/damage-reports', {
+    segmentId: S1.segmentId,
+    observationIds: [],
+    inventoryItemId: null,
+    itemStatus: null,
+    class: 'bank_change',
+    rationale: 'The bank has slumped beside the bench',
+    simulated: true
+  })
+  api.setNow(MISSED_PATROL_DUE)
+  await as('dev_system', 'post', `/segments/${EXPIRING}/missed-patrol`)
+  // A false alarm after S3: the drone reports the panel missing again, the agent summarises it for the Inbox card,
+  // the manager rejects it, a reviewer clears it.
   const alarm = await as('dev_drone_sim', 'post', '/candidates', tier2Candidate)
+  await as('dev_agent', 'post', `/candidates/${alarm.id}/agent-summary`, {
+    text: `Fence panel 4 reported missing again on ${S1.segmentId} (${alarm.id})`,
+    citations: [S1.segmentId, alarm.id],
+    model: 'claude-opus-5-5'
+  })
   await as('dev_manager', 'post', `/candidates/${alarm.id}/decision`, { decision: 'reject', reason: 'A shadow' })
   await as('dev_reviewer', 'post', `/candidates/${alarm.id}/clearance`, {
     checklist: played.retest.retest.checklist,
@@ -329,6 +408,57 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     reason: 'Panel 4 is in place; the frame was a shadow'
   })
   await as('dev_drone_sim', 'post', '/inventory-checks', s1Check(played.candidate.observationIds[0]!))
+
+  // The agent's three flows, asked for by the people who use them. The agent writes in process with its own token, so
+  // its writes are not on api.log: each flow is reconciled here, from the records it changed (every list the manager
+  // reads, before and after) to the events the chain gained meanwhile.
+  const agentFlowRequests = new Set<(typeof api.log)[number]>()
+  const agentFlow = async <T>(run: () => Promise<T>) => {
+    const [before, from, logFrom] = [await api.records(), (await api.audit()).length, api.log.length]
+    const answered = await run()
+    agentFlowRequests.add(api.log.slice(logFrom).find((r) => r.method !== 'GET')!)
+    const written = [...(await api.records()).values()].filter((r) => !Bun.deepEquals(before.get(r.id), r))
+    const appended = (await api.audit()).slice(from)
+    // Each record the flow changed is on the chain, its last event holding the record as it reads back...
+    expect(written.map((r) => [r.id, appended.findLast((e) => e.subjectId === r.id)?.after])).toEqual(
+      written.map((r) => [r.id, r])
+    )
+    // ...and every event the chain gained is one of those writes, allowed, by the agent.
+    expect(appended.map((e) => [e.actor, e.decision, written.some((r) => r.id === e.subjectId)])).toEqual(
+      appended.map(() => [{ type: 'agent', id: 'usr_agent', role: 'agent' }, 'allowed', true])
+    )
+    return { answered, written, appended }
+  }
+  // The Inbox draft for the crew's damage report, once the manager confirmed it: the draft the agent hands back is the
+  // open one the confirm made, so it drafts no other, and the decided candidate keeps the summary it was decided on
+  // (none), so the flow writes nothing.
+  await as('dev_manager', 'post', `/candidates/${damage.id}/decision`, { decision: 'confirm', severity: 'medium' })
+  const inbox = await agentFlow(() => as('dev_manager', 'post', '/agent/inbox-drafts', { candidateId: damage.id }))
+  expect(inbox.appended).toEqual([])
+  expect(inbox.written).toEqual([])
+  expect((await api.audit()).findLast((e) => e.subjectId === inbox.answered.workOrder.id)).toMatchObject({
+    action: 'decideCandidate',
+    actor: { id: 'usr_manager' },
+    after: inbox.answered.workOrder
+  })
+  // The board's monthly report, saved as the agent's notice draft.
+  const report = await agentFlow(() => as('dev_gm', 'post', '/agent/monthly-reports', { month: '2026-10' }))
+  expect(report.appended.map((e) => e.action)).toEqual(['draftNotice'])
+  expect(report.written).toEqual([report.answered.notice])
+  // A question that asks for a write: the agent proposes the missed patrol's plan.
+  const asked = await agentFlow(() =>
+    api.ask(
+      'dev_manager',
+      `The patrol of ${EXPIRING} was missed. Propose a patrol over it at our 30 m altitude cap, and tell me when it would fly.`
+    )
+  )
+  expect(asked.appended.map((e) => e.action)).toEqual(['createPatrolPlan'])
+  const [proposed] = asked.written
+  expect(proposed).toMatchObject({ status: 'proposed', tasks: [{ segmentId: EXPIRING }] })
+  expect(asked.answered.at(-1)).toMatchObject({
+    event: 'answer',
+    data: { citations: expect.arrayContaining([proposed.id]) }
+  })
 
   // And one refused attempt at every write: the agent at a people-only row, otherwise a role the row leaves out.
   const ids = {
@@ -355,15 +485,16 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   const exchanges = api.log.map((r) => ({
     ...r,
     operationId: operationFor(r.method, r.path),
-    actor: r.token === null ? null : api.actorOf(r.token)
+    actor: r.token === null ? null : api.actorOf(r.token),
+    agentFlow: agentFlowRequests.has(r)
   }))
 
   // Every refusal, read or write, is on the chain in the order the API answered it, naming the rule.
   expect(chain.filter((e) => e.decision === 'denied').map((e) => `${e.action} ${e.actor.id} ${e.rule}`)).toEqual(
     exchanges.filter((r) => r.status === 403).map((r) => `${r.operationId} ${r.actor!.id} ${(r.body as Denial).rule}`)
   )
-  // Every allowed write is on the chain with the record it answered with. The route-closure preview is the one POST
-  // that changes nothing, so it has nothing to audit.
+  // Every allowed write is on the chain with the record it answered with. The agent's flows were reconciled where they
+  // ran, through the agent's own writes; the route-closure preview is the one POST that changes nothing.
   const allowed = exchanges.filter((r) => r.method !== 'GET' && r.status < 300)
   const audited = (r: (typeof allowed)[number]) => {
     const record = answeredRecord(r.body)
@@ -377,22 +508,28 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     )
   }
   expect(
-    allowed.filter((r) => r.operationId !== 'previewRouteClosure' && !audited(r)).map((r) => r.operationId)
+    allowed
+      .filter((r) => r.operationId !== 'previewRouteClosure' && !r.agentFlow && !audited(r))
+      .map((r) => r.operationId)
   ).toEqual([])
   expect(chain.filter((e) => e.action === 'previewRouteClosure')).toEqual([])
-  // Every write the API serves today was exercised.
-  const notReachable = {
-    releasePlanHold: 'needs a separation hold, which the API planner never makes: it sees no third parties (#79)',
+  expect(allowed.filter((r) => r.agentFlow).map((r) => r.operationId)).toEqual([
+    'draftInbox',
+    'draftMonthlyReport',
+    'askAgent'
+  ])
+  // Every row of the operations table is accounted for: exercised above as an allowed write, a read (GET writes
+  // nothing; refused reads are with the refusals), or listed here with the reason it is not. A new row fails here.
+  const notExercised: Partial<Record<OperationId, string>> = {
     triageImages: 'answers 501 until #74',
-    // The agent's flows need Claude (apps/api/test/agent.test.ts replays recorded runs). They write only through
-    // the agent's own createWorkOrder and draftNotice calls, made with its token like the ones above.
-    askAgent: 'needs Claude',
-    draftInbox: 'needs Claude',
-    draftMonthlyReport: 'needs Claude'
+    resetDemo: 'the in-browser demo only; the HTTP API has no such route'
   }
-  expect(new Set(allowed.map((r) => r.operationId))).toEqual(
-    new Set(writes.map(([id]) => id).filter((id) => !(id in notReachable)))
-  )
+  const exercised = new Set(allowed.map((r) => r.operationId))
+  const rows = Object.entries(operations) as [OperationId, OperationSpec][]
+  expect(
+    rows.filter(([id, op]) => !exercised.has(id) && op.method !== 'get' && notExercised[id] === undefined)
+  ).toEqual([])
+  expect(Object.keys(notExercised).filter((id) => exercised.has(id as OperationId))).toEqual([])
 
   // An integrator re-hashes the chain from the contract alone, and catches an edited or a missing event.
   const raw: Record<string, unknown>[] = await as('dev_manager', 'get', '/audit')
@@ -401,6 +538,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   const firstRefusal = chain.findIndex((e) => e.decision === 'denied')
   expect(brokenLinks(raw.with(firstRefusal, { ...raw[firstRefusal], rule: null }))).toEqual([firstRefusal])
   expect(brokenLinks(raw.toSpliced(firstRefusal, 1))).toEqual([firstRefusal])
+  await recording.done()
 })
 
 // Paths around the guardrails, found while writing this suite. Each failed before its fix.
@@ -437,6 +575,11 @@ function answeredRecord(body: unknown): { id: string } {
     typeof value === 'object' && value !== null && typeof (value as { id?: unknown }).id === 'string'
   const record = isRecord(body) ? body : Object.values(body as object).find(isRecord)
   if (record === undefined) throw new Error(`No record in ${JSON.stringify(body)}`)
+  // A webhook registration answers with its signing secret once; the audited record never carries it.
+  if ('secret' in record) {
+    const { secret: _, ...stored } = record
+    return stored
+  }
   return record
 }
 

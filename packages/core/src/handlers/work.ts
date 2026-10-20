@@ -9,6 +9,7 @@ type WorkOperation =
   | 'updateWorkOrder'
   | 'setWorkOrderExternalRef'
   | 'recordWorkOrderExternalError'
+  | 'retryWorkOrderHandOff'
   | 'submitWorkOrder'
   | 'startWorkOrder'
   | 'completeWorkOrder'
@@ -66,6 +67,19 @@ export const work: Handlers<WorkOperation> = {
   createWorkOrder: (tx, { body }) => {
     const finding = tx.get('findings', body.findingId)
     if (!finding) return tx.notFound(`No finding ${body.findingId}`)
+    // One open work order per finding. Confirming drafts one, so another request (the agent's draft) gets that draft
+    // back unchanged. One past draft blocks another until its re-test closes or reopens the finding.
+    const open = tx
+      .all('workOrders')
+      .find((w) => w.findingId === finding.id && w.status !== 'accepted' && w.status !== 'rejected')
+    if (open?.status === 'draft') return ok(open, 200)
+    if (open) {
+      return tx.deny(
+        'invalid_transition',
+        `${finding.id} already has work order ${open.id} (${open.status})`,
+        finding.id
+      )
+    }
     const remedy = remedyFor(tx, finding, body.remedyId)
     if (typeof remedy === 'string') return tx.notFound(remedy)
     const workOrder: WorkOrder = {
@@ -131,7 +145,8 @@ export const work: Handlers<WorkOperation> = {
     return ok(linked)
   },
 
-  // A failed hand-off stays visible on the work order and the audit chain. Nothing retries it, so it is written once.
+  // A failed hand-off stays visible on the work order and the audit chain until a person retries it, so it is written
+  // once per attempt: a second failure needs that retry first.
   recordWorkOrderExternalError: (tx, { params, body }) => {
     const workOrder = tx.get('workOrders', params.id)
     if (!workOrder) return tx.notFound(`No work order ${params.id}`)
@@ -139,9 +154,22 @@ export const work: Handlers<WorkOperation> = {
       const message = `${workOrder.id} already records a failed hand-off: ${workOrder.externalError.message}`
       return tx.deny('invalid_transition', message, workOrder.id)
     }
-    const failed: WorkOrder = { ...workOrder, externalError: { message: body.message, at: tx.now } }
+    const failed: WorkOrder = { ...workOrder, externalError: { step: body.step, message: body.message, at: tx.now } }
     tx.put('workOrders', failed)
     return ok(failed)
+  },
+
+  // A person clears a recorded failure; the API then resumes the hand-off from the step that failed.
+  retryWorkOrderHandOff: (tx, { params }) => {
+    const workOrder = tx.get('workOrders', params.id)
+    if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    const retried = workOrder.externalError
+    if (retried === null) {
+      return tx.deny('invalid_transition', `${workOrder.id} has no failed hand-off to retry`, workOrder.id)
+    }
+    const cleared: WorkOrder = { ...workOrder, externalError: null }
+    tx.put('workOrders', cleared)
+    return ok({ workOrder: cleared, retried })
   },
 
   submitWorkOrder: (tx, { params, body }) => {

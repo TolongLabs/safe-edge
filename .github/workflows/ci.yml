@@ -19,3 +19,7 @@ jobs:
       - run: bun run typecheck
       - run: bun run check:browser
       - run: bun run test
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          enable-cache: false
+      - run: bun run check:qgc-plan

@@ -1,16 +1,17 @@
 import { booleanClockwise } from '@turf/boolean-clockwise'
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
+import type { Geofence } from './patrol.ts'
 import type { AssetKind, Edge, Obstruction, OwnerArea } from './segments.ts'
 
 /**
- * The one place that knows where the Elmina OSM layers live, relative to the repo root. It points at the research
- * extract until #59 lands the Overpass extract in `data/elmina/`; then only these paths change.
+ * The one place that knows where the Elmina OSM layers live, relative to the repo root: the Overpass extract that
+ * `bun run fetch:osm` writes.
  */
 export const elminaLayerPaths = {
-  water: 'docs/research/drone-integration/data/water.geojson',
-  barriers: 'docs/research/drone-integration/data/barriers.geojson',
-  paths: 'docs/research/drone-integration/data/paths.geojson',
-  parks: 'docs/research/drone-integration/data/parks.geojson'
+  water: 'data/elmina/osm/water.geojson',
+  barriers: 'data/elmina/osm/barriers.geojson',
+  paths: 'data/elmina/osm/paths.geojson',
+  parks: 'data/elmina/osm/parks.geojson'
 } as const
 
 /** The Elmina Central Park lake and the three polygons OSM names "flood retention pond". */
@@ -28,12 +29,14 @@ export interface ElminaPlannerInput {
   edges: Edge[]
   obstructions: Obstruction[]
   ownerAreas: OwnerArea[]
+  /** Recreational areas (CAR 2016 reg. 143(3)): the parks layer's park and playground polygons. */
+  designatedAreas: Geofence[]
 }
 
-type OsmFeature = Feature<Geometry, { osm_type: string; osm_id: number }>
+type OsmFeature = Feature<Geometry, { osm_type: string; osm_id: number; leisure?: string; name?: string }>
 
 /**
- * Loads the Elmina water edges, their obstructions (barriers and paths) and owner areas. `readJson` takes a path from
+ * Loads the Elmina water edges, their obstructions (barriers and paths), owner areas and designated areas. `readJson` takes a path from
  * `elminaLayerPaths` and returns the parsed file, so the planner itself never touches the file system: tests read
  * with Bun, the browser fetches.
  */
@@ -81,7 +84,25 @@ export async function loadElmina(readJson: (path: string) => Promise<unknown>): 
     { owner: 'Elmina Valley Central Park custodian', geometry: park.geometry, simulated: true, source: 'fixture' }
   ]
 
-  return { edges, obstructions, ownerAreas }
+  // Parks and playgrounds are recreational, so designated areas. The research extract maps no residential, commercial
+  // or industrial land use (#59's Overpass extract adds it), and its 29 point-mapped features are not areas.
+  const designatedAreas = parks.features.flatMap((f): Geofence[] => {
+    const { geometry, properties: p } = f
+    if (geometry.type !== 'Polygon') return []
+    const id = `${p.osm_type}/${p.osm_id}`
+    return [
+      {
+        id,
+        kind: 'designated_area',
+        label: `${p.name ?? `${p.leisure} ${id}`} (recreational)`,
+        geometry,
+        simulated: false,
+        source: 'osm'
+      }
+    ]
+  })
+
+  return { edges, obstructions, ownerAreas, designatedAreas }
 }
 
 async function readLayer(readJson: (path: string) => Promise<unknown>, path: string) {

@@ -36,7 +36,8 @@ export const ID_PREFIXES = {
   notice: 'ntc',
   evidence: 'evd',
   webhook: 'whk',
-  event: 'evt'
+  event: 'evt',
+  thirdPartyReport: 'tpr'
 } as const
 
 const id = (prefix: (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES]) => z.string().regex(new RegExp(`^${prefix}_`))
@@ -68,6 +69,7 @@ export const NoticeId = id('ntc')
 export const EvidenceId = id('evd')
 export const WebhookId = id('whk')
 export const EventId = id('evt')
+export const ThirdPartyReportId = id('tpr')
 
 /** RFC 3339 UTC timestamp, as produced by `Date.prototype.toISOString()`. */
 export const Timestamp = z.iso.datetime()
@@ -82,6 +84,8 @@ export const provenance = { simulated: z.boolean(), source: Source }
 
 /** GeoJSON position: [lon, lat] or [lon, lat, metres above ground]. */
 export const Position = z.array(z.number()).min(2).max(3)
+export const Point = named('Point', z.object({ type: z.literal('Point'), coordinates: Position }))
+export type Point = z.infer<typeof Point>
 export const LineString = named(
   'LineString',
   z.object({ type: z.literal('LineString'), coordinates: z.array(Position).min(2) })

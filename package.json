@@ -6,22 +6,28 @@
     "packages/*"
   ],
   "scripts": {
-    "agent:live": "SAFE_EDGE_CLAUDE=live bun test apps/api/test/agent.test.ts --timeout 600000",
-    "agent:record": "SAFE_EDGE_CLAUDE=record bun test apps/api/test/agent.test.ts --timeout 600000",
+    "agent:live": "SAFE_EDGE_CLAUDE=live bun test apps/api/test/agent.test.ts test/guardrails/api.test.ts --timeout 600000",
+    "agent:record": "SAFE_EDGE_CLAUDE=record bun test apps/api/test/agent.test.ts test/guardrails/api.test.ts --timeout 600000",
     "build": "bun --filter '@safe-edge/web' build",
+    "build:demo-site": "bun scripts/build-demo-site.ts",
     "check:browser": "bun scripts/check-browser.ts",
+    "check:qgc-plan": "out=$(mktemp -d) && bun run export:mission \"$out\" && uv run --script packages/planner/scripts/check-qgc-plan.py \"$out\"/*.plan",
     "dev": "bun --filter '@safe-edge/*' dev",
+    "dev:token": "bun apps/api/src/dev-tokens.ts",
+    "e2e": "playwright test",
     "export:mission": "bun packages/planner/scripts/export-mission.ts",
     "fetch:weather": "bun packages/providers/scripts/fetch-weather.ts",
     "generate:contracts": "bun packages/contracts/scripts/generate.ts",
     "generate:seed": "bun packages/core/scripts/generate-seed.ts",
     "graph": "graphify update .",
-    "lint": "prettier --check .",
+    "lint": "prettier --check . && bun scripts/check-context-files.ts",
     "lint:fix": "prettier --write .",
     "prepare": "husky",
+    "procore:e2e": "bun packages/providers/scripts/procore-e2e.ts",
     "procore:smoke": "bun packages/providers/scripts/procore-smoke.ts",
     "test": "bun test --pass-with-no-tests",
-    "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck"
+    "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck",
+    "fetch:osm": "bun packages/scene/scripts/fetch-osm.ts"
   },
   "lint-staged": {
     "*": "prettier --write --ignore-unknown"
@@ -29,6 +35,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
+    "@playwright/test": "1.64.1",
     "@safe-edge/contracts": "workspace:*",
     "@safe-edge/sdk": "workspace:*",
     "@types/bun": "^1.4.3",

@@ -1,10 +1,10 @@
 import * as z from 'zod'
 import {
+  AgentSummary,
   Asset,
   AuditEvent,
   Baseline,
   Candidate,
-  CandidateClass,
   CandidateStatus,
   ContextSnapshot,
   Dock,
@@ -28,6 +28,7 @@ import {
   PlanReplan,
   Remedy,
   RemedyType,
+  ReportedClass,
   Retest,
   RetestCheck,
   Route,
@@ -36,9 +37,11 @@ import {
   SegmentCoverage,
   Severity,
   Task,
+  ReportedThirdParty,
   Uncertainty,
   User,
   WorkOrder,
+  WorkOrderExternalError,
   WorkOrderStatus
 } from './entities.ts'
 import { EventType, Webhook } from './events.ts'
@@ -119,6 +122,12 @@ export const CreatePatrolPlanRequest = named(
     context: z.array(ContextSnapshot),
     notBefore: Timestamp,
     altitudeCapM: z.number().positive().describe('Agreed with air traffic control'),
+    thirdParties: z
+      .array(ReportedThirdParty)
+      .optional()
+      .describe(
+        "People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them (150 m from a person report counting more than 1,000) as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller and keeps them for every plan it makes until this plan's window closes"
+      ),
     replan: PlanReplan.optional().describe(
       "Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider"
     )
@@ -209,7 +218,7 @@ export const RaiseCandidateRequest = named(
     observationIds: z.array(ObservationId),
     inventoryItemId: InventoryItemId.nullable(),
     itemStatus: ItemStatus.nullable(),
-    class: CandidateClass,
+    class: ReportedClass,
     score: z.number().min(0).max(1),
     uncertainty: Uncertainty.nullable(),
     gridCell: z
@@ -223,6 +232,23 @@ export const RaiseCandidateRequest = named(
 )
 export type RaiseCandidateRequest = z.infer<typeof RaiseCandidateRequest>
 
+/** A person's first-hand report of damage on a segment (PRD PROOF-4). Core files it as a Tier 2 candidate. */
+export const ReportDamageRequest = named(
+  'ReportDamageRequest',
+  z.object({
+    segmentId: SegmentId,
+    observationIds: z
+      .array(ObservationId)
+      .describe('Photos of the damage the reporter recorded on this segment (POST /observations); may be empty'),
+    inventoryItemId: InventoryItemId.nullable().describe('The damaged expected item, when it is one'),
+    itemStatus: ItemStatus.extract(['missing', 'changed']).nullable(),
+    class: ReportedClass,
+    rationale: z.string().min(1).describe('What the reporter saw'),
+    simulated: z.boolean()
+  })
+)
+export type ReportDamageRequest = z.infer<typeof ReportDamageRequest>
+
 export const DecideCandidateRequest = named(
   'DecideCandidateRequest',
   z.discriminatedUnion('decision', [
@@ -233,7 +259,10 @@ export const DecideCandidateRequest = named(
 )
 export type DecideCandidateRequest = z.infer<typeof DecideCandidateRequest>
 
-/** Confirming creates a finding, an interim protection task and a draft work order (PRD INBOX-3). */
+/**
+ * Confirming creates a finding, an interim protection task and a draft work order (PRD INBOX-3). A recapture opens a
+ * recapture task per viewpoint of the candidate's photos, or one for the segment when it has none (INBOX-2).
+ */
 export const CandidateDecision = named(
   'CandidateDecision',
   z.object({
@@ -266,9 +295,16 @@ export type SetWorkOrderExternalRefRequest = z.infer<typeof SetWorkOrderExternal
 
 export const RecordWorkOrderExternalErrorRequest = named(
   'RecordWorkOrderExternalErrorRequest',
-  z.object({ message: z.string().min(1).describe("The work-order system's error") })
+  z.object({
+    step: WorkOrderExternalError.shape.step,
+    message: z.string().min(1).describe("The work-order system's error")
+  })
 )
 export type RecordWorkOrderExternalErrorRequest = z.infer<typeof RecordWorkOrderExternalErrorRequest>
+
+/** A retried hand-off: the work order with its error cleared, and the failure the API now resumes from. */
+export const HandOffRetry = named('HandOffRetry', z.object({ workOrder: WorkOrder, retried: WorkOrderExternalError }))
+export type HandOffRetry = z.infer<typeof HandOffRetry>
 
 export const SubmitWorkOrderRequest = named(
   'SubmitWorkOrderRequest',
@@ -436,15 +472,25 @@ export type AgentAnswer = z.infer<typeof AgentAnswer>
  * of tokens or turns, or skipped the draft it was asked for. `askAgent` sends it as a `stopped` event instead of
  * `answer`; the draft operations return it with status 502.
  */
-export const AgentStopped = z.object({
-  ok: z.literal(false),
-  error: z.literal('agent_stopped'),
-  message: z.string(),
-  stopReason: z.string().describe("Claude's stop_reason for the last turn"),
-  category: z.string().nullable().describe('The refusal category, when Claude refused'),
-  model: z.string()
-})
+export const AgentStopped = named(
+  'AgentStopped',
+  z.object({
+    ok: z.literal(false),
+    error: z.literal('agent_stopped'),
+    message: z.string(),
+    stopReason: z.string().describe("Claude's stop_reason for the last turn"),
+    category: z.string().nullable().describe('The refusal category, when Claude refused'),
+    model: z.string()
+  })
+)
 export type AgentStopped = z.infer<typeof AgentStopped>
+
+/** The agent's summary for a candidate's card; core stamps the label, the agent and the time. */
+export const RecordAgentSummaryRequest = named(
+  'RecordAgentSummaryRequest',
+  AgentSummary.pick({ text: true, citations: true, model: true })
+)
+export type RecordAgentSummaryRequest = z.infer<typeof RecordAgentSummaryRequest>
 
 /** The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order. */
 export const DraftInboxRequest = named('DraftInboxRequest', z.object({ candidateId: CandidateId }))
@@ -456,7 +502,9 @@ export const InboxDraft = named(
     candidateId: CandidateId,
     findingId: FindingId.nullable().describe('Null while the candidate is not confirmed; no work order then'),
     summary: z.string().describe("The agent's summary for the Inbox card"),
-    workOrder: WorkOrder.nullable().describe("The agent's draft; a person edits and submits it"),
+    workOrder: WorkOrder.nullable().describe(
+      "The finding's open draft: the one confirming made, which the agent's draft request returns unchanged, or the agent's own when the finding had none open. A person edits and submits it"
+    ),
     ...agentProvenance
   })
 )
@@ -488,6 +536,28 @@ export const RegisterWebhookRequest = named(
 )
 export type RegisterWebhookRequest = z.infer<typeof RegisterWebhookRequest>
 
+/** A new registration, with the secret its deliveries are signed with. Only this response ever shows the secret. */
+export const RegisteredWebhook = named(
+  'RegisteredWebhook',
+  Webhook.extend({
+    secret: z
+      .string()
+      .regex(/^whsec_[A-Za-z0-9+/]+={0,2}$/)
+      .describe(
+        'Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, ' +
+          'webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>">'
+      )
+  })
+)
+export type RegisteredWebhook = z.infer<typeof RegisteredWebhook>
+
+export const SetScenarioClockRequest = named('SetScenarioClockRequest', z.object({ now: Timestamp }))
+export type SetScenarioClockRequest = z.infer<typeof SetScenarioClockRequest>
+
+/** The API's scenario clock: the time it stamps on every record until the scenario player sets it again. */
+export const ScenarioClock = named('ScenarioClock', z.object({ id: z.literal('clock'), now: Timestamp }))
+export type ScenarioClock = z.infer<typeof ScenarioClock>
+
 export const DemoResetResult = z.object({ reset: z.literal(true) })
 export type DemoResetResult = z.infer<typeof DemoResetResult>
 
@@ -496,7 +566,12 @@ export type DemoResetResult = z.infer<typeof DemoResetResult>
 export const IdParam = {
   segment: z.object({ id: SegmentId }),
   patrolPlan: z.object({ id: PatrolPlanId }),
-  planHold: z.object({ id: PatrolPlanId, segmentId: SegmentId }),
+  planHold: z.object({
+    id: PatrolPlanId,
+    segmentId: z
+      .union([SegmentId, z.literal('dock')])
+      .describe("The held segment, or `dock` for the take-off and landing hold on the plan's dock")
+  }),
   patrol: z.object({ id: PatrolId }),
   candidate: z.object({ id: CandidateId }),
   finding: z.object({ id: FindingId }),

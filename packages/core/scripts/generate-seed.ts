@@ -9,6 +9,7 @@ import type {
   EdgePass,
   InventoryItem,
   Segment,
+  ThirdParty,
   User,
   Viewpoint
 } from '@safe-edge/contracts'
@@ -30,6 +31,12 @@ const STORY_MIN_LENGTH_M = 30
 /** The date the fixtures describe. Pass dates are written relative to it, so `tick` has work to do. */
 const AS_OF = '2026-10-20T00:00:00.000Z'
 const fixture = { simulated: true, source: 'fixture' } as const
+/**
+ * An assumed weekly patrol (PRODUCT.md: today's practice is a weekly walk), last done the Friday before AS_OF, so a
+ * missed patrol falls due on 23 October.
+ */
+const PATROL_INTERVAL_DAYS = 7
+const LAST_PATROLLED_AT = '2026-10-16T01:00:00.000Z'
 
 // Capture settings for the viewpoints, as in #70's tests: an assumed camera, not a chosen aircraft.
 const RANGE_M = 15
@@ -62,6 +69,21 @@ const droneProfile: DroneProfile = {
   maxWindMps: 12,
   camera: { hfovDeg: 70, vfovDeg: 55, imageWidthPx: 4000, imageHeightPx: 3000, maxZoom: 3 },
   missionFormats: ['wpml', 'qgc_plan'],
+  ...fixture
+}
+
+/**
+ * S1's path crowd: people on the lakeside footway (OSM way/926276001), at one of its vertices beside the lake. With the
+ * seed drone's 3× zoom, the path segment beside it (`seg_866518980_9`) cannot keep 50 m and waits for a clear path,
+ * and the bank across the lake (`seg_866518980_7`) stands further off with zoom.
+ */
+const s1PathCrowd: ThirdParty = {
+  id: 'tp_s1_path_crowd',
+  kind: 'person',
+  label: 'S1: people on the lakeside footway',
+  geometry: { type: 'Point', coordinates: [101.5144008, 3.1793557] },
+  observedAt: '2026-10-20T21:20:00.000Z',
+  headcount: null,
   ...fixture
 }
 
@@ -105,7 +127,9 @@ export async function buildSeed(): Promise<Seed> {
     camera: droneProfile.camera,
     rangeM: RANGE_M,
     forwardOverlap: FORWARD_OVERLAP,
-    altitudeM: ALTITUDE_M
+    altitudeM: ALTITUDE_M,
+    // The viewpoints are made from these stations, below.
+    viewpoints: []
   })
   const stations = tasks[0]!.stations
   const key = `${story.osmId}_${story.index}`
@@ -192,6 +216,8 @@ export async function buildSeed(): Promise<Seed> {
       expectedInventory: isStory ? expectedInventory : [],
       baselineId: isStory ? baseline.id : null,
       passId: s.id.replace(/^seg_/, 'pass_'),
+      patrolIntervalDays: PATROL_INTERVAL_DAYS,
+      lastPatrolledAt: LAST_PATROLLED_AT,
       ...fixture
     }
   })
@@ -226,7 +252,8 @@ export async function buildSeed(): Promise<Seed> {
     baselines: [baseline],
     passes: segments.map((s) => passFor(s.id)),
     docks: [dock],
-    droneProfiles: [droneProfile]
+    droneProfiles: [droneProfile],
+    thirdParties: [s1PathCrowd]
   }
 }
 

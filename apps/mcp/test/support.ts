@@ -3,12 +3,11 @@ import { afterAll } from 'bun:test'
 import { Client } from '@modelcontextprotocol/client'
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio'
 import { join } from 'node:path'
+import { testEnv } from '../../../test/spawn.ts'
 
 const entry = join(import.meta.dir, '../src/index.ts')
-const serverEnv = (apiUrl: URL | string, token: string) => ({
-  SAFE_EDGE_API_URL: new URL('/v1', apiUrl).href,
-  SAFE_EDGE_AGENT_TOKEN: token
-})
+const serverEnv = (apiUrl: URL | string, token: string) =>
+  testEnv({ SAFE_EDGE_API_URL: new URL('/v1', apiUrl).href, SAFE_EDGE_AGENT_TOKEN: token })
 
 /** Spawns `bun apps/mcp/src/index.ts` with the API URL and a bearer token, and connects the official client to it. */
 export async function connectMcp(

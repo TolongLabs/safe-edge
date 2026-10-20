@@ -41,7 +41,7 @@ const ref = (schema: z.ZodType) => {
 
 const describeAccess = (op: OperationSpec) =>
   [
-    op.roles === 'any' ? 'Roles: any.' : `Roles: ${op.roles.join(', ')}.`,
+    op.roles === 'any' ? 'Roles: any.' : op.roles.length ? `Roles: ${op.roles.join(', ')}.` : 'People are refused.',
     op.agentScope ? `Agents need scope \`${op.agentScope}\`.` : 'Agents are refused.',
     op.events.length ? `Emits ${op.events.join(', ')}.` : ''
   ]
@@ -76,6 +76,12 @@ const openApiOperation = (operationId: string, op: OperationSpec) => {
     ...(op.body ? { requestBody: { required: true, content: { 'application/json': { schema: ref(op.body) } } } } : {}),
     responses: {
       [op.status]: { description: op.summary, content },
+      ...Object.fromEntries(
+        Object.entries(op.responses ?? {}).map(([status, { description, schema }]) => [
+          status,
+          { description, content: { 'application/json': { schema: ref(schema) } } }
+        ])
+      ),
       ...(op.body || op.query ? { 400: { $ref: '#/components/responses/InvalidInput' } } : {}),
       401: { $ref: '#/components/responses/Unauthenticated' },
       403: { $ref: '#/components/responses/Denied' },

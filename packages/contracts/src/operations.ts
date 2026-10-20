@@ -2,6 +2,7 @@ import type * as z from 'zod'
 import { Actor, type Role, type Scope } from './actors.ts'
 import {
   AgentAnswer,
+  AgentStopped,
   AskAgentRequest,
   AssetList,
   AuditEventList,
@@ -27,6 +28,7 @@ import {
   EvidenceUrl,
   FalseFlagReport,
   FindingList,
+  HandOffRetry,
   IdParam,
   InboxDraft,
   InventoryCheckList,
@@ -44,16 +46,21 @@ import {
   PatrolList,
   PatrolPlanList,
   RaiseCandidateRequest,
+  RecordAgentSummaryRequest,
   RecordClearanceRequest,
   RecordInventoryCheckRequest,
   RecordObservationRequest,
   RecordRetestRequest,
   RecordWorkOrderExternalErrorRequest,
   RegisterWebhookRequest,
+  RegisteredWebhook,
+  ReportDamageRequest,
   RetestOutcome,
   RouteClosure,
   RouteClosureRequest,
+  ScenarioClock,
   SegmentList,
+  SetScenarioClockRequest,
   SetWorkOrderExternalRefRequest,
   StartPatrolRequest,
   SubmitWorkOrderRequest,
@@ -107,6 +114,8 @@ export interface OperationSpec {
   /** The JSON body on success; for streamed operations, the schema of each server-sent event's data. */
   readonly response: z.ZodType
   readonly status: 200 | 201
+  /** Responses besides `status` and the shared errors (400, 401, 403, 404), each with its JSON body. */
+  readonly responses?: { readonly [status: number]: { readonly description: string; readonly schema: z.ZodType } }
   readonly stream?: true
   readonly events: readonly EventType[]
 }
@@ -204,6 +213,18 @@ export const operations = {
     status: 200,
     events: []
   },
+  getPatrolPlan: {
+    method: 'get',
+    path: '/patrol-plans/{id}',
+    summary: 'Read a patrol plan',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    params: IdParam.patrolPlan,
+    response: PatrolPlan,
+    status: 200,
+    events: []
+  },
   createPatrolPlan: {
     method: 'post',
     path: '/patrol-plans',
@@ -219,7 +240,8 @@ export const operations = {
   approvePatrolPlan: {
     method: 'post',
     path: '/patrol-plans/{id}/approve',
-    summary: 'Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)',
+    summary:
+      'Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded). Approving a re-plan of a plan in flight moves its patrol onto the re-plan, which the drone then flies',
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,
@@ -231,7 +253,7 @@ export const operations = {
   releasePlanHold: {
     method: 'post',
     path: '/patrol-plans/{id}/holds/{segmentId}/release',
-    summary: "Record that the pilot or observer saw a waiting segment's path clear",
+    summary: "Record that the pilot or observer saw a waiting segment's path, or the dock, clear",
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,
@@ -251,11 +273,23 @@ export const operations = {
     status: 200,
     events: []
   },
+  getPatrol: {
+    method: 'get',
+    path: '/patrols/{id}',
+    summary: 'Read a patrol',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    params: IdParam.patrol,
+    response: Patrol,
+    status: 200,
+    events: []
+  },
   startPatrol: {
     method: 'post',
     path: '/patrols',
     summary:
-      "Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)",
+      "Start a patrol from an approved plan that no re-plan superseded and no patrol is flying (invalid_transition), inside the plan's window (outside_window) and after its launch holds (weather_hold)",
     handledBy: 'core',
     roles: ['pilot'],
     agentScope: null,
@@ -353,10 +387,38 @@ export const operations = {
     status: 201,
     events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
   },
+  reportDamage: {
+    method: 'post',
+    path: '/damage-reports',
+    summary:
+      'A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass',
+    handledBy: 'core',
+    // The walk crew on the edges, and the manager, who takes reports from residents and the council.
+    roles: ['crew', 'manager'],
+    agentScope: null,
+    body: ReportDamageRequest,
+    response: Candidate,
+    status: 201,
+    events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
+  },
+  reportMissedPatrol: {
+    method: 'post',
+    path: '/segments/{id}/missed-patrol',
+    summary:
+      "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass",
+    handledBy: 'core',
+    roles: ['system'],
+    agentScope: null,
+    params: IdParam.segment,
+    response: Candidate,
+    status: 201,
+    events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
+  },
   decideCandidate: {
     method: 'post',
     path: '/candidates/{id}/decision',
-    summary: 'Confirm, reject (with reason) or recapture',
+    summary:
+      'Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition)',
     handledBy: 'core',
     roles: ['manager'],
     agentScope: null,
@@ -374,6 +436,20 @@ export const operations = {
     roles: 'any',
     agentScope: 'edge.read',
     response: FalseFlagReport,
+    status: 200,
+    events: []
+  },
+  recordAgentSummary: {
+    method: 'post',
+    path: '/candidates/{id}/agent-summary',
+    summary:
+      "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion",
+    handledBy: 'core',
+    roles: [],
+    agentScope: 'finding.propose',
+    params: IdParam.candidate,
+    body: RecordAgentSummaryRequest,
+    response: Candidate,
     status: 200,
     events: []
   },
@@ -404,7 +480,7 @@ export const operations = {
   listTasks: {
     method: 'get',
     path: '/tasks',
-    summary: 'List interim protection and field-check tasks',
+    summary: 'List interim protection, field-check and recapture tasks',
     handledBy: 'core',
     roles: 'any',
     agentScope: 'edge.read',
@@ -517,13 +593,20 @@ export const operations = {
   createWorkOrder: {
     method: 'post',
     path: '/work-orders',
-    summary: 'Create a draft from a finding and a remedy',
+    summary:
+      'Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one',
     handledBy: 'core',
     roles: ['manager'],
     agentScope: 'workorder.draft',
     body: CreateWorkOrderRequest,
     response: WorkOrder,
     status: 201,
+    responses: {
+      200: {
+        description: "The finding's open draft, unchanged (confirming a candidate drafts one); nothing was created",
+        schema: WorkOrder
+      }
+    },
     events: ['edge.work_order.drafted.v1']
   },
   updateWorkOrder: {
@@ -556,13 +639,26 @@ export const operations = {
     method: 'post',
     path: '/work-orders/{id}/external-error',
     summary:
-      'Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)',
+      'Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)',
     handledBy: 'core',
     roles: ['system'],
     agentScope: null,
     params: IdParam.workOrder,
     body: RecordWorkOrderExternalErrorRequest,
     response: WorkOrder,
+    status: 200,
+    events: []
+  },
+  retryWorkOrderHandOff: {
+    method: 'post',
+    path: '/work-orders/{id}/external-retry',
+    summary:
+      'Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)',
+    handledBy: 'core',
+    roles: ['manager', 'engineer'],
+    agentScope: null,
+    params: IdParam.workOrder,
+    response: HandOffRetry,
     status: 200,
     events: []
   },
@@ -762,13 +858,19 @@ export const operations = {
     method: 'post',
     path: '/agent/inbox-drafts',
     summary:
-      'The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft',
+      "The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft",
     handledBy: 'api',
     roles: ['manager'],
     agentScope: null,
     body: DraftInboxRequest,
     response: InboxDraft,
     status: 200,
+    responses: {
+      502: {
+        description: 'Claude refused, or finished without the draft the workflow asked for; the summary is not stored',
+        schema: AgentStopped
+      }
+    },
     events: []
   },
   draftMonthlyReport: {
@@ -782,6 +884,12 @@ export const operations = {
     body: DraftMonthlyReportRequest,
     response: MonthlyReportDraft,
     status: 200,
+    responses: {
+      502: {
+        description: 'Claude refused, or finished without saving exactly one monthly report',
+        schema: AgentStopped
+      }
+    },
     events: []
   },
   streamEvents: {
@@ -810,13 +918,29 @@ export const operations = {
   registerWebhook: {
     method: 'post',
     path: '/webhooks',
-    summary: 'Register a webhook endpoint for CloudEvents',
+    summary:
+      'Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)',
     handledBy: 'api',
     roles: ['integrator'],
     agentScope: null,
     body: RegisterWebhookRequest,
-    response: Webhook,
+    response: RegisteredWebhook,
     status: 201,
+    events: []
+  },
+  setScenarioClock: {
+    method: 'post',
+    path: '/scenario/clock',
+    summary:
+      'Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs ' +
+      'started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). ' +
+      'The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered',
+    handledBy: 'api',
+    roles: ['system'],
+    agentScope: null,
+    body: SetScenarioClockRequest,
+    response: ScenarioClock,
+    status: 200,
     events: []
   },
 

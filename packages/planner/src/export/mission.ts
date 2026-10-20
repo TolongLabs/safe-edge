@@ -2,8 +2,20 @@ import type { DroneProfile, PatrolPlan, Waypoint } from '@safe-edge/contracts'
 
 export const NOT_FLIGHT_READY = 'NOT FLIGHT-READY'
 
-/** Written into every exported file, in a field its format keeps. */
-export const notFlightReadyNotice = `${NOT_FLIGHT_READY}: a format sample generated from a Safe Edge patrol plan. It has not been validated on any aircraft or ground station; a remote pilot must review and approve every live flight.`
+/**
+ * Written into every exported file, in a field its format keeps. Neither format holds a time window or a hold, so the
+ * notice carries the plan's window and the places that wait for a person to confirm the path clear.
+ */
+export function notFlightReadyNotice(plan: PatrolPlan): string {
+  const waits = plan.holds
+    .filter((h) => h.kind === 'separation' && h.releasedBy === null)
+    .map((h) => h.segmentId ?? 'the dock')
+  return [
+    `${NOT_FLIGHT_READY}: a format sample generated from a Safe Edge patrol plan. It has not been validated on any aircraft or ground station; a remote pilot must review and approve every live flight.`,
+    `Fly only inside the plan's window, ${plan.window.start} to ${plan.window.end}.`,
+    ...(waits.length > 0 ? [`Wait for the pilot or observer to confirm the path clear at ${waits.join(', ')}.`] : [])
+  ].join(' ')
+}
 
 export interface MissionExportInput {
   plan: PatrolPlan

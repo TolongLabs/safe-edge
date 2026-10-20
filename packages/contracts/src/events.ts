@@ -84,7 +84,8 @@ export const EVENT_SUMMARIES: Record<EventType, string> = {
   'edge.patrol.completed.v1': 'A patrol landed and reported coverage per segment.',
   'edge.candidate.raised.v1': 'A provider, the system or the agent raised a candidate; core assigned its tier.',
   'edge.candidate.decided.v1': 'A manager confirmed, rejected or asked to recapture a candidate.',
-  'edge.pass.suspended.v1': "A segment's pass was suspended, e.g. by a Tier 2 candidate.",
+  'edge.pass.suspended.v1':
+    "A segment's pass was suspended by a Tier 2 candidate: a missing or changed safety item, a damage report or a missed patrol.",
   'edge.work_order.drafted.v1': 'A person or the agent drafted a work order.',
   'edge.work_order.submitted.v1': 'A manager or engineer submitted a work order with an approved remedy.',
   'edge.repair.completed.v1': 'The installer marked the repair complete.',
@@ -125,13 +126,23 @@ export const EdgeEvent = z.discriminatedUnion(
 )
 export type EdgeEvent = { [T in EventType]: z.infer<(typeof EVENT_SCHEMAS)[T]> }[EventType]
 
-/** A delivery that did not reach the endpoint. Nothing retries it. */
+/**
+ * One delivery attempt that did not reach the endpoint. Network errors, timeouts, 408, 429 and 5xx are retried. An
+ * attempt the API refused to send, because the webhook's origin is no longer on the allowlist, is final.
+ */
 export const WebhookFailure = named(
   'WebhookFailure',
   z.object({
     eventId: EventId,
     at: Timestamp,
-    error: z.string().min(1).describe('HTTP <status>: <body>, or the network error')
+    attempt: z.number().int().positive().describe('1 for the first attempt at this event, 2 for the first retry, ...'),
+    error: z
+      .string()
+      .min(1)
+      .describe(
+        'HTTP <status>: <body, cut at 500 characters>, the network error, or "Not delivered: <origin> is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)"'
+      ),
+    final: z.boolean().describe('True when the API gave up on this event for this endpoint: no retry follows')
   })
 )
 export type WebhookFailure = z.infer<typeof WebhookFailure>
@@ -144,7 +155,10 @@ export const Webhook = named(
     eventTypes: z.array(EventType),
     createdBy: z.string(),
     createdAt: Timestamp,
-    failures: z.array(WebhookFailure).describe('Failed deliveries, oldest first; each is also on the audit chain')
+    failures: z
+      .array(WebhookFailure)
+      .max(20)
+      .describe('The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain')
   })
 )
 export type Webhook = z.infer<typeof Webhook>

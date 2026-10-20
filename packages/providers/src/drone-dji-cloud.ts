@@ -75,6 +75,16 @@ export class DjiCloudDroneProvider implements DroneProvider {
   }
 
   /**
+   * Not mapped yet: how a Dock pauses at a waypoint, resumes, or takes a changed wayline in flight is unverified (the
+   * wayline page did not render for #148). Check the [Dock 3 wayline] services before implementing it.
+   *
+   * [Dock 3 wayline]: https://developer.dji.com/doc/cloud-api-tutorial/en/api-reference/dock-to-cloud/mqtt/dock/dock3/wayline.html
+   */
+  updatePatrol(_runId: string, _plan: PatrolPlan, _approval: HumanApproval): Promise<void> {
+    throw new ProviderNotImplementedError('dji_cloud', 'updatePatrol')
+  }
+
+  /**
    * A task not yet flying: `flighttask_undo` with `flight_ids`. In flight: `return_home` (one-key return). Both on
    * `thing/product/{gateway_sn}/services` ([Dock 3 wayline]).
    *

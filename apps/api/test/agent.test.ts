@@ -6,13 +6,19 @@ import {
   AgentDelta,
   AgentStopped,
   AuditEvent,
+  type AgentSummary,
+  CandidateDecision,
   InboxDraft,
   MonthlyReportDraft,
   WorkOrder
 } from '@safe-edge/contracts'
+import { createSafeEdgeClient, type AgentStreamEvent } from '@safe-edge/sdk'
 import { claude, placesOf } from './claude.ts'
-import { S6, S6_EVIDENCE, S6_REFUSED, auditLength, auditSince, httpPlayer, play, stateOf } from './s6.ts'
-import { S1, raiseTier2, startApi, type Api, type Token } from './support.ts'
+import { join } from 'node:path'
+import * as z from 'zod'
+import { playS1toRepair } from '../../../packages/sdk/test/story.ts'
+import { S6, S6_EVIDENCE, S6_REFUSED, auditLength, auditSince, httpPlayer, play, repoRoot, stateOf } from './s6.ts'
+import { S1, raiseTier2, seed, startApi, type Api, type Token } from './support.ts'
 
 /** S1: the drone's Tier 2 candidate, confirmed by the manager into a finding with a system-drafted work order. */
 async function confirmS1(api: Api) {
@@ -41,20 +47,15 @@ async function agentTokenRefusals(api: Api, workOrderId: string) {
 
 const refusedDraftOnly = { status: 403, body: { ok: false, rule: 'agents_draft_only', message: expect.any(String) } }
 
-/** Asks the agent and reads its server-sent events to the end of the stream. */
+/** The SDK's http client as a person holding `token`, the way the Ask panel calls the API. */
+const clientOf = (api: Api, token: Token) =>
+  createSafeEdgeClient({ transport: 'http', baseUrl: new URL('/v1', api.url).href, token })
+
+/** Asks the agent through the SDK and reads its server-sent events to the end of the stream. */
 async function ask(api: Api, question: string, token: Token = 'tok_manager') {
-  const response = await api.request('post', '/agent/ask', { token, body: { question } })
-  expect(response.status).toBe(200)
-  expect(response.headers.get('content-type')).toStartWith('text/event-stream')
-  return (await response.text())
-    .split('\n\n')
-    .filter((frame) => frame.trim() !== '' && !frame.startsWith(':'))
-    .map((frame) => {
-      const fields = Object.fromEntries(
-        frame.split('\n').map((line) => [line.slice(0, line.indexOf(':')), line.slice(line.indexOf(':') + 2)])
-      )
-      return { event: fields.event!, data: JSON.parse(fields.data!) as unknown }
-    })
+  const events: AgentStreamEvent[] = []
+  for await (const event of await clientOf(api, token).askAgent({ body: { question } })) events.push(event)
+  return events
 }
 
 test('asked which passes expire in 30 days, the agent streams an answer citing the pass IDs its tools returned', async () => {
@@ -71,6 +72,26 @@ test('asked which passes expire in 30 days, the agent streams an answer citing t
   expect(answer.answer).toContain('pass_866518980_5')
   expect(deltas.join('')).toContain(answer.answer)
   expect(recording.sent.map((body) => body.output_config)).toEqual(recording.sent.map(() => ({ effort: 'medium' })))
+  await recording.done()
+})
+
+test('a person who hangs up on the Ask stream cancels the Claude run: the abort reaches the Anthropic request', async () => {
+  const recording = claude('ask-disconnect', { holdAfterFirstText: true })
+  const api = startApi({ claude: recording.client })
+  const hangUp = new AbortController()
+  const reply = await clientOf(api, 'tok_manager').askAgent(
+    { body: { question: 'In one sentence, what can you help a township manager with? No need to look anything up.' } },
+    { signal: hangUp.signal }
+  )
+  const events = reply[Symbol.asyncIterator]()
+
+  // Claude is mid-answer: its first text reached the panel, and the rest of its stream is still to come.
+  expect((await events.next()).value).toMatchObject({ event: 'delta' })
+  hangUp.abort()
+  // The API aborted the request it had open to Claude, and asked for nothing more.
+  expect(await recording.aborted).toBe(0)
+  expect(recording.sent).toHaveLength(1)
+  await expect(events.next()).rejects.toThrow()
   await recording.done()
 })
 
@@ -149,58 +170,113 @@ test('asked to submit a work order and approve its remedy, the agent cannot, and
   await recording.done()
 })
 
-test('for the S1 finding the agent writes the Inbox summary and drafts a work order, which a person then edits', async () => {
+test("the agent's Inbox summary is stored on the candidate for the card until it is decided, and its draft for the confirmed finding is the one open work order", async () => {
   const recording = claude('inbox-s1')
   const api = startApi({ claude: recording.client })
+  const manager = httpPlayer(api).clientFor('usr_manager')
   const draft = async (candidateId: string) => {
     const response = await api.request('post', '/agent/inbox-drafts', { token: 'tok_manager', body: { candidateId } })
     expect(response.status).toBe(200)
     return InboxDraft.parse(await response.json())
   }
+  /** What #80's card reads: the summary on the candidate, labelled as the agent's, with the served model. */
+  const storedSummary = async (candidateId: string) =>
+    (await manager.getCandidate({ params: { id: candidateId } })).candidate.agentSummary
+  const asStored = (made: InboxDraft): AgentSummary => ({
+    label: 'ai_suggestion',
+    text: made.summary,
+    citations: made.citations,
+    model: made.model,
+    draftedBy: { type: 'agent', id: 'usr_agent' },
+    draftedAt: seed.asOf
+  })
 
   // Before the decision, the card gets a summary and nothing is drafted.
   const candidate = (await (await raiseTier2(api)).json()) as { id: string }
   const card = await draft(candidate.id)
   expect(card).toMatchObject({ candidateId: candidate.id, findingId: null, workOrder: null, uncited: false })
   expect(card.citations).toEqual(expect.arrayContaining([candidate.id, S1.segmentId]))
+  expect(await storedSummary(candidate.id)).toEqual(asStored(card))
 
-  // Once the manager confirms it, the agent also drafts the finding's work order.
+  // The manager confirms it, which drafts the finding's work order. Asked again, the agent's draft request gets that
+  // same draft back, so the finding still has one work order. The card keeps the summary the decision was made on.
   const decided = await api.request('post', `/candidates/${candidate.id}/decision`, {
     token: 'tok_manager',
     body: { decision: 'confirm', severity: 'high' }
   })
-  const { finding } = (await decided.json()) as { finding: { id: string } }
+  const { finding, workOrder } = CandidateDecision.parse(await decided.json())
   const confirmed = await draft(candidate.id)
   expect(confirmed).toMatchObject({
     candidateId: candidate.id,
-    findingId: finding.id,
+    findingId: finding!.id,
     uncited: false,
     model: 'claude-opus-5-5',
-    workOrder: { findingId: finding.id, status: 'draft', remedyId: null, draftedBy: { type: 'agent', id: 'usr_agent' } }
+    workOrder
   })
   expect(confirmed.citations).toEqual(expect.arrayContaining([candidate.id, S1.segmentId]))
-  expect(confirmed.summary.length).toBeGreaterThan(0)
+  expect(await storedSummary(candidate.id)).toEqual(asStored(card))
+  expect((await manager.listWorkOrders({})).filter((w) => w.findingId === finding!.id)).toEqual([workOrder!])
+  const agentWrites = (await manager.listAudit({})).filter((e) => e.actor.id === 'usr_agent').map((e) => e.action)
+  expect(agentWrites).toEqual(['recordAgentSummary'])
 
-  // The draft is stored as the agent's; the manager edits it, and the agent's token cannot submit it.
-  const workOrderId = confirmed.workOrder!.id
-  const path = `/work-orders/${workOrderId}`
-  expect(await (await api.request('get', path, { token: 'tok_manager' })).json()).toMatchObject({
-    status: 'draft',
-    notes: confirmed.workOrder!.notes
-  })
+  // The manager edits that draft, and the agent's token cannot submit it.
+  const path = `/work-orders/${workOrder!.id}`
   const edited = await api.request('patch', path, {
     token: 'tok_manager',
     body: { notes: 'Replace fence panel 4 today' }
   })
   expect(edited.status).toBe(200)
   expect(await edited.json()).toMatchObject({ status: 'draft', notes: 'Replace fence panel 4 today' })
-  expect(await agentTokenRefusals(api, workOrderId)).toEqual([refusedDraftOnly, refusedDraftOnly])
+  expect(await agentTokenRefusals(api, workOrder!.id)).toEqual([refusedDraftOnly, refusedDraftOnly])
 
   // The candidate's rationale, written by the drone provider, reached Claude only as data inside tool results.
   // (The agent may quote it back in its own turns.)
   const places = placesOf(recording.sent, 'Fence panel 4 is missing by the playground path')
   expect(places).toContain('tool result')
   expect(places.filter((place) => place === 'system' || place === 'user text')).toEqual([])
+  await recording.done()
+})
+
+test('when the agent cannot make the draft, POST /agent/inbox-drafts answers the 502 AgentStopped the generated OpenAPI documents, and stores nothing', async () => {
+  const recording = claude('inbox-past-draft')
+  const api = startApi({ claude: recording.client })
+  const player = httpPlayer(api)
+  // S1 repaired: the finding's work order is completed and awaits its re-test, so the finding takes no other.
+  const { candidate, decision, workOrderId } = await playS1toRepair({ as: player.clientFor, setNow: player.setNow })
+  const findingId = decision.finding!.id
+  const response = await api.request('post', '/agent/inbox-drafts', {
+    token: 'tok_manager',
+    body: { candidateId: candidate.id }
+  })
+
+  expect(response.status).toBe(502)
+  const body: unknown = await response.json()
+  expect(AgentStopped.parse(body)).toMatchObject({
+    stopReason: 'end_turn',
+    category: null,
+    model: 'claude-opus-5-5',
+    message: expect.stringContaining(findingId)
+  })
+  // Both draft operations document this body for their 502, and this one validates against it.
+  const openapi = Bun.YAML.parse(
+    await Bun.file(join(repoRoot, 'packages/contracts/generated/openapi.yaml')).text()
+  ) as {
+    paths: Record<string, { post: { responses: Record<string, { content: Record<string, { schema: unknown }> }> } }>
+    components: { schemas: Record<string, z.core.JSONSchema.JSONSchema> }
+  }
+  for (const path of ['/agent/inbox-drafts', '/agent/monthly-reports']) {
+    expect(openapi.paths[path]!.post.responses['502']!.content['application/json']!.schema).toEqual({
+      $ref: '#/components/schemas/AgentStopped'
+    })
+  }
+  expect(z.fromJSONSchema(openapi.components.schemas.AgentStopped!).safeParse(body)).toMatchObject({ success: true })
+
+  // The agent's draft request was refused, so the finding keeps its one work order, and no summary was stored.
+  const manager = player.clientFor('usr_manager')
+  expect((await manager.listWorkOrders({})).filter((w) => w.findingId === findingId).map((w) => w.id)).toEqual([
+    workOrderId
+  ])
+  expect((await manager.getCandidate({ params: { id: candidate.id } })).candidate.agentSummary).toBeNull()
   await recording.done()
 })
 

@@ -7,13 +7,14 @@ import {
   type DroneProvider,
   type DroneStatus,
   type PatrolRun,
+  type PlanHold,
   type Pose,
   type ProviderEvent,
   type Waypoint
 } from '@safe-edge/contracts'
 import { assumedEnergyModel } from '@safe-edge/planner'
 import { distance } from '@turf/distance'
-import { ApprovalRequiredError } from './errors.ts'
+import { ApprovalRequiredError, OutsideWindowError } from './errors.ts'
 
 /** Seconds of flight between `battery` events. */
 const BATTERY_SAMPLE_S = 10
@@ -53,14 +54,36 @@ interface Leg {
   endWh: number
 }
 
+/** An event of the flight at `s` seconds after take-off. */
+interface Timed {
+  s: number
+  event: ProviderEvent
+}
+
+/**
+ * A separation hold the drone waits for before `index` (a plan waypoint index): a held segment's first station, or the
+ * transit home for the dock. It hovers from `fromS` and, unless the pilot releases the hold before `untilS`, flies home
+ * then: after `untilS`, the rest of the plan would no longer land inside the window with the drone's reserve.
+ */
+interface Wait {
+  index: number
+  segmentId: string | null
+  fromS: number
+  untilS: number
+}
+
 interface Flight {
   /** Take-off time, epoch milliseconds. */
   t0: number
   startWh: number
+  /** The flight as decided so far, to its landing. */
   legs: Leg[]
+  /** Its take-off, waypoint, frame and landing events, in order. Battery samples come from the legs. */
+  route: Timed[]
+  /** Every event in time order: delivered up to `next`, decided after it. */
   queue: ProviderEvent[]
-  /** The first undelivered event in `queue`. */
   next: number
+  wait: Wait | null
 }
 
 interface DeviceState {
@@ -73,6 +96,7 @@ interface DeviceState {
 
 interface Run {
   record: PatrolRun
+  /** The plan the drone flies: the one dispatched, a later version of it (holds released), or an approved re-plan. */
   plan: PatrolPlan
   device: DeviceState
   flight: Flight | null
@@ -81,8 +105,12 @@ interface Run {
 /**
  * A headless, deterministic drone provider (TRD "SDK and provider adapters": `drone-sim`). It flies an approved plan's
  * waypoints with #71's stated energy model (`assumedEnergyModel`): cruise speed and power along the ground, hover power
- * for 3 m/s climbs and descents, and a hover at each camera station. No wind. Each flight starts on a full battery,
- * because the dock charges between flights. Browser-safe: the Three.js scene subscribes to it with `onEvent`.
+ * for 3 m/s climbs and descents, and a hover at each camera station, where it takes a frame at the station's zoom. No
+ * wind. Each flight starts on a full battery, because the dock charges between flights. It refuses a dispatch that
+ * could not land before the plan's window closes. Before a segment whose separation hold is unreleased, and before the
+ * transit home while the dock's is, it hovers until the pilot releases the hold (`updatePatrol` with the released
+ * plan), for as long as the rest of the plan still fits; then it comes home. An approved re-plan replaces the rest of
+ * the route in flight. Browser-safe: the Three.js scene subscribes to it with `onEvent`.
  */
 export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
   const fleet = new Map<string, DeviceState>(
@@ -93,7 +121,6 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
   )
   const runs = new Map<string, Run>()
   const handlers = new Set<(event: ProviderEvent) => void>()
-
   const tick = () => {
     const nowMs = Date.parse(clock.now())
     const due: ProviderEvent[] = []
@@ -120,6 +147,22 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
     const run = runs.get(id)
     if (!run) throw new Error(`No simulated run ${id}`)
     return run
+  }
+
+  /** The pilot approval `approval` must be, exactly as core recorded it on `plan`. */
+  const checkApproval = (runId: string, plan: PatrolPlan, approval: HumanApproval) => {
+    const given = HumanApproval.safeParse(approval)
+    if (!given.success) throw new ApprovalRequiredError(`${runId} needs a pilot's approval of ${plan.id} to fly`)
+    if (plan.status !== 'approved') {
+      throw new ApprovalRequiredError(`${plan.id} is ${plan.status}; a pilot must approve it before the drone flies it`)
+    }
+    const { planId, approvedBy, approvedAt } = given.data
+    if (planId !== plan.id || approvedBy !== plan.approvedBy || approvedAt !== plan.approvedAt) {
+      throw new ApprovalRequiredError(
+        `${runId}'s approval does not match ${plan.id}'s: ${plan.approvedBy} approved it at ${plan.approvedAt}`
+      )
+    }
+    return given.data
   }
 
   return {
@@ -189,33 +232,40 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
       const run = runState(runId)
       const { plan, record } = run
       if (record.status !== 'scheduled') throw new Error(`${runId} is ${record.status}, not scheduled`)
-      const given = HumanApproval.safeParse(approval)
-      if (!given.success) throw new ApprovalRequiredError(`${runId} needs a pilot's approval of ${plan.id} to fly`)
-      if (plan.status !== 'approved') {
-        throw new ApprovalRequiredError(
-          `${plan.id} was scheduled ${plan.status}; schedule it again once a pilot approves it`
-        )
-      }
-      const { planId, approvedBy, approvedAt } = given.data
-      if (planId !== plan.id || approvedBy !== plan.approvedBy || approvedAt !== plan.approvedAt) {
-        throw new ApprovalRequiredError(
-          `${runId}'s approval does not match ${plan.id}'s: ${plan.approvedBy} approved it at ${plan.approvedAt}`
-        )
-      }
-      // A separation hold waits for a person to confirm the path is clear (core's releasePlanHold). The sim does not
-      // model the wait at the segment, so it flies only a plan whose holds were released.
-      const held = plan.holds.filter((h) => h.kind === 'separation' && h.releasedBy === null)
-      if (held.length > 0) {
-        const segments = held.map((h) => h.segmentId).join(', ')
-        throw new ApprovalRequiredError(
-          `${plan.id} holds ${segments}: the pilot must confirm the path is clear, then schedule the released plan`
-        )
+      const approved = checkApproval(runId, plan, approval)
+      // Take-off and landing at the dock, and the transits from and to it, wait on the ground for the pilot to record
+      // the dock clear (core's startPatrol refuses the same start). Held segments wait in flight.
+      if (dockHold(plan)) {
+        throw new ApprovalRequiredError(`${plan.id} holds the dock: the pilot must confirm it clear before take-off`)
       }
       const now = clock.now()
-      run.flight = flyPlan(run, Date.parse(now))
+      const t0 = Date.parse(now)
+      const at = { plan, spec: run.device.spec, record, t0 }
+      checkFits(at, new Track(at.spec.drone, poseOf(plan.waypoints[0]!)), 1)
+      const track = new Track(at.spec.drone, poseOf(plan.waypoints[0]!))
+      const route: Timed[] = [
+        { s: 0, event: { type: 'takeoff', ...eventFactory(record, t0)(0), planId: plan.id, pose: track.pose } }
+      ]
+      const wait = flyRoute(at, track, 1, route, { wait: true })
+      run.flight = { t0, startWh: at.spec.drone.usableBatteryWh, legs: track.legs, route, queue: [], next: 0, wait }
+      requeue(run, -Infinity)
       record.status = 'in_flight'
       record.dispatchedAt = now
-      record.approval = given.data
+      record.approval = approved
+    },
+
+    async updatePatrol(runId, input, approval) {
+      tick()
+      const run = runState(runId)
+      if (run.record.status === 'scheduled') throw new Error(`${runId} is scheduled, not in flight`)
+      // Landed, or cancelled and on its way home: a newer plan comes too late to change the flight.
+      if (run.record.status !== 'in_flight') return
+      const plan = PatrolPlan.parse(input)
+      const approved = checkApproval(runId, plan, approval)
+      const nowMs = Date.parse(clock.now())
+      if (plan.id === run.plan.id) release(run, plan, nowMs)
+      else switchTo(run, plan, nowMs)
+      run.record.approval = approved
     },
 
     async cancelPatrol(runId) {
@@ -229,7 +279,15 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
       }
       if (record.status !== 'in_flight') throw new Error(`${runId} is already ${record.status}`)
       record.status = 'cancelled'
-      returnToDock(run, Date.parse(clock.now()))
+      // Drop what has not happened yet, fly straight over the dock at the current height, descend and land.
+      const nowMs = Date.parse(clock.now())
+      const flight = run.flight!
+      const track = keepUntil(flight, device.spec.drone, (nowMs - flight.t0) / 1000)
+      flyHome(track, device.spec.dock)
+      flight.route.push(landing(record, flight, track, 'cancelled'))
+      flight.legs.push(...track.legs)
+      flight.wait = null
+      requeue(run, nowMs)
     },
 
     onEvent(handler) {
@@ -239,6 +297,248 @@ export function createDroneSim({ clock, devices }: DroneSimOptions): DroneSim {
       }
     }
   }
+}
+
+/** Where a run's flight is decided: its plan, its aircraft, and its take-off time. */
+interface FlightContext {
+  plan: PatrolPlan
+  spec: SimDevice
+  record: PatrolRun
+  t0: number
+}
+
+/**
+ * The plan's waypoints are unchanged and its holds may be released. If the drone waits, or will wait, at a hold the
+ * pilot has now released, it goes on from there at once (or does not stop on its way to it); once it has turned home
+ * at the end of its wait, a release changes nothing.
+ */
+function release(run: Run, plan: PatrolPlan, nowMs: number) {
+  if (JSON.stringify(plan.waypoints) !== JSON.stringify(run.plan.waypoints)) {
+    throw new Error(`${plan.id}'s route changed after ${run.record.id} took off; a changed route needs a re-plan`)
+  }
+  run.plan = plan
+  const flight = run.flight!
+  const wait = flight.wait
+  if (wait === null || holdBefore(plan, wait.index) !== null) return
+  const nowS = (nowMs - flight.t0) / 1000
+  if (nowS >= wait.untilS) return
+  const track = keepUntil(flight, run.device.spec.drone, Math.max(nowS, wait.fromS))
+  flight.wait = flyRoute(context(run), track, wait.index, flight.route, { wait: true })
+  flight.legs.push(...track.legs)
+  requeue(run, nowMs)
+}
+
+/**
+ * An approved re-plan (#72) keeps the route's first `committedTasks` stops, and every waypoint up to their last
+ * station, as they were, and replaces the rest. The drone keeps flying that prefix if it is still on it, then flies the
+ * re-plan's waypoints after it. Past it (on its way to, or at, a stop the re-plan does not keep), it flies back along
+ * the waypoints it came by to the prefix's last one, so it flies only legs a plan routed, then on. It refuses a re-plan
+ * that does not keep its prefix, and one it could not fly from here inside the re-plan's window with its reserve.
+ */
+function switchTo(run: Run, next: PatrolPlan, nowMs: number) {
+  const current = run.plan
+  const { drone } = run.device.spec
+  const kept = next.replan?.supersedes?.committedTasks
+  if (kept === undefined) {
+    throw new Error(`${next.id} is not a re-plan, so ${run.record.id} cannot switch to it from ${current.id} in flight`)
+  }
+  const currentEnd = prefixEnd(current, kept)
+  const nextEnd = prefixEnd(next, kept)
+  const prefix = (plan: PatrolPlan, end: number) => JSON.stringify(plan.waypoints.slice(0, end))
+  if (kept > 0 && prefix(current, currentEnd) !== prefix(next, nextEnd)) {
+    throw new Error(`${next.id} does not keep the first ${kept} stops of ${current.id}, which ${run.record.id} flies`)
+  }
+  const flight = run.flight!
+  const nowS = (nowMs - flight.t0) / 1000
+  const reached = flight.route.findLast(
+    (t) => t.s <= nowS && (t.event.type === 'waypoint' || t.event.type === 'takeoff')
+  )!
+  const reachedIndex = reached.event.type === 'waypoint' ? reached.event.index : 0
+  // Committed stops were reached, so the decided route reaches the prefix's last waypoint.
+  const prefixLast = flight.route.find((t) => t.event.type === 'waypoint' && t.event.index === currentEnd - 1)!
+  const hoverS = current.waypoints[currentEnd - 1]!.kind === 'station' ? assumedEnergyModel.stationHoverS : 0
+  const leaveS = prefixLast.s + hoverS
+  const at = { ...context(run), plan: next }
+
+  // Still on the prefix: finish it (its last waypoint, and the frame there). Past it: back the way it came.
+  const onPrefix = reachedIndex < currentEnd - 1 || nowS < leaveS
+  const fromS = onPrefix ? leaveS : nowS
+  const back = onPrefix ? [] : current.waypoints.slice(currentEnd - 1, reachedIndex + 1).toReversed()
+  const flyBack = (track: Track) => {
+    for (const waypoint of back) track.fly(poseOf(waypoint))
+  }
+  const here = stateAt(flight.legs, fromS)
+  const trial = new Track(drone, here.pose, fromS, here.wh)
+  flyBack(trial)
+  if (nowMs < Date.parse(next.window.start)) {
+    throw new OutsideWindowError(`${next.id} flies from ${next.window.start}; it is ${new Date(nowMs).toISOString()}`)
+  }
+  checkFits(at, trial, nextEnd)
+
+  const track = keepUntil(flight, drone, fromS)
+  flyBack(track)
+  run.plan = next
+  run.record.planId = next.id
+  flight.wait = flyRoute(at, track, nextEnd, flight.route, { wait: true })
+  flight.legs.push(...track.legs)
+  requeue(run, nowMs)
+}
+
+/**
+ * Throws unless the drone, flying the plan's waypoints from `from` on from `track` without waiting at any hold, lands
+ * before the plan's window closes (`OutsideWindowError`) with at least the drone's reserve.
+ */
+function checkFits(at: FlightContext, track: Track, from: number) {
+  const { plan, spec, record, t0 } = at
+  flyRoute(at, track, from, [], { wait: false })
+  const landsAt = new Date(t0 + track.s * 1000).toISOString()
+  if (Date.parse(landsAt) >= Date.parse(plan.window.end)) {
+    throw new OutsideWindowError(`${plan.id} would land at ${landsAt}, after its window closes at ${plan.window.end}`)
+  }
+  const leftWh = spec.drone.usableBatteryWh - track.wh
+  if (leftWh < spec.drone.reserveWh) {
+    throw new Error(
+      `${record.id} would land ${plan.id} with ${leftWh.toFixed(1)} Wh, under the drone's ${spec.drone.reserveWh} Wh reserve`
+    )
+  }
+}
+
+/**
+ * The waypoint index after a route's first `stops` stops: past their last station. With none, past the take-off and
+ * the climb (the first station's index).
+ */
+function prefixEnd(plan: PatrolPlan, stops: number): number {
+  if (stops > plan.tasks.length) throw new Error(`${plan.id} has ${plan.tasks.length} stops, not ${stops}`)
+  if (stops === 0) return plan.waypoints.findIndex((w) => w.kind === 'station')
+  const segmentId = plan.tasks[stops - 1]!.segmentId
+  return plan.waypoints.findLastIndex((w) => w.segmentId === segmentId) + 1
+}
+
+/** The unreleased separation hold of the dock: its climb, its descent and the transits from and to it. */
+function dockHold(plan: PatrolPlan): PlanHold | undefined {
+  return plan.holds.find((h) => h.kind === 'separation' && h.segmentId === null && h.releasedBy === null)
+}
+
+/**
+ * The unreleased separation hold the drone must wait for before waypoint `index`: a segment's hold before the
+ * segment's first station (where the transit into it starts), and the dock's before the transit home.
+ */
+function holdBefore(plan: PatrolPlan, index: number): PlanHold | null {
+  const waypoint = plan.waypoints[index]!
+  if (waypoint.kind === 'station') {
+    if (plan.waypoints[index - 1]!.segmentId === waypoint.segmentId) return null
+    const held = plan.holds.find(
+      (h) => h.kind === 'separation' && h.segmentId === waypoint.segmentId && h.releasedBy === null
+    )
+    return held ?? null
+  }
+  const home = index === plan.waypoints.length - 2 && index > 1 && waypoint.kind === 'transit'
+  return (home && dockHold(plan)) || null
+}
+
+/**
+ * Flies the plan's waypoints from `from` on (the drone is at waypoint `from - 1`, its frame taken), adding legs to
+ * `track` and events to `route`. With `wait`, the drone hovers before a waypoint an unreleased separation hold keeps it
+ * from: until the last moment the rest of the plan, flown without another wait, would still land before the window
+ * closes with the drone's reserve, then straight home. Returns that wait, or null when it lands at the end of the plan.
+ */
+function flyRoute(
+  at: FlightContext,
+  track: Track,
+  from: number,
+  route: Timed[],
+  { wait }: { wait: boolean }
+): Wait | null {
+  const { plan, spec, record, t0 } = at
+  const event = eventFactory(record, t0)
+  const waypoints = plan.waypoints
+  for (let index = from; index < waypoints.length; index++) {
+    const hold = wait ? holdBefore(plan, index) : null
+    if (hold) {
+      const fromS = track.s
+      const rest = new Track(spec.drone, track.pose, track.s, track.wh)
+      flyRoute(at, rest, index, [], { wait: false })
+      const energyS = ((spec.drone.usableBatteryWh - spec.drone.reserveWh - rest.wh) * 3600) / spec.drone.hoverPowerW
+      const windowS = (Date.parse(plan.window.end) - t0) / 1000 - rest.s
+      const untilS = fromS + Math.max(0, Math.min(energyS, windowS))
+      track.hover(untilS - fromS)
+      flyHome(track, spec.dock)
+      route.push({ s: track.s, event: landingEvent(event, track, spec.drone.usableBatteryWh, 'hold_timeout') })
+      return { index, segmentId: hold.segmentId, fromS, untilS }
+    }
+    const waypoint = waypoints[index]!
+    track.fly(poseOf(waypoint))
+    const { s, pose } = track
+    if (index === waypoints.length - 1) {
+      route.push({ s, event: landingEvent(event, track, spec.drone.usableBatteryWh, 'completed') })
+      return null
+    }
+    route.push({
+      s,
+      event: { type: 'waypoint', ...event(s), index, kind: waypoint.kind, segmentId: waypoint.segmentId, pose }
+    })
+    if (waypoint.kind === 'station') {
+      route.push({
+        s,
+        event: {
+          type: 'observation',
+          ...event(s),
+          waypointIndex: index,
+          segmentId: waypoint.segmentId!,
+          viewpointId: waypoint.viewpointId,
+          zoom: waypoint.zoom,
+          captureSource: 'drone',
+          image: null,
+          pose,
+          quality: NOMINAL_QUALITY,
+          privacyAction: 'none'
+        }
+      })
+      track.hover(assumedEnergyModel.stationHoverS)
+    }
+  }
+  throw new Error(`${plan.id} has no landing waypoint`)
+}
+
+function context(run: Run): FlightContext {
+  return { plan: run.plan, spec: run.device.spec, record: run.record, t0: run.flight!.t0 }
+}
+
+/** Keeps the flight up to `s` seconds after take-off, dropping what was decided after, and returns a track from there. */
+function keepUntil(flight: Flight, drone: DroneProfile, s: number): Track {
+  const here = stateAt(flight.legs, s)
+  flight.legs = flight.legs.filter((leg) => leg.startS < s).map((leg) => (leg.endS <= s ? leg : cut(leg, s, here)))
+  flight.route = flight.route.filter((t) => t.s <= s)
+  return new Track(drone, here.pose, s, here.wh)
+}
+
+/** Straight over the dock at the current height, then down onto it. */
+function flyHome(track: Track, dock: Dock) {
+  track.fly({ ...dockPose(dock, track.pose.headingDeg), altM: track.pose.altM })
+  track.fly(dockPose(dock, track.pose.headingDeg))
+}
+
+function landing(record: PatrolRun, flight: Flight, track: Track, outcome: 'completed' | 'cancelled'): Timed {
+  return { s: track.s, event: landingEvent(eventFactory(record, flight.t0), track, flight.startWh, outcome) }
+}
+
+function landingEvent(
+  event: ReturnType<typeof eventFactory>,
+  track: Track,
+  startWh: number,
+  outcome: Extract<ProviderEvent, { type: 'landed' }>['outcome']
+): ProviderEvent {
+  return { type: 'landed', ...event(track.s), outcome, pose: track.pose, remainingWh: startWh - track.wh }
+}
+
+/** Rebuilds the undelivered queue from the decided flight: its route events and battery samples after `afterMs`. */
+function requeue(run: Run, afterMs: number) {
+  const flight = run.flight!
+  const event = eventFactory(run.record, flight.t0)
+  const ahead = [...flight.route, ...batterySamples(flight.legs, flight.startWh, event)].filter(
+    (t) => Date.parse(t.event.at) > afterMs
+  )
+  flight.queue = [...flight.queue.slice(0, flight.next), ...inOrder(ahead)]
 }
 
 /** Builds legs from a start pose, time and energy, with the planner's energy model. */
@@ -278,80 +578,6 @@ class Track {
   }
 }
 
-/** The whole flight, decided at dispatch: take-off now, every waypoint, a frame at each station, landing. */
-function flyPlan(run: Run, t0: number): Flight {
-  const { plan, device, record } = run
-  const waypoints = plan.waypoints
-  const startWh = device.spec.drone.usableBatteryWh
-  const event = eventFactory(record, t0)
-  const track = new Track(device.spec.drone, poseOf(waypoints[0]!))
-  const timed: { s: number; event: ProviderEvent }[] = [
-    { s: 0, event: { type: 'takeoff', ...event(0), planId: plan.id, pose: track.pose } }
-  ]
-  for (let index = 1; index < waypoints.length; index++) {
-    if (waypoints[index - 1]!.kind === 'station') track.hover(assumedEnergyModel.stationHoverS)
-    const waypoint = waypoints[index]!
-    track.fly(poseOf(waypoint))
-    const { s, pose } = track
-    if (index === waypoints.length - 1) {
-      timed.push({
-        s,
-        event: { type: 'landed', ...event(s), outcome: 'completed', pose, remainingWh: startWh - track.wh }
-      })
-      break
-    }
-    timed.push({
-      s,
-      event: { type: 'waypoint', ...event(s), index, kind: waypoint.kind, segmentId: waypoint.segmentId, pose }
-    })
-    if (waypoint.kind === 'station') {
-      timed.push({
-        s,
-        event: {
-          type: 'observation',
-          ...event(s),
-          waypointIndex: index,
-          segmentId: waypoint.segmentId!,
-          viewpointId: waypoint.viewpointId,
-          captureSource: 'drone',
-          image: null,
-          pose,
-          quality: NOMINAL_QUALITY,
-          privacyAction: 'none'
-        }
-      })
-    }
-  }
-  const legs = track.legs
-  return { t0, startWh, legs, queue: inOrder([...timed, ...batterySamples(legs, startWh, event)]), next: 0 }
-}
-
-/**
- * A cancel in flight: drop what has not happened yet, fly straight over the dock at the current height, descend and
- * land. Battery samples continue on the way back.
- */
-function returnToDock(run: Run, nowMs: number) {
-  const flight = run.flight!
-  const { dock, drone } = run.device.spec
-  const s = (nowMs - flight.t0) / 1000
-  const here = stateAt(flight.legs, s)
-  const track = new Track(drone, here.pose, s, here.wh)
-  track.fly({ ...dockPose(dock, here.pose.headingDeg), altM: here.pose.altM })
-  track.fly(dockPose(dock, here.pose.headingDeg))
-  const flown = flight.legs.filter((leg) => leg.startS < s).map((leg) => (leg.endS <= s ? leg : cut(leg, s, here)))
-  flight.legs = [...flown, ...track.legs]
-  const event = eventFactory(run.record, flight.t0)
-  const landed: ProviderEvent = {
-    type: 'landed',
-    ...event(track.s),
-    outcome: 'cancelled',
-    pose: track.pose,
-    remainingWh: flight.startWh - track.wh
-  }
-  const ahead = batterySamples(flight.legs, flight.startWh, event).filter((t) => Date.parse(t.event.at) > nowMs)
-  flight.queue = [...flight.queue.slice(0, flight.next), ...inOrder([...ahead, { s: track.s, event: landed }])]
-}
-
 function eventFactory(record: PatrolRun, t0: number) {
   return (s: number) => ({
     runId: record.id,
@@ -363,7 +589,7 @@ function eventFactory(record: PatrolRun, t0: number) {
 
 function batterySamples(legs: Leg[], startWh: number, event: ReturnType<typeof eventFactory>) {
   const endS = legs.at(-1)!.endS
-  const samples: { s: number; event: ProviderEvent }[] = []
+  const samples: Timed[] = []
   for (let s = BATTERY_SAMPLE_S; s < endS; s += BATTERY_SAMPLE_S) {
     const remainingWh = startWh - stateAt(legs, s).wh
     samples.push({ s, event: { type: 'battery', ...event(s), remainingWh, percent: (100 * remainingWh) / startWh } })
@@ -372,7 +598,7 @@ function batterySamples(legs: Leg[], startWh: number, event: ReturnType<typeof e
 }
 
 /** Stable by time, so events at the same moment keep the order they were made in. */
-function inOrder(timed: { s: number; event: ProviderEvent }[]): ProviderEvent[] {
+function inOrder(timed: Timed[]): ProviderEvent[] {
   return timed.toSorted((a, b) => a.s - b.s).map((t) => t.event)
 }
 

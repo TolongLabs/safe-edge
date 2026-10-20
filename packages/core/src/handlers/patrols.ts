@@ -4,9 +4,11 @@ import {
   type PatrolPlanner,
   type Segment,
   type SegmentCoverage,
-  type Task
+  type Task,
+  type ThirdParty
 } from '@safe-edge/contracts'
 import { canonicalJson } from '../audit.ts'
+import { passesQualityGate } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
@@ -16,7 +18,15 @@ const ROUNDING_M = 1e-6
 type PatrolOperation =
   'createPatrolPlan' | 'approvePatrolPlan' | 'releasePlanHold' | 'startPatrol' | 'completePatrol' | 'recordObservation'
 
-export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<PatrolOperation> => ({
+/**
+ * `thirdParties` are the ones the site records (the seed's), which every plan keeps clear of. A create-plan request may
+ * report more: core stores them, and every plan it makes keeps clear of them too until the reporting plan's window
+ * closes (`ThirdPartyReport`).
+ */
+export const patrolHandlers = (
+  planner: PatrolPlanner | undefined,
+  thirdParties: ThirdParty[]
+): Handlers<PatrolOperation> => ({
   createPatrolPlan: (tx, { body }) => {
     const dock = tx.get('docks', body.dockId)
     if (!dock) return tx.notFound(`No dock ${body.dockId}`)
@@ -42,6 +52,11 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (planner === undefined) throw new Error('createPatrolPlan needs a planner: pass one to createCore({ planner })')
     const ids = new Set(body.segmentIds)
     const id = tx.id('plan')
+    const reported = (body.thirdParties ?? []).map((p) => ({ ...p, source: tx.source }))
+    const inForce = tx
+      .all('thirdPartyReports')
+      .filter((r) => Date.parse(tx.now) < Date.parse(r.validTo))
+      .map((r) => r.thirdParty)
     // The planner is outside core, so its output is checked against the contract and the approval gate first.
     const plan = PatrolPlan.parse(
       planner({
@@ -53,7 +68,8 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
         droneProfile,
         segments,
         passes: segments.flatMap((s) => (s.passId === null ? [] : [tx.must('passes', s.passId)])),
-        findings: tx.all('findings').filter((f) => ids.has(f.segmentId))
+        findings: tx.all('findings').filter((f) => ids.has(f.segmentId)),
+        thirdParties: distinct([...thirdParties, ...inForce, ...reported])
       })
     )
     if (plan.id !== id || plan.status !== 'proposed' || plan.approvedBy !== null || plan.approvedAt !== null) {
@@ -63,6 +79,17 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
       throw new Error(`The planner must record the requested re-plan on ${id}`)
     }
     tx.put('patrolPlans', plan)
+    for (const thirdParty of reported) {
+      tx.put('thirdPartyReports', {
+        id: tx.id('tpr'),
+        planId: plan.id,
+        thirdParty,
+        reportedAt: tx.now,
+        validTo: plan.window.end,
+        simulated: thirdParty.simulated,
+        source: tx.source
+      })
+    }
     tx.emit('edge.patrol.planned.v1', {
       planId: plan.id,
       segmentIds: plan.tasks.map((t) => t.segmentId),
@@ -81,6 +108,10 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
       return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; approve that instead`, plan.id)
     const approved = { ...plan, status: 'approved' as const, approvedBy: tx.actor.id, approvedAt: tx.now }
     tx.put('patrolPlans', approved)
+    // A re-plan of a plan in flight is the rest of that flight: from now on its patrol flies the re-plan, and the drone
+    // provider switches the drone to it.
+    const flying = flyingAncestor(tx, plan)
+    if (flying) tx.put('patrols', { ...flying, planId: plan.id })
     return ok(approved)
   },
 
@@ -88,7 +119,9 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
   releasePlanHold: (tx, { params }) => {
     const plan = tx.get('patrolPlans', params.id)
     if (!plan) return tx.notFound(`No patrol plan ${params.id}`)
-    const index = plan.holds.findIndex((h) => h.kind === 'separation' && h.segmentId === params.segmentId)
+    // `dock` names the take-off and landing hold, the separation hold without a segment.
+    const at = params.segmentId === 'dock' ? null : params.segmentId
+    const index = plan.holds.findIndex((h) => h.kind === 'separation' && h.segmentId === at)
     if (index < 0) return tx.notFound(`${plan.id} has no separation hold on ${params.segmentId}`)
     const hold = plan.holds[index]!
     if (hold.releasedBy !== null) {
@@ -111,7 +144,9 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     }
     const next = supersededBy(tx, plan)
     if (next) return tx.deny('plan_superseded', `${plan.id} was re-planned as ${next.id}; fly that instead`, plan.id)
-    // Weather and lightning holds stop the launch until they end; separation holds wait at their segment in flight.
+    const flying = tx.all('patrols').find((p) => p.planId === plan.id && p.status === 'in_flight')
+    if (flying) return tx.deny('invalid_transition', `${plan.id} is already flying as ${flying.id}`, plan.id)
+    // Weather and lightning holds stop the launch until they end; separation holds on segments wait there in flight.
     const launchHolds = plan.holds.filter(
       (h) => h.segmentId === null && h.until !== null && Date.parse(tx.now) < Date.parse(h.until)
     )
@@ -119,10 +154,20 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
       const holds = launchHolds.map((h) => `${h.kind} hold until ${h.until}: ${h.reason}`).join('; ')
       return tx.deny('weather_hold', `${plan.id} cannot launch yet: ${holds}`, plan.id)
     }
-    // The agreed window: from its start, up to (not at) its end.
+    // People within 30 m of the dock hold the take-off until the pilot records the dock clear.
+    const dockHold = plan.holds.find((h) => h.kind === 'separation' && h.segmentId === null && h.releasedBy === null)
+    if (dockHold) return tx.deny('separation_hold', `${plan.id} cannot take off yet: ${dockHold.reason}`, plan.id)
+    // The agreed window: from its start, up to (not at) its end, and landing before the end.
     const now = Date.parse(tx.now)
     if (now < Date.parse(plan.window.start) || now >= Date.parse(plan.window.end)) {
       const message = `${plan.id} flies from ${plan.window.start} until ${plan.window.end}; it is ${tx.now}`
+      return tx.deny('outside_window', message, plan.id)
+    }
+    const [takeoff, landing] = [plan.waypoints[0], plan.waypoints.at(-1)]
+    const flightMs = takeoff && landing ? Date.parse(landing.eta) - Date.parse(takeoff.eta) : 0
+    if (now + flightMs >= Date.parse(plan.window.end)) {
+      const landsAt = new Date(now + flightMs).toISOString()
+      const message = `${plan.id} would land at ${landsAt}, after its window closes at ${plan.window.end}`
       return tx.deny('outside_window', message, plan.id)
     }
     const patrol: Patrol = {
@@ -175,12 +220,21 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     const coverage = [...covered, ...unreported]
     const completed: Patrol = { ...patrol, status: 'completed', completedAt: tx.now, coverage }
     tx.put('patrols', completed)
+    // Inspecting a whole segment restarts its patrol interval and does a whole-segment recapture asked for before
+    // take-off. Part of one does neither: its unknown rest gets a field check, and the patrol is still due.
+    for (const c of coverage.filter((c) => c.unknownM === 0)) {
+      tx.put('segments', { ...tx.must('segments', c.segmentId), lastPatrolledAt: tx.now })
+      const tookOff = Date.parse(patrol.startedAt)
+      closeRecaptures(tx, c.segmentId, (t) => t.viewpointId === null && Date.parse(t.createdAt) <= tookOff)
+    }
     for (const c of coverage.filter((c) => c.unknownM > 0)) {
       const segment = tx.must('segments', c.segmentId)
       const task: Task = {
         id: tx.id('task'),
         kind: 'field_check',
         segmentId: segment.id,
+        viewpointId: null,
+        candidateId: null,
         findingId: null,
         assigneeUserId: tx.must('assets', segment.assetId).custodianUserId,
         status: 'open',
@@ -205,10 +259,49 @@ export const patrolHandlers = (planner: PatrolPlanner | undefined): Handlers<Pat
     if (body.patrolId !== null && !tx.get('patrols', body.patrolId)) return tx.notFound(`No patrol ${body.patrolId}`)
     const observation = { id: tx.id('obs'), ...body, source: tx.source }
     tx.put('observations', observation)
+    // A frame taken since a recapture was asked for is the re-shoot, unless the privacy gate discarded it or it fails
+    // the quality gate: low quality means recapture.
+    if (observation.privacyAction !== 'discarded' && passesQualityGate(observation.quality)) {
+      const takenAt = Date.parse(observation.capturedAt)
+      closeRecaptures(
+        tx,
+        segment.id,
+        (t) =>
+          (t.viewpointId === null || t.viewpointId === observation.viewpointId) && takenAt >= Date.parse(t.createdAt)
+      )
+    }
     return ok(observation)
   }
 })
 
+/** Marks done the open recapture tasks on a segment that a new capture covers: its viewpoint's, or the segment's. */
+function closeRecaptures(tx: Tx, segmentId: string, covers: (task: Task) => boolean): void {
+  for (const task of tx.all('tasks')) {
+    if (task.kind === 'recapture' && task.status === 'open' && task.segmentId === segmentId && covers(task)) {
+      tx.put('tasks', { ...task, status: 'done' })
+    }
+  }
+}
+
 /** The re-plan that replaced `plan`, if any. A superseded plan is never approved or flown. */
 const supersededBy = (tx: Tx, plan: PatrolPlan) =>
   tx.all('patrolPlans').find((p) => p.replan?.supersedes?.planId === plan.id)
+
+/** The patrol in flight on a plan `plan` re-plans, directly or through earlier re-plans of it. */
+function flyingAncestor(tx: Tx, plan: PatrolPlan): Patrol | undefined {
+  const flying = tx.all('patrols').filter((p) => p.status === 'in_flight')
+  for (
+    let id = plan.replan?.supersedes?.planId;
+    id !== undefined;
+    id = tx.get('patrolPlans', id)?.replan?.supersedes?.planId
+  ) {
+    const patrol = flying.find((p) => p.planId === id)
+    if (patrol) return patrol
+  }
+  return undefined
+}
+
+/** Each third party once, however many times it was reported. */
+function distinct(parties: ThirdParty[]): ThirdParty[] {
+  return [...new Map(parties.map((p) => [canonicalJson(p), p])).values()]
+}

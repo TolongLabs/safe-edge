@@ -7,6 +7,7 @@ import {
   type EdgePass,
   type FalseFlagReport,
   type FlagClass,
+  type ImageQuality,
   type InventoryItem,
   type ItemStatus,
   type OperationSpec,
@@ -14,6 +15,7 @@ import {
   type Retest,
   type Route,
   type RouteStatus,
+  type Segment,
   type Tier,
   type User
 } from '@safe-edge/contracts'
@@ -48,6 +50,21 @@ export function actorFor(user: User): Actor {
 }
 
 /**
+ * The quality gate a frame passes to count as a re-shoot (TRD perception routing: low quality means recapture).
+ * Assumed figures: no perception model has calibrated them yet.
+ */
+const QUALITY_GATE = { minSharpness: 0.6, maxAlignmentResidualPx: 5, maxOcclusion: 0.3 }
+
+/** Sharp enough, aligned to its baseline (a frame with none to align to has a null residual) and not occluded. */
+export function passesQualityGate({ sharpness, alignmentResidualPx, occlusion }: ImageQuality): boolean {
+  return (
+    sharpness >= QUALITY_GATE.minSharpness &&
+    (alignmentResidualPx === null || alignmentResidualPx <= QUALITY_GATE.maxAlignmentResidualPx) &&
+    occlusion <= QUALITY_GATE.maxOcclusion
+  )
+}
+
+/**
  * Core assigns tiers, never the caller: a missing or changed safety-critical item is Tier 2, an item that was not
  * visible is Tier 3 (a field check), and everything else, including every generic image change, is Tier 1. A flag
  * whose class is over its false-flag budget drops from Tier 2 to Tier 1, so noise stops suspending passes.
@@ -63,9 +80,11 @@ export const FALSE_FLAG_BUDGET = 10
 
 /**
  * What a flag's false flags count against: the item type for an expected-inventory flag, else its class. Null for an
- * expected-inventory flag that names no item, which no budget covers.
+ * expected-inventory flag that names no item, and for a missed patrol, which core raises from the calendar rather than
+ * from a frame: no budget covers either.
  */
 export function flagClassOf(item: InventoryItem | null, candidateClass: CandidateClass): FlagClass | null {
+  if (candidateClass === 'missed_patrol') return null
   if (candidateClass !== 'inventory_item') return candidateClass
   return item?.type ?? null
 }
@@ -216,3 +235,14 @@ export function openSuspicions(tx: Tx, segmentId: string): string[] {
 /** When a valid pass starts expiring: 30 days before `validTo`. */
 export const expiringFrom = (validTo: string) => Date.parse(validTo) - EXPIRING_WINDOW_DAYS * DAY_MS
 export const DAY = DAY_MS
+
+/**
+ * When a segment's patrol is missed: a whole patrol interval after the last patrol that inspected some of it (`since`),
+ * or after its pass's `validFrom` when that is later, because the re-test that issued the pass was an inspection on site.
+ */
+export function missedPatrolDue(segment: Segment, pass: EdgePass): { since: string; dueMs: number } {
+  const since = [segment.lastPatrolledAt, pass.validFrom]
+    .filter((at) => at !== null)
+    .reduce((a, b) => (Date.parse(a) >= Date.parse(b) ? a : b))
+  return { since, dueMs: Date.parse(since) + segment.patrolIntervalDays * DAY_MS }
+}

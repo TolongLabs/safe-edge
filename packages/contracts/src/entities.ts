@@ -19,14 +19,17 @@ import {
   PatrolId,
   PatrolPlanId,
   PhotoMark,
+  Point,
   Polygon,
   Pose,
   Quote,
   RemedyId,
   RetestId,
   RouteId,
+  Source,
   SegmentId,
   TaskId,
+  ThirdPartyReportId,
   Timestamp,
   TownshipId,
   UserId,
@@ -92,6 +95,14 @@ export const Segment = named(
     expectedInventory: z.array(InventoryItem),
     baselineId: BaselineId.nullable(),
     passId: PassId.nullable(),
+    patrolIntervalDays: z
+      .number()
+      .int()
+      .positive()
+      .describe(
+        "How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later"
+      ),
+    lastPatrolledAt: Timestamp.nullable().describe('When a completed patrol last inspected the whole segment'),
     ...provenance
   })
 )
@@ -235,6 +246,57 @@ export const ContextSnapshot = named(
 )
 export type ContextSnapshot = z.infer<typeof ContextSnapshot>
 
+/**
+ * A person, vessel, vehicle or structure not under the remote pilot's control, as a create-plan request reports it
+ * (core stamps the source). CAR 2016 regulation 143(1)(e)–(g): no flight within 50 m of one, nor within 30 m of any
+ * person during take-off or landing, without the Director General's authorisation; (c), (d): nor over or within 150 m
+ * of any assembly in the open air of more than 1,000 persons.
+ */
+export const ReportedThirdParty = named(
+  'ReportedThirdParty',
+  z
+    .object({
+      id: z.string().min(1),
+      kind: z.enum(['person', 'vessel', 'vehicle', 'structure']),
+      label: z.string().describe('As people should read it, e.g. "3 people on the lakeside footway"'),
+      geometry: z.union([Point, LineString, Polygon]),
+      observedAt: Timestamp.nullable().describe('When it was seen; null for a mapped structure'),
+      headcount: z
+        .number()
+        .int()
+        .positive()
+        .nullable()
+        .describe(
+          'How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it'
+        ),
+      simulated: z.boolean()
+    })
+    .refine((p) => p.kind === 'person' || p.headcount === null, {
+      message: 'Only a person report counts people; a vessel, vehicle or structure has headcount null',
+      path: ['headcount']
+    })
+)
+export type ReportedThirdParty = z.infer<typeof ReportedThirdParty>
+
+/** A third party with its provenance, as the seed records it and the planner port takes it. Not on the REST API. */
+export const ThirdParty = ReportedThirdParty.extend({ source: Source })
+export type ThirdParty = z.infer<typeof ThirdParty>
+
+/**
+ * A third party a create-plan request reported, as core stores it (audited with the request). Every plan core makes
+ * while it counts keeps clear of it, re-plans included: a report describes the flight it came with, so it counts until
+ * that plan's window closes. Not on the REST API: the audit chain carries each one.
+ */
+export const ThirdPartyReport = z.object({
+  id: ThirdPartyReportId,
+  planId: PatrolPlanId.describe('The plan whose request reported it'),
+  thirdParty: ThirdParty.describe('As reported, with the source core stamped from the caller'),
+  reportedAt: Timestamp,
+  validTo: Timestamp.describe("The reporting plan's window end: plans core makes from then on no longer see it"),
+  ...provenance
+})
+export type ThirdPartyReport = z.infer<typeof ThirdPartyReport>
+
 /** Each part is 0–1, or null when its input is stale or missing ("unknown", never zero). */
 export const PriorityScore = named(
   'PriorityScore',
@@ -273,7 +335,10 @@ export const PatrolTask = named(
     flightLine: LineString,
     stations: z.array(CameraStation),
     priority: PriorityScore,
-    energyWh: z.number().nonnegative().describe('Flying the task and hovering at its stations, without transit')
+    energyWh: z
+      .number()
+      .nonnegative()
+      .describe('Flying the task, hovering at its stations and any wait for a separation hold, without transit')
   })
 )
 export type PatrolTask = z.infer<typeof PatrolTask>
@@ -303,10 +368,23 @@ export const PlanHold = named(
 )
 export type PlanHold = z.infer<typeof PlanHold>
 
-/** Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off. */
+/**
+ * Why a segment, or some of its stations, is not in the plan. `flight_line`: no offset flight line fits the stand-off.
+ * `authorisation`: it would fly over or within 150 m of a designated area without the Director General's authorisation,
+ * or of an open-air assembly of more than 1,000 persons. `separation_hold`: a structure would be within 50 m of it.
+ */
 export const RejectionCode = named(
   'RejectionCode',
-  z.enum(['battery', 'geofence', 'flight_line', 'weather_hold', 'separation_hold', 'stale_input', 'outside_window'])
+  z.enum([
+    'battery',
+    'geofence',
+    'flight_line',
+    'weather_hold',
+    'separation_hold',
+    'stale_input',
+    'outside_window',
+    'authorisation'
+  ])
 )
 export type RejectionCode = z.infer<typeof RejectionCode>
 
@@ -326,6 +404,7 @@ export const ReplanTrigger = named(
       warning: ContextSnapshot.describe('A `weather_warning` or `lightning_warning` in force')
     }),
     z.object({ kind: z.literal('flag_confirmed'), segmentId: SegmentId, findingId: FindingId }),
+    z.object({ kind: z.literal('recapture_requested'), segmentId: SegmentId, candidateId: CandidateId }),
     z.object({ kind: z.literal('pass_expiring'), segmentId: SegmentId, passId: PassId, validTo: Timestamp }),
     z.object({
       kind: z.literal('repair_completed'),
@@ -382,6 +461,14 @@ export const PatrolPlan = named(
     energyWh: z.number().nonnegative(),
     reserveWh: z.number().nonnegative().describe("Energy left on landing; at least the drone profile's reserve"),
     rejected: z.array(z.object({ segmentId: SegmentId, code: RejectionCode, reason: z.string() })),
+    authorisation: z
+      .object({
+        ref: z.string().describe("The Director General's authorisation the flight relies on"),
+        reason: z.string().describe('The designated areas the route flies over or within 150 m of'),
+        simulated: z.boolean().describe('True for an assumed authorisation, such as a fixture')
+      })
+      .nullable()
+      .describe('CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area'),
     replan: PlanReplan.nullable().describe('null for a plan a person or the agent asked for'),
     approvedBy: UserId.nullable(),
     approvedAt: Timestamp.nullable(),
@@ -462,9 +549,19 @@ export const OTHER_CHANGE_CLASSES = [
   'other'
 ] as const
 
-/** `inventory_item` for expected-inventory results; the rest are the triage "other changes" classes. */
-export const CandidateClass = named('CandidateClass', z.enum(['inventory_item', ...OTHER_CHANGE_CLASSES]))
+/**
+ * `inventory_item` for expected-inventory results, the triage "other changes" classes, and `missed_patrol`, which only
+ * core raises (POST /segments/{id}/missed-patrol).
+ */
+export const CandidateClass = named(
+  'CandidateClass',
+  z.enum(['inventory_item', ...OTHER_CHANGE_CLASSES, 'missed_patrol'])
+)
 export type CandidateClass = z.infer<typeof CandidateClass>
+
+/** The classes a caller may raise or report: every class but `missed_patrol`. */
+export const ReportedClass = named('ReportedClass', CandidateClass.exclude(['missed_patrol']))
+export type ReportedClass = z.infer<typeof ReportedClass>
 
 export const Uncertainty = named('Uncertainty', z.enum(['low', 'medium', 'high']))
 export type Uncertainty = z.infer<typeof Uncertainty>
@@ -475,6 +572,24 @@ export const CandidateStatus = named(
 )
 export type CandidateStatus = z.infer<typeof CandidateStatus>
 
+/** The agent's summary on a candidate's Inbox card (PRD INBOX-1), stored by `POST /agent/inbox-drafts`. */
+export const AgentSummary = named(
+  'AgentSummary',
+  z.object({
+    label: z.literal('ai_suggestion').describe('Show it as an AI suggestion: no person has checked it'),
+    text: z.string().min(1),
+    citations: z
+      .array(z.string())
+      .describe(
+        "Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited"
+      ),
+    model: z.string().min(1).describe("The model the Claude API reported serving the run, never the model's own words"),
+    draftedBy: ActorRef,
+    draftedAt: Timestamp
+  })
+)
+export type AgentSummary = z.infer<typeof AgentSummary>
+
 export const Candidate = named(
   'Candidate',
   z.object({
@@ -484,8 +599,14 @@ export const Candidate = named(
     inventoryItemId: InventoryItemId.nullable(),
     itemStatus: ItemStatus.nullable(),
     class: CandidateClass,
-    tier: Tier.describe('Assigned by core: 2 for a missing or changed safety item, 3 for not visible, else 1'),
-    score: z.number().min(0).max(1),
+    tier: Tier.describe(
+      'Assigned by core: 2 for a missing or changed safety item, a damage report or a missed patrol, 3 for not visible, else 1'
+    ),
+    score: z
+      .number()
+      .min(0)
+      .max(1)
+      .describe('Detection score; 1 for a damage report or a missed patrol, which a person saw or core counted'),
     uncertainty: Uncertainty.nullable(),
     gridCell: z
       .string()
@@ -504,6 +625,9 @@ export const Candidate = named(
     decidedBy: UserId.nullable(),
     decidedAt: Timestamp.nullable(),
     decisionReason: z.string().nullable(),
+    agentSummary: AgentSummary.nullable().describe(
+      'Null until the agent summarises it; a new summary replaces the last'
+    ),
     ...provenance
   })
 )
@@ -575,13 +699,21 @@ export const Finding = named(
 )
 export type Finding = z.infer<typeof Finding>
 
-/** Interim protection after a confirmed finding, or a field check for unknown coverage. */
+/**
+ * Interim protection after a confirmed finding, a field check for unknown coverage or a not-visible item, or a
+ * recapture a manager asked for. A recapture is done when a new frame of its viewpoint is recorded, or for the whole
+ * segment when a patrol that took off after it opened inspects some of the segment.
+ */
 export const Task = named(
   'Task',
   z.object({
     id: TaskId,
-    kind: z.enum(['interim_protection', 'field_check']),
+    kind: z.enum(['interim_protection', 'field_check', 'recapture']),
     segmentId: SegmentId,
+    viewpointId: ViewpointId.nullable().describe(
+      "The viewpoint to capture again: that of the candidate's photo; null for the whole segment or another kind"
+    ),
+    candidateId: CandidateId.nullable().describe('The candidate that opened it (recapture, or a Tier 3 field check)'),
     findingId: FindingId.nullable(),
     assigneeUserId: UserId.nullable(),
     status: z.enum(['open', 'done']),
@@ -599,6 +731,19 @@ export const WorkOrderStatus = named(
 )
 export type WorkOrderStatus = z.infer<typeof WorkOrderStatus>
 
+/** Why a hand-off to the external work-order system failed, and at which call of the WorkOrderProvider port. */
+export const WorkOrderExternalError = named(
+  'WorkOrderExternalError',
+  z.object({
+    step: z
+      .enum(['createFinding', 'addEvidence', 'updateStatus'])
+      .describe('The call that failed: filing the finding, attaching its photos, or moving the record’s status'),
+    message: z.string().min(1),
+    at: Timestamp
+  })
+)
+export type WorkOrderExternalError = z.infer<typeof WorkOrderExternalError>
+
 export const WorkOrder = named(
   'WorkOrder',
   z.object({
@@ -614,12 +759,9 @@ export const WorkOrder = named(
     completedAt: Timestamp.nullable(),
     completionEvidence: z.array(EvidenceRef),
     externalRef: z.string().nullable().describe('Procore observation ID'),
-    externalError: z
-      .object({ message: z.string().min(1), at: Timestamp })
-      .nullable()
-      .describe(
-        'Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried'
-      ),
+    externalError: WorkOrderExternalError.nullable().describe(
+      'Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it'
+    ),
     createdAt: Timestamp,
     ...provenance
   })

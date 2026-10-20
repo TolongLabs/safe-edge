@@ -9,6 +9,7 @@ Contents:
 1.  [Events and Reset demo](#events-and-reset-demo)
 1.  [Patrol plans in demo mode](#patrol-plans-in-demo-mode)
 1.  [The http transport](#the-http-transport)
+1.  [Streams over HTTP: Ask and events](#streams-over-http-ask-and-events)
 1.  [Errors](#errors)
 
 ## Demo mode: the memory transport
@@ -49,12 +50,14 @@ const unsubscribe = demo.subscribe((event) => {
 })
 
 await demo.resetDemo() // the seed again, an empty audit chain, ID counters from 1
-await demo.tick('2026-11-01T02:00:00.000Z') // passes move to expiring and expired on the scenario clock
+await demo.tick('2026-11-01T02:00:00.000Z') // the scheduled pass: expiring and expired passes, missed patrols
 ```
 
-- `subscribe` hears every event core emits in this demo, whichever user acted. It is memory-only for now: the http client does not yet read the API's `GET /v1/events` stream.
+- `subscribe` hears every event core emits in this demo, whichever user acted. Over HTTP, read `GET /v1/events` with `streamEvents` instead (see [Streams over HTTP](#streams-over-http-ask-and-events)).
+- Core's re-plan subscriber runs in the demo as in the API: a confirmed flag, a completed repair or a pass starting to expire re-plans the open plans as the system (`core.replan`), and a repair with no plan open queues a re-test patrol. Each re-plan's `edge.patrol.planned.v1` reaches subscribers right after the event that caused it. It needs the planner (see [Patrol plans in demo mode](#patrol-plans-in-demo-mode)); without one, the failure goes on the audit chain as `runAutomation` with subject `automation`. A plan that fails is the only one left out: the trigger's other plans are re-planned.
+- The demo flies drone-sim, as the API does (`hostDroneSim` in `@safe-edge/providers`): a patrol the pilot starts with `provider: 'sim'` takes off on the demo clock, and each `tick(now)` delivers its frames and landing to core as `usr_drone_sim`. An in-flight patrol is re-planned from the stops the drone has reached; once the pilot approves the re-plan, the drone flies it. A held segment waits in flight until the pilot calls `releasePlanHold`. A patrol started on another provider is recorded as a `runAutomation` failure.
 - `resetDemo` restores the seed for every client made with `as`, and subscribers stay subscribed. It emits no event, so refetch what the screen shows after calling it. The agent user cannot reset.
-- `tick(now)` runs core's time-driven pass moves (S4's expiring passes): valid to expiring 30 days before `validTo`, then to expired. The system acts, whichever user the client is, so a tick never makes a pass valid. Subscribers get the `edge.pass.expiring.v1` and `edge.pass.expired.v1` events, and `tick` returns them. It is memory-only: the HTTP API exposes no tick.
+- `tick(now)` first delivers what drone-sim's drones did by the demo clock, then runs the scheduled pass the HTTP API runs on its timer or each time its scenario clock is set (core's `runSchedule`): passes move valid to expiring 30 days before `validTo`, then to expired (S4), and every valid or expiring pass whose segment went a whole patrol interval uninspected gets a missed patrol, which suspends it. The system acts, whichever user the client is, so a tick never makes a pass valid. Set the demo clock to `now` first: core stamps the missed patrols with the clock. Subscribers get the events, and `tick` returns them. It is memory-only.
 
 ## Patrol plans in demo mode
 
@@ -80,7 +83,31 @@ await api.uploadEvidence({ body: { mediaType: 'image/jpeg', dataBase64, captured
 
 - Every request sends `Authorization: Bearer <token>`; the API maps the token to a user.
 - Every write sends a fresh `Idempotency-Key`. To retry a write safely, pass your own and reuse it: `api.draftNotice(input, { idempotencyKey })`.
-- The http client also has the HTTP-only operations (`uploadEvidence`, `getEvidenceUrl`, `triageImages`, `registerWebhook`) and lacks `resetDemo`. Responses are checked against the contract.
+- The http client also has the HTTP-only operations (`uploadEvidence`, `getEvidenceUrl`, `triageImages`, `registerWebhook`, `setScenarioClock`, and the agent's `draftInbox` and `draftMonthlyReport`) and lacks `resetDemo`. Responses are checked against the contract.
+- To replay a scenario against the dev API, which `bun run dev` starts on the scenario clock (`SAFE_EDGE_CLOCK=wall` opts out), set its clock to each event's time as the system user before the event: `system.setScenarioClock({ body: { now: event.at } })`. Records then carry the scenario's times, as they do with the memory transport's `clock`. An API on the wall clock, as production always is, answers 501.
+
+## Streams over HTTP: Ask and events
+
+The two streamed operations are http-client methods too. Each resolves once the API has accepted the request, so a refusal or bad input throws there as a typed error, and then yields parsed events:
+
+```ts
+const hangUp = new AbortController()
+const reply = await api.askAgent({ body: { question: 'Which passes expire in 30 days?' } }, { signal: hangUp.signal })
+for await (const part of reply) {
+  if (part.event === 'delta')
+    append(part.data.text) // text as the agent writes it
+  else if (part.event === 'answer')
+    show(part.data) // AgentAnswer: replaces the deltas, with citations and model
+  else showStopped(part.data) // AgentStopped: Claude refused or could not finish
+}
+
+const events = await api.streamEvents() // subscribed now: act after this
+for await (const event of events) handle(event) // EdgeEvent CloudEvents, as subscribe gives them
+```
+
+- `askAgent` ends after one `answer` or one `stopped`. An `error` event (the run failed on the server) throws.
+- To hang up, abort `signal` or leave the `for await` loop early. Hanging up on `askAgent` cancels the agent's Claude run on the server, so close the stream when the Ask panel closes.
+- `streamEvents` never ends on its own: abort its `signal` or leave the loop when the screen goes away. It has no replay, so events emitted before it resolved are not sent.
 
 ## Errors
 

@@ -220,10 +220,40 @@ paths:
       x-safe-edge-agent-scope: patrol.propose
       x-safe-edge-events:
         - edge.patrol.planned.v1
+  /patrol-plans/{id}:
+    get:
+      operationId: getPatrolPlan
+      summary: Read a patrol plan
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - patrol-plans
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^plan_
+      responses:
+        "200":
+          description: Read a patrol plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatrolPlan"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /patrol-plans/{id}/approve:
     post:
       operationId: approvePatrolPlan
-      summary: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
+      summary: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded). Approving a re-plan of a plan in flight moves its patrol onto the re-plan, which the drone then flies
       description: "Roles: pilot. Agents are refused."
       tags:
         - patrol-plans
@@ -237,7 +267,7 @@ paths:
         - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
-          description: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded)
+          description: Allow the plan to fly; a plan a re-plan superseded is refused (plan_superseded). Approving a re-plan of a plan in flight moves its patrol onto the re-plan, which the drone then flies
           content:
             application/json:
               schema:
@@ -254,7 +284,7 @@ paths:
   /patrol-plans/{id}/holds/{segmentId}/release:
     post:
       operationId: releasePlanHold
-      summary: Record that the pilot or observer saw a waiting segment's path clear
+      summary: Record that the pilot or observer saw a waiting segment's path, or the dock, clear
       description: "Roles: pilot. Agents are refused."
       tags:
         - patrol-plans
@@ -269,12 +299,16 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            pattern: ^seg_
+            anyOf:
+              - type: string
+                pattern: ^seg_
+              - type: string
+                const: dock
+            description: The held segment, or `dock` for the take-off and landing hold on the plan's dock
         - $ref: "#/components/parameters/IdempotencyKey"
       responses:
         "200":
-          description: Record that the pilot or observer saw a waiting segment's path clear
+          description: Record that the pilot or observer saw a waiting segment's path, or the dock, clear
           content:
             application/json:
               schema:
@@ -311,7 +345,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: startPatrol
-      summary: Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
+      summary: Start a patrol from an approved plan that no re-plan superseded and no patrol is flying (invalid_transition), inside the plan's window (outside_window) and after its launch holds (weather_hold)
       description: "Roles: pilot. Agents are refused. Emits edge.patrol.started.v1."
       tags:
         - patrols
@@ -325,7 +359,7 @@ paths:
               $ref: "#/components/schemas/StartPatrolRequest"
       responses:
         "201":
-          description: Start a patrol from an approved plan that no re-plan superseded, inside the plan's window (outside_window) and after its launch holds (weather_hold)
+          description: Start a patrol from an approved plan that no re-plan superseded and no patrol is flying (invalid_transition), inside the plan's window (outside_window) and after its launch holds (weather_hold)
           content:
             application/json:
               schema:
@@ -340,6 +374,36 @@ paths:
         - pilot
       x-safe-edge-events:
         - edge.patrol.started.v1
+  /patrols/{id}:
+    get:
+      operationId: getPatrol
+      summary: Read a patrol
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - patrols
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^ptl_
+      responses:
+        "200":
+          description: Read a patrol
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Patrol"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /patrols/{id}/complete:
     post:
       operationId: completePatrol
@@ -592,10 +656,77 @@ paths:
         - system
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
+  /damage-reports:
+    post:
+      operationId: reportDamage
+      summary: "A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass"
+      description: "Roles: crew, manager. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1."
+      tags:
+        - damage-reports
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportDamageRequest"
+      responses:
+        "201":
+          description: "A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - crew
+        - manager
+      x-safe-edge-events:
+        - edge.candidate.raised.v1
+        - edge.pass.suspended.v1
+  /segments/{id}/missed-patrol:
+    post:
+      operationId: reportMissedPatrol
+      summary: "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass"
+      description: "Roles: system. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1."
+      tags:
+        - segments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^seg_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "201":
+          description: "Report that no patrol inspected the segment for a whole patrolIntervalDays (counted from lastPatrolledAt, or from the pass's validFrom when later): core raises a Tier 2 missed_patrol candidate, which suspends the valid or expiring pass"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - system
+      x-safe-edge-events:
+        - edge.candidate.raised.v1
+        - edge.pass.suspended.v1
   /candidates/{id}/decision:
     post:
       operationId: decideCandidate
-      summary: Confirm, reject (with reason) or recapture
+      summary: Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition)
       description: "Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1."
       tags:
         - candidates
@@ -615,7 +746,7 @@ paths:
               $ref: "#/components/schemas/DecideCandidateRequest"
       responses:
         "200":
-          description: Confirm, reject (with reason) or recapture
+          description: Confirm, reject (with reason) or recapture (with reason; opens a recapture task); a missed patrol cannot be confirmed (invalid_transition)
           content:
             application/json:
               schema:
@@ -653,6 +784,45 @@ paths:
           $ref: "#/components/responses/Denied"
       x-safe-edge-roles: any
       x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
+  /candidates/{id}/agent-summary:
+    post:
+      operationId: recordAgentSummary
+      summary: "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion"
+      description: People are refused. Agents need scope `finding.propose`.
+      tags:
+        - candidates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^cand_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordAgentSummaryRequest"
+      responses:
+        "200":
+          description: "Store the agent's Inbox summary on a candidate, replacing the last, until a manager decides it (then 403 invalid_transition: the summary stays the one the decision was made on); agents only, so a person's words are never labelled an AI suggestion"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Candidate"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: []
+      x-safe-edge-agent-scope: finding.propose
       x-safe-edge-events: []
   /findings:
     get:
@@ -730,7 +900,7 @@ paths:
   /tasks:
     get:
       operationId: listTasks
-      summary: List interim protection and field-check tasks
+      summary: List interim protection, field-check and recapture tasks
       description: "Roles: any. Agents need scope `edge.read`."
       tags:
         - tasks
@@ -751,7 +921,7 @@ paths:
             pattern: ^seg_
       responses:
         "200":
-          description: List interim protection and field-check tasks
+          description: List interim protection, field-check and recapture tasks
           content:
             application/json:
               schema:
@@ -1008,7 +1178,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: createWorkOrder
-      summary: Create a draft from a finding and a remedy
+      summary: "Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one"
       description: "Roles: manager. Agents need scope `workorder.draft`. Emits edge.work_order.drafted.v1."
       tags:
         - work-orders
@@ -1021,8 +1191,14 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateWorkOrderRequest"
       responses:
+        "200":
+          description: The finding's open draft, unchanged (confirming a candidate drafts one); nothing was created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
         "201":
-          description: Create a draft from a finding and a remedy
+          description: "Create a draft from a finding and a remedy. A finding has one open work order: refused while one is past draft, and its draft comes back instead when it has one"
           content:
             application/json:
               schema:
@@ -1149,7 +1325,7 @@ paths:
   /work-orders/{id}/external-error:
     post:
       operationId: recordWorkOrderExternalError
-      summary: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+      summary: Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)
       description: "Roles: system. Agents are refused."
       tags:
         - work-orders
@@ -1169,7 +1345,7 @@ paths:
               $ref: "#/components/schemas/RecordWorkOrderExternalErrorRequest"
       responses:
         "200":
-          description: Record why handing a submitted work order to the external work-order system failed, once (system only; nothing retries it)
+          description: Record why handing a work order to the external work-order system failed (system only; once, until a person retries it)
           content:
             application/json:
               schema:
@@ -1184,6 +1360,38 @@ paths:
           $ref: "#/components/responses/NotFound"
       x-safe-edge-roles:
         - system
+      x-safe-edge-events: []
+  /work-orders/{id}/external-retry:
+    post:
+      operationId: retryWorkOrderHandOff
+      summary: Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)
+      description: "Roles: manager, engineer. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Retry a failed hand-off to the external work-order system from the step that failed (a manager or engineer)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HandOffRetry"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - manager
+        - engineer
       x-safe-edge-events: []
   /work-orders/{id}/submit:
     post:
@@ -1705,7 +1913,7 @@ paths:
   /agent/inbox-drafts:
     post:
       operationId: draftInbox
-      summary: The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+      summary: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
       description: "Roles: manager. Agents are refused."
       tags:
         - agent
@@ -1719,7 +1927,7 @@ paths:
               $ref: "#/components/schemas/DraftInboxRequest"
       responses:
         "200":
-          description: The agent summarises a candidate for its Inbox card and, once it is a finding, drafts its work order; 502 AgentStopped when Claude refuses or skips the draft
+          description: The agent summarises a candidate for its Inbox card, stored as the candidate's agentSummary while it awaits a decision (a decided candidate keeps the summary it was decided on), and once it is a finding, drafts its work order (getting back the open draft); 502 AgentStopped when Claude refuses or skips the draft
           content:
             application/json:
               schema:
@@ -1730,6 +1938,12 @@ paths:
           $ref: "#/components/responses/Unauthenticated"
         "403":
           $ref: "#/components/responses/Denied"
+        "502":
+          description: Claude refused, or finished without the draft the workflow asked for; the summary is not stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentStopped"
       x-safe-edge-roles:
         - manager
       x-safe-edge-events: []
@@ -1761,6 +1975,12 @@ paths:
           $ref: "#/components/responses/Unauthenticated"
         "403":
           $ref: "#/components/responses/Denied"
+        "502":
+          description: Claude refused, or finished without saving exactly one monthly report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentStopped"
       x-safe-edge-roles:
         - gm
         - manager
@@ -1809,7 +2029,7 @@ paths:
       x-safe-edge-events: []
     post:
       operationId: registerWebhook
-      summary: Register a webhook endpoint for CloudEvents
+      summary: Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
       description: "Roles: integrator. Agents are refused."
       tags:
         - webhooks
@@ -1823,11 +2043,11 @@ paths:
               $ref: "#/components/schemas/RegisterWebhookRequest"
       responses:
         "201":
-          description: Register a webhook endpoint for CloudEvents
+          description: Register a webhook endpoint for CloudEvents, signed per Standard Webhooks; its origin must be on the allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Webhook"
+                $ref: "#/components/schemas/RegisteredWebhook"
         "400":
           $ref: "#/components/responses/InvalidInput"
         "401":
@@ -1836,6 +2056,37 @@ paths:
           $ref: "#/components/responses/Denied"
       x-safe-edge-roles:
         - integrator
+      x-safe-edge-events: []
+  /scenario/clock:
+    post:
+      operationId: setScenarioClock
+      summary: "Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered"
+      description: "Roles: system. Agents are refused."
+      tags:
+        - scenario
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetScenarioClockRequest"
+      responses:
+        "200":
+          description: "Set the time the API stamps on records, as a scenario player does before each event (dev and demo runs started with SAFE_EDGE_CLOCK=scenario only; production refuses it, and the wall-clock API answers 501). The clock moves forward only: an earlier time is refused (403 clock_backwards), so audit times stay ordered"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioClock"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles:
+        - system
       x-safe-edge-events: []
 components:
   securitySchemes:
@@ -1887,6 +2138,22 @@ components:
         - provider
         - model
         - system
+    Point:
+      type: object
+      properties:
+        type:
+          type: string
+          const: Point
+        coordinates:
+          minItems: 2
+          maxItems: 3
+          type: array
+          items:
+            type: number
+      required:
+        - type
+        - coordinates
+      additionalProperties: false
     LineString:
       type: object
       properties:
@@ -2095,9 +2362,11 @@ components:
         - plan_not_approved
         - plan_superseded
         - weather_hold
+        - separation_hold
         - outside_window
         - invalid_coverage
         - every_item_reported
+        - clock_backwards
     Denial:
       type: object
       properties:
@@ -2292,6 +2561,16 @@ components:
             - type: string
               pattern: ^pass_
             - type: "null"
+        patrolIntervalDays:
+          type: integer
+          exclusiveMinimum: 0
+          description: How often a patrol must inspect the segment. A whole interval without one is a missed patrol, which suspends its pass; it counts from lastPatrolledAt, or from the pass's validFrom when that is later
+        lastPatrolledAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+          description: When a completed patrol last inspected the whole segment
         simulated:
           type: boolean
         source:
@@ -2307,6 +2586,8 @@ components:
         - expectedInventory
         - baselineId
         - passId
+        - patrolIntervalDays
+        - lastPatrolledAt
         - simulated
         - source
       additionalProperties: false
@@ -2712,6 +2993,50 @@ components:
         - simulated
         - source
       additionalProperties: false
+    ReportedThirdParty:
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          enum:
+            - person
+            - vessel
+            - vehicle
+            - structure
+        label:
+          type: string
+          description: As people should read it, e.g. "3 people on the lakeside footway"
+        geometry:
+          anyOf:
+            - $ref: "#/components/schemas/Point"
+            - $ref: "#/components/schemas/LineString"
+            - $ref: "#/components/schemas/Polygon"
+        observedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+          description: When it was seen; null for a mapped structure
+        headcount:
+          anyOf:
+            - type: integer
+              exclusiveMinimum: 0
+            - type: "null"
+          description: "How many people a `person` report counts; null when nobody counted them, and for a vessel, vehicle or structure. More than 1,000 is an assembly in the open air: plans keep 150 m from it"
+        simulated:
+          type: boolean
+      required:
+        - id
+        - kind
+        - label
+        - geometry
+        - observedAt
+        - headcount
+        - simulated
+      additionalProperties: false
     PriorityScore:
       type: object
       properties:
@@ -2801,7 +3126,7 @@ components:
         energyWh:
           type: number
           minimum: 0
-          description: Flying the task and hovering at its stations, without transit
+          description: Flying the task, hovering at its stations and any wait for a separation hold, without transit
       required:
         - segmentId
         - flightLine
@@ -2916,6 +3241,7 @@ components:
         - separation_hold
         - stale_input
         - outside_window
+        - authorisation
     ReplanTrigger:
       oneOf:
         - type: object
@@ -2957,6 +3283,22 @@ components:
             - kind
             - segmentId
             - findingId
+          additionalProperties: false
+        - type: object
+          properties:
+            kind:
+              type: string
+              const: recapture_requested
+            segmentId:
+              type: string
+              pattern: ^seg_
+            candidateId:
+              type: string
+              pattern: ^cand_
+          required:
+            - kind
+            - segmentId
+            - candidateId
           additionalProperties: false
         - type: object
           properties:
@@ -3111,6 +3453,26 @@ components:
               - code
               - reason
             additionalProperties: false
+        authorisation:
+          anyOf:
+            - type: object
+              properties:
+                ref:
+                  type: string
+                  description: The Director General's authorisation the flight relies on
+                reason:
+                  type: string
+                  description: The designated areas the route flies over or within 150 m of
+                simulated:
+                  type: boolean
+                  description: True for an assumed authorisation, such as a fixture
+              required:
+                - ref
+                - reason
+                - simulated
+              additionalProperties: false
+            - type: "null"
+          description: CAR 2016 reg. 143(1)(a), (b); null when the route comes within 150 m of no designated area
         replan:
           anyOf:
             - $ref: "#/components/schemas/PlanReplan"
@@ -3147,6 +3509,7 @@ components:
         - energyWh
         - reserveWh
         - rejected
+        - authorisation
         - replan
         - approvedBy
         - approvedAt
@@ -3326,6 +3689,18 @@ components:
         - water_level_change
         - text_in_image
         - other
+        - missed_patrol
+    ReportedClass:
+      type: string
+      enum:
+        - inventory_item
+        - worn_path
+        - bank_change
+        - vegetation
+        - floating_debris
+        - water_level_change
+        - text_in_image
+        - other
     Uncertainty:
       type: string
       enum:
@@ -3339,6 +3714,38 @@ components:
         - confirmed
         - rejected
         - needs_recapture
+    AgentSummary:
+      type: object
+      properties:
+        label:
+          type: string
+          const: ai_suggestion
+          description: "Show it as an AI suggestion: no person has checked it"
+        text:
+          type: string
+          minLength: 1
+        citations:
+          type: array
+          items:
+            type: string
+          description: "Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited"
+        model:
+          type: string
+          minLength: 1
+          description: The model the Claude API reported serving the run, never the model's own words
+        draftedBy:
+          $ref: "#/components/schemas/ActorRef"
+        draftedAt:
+          type: string
+          format: date-time
+      required:
+        - label
+        - text
+        - citations
+        - model
+        - draftedBy
+        - draftedAt
+      additionalProperties: false
     Candidate:
       type: object
       properties:
@@ -3365,12 +3772,13 @@ components:
         class:
           $ref: "#/components/schemas/CandidateClass"
         tier:
-          description: "Assigned by core: 2 for a missing or changed safety item, 3 for not visible, else 1"
+          description: "Assigned by core: 2 for a missing or changed safety item, a damage report or a missed patrol, 3 for not visible, else 1"
           $ref: "#/components/schemas/Tier"
         score:
           type: number
           minimum: 0
           maximum: 1
+          description: Detection score; 1 for a damage report or a missed patrol, which a person saw or core counted
         uncertainty:
           anyOf:
             - $ref: "#/components/schemas/Uncertainty"
@@ -3408,6 +3816,11 @@ components:
           type:
             - string
             - "null"
+        agentSummary:
+          anyOf:
+            - $ref: "#/components/schemas/AgentSummary"
+            - type: "null"
+          description: Null until the agent summarises it; a new summary replaces the last
         simulated:
           type: boolean
         source:
@@ -3431,6 +3844,7 @@ components:
         - decidedBy
         - decidedAt
         - decisionReason
+        - agentSummary
         - simulated
         - source
       additionalProperties: false
@@ -3613,9 +4027,22 @@ components:
           enum:
             - interim_protection
             - field_check
+            - recapture
         segmentId:
           type: string
           pattern: ^seg_
+        viewpointId:
+          anyOf:
+            - type: string
+              pattern: ^vp_
+            - type: "null"
+          description: "The viewpoint to capture again: that of the candidate's photo; null for the whole segment or another kind"
+        candidateId:
+          anyOf:
+            - type: string
+              pattern: ^cand_
+            - type: "null"
+          description: The candidate that opened it (recapture, or a Tier 3 field check)
         findingId:
           anyOf:
             - type: string
@@ -3649,6 +4076,8 @@ components:
         - id
         - kind
         - segmentId
+        - viewpointId
+        - candidateId
         - findingId
         - assigneeUserId
         - status
@@ -3667,6 +4096,27 @@ components:
         - completed
         - accepted
         - rejected
+    WorkOrderExternalError:
+      type: object
+      properties:
+        step:
+          type: string
+          enum:
+            - createFinding
+            - addEvidence
+            - updateStatus
+          description: "The call that failed: filing the finding, attaching its photos, or moving the record’s status"
+        message:
+          type: string
+          minLength: 1
+        at:
+          type: string
+          format: date-time
+      required:
+        - step
+        - message
+        - at
+      additionalProperties: false
     WorkOrder:
       type: object
       properties:
@@ -3718,20 +4168,9 @@ components:
             - "null"
         externalError:
           anyOf:
-            - type: object
-              properties:
-                message:
-                  type: string
-                  minLength: 1
-                at:
-                  type: string
-                  format: date-time
-              required:
-                - message
-                - at
-              additionalProperties: false
+            - $ref: "#/components/schemas/WorkOrderExternalError"
             - type: "null"
-          description: Why handing this submitted work order (or its photos) to the work-order system failed; recorded by the system, never retried
+          description: Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it
         createdAt:
           type: string
           format: date-time
@@ -4077,14 +4516,23 @@ components:
         at:
           type: string
           format: date-time
+        attempt:
+          type: integer
+          exclusiveMinimum: 0
+          description: 1 for the first attempt at this event, 2 for the first retry, ...
         error:
           type: string
           minLength: 1
-          description: "HTTP <status>: <body>, or the network error"
+          description: 'HTTP <status>: <body, cut at 500 characters>, the network error, or "Not delivered: <origin> is not on the webhook allowlist (SAFE_EDGE_WEBHOOK_ORIGINS)"'
+        final:
+          type: boolean
+          description: "True when the API gave up on this event for this endpoint: no retry follows"
       required:
         - eventId
         - at
+        - attempt
         - error
+        - final
       additionalProperties: false
     Webhook:
       type: object
@@ -4105,10 +4553,11 @@ components:
           type: string
           format: date-time
         failures:
+          maxItems: 20
           type: array
           items:
             $ref: "#/components/schemas/WebhookFailure"
-          description: Failed deliveries, oldest first; each is also on the audit chain
+          description: The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain
       required:
         - id
         - url
@@ -4312,6 +4761,11 @@ components:
           type: number
           exclusiveMinimum: 0
           description: Agreed with air traffic control
+        thirdParties:
+          description: People, vessels, vehicles or structures seen near the route, not under the pilot's control. The plan keeps 50 m from them (150 m from a person report counting more than 1,000) as well as from the ones the site records; a segment it cannot keep clear waits for the pilot. Core stamps their source from the caller and keeps them for every plan it makes until this plan's window closes
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportedThirdParty"
         replan:
           description: Re-plan `supersedes`' uncommitted stops after `trigger`; `segmentIds` are the segments to consider
           $ref: "#/components/schemas/PlanReplan"
@@ -4506,7 +4960,7 @@ components:
             - $ref: "#/components/schemas/ItemStatus"
             - type: "null"
         class:
-          $ref: "#/components/schemas/CandidateClass"
+          $ref: "#/components/schemas/ReportedClass"
         score:
           type: number
           minimum: 0
@@ -4539,6 +4993,48 @@ components:
         - gridCell
         - rationale
         - model
+        - simulated
+      additionalProperties: false
+    ReportDamageRequest:
+      type: object
+      properties:
+        segmentId:
+          type: string
+          pattern: ^seg_
+        observationIds:
+          type: array
+          items:
+            type: string
+            pattern: ^obs_
+          description: Photos of the damage the reporter recorded on this segment (POST /observations); may be empty
+        inventoryItemId:
+          anyOf:
+            - type: string
+              pattern: ^item_
+            - type: "null"
+          description: The damaged expected item, when it is one
+        itemStatus:
+          anyOf:
+            - type: string
+              enum:
+                - missing
+                - changed
+            - type: "null"
+        class:
+          $ref: "#/components/schemas/ReportedClass"
+        rationale:
+          type: string
+          minLength: 1
+          description: What the reporter saw
+        simulated:
+          type: boolean
+      required:
+        - segmentId
+        - observationIds
+        - inventoryItemId
+        - itemStatus
+        - class
+        - rationale
         - simulated
       additionalProperties: false
     DecideCandidateRequest:
@@ -4642,12 +5138,31 @@ components:
     RecordWorkOrderExternalErrorRequest:
       type: object
       properties:
+        step:
+          type: string
+          enum:
+            - createFinding
+            - addEvidence
+            - updateStatus
+          description: "The call that failed: filing the finding, attaching its photos, or moving the record’s status"
         message:
           type: string
           minLength: 1
           description: The work-order system's error
       required:
+        - step
         - message
+      additionalProperties: false
+    HandOffRetry:
+      type: object
+      properties:
+        workOrder:
+          $ref: "#/components/schemas/WorkOrder"
+        retried:
+          $ref: "#/components/schemas/WorkOrderExternalError"
+      required:
+        - workOrder
+        - retried
       additionalProperties: false
     SubmitWorkOrderRequest:
       type: object
@@ -5075,6 +5590,55 @@ components:
       required:
         - question
       additionalProperties: false
+    AgentStopped:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          const: false
+        error:
+          type: string
+          const: agent_stopped
+        message:
+          type: string
+        stopReason:
+          type: string
+          description: Claude's stop_reason for the last turn
+        category:
+          description: The refusal category, when Claude refused
+          type:
+            - string
+            - "null"
+        model:
+          type: string
+      required:
+        - ok
+        - error
+        - message
+        - stopReason
+        - category
+        - model
+      additionalProperties: false
+    RecordAgentSummaryRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        citations:
+          type: array
+          items:
+            type: string
+          description: "Record IDs the text names that the agent's tool results returned: the evidence it rests on; empty when uncited"
+        model:
+          type: string
+          minLength: 1
+          description: The model the Claude API reported serving the run, never the model's own words
+      required:
+        - text
+        - citations
+        - model
+      additionalProperties: false
     DraftInboxRequest:
       type: object
       properties:
@@ -5103,7 +5667,7 @@ components:
           anyOf:
             - $ref: "#/components/schemas/WorkOrder"
             - type: "null"
-          description: The agent's draft; a person edits and submits it
+          description: "The finding's open draft: the one confirming made, which the agent's draft request returns unchanged, or the agent's own when the finding had none open. A person edits and submits it"
         citations:
           type: array
           items:
@@ -5204,4 +5768,63 @@ components:
       required:
         - url
         - eventTypes
+      additionalProperties: false
+    RegisteredWebhook:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^whk_
+        url:
+          type: string
+          format: uri
+        eventTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventType"
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        failures:
+          maxItems: 20
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookFailure"
+          description: The latest 20 failed delivery attempts, oldest first; every attempt is also on the audit chain
+        secret:
+          type: string
+          pattern: ^whsec_[A-Za-z0-9+/]+={0,2}$
+          description: 'Standard Webhooks signing secret (whsec_ + base64 of 32 random bytes). Every delivery carries webhook-id, webhook-timestamp and webhook-signature: v1,<base64 HMAC-SHA256 of "<webhook-id>.<webhook-timestamp>.<raw body>">'
+      required:
+        - id
+        - url
+        - eventTypes
+        - createdBy
+        - createdAt
+        - failures
+        - secret
+      additionalProperties: false
+    SetScenarioClockRequest:
+      type: object
+      properties:
+        now:
+          type: string
+          format: date-time
+      required:
+        - now
+      additionalProperties: false
+    ScenarioClock:
+      type: object
+      properties:
+        id:
+          type: string
+          const: clock
+        now:
+          type: string
+          format: date-time
+      required:
+        - id
+        - now
       additionalProperties: false

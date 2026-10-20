@@ -1,37 +1,59 @@
-import type {
-  Candidate,
-  Denial,
-  Finding,
-  InventoryCheck,
-  InventoryItem,
-  RaiseCandidateRequest,
-  Segment,
-  Task,
-  WorkOrder
-} from '@safe-edge/contracts'
-import { falseFlagReport, flagClassOf, itemOf, movePass, tierFor } from '../policy.ts'
+import type { Candidate, Denial, Finding, InventoryCheck, NotFound, Task, Tier, WorkOrder } from '@safe-edge/contracts'
+import { falseFlagReport, flagClassOf, missedPatrolDue, movePass, tierFor } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
 const DECIDED = { confirm: 'confirmed', reject: 'rejected', recapture: 'needs_recapture' } as const
 
+type CandidateInput = Pick<
+  Candidate,
+  | 'segmentId'
+  | 'observationIds'
+  | 'inventoryItemId'
+  | 'itemStatus'
+  | 'class'
+  | 'score'
+  | 'uncertainty'
+  | 'gridCell'
+  | 'rationale'
+  | 'model'
+  | 'simulated'
+>
+
 /**
- * Raises one candidate on a checked segment and item. Core assigns the tier, under the false-flag budget; a Tier 2
- * suspends the segment's pass in the same transaction, and a Tier 3 opens a field check.
+ * Raises a candidate on its segment. Core assigns the tier: `tierFor` what was seen, under the false-flag budget, unless
+ * the caller is a report that is Tier 2 whatever it names. Suspicion suspends: a Tier 2 candidate suspends the segment's valid or expiring pass in
+ * the same transaction, and the pass's stateReason names `cause` and the candidate.
  */
-function raise(tx: Tx, segment: Segment, item: InventoryItem | null, body: RaiseCandidateRequest): Candidate | Denial {
-  const flagClass = flagClassOf(item, body.class)
+function raise(
+  tx: Tx,
+  input: CandidateInput,
+  cause: string,
+  tier?: Tier
+): { ok: true; data: Candidate } | Denial | NotFound {
+  const segment = tx.get('segments', input.segmentId)
+  if (!segment) return tx.notFound(`No segment ${input.segmentId}`)
+  for (const id of input.observationIds) {
+    if (tx.get('observations', id)?.segmentId !== segment.id)
+      return tx.notFound(`No observation ${id} on ${segment.id}`)
+  }
+  const item =
+    input.inventoryItemId === null ? null : segment.expectedInventory.find((i) => i.id === input.inventoryItemId)
+  if (item === undefined) return tx.notFound(`Segment ${segment.id} expects no item ${input.inventoryItemId}`)
+  const flagClass = flagClassOf(item, input.class)
   const overBudget = flagClass !== null && falseFlagReport(tx).overBudget.includes(flagClass)
+
   const candidate: Candidate = {
     id: tx.id('cand'),
-    ...body,
-    tier: tierFor(item, body.itemStatus, overBudget),
+    ...input,
+    tier: tier ?? tierFor(item, input.itemStatus, overBudget),
     status: 'candidate',
     raisedBy: { type: tx.actor.type, id: tx.actor.id },
     raisedAt: tx.now,
     decidedBy: null,
     decidedAt: null,
     decisionReason: null,
+    agentSummary: null,
     source: tx.source
   }
   tx.put('candidates', candidate)
@@ -41,13 +63,9 @@ function raise(tx: Tx, segment: Segment, item: InventoryItem | null, body: Raise
     segment.id
   )
 
-  // Suspicion suspends, in this same transaction.
   const pass = segment.passId === null ? null : tx.must('passes', segment.passId)
   if (candidate.tier === 2 && pass && (pass.state === 'valid' || pass.state === 'expiring')) {
-    const suspended = movePass(tx, pass, {
-      to: 'suspended',
-      reason: `Tier 2 candidate ${candidate.id} awaiting review`
-    })
+    const suspended = movePass(tx, pass, { to: 'suspended', reason: `${cause} ${candidate.id} awaiting review` })
     if ('rule' in suspended) return suspended
     tx.emit(
       'edge.pass.suspended.v1',
@@ -62,6 +80,8 @@ function raise(tx: Tx, segment: Segment, item: InventoryItem | null, body: Raise
       id: tx.id('task'),
       kind: 'field_check',
       segmentId: segment.id,
+      viewpointId: null,
+      candidateId: candidate.id,
       findingId: null,
       assigneeUserId: tx.must('assets', segment.assetId).custodianUserId,
       status: 'open',
@@ -73,23 +93,19 @@ function raise(tx: Tx, segment: Segment, item: InventoryItem | null, body: Raise
     }
     tx.put('tasks', task)
   }
-  return candidate
+  return ok(candidate)
 }
 
-export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decideCandidate' | 'completeTask'> = {
-  raiseCandidate: (tx, { body }) => {
-    const segment = tx.get('segments', body.segmentId)
-    if (!segment) return tx.notFound(`No segment ${body.segmentId}`)
-    for (const id of body.observationIds) {
-      if (tx.get('observations', id)?.segmentId !== segment.id)
-        return tx.notFound(`No observation ${id} on ${segment.id}`)
-    }
-    const item =
-      body.inventoryItemId === null ? null : segment.expectedInventory.find((i) => i.id === body.inventoryItemId)
-    if (item === undefined) return tx.notFound(`Segment ${segment.id} expects no item ${body.inventoryItemId}`)
-    const raised = raise(tx, segment, item, body)
-    return 'rule' in raised ? raised : ok(raised)
-  },
+export const inbox: Handlers<
+  | 'raiseCandidate'
+  | 'recordInventoryCheck'
+  | 'reportDamage'
+  | 'reportMissedPatrol'
+  | 'decideCandidate'
+  | 'recordAgentSummary'
+  | 'completeTask'
+> = {
+  raiseCandidate: (tx, { body }) => raise(tx, body, 'Tier 2 candidate'),
 
   // Edge Watch reports every item a viewpoint expects (PRD WATCH-6): an item left out would read as inspected.
   recordInventoryCheck: (tx, { body }) => {
@@ -122,18 +138,22 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
     const candidates: Candidate[] = []
     for (const result of items.filter((r) => r.status !== 'present')) {
       const { inventoryItemId, status, ...judgement } = result
-      const raised = raise(tx, segment, itemOf(tx, { segmentId: segment.id, inventoryItemId }), {
-        segmentId: segment.id,
-        observationIds: [observation.id],
-        inventoryItemId,
-        itemStatus: status,
-        class: 'inventory_item',
-        ...judgement,
-        model: body.model,
-        simulated: observation.simulated
-      })
-      if ('rule' in raised) return raised
-      candidates.push(raised)
+      const raised = raise(
+        tx,
+        {
+          segmentId: segment.id,
+          observationIds: [observation.id],
+          inventoryItemId,
+          itemStatus: status,
+          class: 'inventory_item',
+          ...judgement,
+          model: body.model,
+          simulated: observation.simulated
+        },
+        'Tier 2 candidate'
+      )
+      if (!('data' in raised)) return raised
+      candidates.push(raised.data)
     }
     const check: InventoryCheck = {
       id: tx.id('chk'),
@@ -153,11 +173,52 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
     return ok({ check, candidates })
   },
 
+  // A person saw the damage, so it waits for the manager's confirmation as Tier 2 whatever item it names (PROOF-4).
+  reportDamage: (tx, { body }) =>
+    raise(tx, { ...body, score: 1, uncertainty: null, gridCell: null, model: null }, 'Damage report', 2),
+
+  // Nobody has inspected the segment for a whole patrol interval, so nobody can vouch for its pass (PROOF-4). The
+  // interval runs from the last patrol that inspected some of it, or from the re-test that issued the pass if later.
+  reportMissedPatrol: (tx, { params }) => {
+    const segment = tx.get('segments', params.id)
+    if (!segment) return tx.notFound(`No segment ${params.id}`)
+    if (segment.passId === null) throw new Error(`store integrity: ${segment.id} has no pass`)
+    const pass = tx.must('passes', segment.passId)
+    if (pass.state !== 'valid' && pass.state !== 'expiring') {
+      const message = `${pass.id} is ${pass.state}; a missed patrol suspends only a valid or expiring pass`
+      return tx.deny('invalid_transition', message, segment.id)
+    }
+    const { since, dueMs } = missedPatrolDue(segment, pass)
+    const days = segment.patrolIntervalDays
+    if (Date.parse(tx.now) < dueMs) {
+      const message = `${segment.id} was inspected at ${since}; its ${days}-day patrol is due at ${new Date(dueMs).toISOString()}`
+      return tx.deny('invalid_transition', message, segment.id)
+    }
+    const missed: CandidateInput = {
+      segmentId: segment.id,
+      observationIds: [],
+      inventoryItemId: null,
+      itemStatus: null,
+      class: 'missed_patrol',
+      score: 1,
+      uncertainty: null,
+      gridCell: null,
+      rationale: `No patrol has inspected ${segment.id} since ${since}; it must be patrolled every ${days} days`,
+      model: null,
+      simulated: segment.simulated
+    }
+    return raise(tx, missed, 'Missed patrol', 2)
+  },
+
   decideCandidate: (tx, { params, body }) => {
     const candidate = tx.get('candidates', params.id)
     if (!candidate) return tx.notFound(`No candidate ${params.id}`)
     if (candidate.status !== 'candidate') {
       return tx.deny('invalid_transition', `${candidate.id} is already ${candidate.status}`, candidate.id)
+    }
+    if (candidate.class === 'missed_patrol' && body.decision === 'confirm') {
+      const message = `${candidate.id} is a missed patrol: nothing to repair, so send it for recapture or reject it`
+      return tx.deny('invalid_transition', message, candidate.id)
     }
     const decided: Candidate = {
       ...candidate,
@@ -168,6 +229,33 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
     }
     tx.put('candidates', decided)
     if (body.decision !== 'confirm') {
+      // A recapture is owned work, like confirm: the custodian has each viewpoint of the candidate's photos captured
+      // again, or the whole segment when it has none.
+      const tasks: Task[] = []
+      if (body.decision === 'recapture') {
+        const segment = tx.must('segments', candidate.segmentId)
+        const custodian = tx.must('assets', segment.assetId).custodianUserId
+        const viewpointIds = new Set(candidate.observationIds.map((id) => tx.must('observations', id).viewpointId))
+        for (const viewpointId of viewpointIds.size === 0 ? [null] : viewpointIds) {
+          const task: Task = {
+            id: tx.id('task'),
+            kind: 'recapture',
+            segmentId: segment.id,
+            viewpointId,
+            candidateId: candidate.id,
+            findingId: null,
+            assigneeUserId: custodian,
+            status: 'open',
+            reason: body.reason,
+            dueAt: null,
+            createdAt: tx.now,
+            simulated: candidate.simulated,
+            source: tx.source
+          }
+          tx.put('tasks', task)
+          tasks.push(task)
+        }
+      }
       tx.emit(
         'edge.candidate.decided.v1',
         {
@@ -179,7 +267,7 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
         },
         candidate.segmentId
       )
-      return ok({ candidate: decided, finding: null, tasks: [], workOrder: null })
+      return ok({ candidate: decided, finding: null, tasks, workOrder: null })
     }
 
     // Confirming opens work: a finding owned by the custodian, interim protection and a draft work order.
@@ -202,6 +290,8 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
       id: tx.id('task'),
       kind: 'interim_protection',
       segmentId: segment.id,
+      viewpointId: null,
+      candidateId: null,
       findingId: finding.id,
       assigneeUserId: custodian,
       status: 'open',
@@ -247,6 +337,28 @@ export const inbox: Handlers<'raiseCandidate' | 'recordInventoryCheck' | 'decide
       segment.id
     )
     return ok({ candidate: decided, finding, tasks: [task], workOrder })
+  },
+
+  // Only an agent's token reaches this (the table names no role), so the label is true.
+  recordAgentSummary: (tx, { params, body }) => {
+    const candidate = tx.get('candidates', params.id)
+    if (!candidate) return tx.notFound(`No candidate ${params.id}`)
+    // The decision was made on the card as it was; a later summary would rewrite what the manager read.
+    if (candidate.status !== 'candidate') {
+      const message = `${candidate.id} is already ${candidate.status}; its summary stays the one the decision was made on`
+      return tx.deny('invalid_transition', message, candidate.id)
+    }
+    const summarised: Candidate = {
+      ...candidate,
+      agentSummary: {
+        label: 'ai_suggestion',
+        ...body,
+        draftedBy: { type: tx.actor.type, id: tx.actor.id },
+        draftedAt: tx.now
+      }
+    }
+    tx.put('candidates', summarised)
+    return ok(summarised)
   },
 
   completeTask: (tx, { params }) => {

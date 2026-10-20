@@ -11,6 +11,8 @@ Contents:
 1.  [Users and jobs](#users-and-jobs)
 1.  [How it works: the Edge Loop](#how-it-works-the-edge-loop)
 1.  [Product principles](#product-principles)
+1.  [Brand personality](#brand-personality)
+1.  [Anti-references](#anti-references)
 1.  [What makes it different](#what-makes-it-different)
 1.  [Capabilities](#capabilities)
     1.  [Patrol planner](#patrol-planner)
@@ -23,6 +25,7 @@ Contents:
     1.  [SDK and MCP server](#sdk-and-mcp-server)
 1.  [AI layer at a glance](#ai-layer-at-a-glance)
 1.  [Drone integration phases](#drone-integration-phases)
+1.  [Register](#register)
 1.  [Platform](#platform)
 1.  [Success measures](#success-measures)
 1.  [Constraints](#constraints)
@@ -84,6 +87,16 @@ These are roles to confirm by name, not commitments already obtained.
 9.  **The drone is optional.** The protocol, not the aircraft, is the product. A phone patrol feeds the same Inbox, Fix Lens and proof.
 
 [caam]: /docs/research/drone-integration/caam-rules.md
+
+## Brand personality
+
+Steady, civic, exact. Safe Edge reads as a public-works tool: reliable, owned by the township, and measured in metres and dates.
+
+## Anti-references
+
+- **Generic SaaS dashboard:** KPI tiles, identical cards, purple gradients, the template look.
+- **CCTV control room:** a dark surveillance wall with red alarms and a feeling of watching people, which contradicts "watch edges, not people".
+- **Dated government portal:** dense tables, tiny type, banner logos and forms from 2010.
 
 ## What makes it different
 
@@ -190,7 +203,13 @@ Published evidence decides what the AI may claim ([detection research][detection
 [hardware]: /docs/research/drone-integration/hardware-cost.md
 [nst-crash]: https://www.nst.com.my/amp/news/nation/2023/08/944279/elmina-air-crash-what-we-know-so-far
 
+## Register
+
+product
+
 ## Platform
+
+web
 
 - A web app, desktop-first for the manager and engineer, with phone screens for field capture and re-test.
 - A 3D simulation of Elmina in the browser, built on Three.js, for the demo and for planning views.

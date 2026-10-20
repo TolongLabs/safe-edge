@@ -20,7 +20,8 @@ export type OperationOutput<K extends OperationId> = z.output<Operations[K]['res
 
 export type DispatchSuccess<K extends CoreOperationId> = {
   ok: true
-  status: Operations[K]['status']
+  /** The operation's `status`, or 200 when it answered with an existing record (listed in its `responses`). */
+  status: Operations[K]['status'] | 200
   data: OperationOutput<K>
   /** The CloudEvents this call emitted, for the transport to publish (SSE, webhooks, memory subscribers). */
   events: EdgeEvent[]
@@ -43,3 +44,18 @@ export type Dispatch = <K extends CoreOperationId>(
   actor: Actor,
   input: OperationInput<K>
 ) => DispatchResult<K>
+
+/**
+ * Dispatches as `actor` for a caller that needs the call to succeed (the automation, the drone bridge, the work-order
+ * hand-off): a refusal or a missing record throws, naming the operation and the actor.
+ */
+export function dispatchOrThrow<K extends CoreOperationId>(
+  dispatch: Dispatch,
+  operationId: K,
+  actor: Actor,
+  input: OperationInput<K>
+): DispatchSuccess<K> {
+  const result = dispatch(operationId, actor, input)
+  if (!result.ok) throw new Error(`${operationId} as ${actor.id} failed: ${result.message}`)
+  return result
+}

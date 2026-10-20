@@ -1,6 +1,6 @@
 # Safe Edge PRD
 
-What the team ships by noon on 23 October 2026, and how we know each part is done. The product truth is in [`PRODUCT.md`](/PRODUCT.md); the build design is in the [TRD](/docs/TRD.md).
+What the team ships by noon on 23 October 2026, and how we know each part is done. The product truth is in [`PRODUCT.md`](/docs/PRODUCT.md); the build design is in the [TRD](/docs/TRD.md).
 
 Contents:
 
@@ -128,7 +128,7 @@ Priority: **P0** must exist for the demo, **P1** should exist, **P2** is a stret
 - **INBOX-2 (P0) Decisions.** Confirm, reject with a required reason, or recapture. An optional blind-first mode asks for the reviewer's own label on Tier 2 cards before showing the AI's label.
 - **INBOX-3 (P0) Confirm opens work.** Confirming creates a finding owned by the segment custodian, an interim protection task and a draft work order.
 - **INBOX-4 (P0) Drafts only.** The agent drafts the summary and the work order. People edit and submit; the agent cannot.
-- **INBOX-5 (P1) Three taps.** Confirm a card and submit its work order in at most three taps.
+- **INBOX-5 (P1) Few taps.** Confirm a card in one tap. Submit its work order in one more tap once an engineer has approved the remedy (FIX-4) and interim protection is in place; until then, Submit names the missing step.
 - **INBOX-6 (P1) Ask the agent.** A chat panel answers questions over Safe Edge data with the same tools as the MCP server, and every answer cites record IDs.
 
 ### Fix Lens

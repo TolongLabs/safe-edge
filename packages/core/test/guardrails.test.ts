@@ -70,16 +70,30 @@ describe('the agent reads, proposes and drafts, and nothing else', () => {
       rationale: 'A worn path leads from the playground to the bank'
     })
     expect(proposed.data).toMatchObject({ tier: 1, status: 'candidate', raisedBy: { type: 'agent', id: AGENT } })
-    const confirmed = h.call('decideCandidate', 'usr_manager', {
-      params: { id: proposed.data.id },
-      body: { decision: 'confirm', severity: 'low' }
+    // A repair that failed its re-test leaves the finding reopened with no open work order: the agent drafts the next.
+    const played = playS1toRepair(h)
+    h.call('recordRetest', 'usr_reviewer', {
+      body: {
+        ...played.retest,
+        checklist: [
+          { kind: 'route_check', subjectId: null, result: 'fail', reason: 'Gap still open', measuredMm: 300 }
+        ],
+        result: 'rejected',
+        reason: 'Panel 4 still loose'
+      }
     })
     const draft = h.call('createWorkOrder', AGENT, {
-      body: { findingId: confirmed.data.finding!.id, remedyId: null, notes: 'Agent draft: fence the worn path' }
+      body: { findingId: played.findingId, remedyId: null, notes: 'Agent draft: refit panel 4' }
     })
     expect(draft.data).toMatchObject({ status: 'draft', draftedBy: { type: 'agent', id: AGENT } })
     const edited = h.call('updateWorkOrder', AGENT, { params: { id: draft.data.id }, body: { notes: 'Revised draft' } })
     expect(edited.data.notes).toBe('Revised draft')
+    // The manager edits any draft, the agent's included.
+    const managed = h.call('updateWorkOrder', 'usr_manager', {
+      params: { id: draft.data.id },
+      body: { notes: 'Manager edit' }
+    })
+    expect(managed.data.notes).toBe('Manager edit')
     const notice = h.call('draftNotice', AGENT, {
       body: { kind: 'escalation', subjectId: S1.segmentId, title: 'Worn path', body: 'Draft for the GM' }
     })
@@ -105,14 +119,11 @@ describe('the agent reads, proposes and drafts, and nothing else', () => {
     expectDenied(h, edit, 'agents_draft_only', AGENT, 'updateWorkOrder')
     expect(h.audit().at(-1)!.subjectId).toBe(managers.id)
     expect(h.call('getWorkOrder', 'usr_manager', { params: { id: managers.id } }).data.notes).toBe(managers.notes)
-    // The manager edits any draft, the agent's included.
-    const agents = h.call('createWorkOrder', AGENT, {
+    // Nor can it slip in its own: its draft request gets the person's draft back, unchanged (one open work order).
+    const again = h.attempt('createWorkOrder', AGENT, {
       body: { findingId: confirmed.data.finding!.id, remedyId: null, notes: 'Agent draft' }
-    }).data
-    expect(
-      h.call('updateWorkOrder', 'usr_manager', { params: { id: agents.id }, body: { notes: 'Manager edit' } }).data
-        .notes
-    ).toBe('Manager edit')
+    })
+    expect(again).toMatchObject({ ok: true, status: 200, data: managers, events: [] })
   })
 
   test('a token without the operation scope is refused with scope_missing', () => {

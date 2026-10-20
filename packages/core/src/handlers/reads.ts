@@ -10,8 +10,10 @@ type ReadOperation =
   | 'listDocks'
   | 'listDroneProfiles'
   | 'listPatrolPlans'
+  | 'getPatrolPlan'
   | 'listPatrols'
   | 'listInventoryChecks'
+  | 'getPatrol'
   | 'listCandidates'
   | 'getFalseFlags'
   | 'getCandidate'
@@ -46,6 +48,10 @@ export const reads: Handlers<ReadOperation> = {
   listDocks: (tx) => ok(tx.all('docks')),
   listDroneProfiles: (tx) => ok(tx.all('droneProfiles')),
   listPatrolPlans: (tx) => ok(tx.all('patrolPlans')),
+  getPatrolPlan: (tx, { params }) => {
+    const plan = tx.get('patrolPlans', params.id)
+    return plan ? ok(plan) : tx.notFound(`No patrol plan ${params.id}`)
+  },
   listPatrols: (tx) => ok(tx.all('patrols')),
   listInventoryChecks: (tx, { query }) =>
     ok(
@@ -53,6 +59,10 @@ export const reads: Handlers<ReadOperation> = {
         .all('inventoryChecks')
         .filter((c) => matches(c.segmentId, query.segmentId) && matches(c.patrolId ?? undefined, query.patrolId))
     ),
+  getPatrol: (tx, { params }) => {
+    const patrol = tx.get('patrols', params.id)
+    return patrol ? ok(patrol) : tx.notFound(`No patrol ${params.id}`)
+  },
   listCandidates: (tx, { query }) =>
     ok(tx.all('candidates').filter((c) => matches(c.status, query.status) && matches(c.segmentId, query.segmentId))),
   getFalseFlags: (tx) => ok(falseFlagReport(tx)),

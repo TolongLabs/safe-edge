@@ -256,7 +256,7 @@ const draftWorkOrder = tool({
   name: 'draft_work_order',
   title: 'Draft a work order',
   description:
-    'Creates a draft work order linked to a confirmed finding. It stays a draft: a person submits it after an engineer approves the remedy.',
+    'Creates a draft work order linked to a confirmed finding. It stays a draft: a person submits it after an engineer approves the remedy. A finding has one open work order: confirming a candidate drafts one, so when the finding already has a draft you get that draft back unchanged (your notes are not saved), and while its work order is past draft you are refused.',
   scope: 'workorder.draft',
   readOnly: false,
   input: CreateWorkOrderRequest.extend({
@@ -338,7 +338,19 @@ const proposePatrol = tool({
         altitudeCapM: input.altitudeCapM
       }
     })
-    return { plan: { ...plan, tasks: plan.tasks.map((task) => ({ ...task, stationCount: task.stations.length })) } }
+    // The model gets a summary, coarse enough to read the same on every platform: the planner's trigonometry differs in
+    // the last bit between macOS and Linux libm, which the full-precision energies and window carried into the prompt.
+    const wh = (value: number) => Math.round(value * 10) / 10
+    const second = (at: string) => new Date(Math.round(Date.parse(at) / 1000) * 1000).toISOString()
+    return {
+      plan: {
+        ...plan,
+        window: { ...plan.window, start: second(plan.window.start), end: second(plan.window.end) },
+        energyWh: wh(plan.energyWh),
+        reserveWh: wh(plan.reserveWh),
+        tasks: plan.tasks.map((task) => ({ ...task, energyWh: wh(task.energyWh), stationCount: task.stations.length }))
+      }
+    }
   }
 })
 

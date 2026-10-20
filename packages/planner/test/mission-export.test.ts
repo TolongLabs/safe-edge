@@ -5,6 +5,7 @@ import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { demoPlan } from '../scripts/export-mission.ts'
+import { testEnv } from '../../../test/spawn.ts'
 import { exportQgcPlan, exportWpmlKmz } from '../src/export/index.ts'
 
 const repoRoot = join(import.meta.dir, '../../..')
@@ -15,13 +16,30 @@ const NAV_WAYPOINT = 16
 const NAV_LAND = 21
 const NAV_TAKEOFF = 22
 const DO_MOUNT_CONTROL = 205
+const SET_CAMERA_ZOOM = 531
 const IMAGE_START_CAPTURE = 2000
+/** MAVLink CAMERA_ZOOM_TYPE: "Zoom value as horizontal field of view in degrees". */
+const ZOOM_TYPE_HORIZONTAL_FOV = 4
+/** The seed camera's 70° HFOV narrowed by a zoom: tan(HFOV/2) shrinks by the zoom factor. */
+const hfovAt = (zoom: number) => 2 * Math.atan(Math.tan((35 * Math.PI) / 180) / zoom) * (180 / Math.PI)
+/** Its 35 mm-equivalent focal length at 1×: half the 36 mm frame width over tan(35°), 25.7 mm. */
+const EQUIVALENT_FOCAL_MM = 18 / Math.tan((35 * Math.PI) / 180)
+expect(EQUIVALENT_FOCAL_MM).toBeCloseTo(25.71, 2)
 
 describe('mission export of a patrol planned over real Elmina segments', async () => {
   // The seed dock sits on a 6 m roof at 101.513484, 3.178393, on ground 36 m above sea level. The seed drone cruises
   // at 10 m/s. The plan flies 9 m above the edge, so 3 m above the dock, and hovers 3 s at each camera station.
   const { plan, drone, groundAmslM } = await demoPlan(readJson)
   const stations = plan.waypoints.filter((w) => w.kind === 'station')
+
+  test("the demo plan keeps clear of the seed's S1 path crowd: zoom across the lake, no room for the wait on the path", () => {
+    const farBank = stations.filter((w) => w.segmentId === 'seg_866518980_7')
+    expect(farBank.some((w) => w.zoom > 1)).toBe(true)
+    expect(stations.filter((w) => w.zoom > 1).every((w) => w.segmentId === 'seg_866518980_7')).toBe(true)
+    // The path segment's 2-minute wait for a clear path does not fit the 90 Wh battery beside the rest.
+    expect(plan.rejected.find((r) => r.segmentId === 'seg_866518980_9')?.code).toBe('battery')
+    expect(plan.holds).toEqual([])
+  })
 
   test('the demo plan flies real stations from the dock and back', () => {
     expect(stations.length).toBeGreaterThan(10)
@@ -65,9 +83,26 @@ describe('mission export of a patrol planned over real Elmina segments', async (
       expect(items.map((item) => item.doJumpId)).toEqual(items.map((_, i) => i + 1))
     })
 
-    test('is stamped not flight-ready', () => {
+    test("is stamped not flight-ready, with the plan's window and any place that waits for a clear path", () => {
       expect(file.groundStation).toContain('NOT FLIGHT-READY')
       expect(file.notice).toContain('NOT FLIGHT-READY')
+      expect(file.notice).toEndWith(`Fly only inside the plan's window, ${plan.window.start} to ${plan.window.end}.`)
+      // Neither format holds a hold, so the notice names where an unreleased one waits.
+      const hold = (segmentId: string | null, releasedBy: string | null) => ({
+        kind: 'separation' as const,
+        segmentId,
+        until: null,
+        reason: 'people within 50 m',
+        releasedBy,
+        releasedAt: releasedBy && plan.window.start
+      })
+      const held = {
+        ...plan,
+        holds: [hold('seg_866518980_6', null), hold(null, null), hold('seg_866518980_5', 'usr_pilot')]
+      }
+      expect(JSON.parse(exportQgcPlan({ plan: held, drone, groundAmslM })).notice).toEndWith(
+        `${plan.window.end}. Wait for the pilot or observer to confirm the path clear at seg_866518980_6, the dock.`
+      )
     })
 
     test('takes off from the dock, flies every waypoint 3 m above it, and lands back on it', () => {
@@ -90,21 +125,29 @@ describe('mission export of a patrol planned over real Elmina segments', async (
       for (const item of [nav[0]!, nav.at(-1)!]) expect(item.params.slice(4, 6)).toEqual([3.178393, 101.513484])
     })
 
-    test('hovers 3 s at each station, then pitches the gimbal and takes one photo', () => {
+    test("hovers 3 s at each station, then pitches the gimbal, sets the station's zoom and takes one photo", () => {
       const atStations = items.flatMap((item, i) =>
-        item.command === NAV_WAYPOINT && item.params[0] !== 0 ? [items.slice(i, i + 3)] : []
+        item.command === NAV_WAYPOINT && item.params[0] !== 0 ? [items.slice(i, i + 4)] : []
       )
       expect(atStations).toHaveLength(stations.length)
-      atStations.forEach(([waypoint, gimbal, photo], i) => {
+      atStations.forEach(([waypoint, gimbal, zoom, photo], i) => {
         expect(waypoint!.params[0]).toBe(3)
         expect(waypoint!.params.slice(4, 6)).toEqual([stations[i]!.lat, stations[i]!.lon])
         // QGC's own camera-section encoding: pitch, roll 0, yaw 0 (straight ahead), MAV_MOUNT_MODE_MAVLINK_TARGETING.
         expect(gimbal).toMatchObject({ command: DO_MOUNT_CONTROL, frame: 2 })
         expect(gimbal!.params).toEqual([stations[i]!.gimbalPitchDeg, 0, 0, 0, 0, 0, 2])
+        // MAV_CMD_SET_CAMERA_ZOOM at every station, zoom being camera state: the field of view, all cameras (id 0).
+        expect(zoom).toMatchObject({ command: SET_CAMERA_ZOOM, frame: 2 })
+        expect(zoom!.params[0]).toBe(ZOOM_TYPE_HORIZONTAL_FOV)
+        expect(zoom!.params[1]).toBeCloseTo(hfovAt(stations[i]!.zoom), 9)
+        expect(zoom!.params.slice(2)).toEqual([0, null, 0, 0, 0])
         expect(photo).toMatchObject({ command: IMAGE_START_CAPTURE, frame: 2 })
         expect(photo!.params).toEqual([0, 0, 1, i + 1, null, null, null])
       })
-      expect(items).toHaveLength(plan.waypoints.length + 2 * stations.length)
+      // At 1× the camera's own 70°; at 2× 38.6°.
+      expect(hfovAt(1)).toBeCloseTo(70, 9)
+      expect(hfovAt(2)).toBeCloseTo(38.59, 2)
+      expect(items).toHaveLength(plan.waypoints.length + 3 * stations.length)
     })
   })
 
@@ -130,6 +173,9 @@ describe('mission export of a patrol planned over real Elmina segments', async (
         const document = child(doc.documentElement!, KML, 'Document')
         expect(child(document, KML, 'name').textContent).toBe('Safe Edge plan_demo (NOT FLIGHT-READY)')
         expect(child(document, KML, 'description').textContent).toStartWith('NOT FLIGHT-READY: ')
+        expect(child(document, KML, 'description').textContent).toContain(
+          `Fly only inside the plan's window, ${plan.window.start} to ${plan.window.end}.`
+        )
       }
     })
 
@@ -219,7 +265,7 @@ describe('mission export of a patrol planned over real Elmina segments', async (
       }
     })
 
-    test('in both files each station pitches the gimbal, hovers 3 s and takes one photo named for its segment', () => {
+    test('in both files each station pitches the gimbal, zooms when it stands off, hovers 3 s and takes one photo', () => {
       for (const doc of Object.values(files)) {
         const folder = child(child(doc.documentElement!, KML, 'Document'), KML, 'Folder')
         const groups = children(folder, KML, 'Placemark').map((placemark, i) => {
@@ -236,24 +282,37 @@ describe('mission export of a patrol planned over real Elmina segments', async (
             ...wpmlValues(action),
             ...wpmlValues(child(action, WPML, 'actionActuatorFuncParam'))
           }))
+          // A station standing off with zoom sets the zoom lens's focal length (35 mm-equivalent, to 0.1 mm) and shoots
+          // with that lens; a 1× station shoots wide.
+          const { zoom, gimbalPitchDeg, segmentId } = airborne[i]!
+          const zoomed = zoom > 1
           expect(actions).toEqual([
             expect.objectContaining({
-              actionId: '0',
               actionActuatorFunc: 'gimbalRotate',
               gimbalRotateMode: 'absoluteAngle',
               gimbalPitchRotateEnable: '1',
-              gimbalPitchRotateAngle: String(airborne[i]!.gimbalPitchDeg),
+              gimbalPitchRotateAngle: String(gimbalPitchDeg),
               gimbalYawRotateEnable: '0',
               gimbalRollRotateEnable: '0'
             }),
-            expect.objectContaining({ actionId: '1', actionActuatorFunc: 'hover', hoverTime: '3' }),
+            ...(zoomed
+              ? [
+                  expect.objectContaining({
+                    actionActuatorFunc: 'zoom',
+                    payloadPositionIndex: '0',
+                    focalLength: (EQUIVALENT_FOCAL_MM * zoom).toFixed(1)
+                  })
+                ]
+              : []),
+            expect.objectContaining({ actionActuatorFunc: 'hover', hoverTime: '3' }),
             expect.objectContaining({
-              actionId: '2',
               actionActuatorFunc: 'takePhoto',
-              fileSuffix: airborne[i]!.segmentId,
-              payloadPositionIndex: '0'
+              fileSuffix: segmentId,
+              payloadPositionIndex: '0',
+              payloadLensIndex: zoomed ? 'zoom' : 'wide'
             })
           ])
+          expect(actions.map((a) => a.actionId)).toEqual(actions.map((_, n) => String(n)))
           return wpmlValues(group!).actionGroupId
         })
         const ids = groups.filter((id) => id !== undefined)
@@ -274,7 +333,7 @@ describe('mission export of a patrol planned over real Elmina segments', async (
 
   test('`bun run export:mission <dir>` writes both files for the demo plan, stamped in their names', async () => {
     const outDir = await mkdtemp(join(tmpdir(), 'mission-export-'))
-    const run = Bun.spawnSync(['bun', 'run', 'export:mission', outDir], { cwd: repoRoot })
+    const run = Bun.spawnSync(['bun', 'run', 'export:mission', outDir], { cwd: repoRoot, env: testEnv() })
     if (run.exitCode !== 0) throw new Error(run.stderr.toString())
     expect(run.stdout.toString()).toContain('wrote plan_demo-NOT-FLIGHT-READY.kmz and plan_demo-NOT-FLIGHT-READY.plan')
     expect((await readdir(outDir)).toSorted()).toEqual([

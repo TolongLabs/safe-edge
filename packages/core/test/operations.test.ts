@@ -57,19 +57,25 @@ describe('the operations table in core', () => {
       label: 'person on the S1 edge',
       geometry: { type: 'Point', coordinates: [101.5124058, 3.1786474] },
       observedAt: '2026-10-24T23:00:00.000Z',
+      headcount: null,
       simulated: true,
       source: 'fixture'
     }
     const h = startCore({ planner: await plannerWith({ thirdParties: [onTheEdge] }) })
     const played = playS1toRepair(h)
     h.call('recordRetest', 'usr_reviewer', { body: played.retest })
-    // Then a false alarm: the drone reports the panel missing again, the manager rejects it, a reviewer clears it.
+    // Then a false alarm: the drone reports the panel missing again, the agent summarises it for the Inbox card, the
+    // manager rejects it, a reviewer clears it.
     const alarm = raiseOnS1(h, 'usr_drone_sim', {
       inventoryItemId: S1.inventoryItemId,
       itemStatus: 'missing',
       class: 'inventory_item',
       rationale: 'Panel 4 missing again'
     }).data
+    h.call('recordAgentSummary', 'usr_agent', {
+      params: { id: alarm.id },
+      body: { text: `A false alarm on ${S1.segmentId}`, citations: [alarm.id], model: 'claude-opus-5-5' }
+    })
     h.call('decideCandidate', 'usr_manager', {
       params: { id: alarm.id },
       body: { decision: 'reject', reason: 'Shadow' }
@@ -86,8 +92,9 @@ describe('the operations table in core', () => {
     })
     h.call('recordWorkOrderExternalError', 'usr_system', {
       params: { id: played.workOrderId },
-      body: { message: 'Procore POST /rest/v1.1/projects/1234/uploads answered 503' }
+      body: { step: 'addEvidence', message: 'Procore POST /rest/v1.1/projects/1234/uploads answered 503' }
     })
+    h.call('retryWorkOrderHandOff', 'usr_manager', { params: { id: played.workOrderId } })
     const notice = h.call('draftNotice', 'usr_manager', {
       body: { kind: 'monthly_report', subjectId: null, title: 'October report', body: 'One finding closed' }
     }).data
@@ -106,6 +113,8 @@ describe('the operations table in core', () => {
     }).data
     h.call('approvePatrolPlan', 'usr_pilot', { params: { id: plan.id } })
     h.setNow(plan.window.start)
+    // They are beside the transit from S1 back to the dock as well (#150), so take-off waits for the pilot.
+    h.call('releasePlanHold', 'usr_pilot', { params: { id: plan.id, segmentId: 'dock' } })
     const patrol = h.call('startPatrol', 'usr_pilot', {
       body: { planId: plan.id, provider: 'sim', droneId: 'sim-1' }
     }).data
@@ -126,6 +135,19 @@ describe('the operations table in core', () => {
         model: null
       }
     })
+    // The other suspensions: a segment unpatrolled since the seed's last patrol, and damage the crew saw.
+    h.call('reportMissedPatrol', 'usr_system', { params: { id: 'seg_866518980_12' } })
+    h.call('reportDamage', 'usr_crew', {
+      body: {
+        segmentId: S1.segmentId,
+        observationIds: [],
+        inventoryItemId: null,
+        itemStatus: null,
+        class: 'bank_change',
+        rationale: 'The bank has slumped beside the bench',
+        simulated: true
+      }
+    })
 
     // Reads, each checked against its response schema by `call`.
     const reader = 'usr_gm'
@@ -137,8 +159,10 @@ describe('the operations table in core', () => {
     h.call('listDocks', reader, {})
     h.call('listDroneProfiles', reader, {})
     h.call('listPatrolPlans', reader, {})
+    h.call('getPatrolPlan', reader, { params: { id: plan.id } })
     h.call('listPatrols', reader, {})
     h.call('listInventoryChecks', reader, { query: { segmentId: S1.segmentId } })
+    h.call('getPatrol', reader, { params: { id: patrol.id } })
     h.call('listCandidates', 'usr_manager', { query: { status: 'confirmed' } })
     h.call('getFalseFlags', reader, {})
     h.call('getCandidate', 'usr_reviewer', { params: { id: played.raised.data.id } })

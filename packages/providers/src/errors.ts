@@ -5,6 +5,11 @@ export class ApprovalRequiredError extends Error {
   override name = 'ApprovalRequiredError'
 }
 
+/** `dispatchPatrol` was called too late for the flight to land before the plan's window closes. */
+export class OutsideWindowError extends Error {
+  override name = 'OutsideWindowError'
+}
+
 /** A typed stub's method: the adapter documents its vendor mapping but does not talk to the vendor yet. */
 export class ProviderNotImplementedError extends Error {
   override name = 'ProviderNotImplementedError'
@@ -17,4 +22,12 @@ export class ProviderNotImplementedError extends Error {
     this.provider = provider
     this.method = method
   }
+}
+
+/**
+ * The work-order system refused a request, answered with something other than the documented response, or could not
+ * be reached. What a hand-off records on the work order for a person to retry; any other error is a bug.
+ */
+export class WorkOrderProviderError extends Error {
+  override name = 'WorkOrderProviderError'
 }

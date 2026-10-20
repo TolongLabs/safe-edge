@@ -20,9 +20,13 @@ function refusals(op: OperationSpec): [Token, PolicyRule][] {
   return out
 }
 
-/** A person or service the table allows. */
+/** A person or service the table allows, or the agent for a row the table keeps for agents. */
 const allowed = (op: OperationSpec): Token =>
-  op.roles === 'any' ? 'tok_manager' : `tok_${op.roles.find((r) => r !== 'agent')!}`
+  op.roles === 'any'
+    ? 'tok_manager'
+    : op.roles.length === 0
+      ? 'tok_agent'
+      : `tok_${op.roles.find((r) => r !== 'agent')!}`
 
 test('every operation in the table is served under /v1 and refuses callers the table does not allow, naming the rule', async () => {
   const api = startApi()

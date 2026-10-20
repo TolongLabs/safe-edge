@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "SAFE_EDGE_DEV_TOKENS_FILE=../../data/elmina/fixtures/dev-tokens.json SAFE_EDGE_AGENT_TOKEN=dev_agent bun --env-file=../../.env run --hot src/index.ts",
+    "dev": "bun --env-file=../../.env run --hot src/dev.ts",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -11,9 +11,13 @@
     "@safe-edge/agent-tools": "workspace:*",
     "@safe-edge/contracts": "workspace:*",
     "@safe-edge/core": "workspace:*",
+    "@safe-edge/planner": "workspace:*",
     "@safe-edge/providers": "workspace:*",
     "@safe-edge/sdk": "workspace:*",
     "hono": "^4.13.13",
     "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "standardwebhooks": "1.1.1"
   }
 }

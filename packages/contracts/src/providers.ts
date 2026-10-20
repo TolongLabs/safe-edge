@@ -9,7 +9,8 @@ import {
   type EdgePass,
   type Finding,
   type PatrolPlan,
-  type Segment
+  type Segment,
+  type ThirdParty
 } from './entities.ts'
 import {
   DockId,
@@ -79,8 +80,9 @@ export type PatrolRun = z.infer<typeof PatrolRun>
 const eventBase = { runId: RunId, deviceId: DeviceId, at: Timestamp, simulated: z.boolean() }
 
 /**
- * The provider event stream, in time order. Waypoint indexes are the plan's `waypoints` indexes: `takeoff` leaves
- * waypoint 0, `waypoint` reaches 1 to n − 2, and `landed` reaches n − 1 (or the dock, after a cancel).
+ * The provider event stream, in time order. Waypoint indexes are the `waypoints` indexes of the plan the drone flies
+ * (after `updatePatrol` switches it to a re-plan, the re-plan's): `takeoff` leaves waypoint 0, `waypoint` reaches 1 to
+ * n − 2, and `landed` reaches n − 1 (or the dock, after a cancel or a hold's wait ran out).
  */
 export const ProviderEvent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('takeoff'), ...eventBase, planId: PatrolPlanId, pose: Pose }),
@@ -92,13 +94,17 @@ export const ProviderEvent = z.discriminatedUnion('type', [
     segmentId: SegmentId.nullable(),
     pose: Pose
   }),
-  /** One frame at a camera station. `viewpointId` is the plan station's, null when the plan links none. */
+  /**
+   * One frame at a camera station, taken at the station's zoom. `viewpointId` is the plan station's, null when the plan
+   * links none.
+   */
   z.object({
     type: z.literal('observation'),
     ...eventBase,
     waypointIndex: z.number().int().positive(),
     segmentId: SegmentId,
     viewpointId: ViewpointId.nullable(),
+    zoom: Waypoint.shape.zoom,
     captureSource: z.literal('drone'),
     image: EvidenceRef.nullable(),
     pose: Pose,
@@ -111,10 +117,14 @@ export const ProviderEvent = z.discriminatedUnion('type', [
     remainingWh: z.number().nonnegative(),
     percent: z.number().min(0).max(100)
   }),
+  /**
+   * `completed`: the drone flew its plan to the end. `cancelled`: `cancelPatrol` sent it straight home. `hold_timeout`:
+   * it waited at a separation hold until the rest of the plan no longer fitted its battery or window, then came home.
+   */
   z.object({
     type: z.literal('landed'),
     ...eventBase,
-    outcome: z.enum(['completed', 'cancelled']),
+    outcome: z.enum(['completed', 'cancelled', 'hold_timeout']),
     pose: Pose,
     remainingWh: z.number().nonnegative()
   })
@@ -130,6 +140,12 @@ export interface DroneProvider {
   schedulePatrol(plan: PatrolPlan): Promise<PatrolRun>
   /** Flies a scheduled run. Rejects unless `approval` matches the pilot approval recorded on the run's plan. */
   dispatchPatrol(runId: string, approval: HumanApproval): Promise<void>
+  /**
+   * Hands an in-flight run a newer version of its plan, approved as `approval` says: the same plan with separation
+   * holds released (the drone stops waiting at them), or an approved re-plan that supersedes it, whose stops after the
+   * committed ones replace the rest of the route. Rejects a re-plan the drone can no longer fly from where it is.
+   */
+  updatePatrol(runId: string, plan: PatrolPlan, approval: HumanApproval): Promise<void>
   /** Drops a scheduled run, or sends an in-flight one straight back to its dock. */
   cancelPatrol(runId: string): Promise<void>
   /** Subscribes to the event stream. Returns the unsubscribe function. */
@@ -148,13 +164,16 @@ export type ExternalRecordRef = z.infer<typeof ExternalRecordRef>
 export const ExternalWorkStatus = z.enum(['open', 'ready_for_review', 'rejected', 'closed'])
 export type ExternalWorkStatus = z.infer<typeof ExternalWorkStatus>
 
-/** How accepted findings reach a work-order or defect system, without core knowing which one. */
+/**
+ * How accepted findings reach a work-order or defect system, without core knowing which one. Safe Edge stores only
+ * the record's `id` (the work order's `externalRef`), so the later calls take just that.
+ */
 export interface WorkOrderProvider {
   /** Files the finding in the external system. */
   createFinding(input: Finding): Promise<ExternalRecordRef>
   /** Attaches evidence images to the external record. */
-  addEvidence(ref: ExternalRecordRef, evidence: EvidenceRef[]): Promise<void>
-  updateStatus(ref: ExternalRecordRef, status: ExternalWorkStatus): Promise<void>
+  addEvidence(ref: Pick<ExternalRecordRef, 'id'>, evidence: EvidenceRef[]): Promise<void>
+  updateStatus(ref: Pick<ExternalRecordRef, 'id'>, status: ExternalWorkStatus): Promise<void>
 }
 
 /**
@@ -162,7 +181,9 @@ export interface WorkOrderProvider {
  * `planPatrol` (#71), which holds what the store does not: planner geometry, capture settings, geofences and
  * water-level bands. Synchronous, like the rest of core. Core supplies the plan ID and the time, and stores the plan
  * only if it comes back proposed and unapproved. A re-plan request (`request.replan`) also gets the plan it supersedes
- * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`.
+ * as `previous` (null when the trigger queues a new patrol); the adapter calls the planner's `replan`. `thirdParties`
+ * are the ones the site records (the seed's), then the reports core keeps while they count (`ThirdPartyReport`), then
+ * the ones the request reports, each once.
  */
 export type PatrolPlanner = (input: {
   id: string
@@ -174,4 +195,5 @@ export type PatrolPlanner = (input: {
   segments: Segment[]
   passes: EdgePass[]
   findings: Finding[]
+  thirdParties: ThirdParty[]
 }) => PatrolPlan

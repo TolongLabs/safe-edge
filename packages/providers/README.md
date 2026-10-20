@@ -10,6 +10,7 @@ Contents:
     1.  [Event types](#event-types)
     1.  [Event timing and order](#event-timing-and-order)
 1.  [Approval gate](#approval-gate)
+1.  [Window gate](#window-gate)
 1.  [Feeding core](#feeding-core)
 1.  [Sending findings to Procore](#sending-findings-to-procore)
     1.  [Procore does not notify assignees](#procore-does-not-notify-assignees)
@@ -52,21 +53,22 @@ sim.tick()
 - The sim is deterministic: the same plan, devices and clock give the same events. It is browser-safe (`bun run check:browser` bundles it).
 - `getStatus(deviceId)` interpolates the pose and battery at `clock.now()`, for a smooth gauge between events.
 - `cancelPatrol` drops a scheduled run, or flies an in-flight one straight over the dock at its current height, then down to land.
+- `updatePatrol(runId, plan, approval)` hands an in-flight run a newer approved version of its plan: the same plan with holds released (see [Approval gate](#approval-gate)), or a re-plan that supersedes it (#72). A re-plan keeps the first `committedTasks` stops and every waypoint up to their last station, and replaces the rest. The drone finishes that prefix if it is still on it, then flies the re-plan's waypoints after it. If it has gone past it, it first flies back along the waypoints it came by to the prefix's last one, so every leg it flies is one a plan routed. It rejects a re-plan that does not keep the prefix, one whose window has not opened, and one it could not fly from there with the drone's reserve before the window closes. An update for a run that has landed or was cancelled changes nothing.
 - The stream only moves forward. To rewind the scene, build a new sim and replay.
 
 ## Event stream
 
 ### Event types
 
-Every event has `type`, `runId` (`simrun_<n>`), `deviceId`, `at` and `simulated: true`. A `pose` is the camera pose: `lon`, `lat`, `altM` above ground, `headingDeg` clockwise from north and gimbal `pitchDeg` (negative looks down). Indexes are the plan's `waypoints` indexes.
+Every event has `type`, `runId` (`simrun_<n>`), `deviceId`, `at` and `simulated: true`. A `pose` is the camera pose: `lon`, `lat`, `altM` above ground, `headingDeg` clockwise from north and gimbal `pitchDeg` (negative looks down). Indexes are the `waypoints` indexes of the plan the drone flies: after `updatePatrol` switches it to a re-plan, the re-plan's (so they can step back when the drone flies back to the committed stops; that return reports no waypoints).
 
-| `type`        | When                                                      | Other fields                                                                                                                                            |
-| ------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `takeoff`     | At dispatch, leaving waypoint 0 on the dock               | `planId`, `pose`                                                                                                                                        |
-| `waypoint`    | On reaching each waypoint 1 to n − 2 (transits, stations) | `index`, `kind`, `segmentId` (null on transits), `pose`                                                                                                 |
-| `observation` | At each camera station, straight after its `waypoint`     | `waypointIndex`, `segmentId`, `viewpointId` (the plan station's, null when none), `captureSource: 'drone'`, `image`, `pose`, `quality`, `privacyAction` |
-| `battery`     | Every 10 s of flight                                      | `remainingWh`, `percent` of the usable battery                                                                                                          |
-| `landed`      | On reaching the last waypoint, or the dock after a cancel | `outcome` (`completed` or `cancelled`), `pose`, `remainingWh`                                                                                           |
+| `type`        | When                                                                               | Other fields                                                                                                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `takeoff`     | At dispatch, leaving waypoint 0 on the dock                                        | `planId`, `pose`                                                                                                                                                                |
+| `waypoint`    | On reaching each waypoint 1 to n − 2 (transits, stations)                          | `index`, `kind`, `segmentId` (null on transits), `pose`                                                                                                                         |
+| `observation` | At each camera station, straight after its `waypoint`                              | `waypointIndex`, `segmentId`, `viewpointId` (the plan station's, null when none), `zoom` (the station's), `captureSource: 'drone'`, `image`, `pose`, `quality`, `privacyAction` |
+| `battery`     | Every 10 s of flight                                                               | `remainingWh`, `percent` of the usable battery                                                                                                                                  |
+| `landed`      | On reaching the last waypoint, or the dock after a cancel or a hold's wait ran out | `outcome` (`completed`, `cancelled` or `hold_timeout`), `pose`, `remainingWh`                                                                                                   |
 
 The sim has no camera, so `observation.image` is null, `quality` is nominal (`sharpness: 1`, `occlusion: 0`) and `privacyAction` is `none`. A scenario that needs imagery attaches its fixture images. Validate events with `ProviderEvent.parse`.
 
@@ -80,17 +82,34 @@ The sim has no camera, so `observation.image` is null, `quality` is nominal (`sh
 
 `dispatchPatrol` rejects with `ApprovalRequiredError` unless the scheduled plan is `approved` and the `HumanApproval` equals what core recorded on `approvePatrolPlan` (`planId`, `approvedBy`, `approvedAt`). Only a pilot can approve in core, never an agent. Scheduling a proposed plan is allowed, but that run can never fly: once a pilot approves, schedule the approved plan again.
 
-A `separation` hold (#79) waits for a person to confirm the path is clear. The sim does not model that wait at the segment, so it also refuses, with the same error, a plan that still has an unreleased separation hold: the pilot records the path clear with `releasePlanHold`, then schedules the released plan. Weather and lightning holds stop the launch in core's `startPatrol`, which the pilot calls before dispatching.
+A `separation` hold (#79) waits for a person to confirm the path is clear, on a segment (its stations, flight line or the transit into it) or on the dock (#125, #150: its climb, descent or the transits from and to it). The pilot records the path clear with `releasePlanHold`, and the host hands the released plan to the run with `updatePatrol`.
 
-The DJI and MAVLink adapters must apply the same checks before they send any flight command.
+- **The dock's hold before take-off.** `dispatchPatrol` refuses, with the same error, a plan whose dock hold is unreleased: take-off waits on the ground, as core's `startPatrol` does (`separation_hold`).
+- **A segment's hold, in flight.** The drone flies up to the waypoint before the held segment's first station (the start of the transit into it, clear of the people) and hovers there until the release arrives, then flies on. The plan budgets a 2-minute hover for it (#125); a longer wait lands that much later, on that much less battery, and a hold released before the drone gets there costs no wait, so that flight lands earlier than the plan's ETAs.
+- **The dock's hold on the way home.** A re-plan in flight carries a dock hold for the transit home (#150). The drone hovers at its last station, before that transit, until the release arrives. The plan budgets no wait for it.
+- **How long it waits.** For as long as the rest of the plan, flown without another wait, would still land before the window closes with the drone profile's reserve. Then it flies straight home and lands with `outcome: 'hold_timeout'`; a release after that changes nothing.
+
+Weather and lightning holds stop the launch in core's `startPatrol`, which the pilot calls before dispatching.
+
+## Window gate
+
+`dispatchPatrol` rejects with `OutsideWindowError` when the flight, launched now, would land at or after the plan's `window.end`. The run stays scheduled. Core's `startPatrol` refuses the same start as `outside_window`.
+
+`dispatchPatrol` and `updatePatrol` also reject a flight that would land with less than the drone profile's reserve. The DJI and MAVLink adapters must apply the same checks before they send any flight command.
 
 ## Feeding core
 
-Whoever hosts the sim (the API or the scenario player) turns its events into core operations. `packages/providers/test/drone-sim.test.ts` does this end to end over real Elmina segments.
+Whoever hosts the sim turns its events into core operations with `bridgeDrone({ provider, dispatch, actor, publish, onFailure })` (`src/drone-bridge.ts`). `hostDroneSim` (`src/drone-sim-host.ts`) is that hosting as both transports run it: one simulated aircraft per dock and drone profile, a patrol started with `provider: 'sim'` flown on it, another provider recorded as a failure. The API (`apps/api/src/automation.ts`) and the SDK's memory transport use it; `packages/providers/test/drone-sim.test.ts` drives the sim over core alone.
 
-1.  After `approvePatrolPlan`, the pilot calls `startPatrol` with `provider: 'sim'` and `droneId: run.deviceId`. Then dispatch the run on the sim.
-2.  `observation` becomes `recordObservation` (`POST /observations`) as the provider user `usr_drone_sim`, with `patrolId` from core and `capturedAt: at`. Core needs a `viewpointId` from the segment's fixed viewpoints, and #71's planner leaves plan stations unlinked, so match the frame's pose to a viewpoint (within a metre) and skip frames that match none.
-3.  `landed` becomes `completePatrol` with one coverage entry per planned segment. A segment counts as inspected only when every one of its stations was captured; otherwise its whole length is unknown, and core opens a field check for it.
+1.  After `approvePatrolPlan` and `startPatrol`, `bridge.fly(patrol)` schedules the plan on the provider and dispatches it with the approval core recorded. A refused dispatch drops the scheduled run and rejects.
+2.  `observation` becomes `recordObservation` (`POST /observations`) as the provider actor, with `patrolId` from core and `capturedAt: at`, when the frame carries a `viewpointId`. The planner gives each fixed viewpoint's ID to the station nearest it, so the frame matches its viewpoint by ID. Other frames only count towards coverage.
+3.  `landed` becomes `completePatrol` with one coverage entry per planned segment. Coverage counts stations, not frames: a station is seen once it has a frame the privacy gate kept, and each station seen stands for an equal share of its segment's length. The rest is unknown, and core opens a field check for it. A frame at a waypoint that is not a station of its segment, or a station on a segment the plan does not fly, is a failure.
+4.  `bridge.committedTasks(patrol, plan)` is how many of `plan`'s route stops are committed, which core's re-plan subscriber asks for an in-flight patrol: the stops the drone has reached (`waypoint` events at stations) when it flies `plan`, or the stops a re-plan of it keeps while the pilot has yet to approve that re-plan.
+5.  `bridge.sync()`, which the host calls after `approvePatrolPlan` and `releasePlanHold`, reads each flight's patrol and its plan from core. Approving a re-plan of a plan in flight moves its patrol onto the re-plan in core, so the bridge hands the provider the re-plan (or the released plan) with `updatePatrol`. If the provider refuses, the failure goes to `onFailure` and the drone is recalled with `cancelPatrol`, since core already records the patrol on the re-plan (which may be a weather re-plan that brings it home).
+
+The bridge goes on after a write fails and hands the error to `onFailure`; the transports record it as a failed `runAutomation` on the audit chain. A landing with `outcome: 'hold_timeout'` completes the patrol and is recorded the same way.
+
+The simulated aircraft live in the process that hosts them. When the API restarts, each patrol still in flight on drone-sim is completed as `usr_drone_sim` with nothing reported (every planned segment unknown, so core opens field checks), and the interruption is recorded, in one journal transaction (`interrupted()` in `apps/api/src/automation.ts`).
 
 ## Sending findings to Procore
 
@@ -101,7 +120,7 @@ When a manager or engineer submits a work order (`edge.work_order.submitted.v1`)
 3.  The API stores the Observation ID as the work order's `externalRef` with `setWorkOrderExternalRef` (system only, set once, audited), before any photo goes.
 4.  `addEvidence` uploads each observation photo and attaches it to the Observation.
 
-A failure is not retried: the API records it on the work order as `externalError` (`recordWorkOrderExternalError`, system only, set once, audited), readable with `GET /v1/work-orders/{id}`, and logs it. Every submitted work order gets its own Observation, including the one a reopened finding gets. Nothing calls `updateStatus` yet. It maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
+A Procore failure (refused, unreachable, or an undocumented answer: `WorkOrderProviderError`) is recorded on the work order as `externalError` with the step that failed (`recordWorkOrderExternalError`, system only, audited), readable with `GET /v1/work-orders/{id}`, and logged. Any other error is a bug and is not recorded. A manager or engineer retries with `POST /v1/work-orders/{id}/external-retry`, which resumes from that step. Every submitted work order gets its own Observation, including the one a reopened finding gets. The repair moves it with `updateStatus`: a completed repair to `ready_for_review`, an accepted re-test to `closed`, a rejected one to `not_accepted`. The adapter maps `open`, `ready_for_review`, `rejected` and `closed` to Procore's `initiated`, `ready_for_review`, `not_accepted` and `closed`. Procore notifies the distribution list when an Observation's status changes.
 
 ### Procore does not notify assignees
 
@@ -128,7 +147,8 @@ No credentials are checked in. To get them:
 
 1.  Run `scripts/procore-sandbox-wizard.sh`. It walks you through creating the Developer Portal account and an app with a service account (Service Account Authentication), and installing the app in its Developer Sandbox. It then checks the credentials against the sandbox and writes `PROCORE_CLIENT_ID`, `PROCORE_CLIENT_SECRET`, `PROCORE_COMPANY_ID` and `PROCORE_PROJECT_ID` to the gitignored root `.env`.
 1.  Run `bun run procore:smoke`. It files one Observation with a photo in the sandbox (`login-sandbox.procore.com`, `sandbox.procore.com`) through this adapter, then prints the Observation's ID and API URL. The photo is the repo's Safe Edge workflow diagram. The script fails when any variable is missing, and it refuses to run in CI.
-1.  `bun run dev` loads the root `.env` into the API, so confirmed candidates go to the sandbox. With no `PROCORE_*` variable set, the API keeps work orders in Safe Edge. With only some of them set, it refuses to start.
+1.  `bun run dev` loads the root `.env` into the API, so submitted work orders go to the sandbox. With no `PROCORE_*` variable set, the API keeps work orders in Safe Edge. With only some of them set, it refuses to start.
+1.  Run `bun run procore:e2e` for the whole path. It starts the dev API, plays S1 over HTTP with the dev tokens up to the manager's submit, reads the work order's `externalRef`, then fetches that Observation from the sandbox and checks its photo is the uploaded one, byte for byte. Like the smoke test, it fails when any variable is missing and refuses to run in CI. A recorded run is in [Procore sandbox hand-off](/docs/evidence/procore-sandbox.md).
 
 ## See also
 

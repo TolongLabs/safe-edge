@@ -1,10 +1,13 @@
-// Starts the API the way index.ts does, but on a free port with an injected clock, and calls it over real HTTP.
+// Starts the API the way index.ts does, but on a free port with a scenario clock, and calls it over real HTTP.
 import type Anthropic from '@anthropic-ai/sdk'
 import { afterAll } from 'bun:test'
-import type { Actor, RaiseCandidateRequest, Role } from '@safe-edge/contracts'
-import { counterIds, createCore, Seed } from '@safe-edge/core'
+import { EdgeEvent, type Actor, type RaiseCandidateRequest, type Role } from '@safe-edge/contracts'
+import { Seed } from '@safe-edge/core'
 import { join } from 'node:path'
 import { createApp, type ApiOptions } from '../src/app.ts'
+import type { Every } from '../src/automation.ts'
+import { scenarioClock, type ApiClock } from '../src/clock.ts'
+import type { WebhookOptions } from '../src/events.ts'
 import { createElminaPlanner } from '@safe-edge/sdk'
 import { devTokens } from '../src/tokens.ts'
 
@@ -22,12 +25,6 @@ tokens.set('tok_agent_unscoped', { type: 'agent', id: 'usr_agent', role: 'agent'
 tokens.set('tok_agent_read_only', { type: 'agent', id: 'usr_agent', role: 'agent', scopes: ['edge.read'] })
 export type Token = `tok_${Role}` | 'tok_agent_unscoped' | 'tok_agent_read_only'
 
-/** The committed dev tokens (`dev_manager`, `dev_agent`, …), loaded from their file as `bun run dev` loads them. */
-export const fixtureDevTokens = await devTokens(
-  { SAFE_EDGE_DEV_TOKENS_FILE: join(repoRoot, 'data/elmina/fixtures/dev-tokens.json') },
-  seed.users
-)
-
 /** One request as the server saw it: who sent it, and what came back (JSON bodies only; streams are not read). */
 export interface Exchange {
   method: string
@@ -38,24 +35,46 @@ export interface Exchange {
   body: unknown
 }
 
-/** With `claude`, the API runs its agent with that client and the `tok_agent` token; without it, it has no agent. */
+/**
+ * With `claude`, the API runs its agent with that client and the `tok_agent` token; without it, it has no agent. The
+ * clock is a scenario clock (`setNow` sets it directly, without the automation a `setScenarioClock` call runs), unless
+ * the test passes a clock without `set` and a timer, as on the wall clock.
+ */
 export function startApi({
   heartbeatMs = 5_000,
   tokens: tokenTable = tokens,
   workOrders,
-  claude
+  claude,
+  webhooks: { origins = [], allowLoopback = true, retryDelaysMs = [] } = {},
+  clock = scenarioClock(seed.asOf),
+  every,
+  weather
 }: {
   heartbeatMs?: number
+  /** Loopback webhooks allowed and no retries by default, so a failed delivery is final at once. */
+  webhooks?: Partial<WebhookOptions>
   tokens?: ReadonlyMap<string, Actor>
   workOrders?: ApiOptions['workOrders']
   claude?: Anthropic
+  clock?: ApiClock
+  every?: Every
+  weather?: ApiOptions['weather']
 } = {}) {
-  let now = seed.asOf
-  const clock = { now: () => now }
-  const ids = counterIds()
-  const core = createCore({ seed, clock, ids, planner })
   const agent = claude && { claude, token: 'tok_agent' }
-  const app = createApp({ core, clock, ids, tokens: tokenTable, heartbeatMs, workOrders, agent })
+  const app = createApp({
+    seed,
+    planner,
+    clock,
+    store: ':memory:',
+    tokens: tokenTable,
+    heartbeatMs,
+    workOrders,
+    agent,
+    webhooks: { origins, allowLoopback, retryDelaysMs },
+    idempotencyRetentionMs: 24 * 60 * 60 * 1000,
+    every,
+    weather
+  })
   const log: Exchange[] = []
   const server = Bun.serve({
     port: 0,
@@ -96,7 +115,8 @@ export function startApi({
     /** Every request the server answered, in order. */
     log,
     setNow: (iso: string) => {
-      now = iso
+      if (clock.set === undefined) throw new Error('This test API runs on a clock the test moves itself')
+      clock.set(iso)
     }
   }
 }
@@ -120,3 +140,47 @@ export const tier2Candidate = {
 
 export const raiseTier2 = (api: Api, token: Token | string = 'tok_provider') =>
   api.request('post', '/candidates', { token, body: tier2Candidate })
+
+/** Reads server-sent event frames (blank-line separated) as they arrive. */
+export function sseFrames(body: ReadableStream<Uint8Array>) {
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  return {
+    async next(): Promise<string> {
+      while (!buffer.includes('\n\n')) {
+        const { done, value } = await reader.read()
+        if (done) throw new Error('the event stream closed')
+        buffer += decoder.decode(value, { stream: true })
+      }
+      const end = buffer.indexOf('\n\n')
+      const frame = buffer.slice(0, end)
+      buffer = buffer.slice(end + 2)
+      return frame
+    },
+    cancel: () => reader.cancel()
+  }
+}
+
+/** The CloudEvents the stream carries next, skipping heartbeats. */
+export async function nextEvents(frames: ReturnType<typeof sseFrames>, count: number): Promise<EdgeEvent[]> {
+  const events: EdgeEvent[] = []
+  while (events.length < count) {
+    const frame = await frames.next()
+    if (frame.startsWith(':')) continue
+    const data = frame.split('\n').find((line) => line.startsWith('data: '))!
+    events.push(EdgeEvent.parse(JSON.parse(data.slice('data: '.length))))
+  }
+  return events
+}
+
+/** An `every` the test fires by hand: `fire()` runs each job once, in the order the API set them, as if its interval passed. */
+export function manualTimer() {
+  const jobs: (() => void | Promise<void>)[] = []
+  return {
+    every: ((_ms, run) => void jobs.push(run)) satisfies Every,
+    fire: async () => {
+      for (const run of jobs) await run()
+    }
+  }
+}

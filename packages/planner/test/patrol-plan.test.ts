@@ -3,7 +3,16 @@ import { PatrolPlan } from '@safe-edge/contracts'
 import { booleanIntersects } from '@turf/boolean-intersects'
 import { distance } from '@turf/distance'
 import { lineString } from '@turf/helpers'
-import { loadElmina, planPatrol, planStations, splitEdges, type Geofence, type PatrolPlanInput } from '../src/index.ts'
+import type { FeatureCollection, Polygon } from 'geojson'
+import {
+  elminaLayerPaths,
+  loadElmina,
+  planPatrol,
+  planStations,
+  splitEdges,
+  type Geofence,
+  type PatrolPlanInput
+} from '../src/index.ts'
 import { dock, drone, readJson, reading } from './support.ts'
 
 const NOW = '2026-10-20T06:00:00.000Z'
@@ -25,6 +34,7 @@ describe('patrol plans over real Elmina segments', async () => {
     drone,
     rangeM: 15,
     forwardOverlap: 0.6,
+    viewpoints: [],
     altitudeM: 9,
     altitudeCapM: 60,
     // The window opens at first light next morning and is long enough for every segment.
@@ -35,7 +45,9 @@ describe('patrol plans over real Elmina segments', async () => {
     passes: selected.map((s) => ({ segmentId: s.id, state: 'valid', validTo: at(24 * 200), readAt: NOW })),
     flags: selected.map((s) => ({ segmentId: s.id, severity: null, readAt: NOW })),
     geofences: [],
-    thirdParties: []
+    authorisation: null,
+    thirdParties: [],
+    separationWaitS: 120
   })
 
   test('scores each segment as 0.25 expiry + 0.35 reviewed flag + 0.25 rain + 0.15 water level, with the parts', () => {
@@ -213,6 +225,72 @@ describe('patrol plans over real Elmina segments', async () => {
       const line = lineString(leg.map((w) => [w.lon, w.lat]))
       expect(booleanIntersects(line, northPond.geometry) || booleanIntersects(line, band.geometry)).toBe(false)
     }
+  })
+
+  test("flying over or within 150 m of a designated area needs the Director General's authorisation", async () => {
+    // CAR 2016 reg. 143(1)(a), (b): "over any designated area" and "within 150 metres of any designated area", and (3):
+    // an area "used for residential, commercial, industrial or recreational purposes". The park the dock and the lake
+    // are in, as OSM maps it.
+    const parks = (await readJson(elminaLayerPaths.parks)) as FeatureCollection<Polygon, { osm_id: number }>
+    const park: Geofence = {
+      id: 'way/866543394',
+      kind: 'designated_area',
+      label: 'Elmina Valley Central Park (recreational)',
+      geometry: parks.features.find((f) => f.properties.osm_id === 866543394)!.geometry,
+      simulated: false,
+      source: 'osm'
+    }
+    const ids = ['seg_866518980_5', 'seg_866518980_9', 'seg_404002712_0']
+    const base = input(ids.map(segment))
+    const unauthorised = planPatrol({ ...base, geofences: [park] })
+    expect(unauthorised.tasks).toEqual([])
+    expect(unauthorised.waypoints).toEqual([])
+    expect(unauthorised.authorisation).toBeNull()
+    const needs = `comes within 150 m of designated area "${park.label}" without the Director General's authorisation (CAR 2016 reg. 143(1)(a), (b))`
+    expect(unauthorised.rejected).toEqual([
+      // The lake's flight lines are in the park; the pond's are not, but the dock it would fly from is.
+      { segmentId: ids[0], code: 'authorisation', reason: `its flight line ${needs}` },
+      { segmentId: ids[1], code: 'authorisation', reason: `its flight line ${needs}` },
+      { segmentId: ids[2], code: 'authorisation', reason: `every straight transit to it ${needs}` }
+    ])
+
+    // An authorisation (a labelled fixture: CAAM has issued none) lets the same plan fly, and the plan says what it
+    // relies on it for.
+    const authorisation = { ref: 'ATF fixture, not issued by CAAM', simulated: true, source: 'fixture' }
+    const authorised = planPatrol({ ...base, geofences: [park], authorisation })
+    expect(authorised.tasks.map((t) => t.segmentId).toSorted()).toEqual(ids.toSorted())
+    expect(authorised.waypoints).toEqual(planPatrol(base).waypoints)
+    expect(authorised.authorisation).toEqual({
+      ref: authorisation.ref,
+      reason: `the route flies over or within 150 m of designated area "${park.label}" (CAR 2016 reg. 143(1)(a), (b))`,
+      simulated: true
+    })
+    // A route that comes nowhere near a designated area needs none.
+    expect(planPatrol(base).authorisation).toBeNull()
+
+    // The 150 m reaches past the area's edge: shop lots 110 m and 190 m south of the dock (test fixtures, 20 m square).
+    const shops = (m: number): Geofence => ({
+      id: `geo_test_shops_${m}`,
+      kind: 'designated_area',
+      label: `test shop lot ${m} m south of the dock (commercial)`,
+      geometry: {
+        type: 'Polygon',
+        coordinates: [square(dock.position.lon, dock.position.lat - (m + 10) / 111_320, 10 / 111_320)]
+      },
+      simulated: true,
+      source: 'fixture'
+    })
+    const pond = input([segment('seg_404002712_0')])
+    expect(planPatrol({ ...pond, geofences: [shops(110)] }).rejected).toEqual([
+      {
+        segmentId: 'seg_404002712_0',
+        code: 'authorisation',
+        reason: `every straight transit to it comes within 150 m of designated area "test shop lot 110 m south of the dock (commercial)" without the Director General's authorisation (CAR 2016 reg. 143(1)(a), (b))`
+      }
+    ])
+    const clear = planPatrol({ ...pond, geofences: [shops(190)] })
+    expect(clear.rejected).toEqual([])
+    expect(clear.authorisation).toBeNull()
   })
 })
 

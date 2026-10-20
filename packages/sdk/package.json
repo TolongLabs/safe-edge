@@ -12,6 +12,7 @@
     "@safe-edge/contracts": "workspace:*",
     "@safe-edge/core": "workspace:*",
     "@safe-edge/planner": "workspace:*",
+    "@safe-edge/providers": "workspace:*",
     "zod": "^4.6.7"
   }
 }

@@ -33,8 +33,12 @@ interface Recording {
   exchanges: Exchange[]
 }
 
-/** A Claude client for one test scenario, plus every request body it sent (in all modes). */
-export function claude(scenario: string) {
+/**
+ * A Claude client for one test scenario, plus every request body it sent (in all modes). With `holdAfterFirstText`,
+ * each answer streams up to its first text delta and then stays open, as a slow model's would, until the request's
+ * abort signal fires (`aborted` resolves with that request's index).
+ */
+export function claude(scenario: string, { holdAfterFirstText = false } = {}) {
   const file = join(import.meta.dir, 'fixtures/claude', `${scenario}.json`)
   const recording: Recording | undefined = mode === 'replay' ? JSON.parse(readFileSync(file, 'utf8')) : undefined
   if (recording && recording.label.model !== AGENT_MODEL) {
@@ -42,6 +46,27 @@ export function claude(scenario: string) {
   }
   const exchanges: Exchange[] = []
   const sent: SentRequest['body'][] = []
+  const aborted = Promise.withResolvers<number>()
+
+  /** The answer as the Anthropic SDK reads it: whole, or held open after its first text delta. */
+  const respond = (index: number, body: string, init: ResponseInit, signal: AbortSignal | null | undefined) => {
+    if (!holdAfterFirstText) return new Response(body, init)
+    if (!signal) throw new Error('Expected the Anthropic SDK to send an abort signal')
+    const firstText = body.indexOf('"text_delta"')
+    if (firstText === -1) throw new Error(`${scenario}: response ${index + 1} streams no text to hold after`)
+    const head = new TextEncoder().encode(body.slice(0, body.indexOf('\n\n', firstText) + 2))
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(head)
+        const abort = () => {
+          aborted.resolve(index)
+          controller.error(signal.reason)
+        }
+        signal.addEventListener('abort', abort, { once: true })
+      }
+    })
+    return new Response(stream, init)
+  }
 
   const fetch = async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
     if (typeof init?.body !== 'string') throw new Error('Expected the Anthropic SDK to send a JSON string body')
@@ -66,24 +91,26 @@ export function claude(scenario: string) {
       const headers = new Headers()
       if (next.response.contentType) headers.set('content-type', next.response.contentType)
       if (next.response.requestId) headers.set('request-id', next.response.requestId)
-      return new Response(next.response.body, { status: next.response.status, headers })
+      return respond(index, next.response.body, { status: next.response.status, headers }, init.signal)
     }
 
     const response = await globalThis.fetch(input, init)
-    if (mode === 'live') return response
+    if (mode === 'live' && !holdAfterFirstText) return response
     const body = await response.text()
     const contentType = response.headers.get('content-type')
     const requestId = response.headers.get('request-id')
+    const index = exchanges.length
     exchanges.push({ request, response: { status: response.status, contentType, requestId, body } })
     const headers = new Headers()
     if (contentType) headers.set('content-type', contentType)
     if (requestId) headers.set('request-id', requestId)
-    return new Response(body, { status: response.status, headers })
+    return respond(index, body, { status: response.status, headers }, init.signal)
   }
 
   return {
     client: new Anthropic({ ...(recording ? { apiKey: 'replay-needs-no-key', maxRetries: 0 } : {}), fetch }),
     sent,
+    aborted: aborted.promise,
     /** Replay: every recorded request was made. Record: writes the recording. */
     async done() {
       if (recording && exchanges.length !== recording.exchanges.length) {
@@ -120,6 +147,10 @@ function firstDifference(recorded: unknown, actual: unknown, path: string): stri
     return null
   }
   if (recorded === actual) return null
+  // A tool result is JSON in a string: compare it parsed, so the path reaches the value that differs.
+  if (typeof recorded === 'string' && typeof actual === 'string' && /^{"/.test(recorded) && /^{"/.test(actual)) {
+    return firstDifference(JSON.parse(recorded), JSON.parse(actual), `${path}(json)`)
+  }
   const show = (value: unknown) => JSON.stringify(value)?.slice(0, 300)
   return `${path}: recorded ${show(recorded)}, sent ${show(actual)}; ${RERECORD}`
 }

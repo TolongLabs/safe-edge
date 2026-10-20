@@ -9,7 +9,8 @@ import {
   type OperationId,
   type OperationInput,
   type OperationSpec,
-  type PatrolPlanner
+  type PatrolPlanner,
+  type PolicyRule
 } from '@safe-edge/contracts'
 import { fixLens } from './handlers/fix-lens.ts'
 import type { Handlers } from './handlers/handler.ts'
@@ -28,8 +29,17 @@ export interface Clock {
   now(): string
 }
 
-/** What the API stores outside core: its operations' records, and its own failed webhook deliveries. */
-export type StoredAction = OperationId | 'deliverWebhook'
+/** Writes a transport makes that no operation names: failed webhook deliveries, failed automation steps. */
+const TRANSPORT_ACTIONS = ['deliverWebhook', 'runAutomation'] as const
+type TransportAction = (typeof TRANSPORT_ACTIONS)[number]
+const isTransportAction = (action: StoredAction): action is TransportAction =>
+  (TRANSPORT_ACTIONS as readonly string[]).includes(action)
+
+/**
+ * What a transport stores outside core: the API's operations' records, its own failed webhook deliveries, and failed
+ * automation steps (`recordAutomationFailure`).
+ */
+export type StoredAction = OperationId | TransportAction
 
 export interface IdGenerator {
   next(prefix: IdPrefix): string
@@ -59,6 +69,18 @@ export interface Core {
    */
   recordStored(action: StoredAction, actor: Actor, record: { id: string }, before?: { id: string } | null): void
   /**
+   * Appends a refusal the API decided itself for an operation it serves (`handledBy: 'api'`), such as a scenario clock
+   * set back, so it is on the audit chain as core's own refusals are. Returns the denial to answer with. `input` only
+   * names the refused record.
+   */
+  refuse(
+    operationId: OperationId,
+    actor: Actor,
+    rule: PolicyRule,
+    message: string,
+    input?: { params?: unknown; body?: unknown }
+  ): Denial
+  /**
    * Time-driven pass moves: valid → expiring 30 days before `validTo`, and → expired at `validTo`. Acts as the system,
    * which the one-way rule never lets make a pass valid. Returns the events to publish.
    */
@@ -83,7 +105,14 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
   const seed = Seed.parse(rawSeed)
   checkSeed(seed)
   const state = createState(seed)
-  const handlers: Handlers = { ...reads, ...patrolHandlers(planner), ...inbox, ...fixLens, ...work, ...notices }
+  const handlers: Handlers = {
+    ...reads,
+    ...patrolHandlers(planner, seed.thirdParties),
+    ...inbox,
+    ...fixLens,
+    ...work,
+    ...notices
+  }
   const openTx = (actor: Actor, now: string) => new Tx(state, actor, now, (prefix) => ids.next(prefix), seed.townshipId)
 
   const checkAccess = (operationId: OperationId, actor: Actor, input: { params?: unknown; body?: unknown } = {}) => {
@@ -99,9 +128,23 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     record: { id: string },
     before: { id: string } | null = null
   ) => {
-    const handledBy = action === 'deliverWebhook' ? 'api' : operations[action].handledBy
+    const handledBy = isTransportAction(action) ? 'api' : operations[action].handledBy
     if (handledBy !== 'api') throw new Error(`${action} is handled by ${handledBy}, whose writes core audits itself`)
     openTx(Actor.parse(actor), clock.now()).commitStored(action, record, before)
+  }
+
+  const refuse = (
+    operationId: OperationId,
+    actor: Actor,
+    rule: PolicyRule,
+    message: string,
+    input: { params?: unknown; body?: unknown } = {}
+  ): Denial => {
+    const { handledBy } = operations[operationId]
+    if (handledBy !== 'api')
+      throw new Error(`${operationId} is handled by ${handledBy}, whose refusals core audits itself`)
+    openTx(Actor.parse(actor), clock.now()).commitDenial(operationId, rule, refusedSubject(operationId, input))
+    return { ok: false, rule, message }
   }
 
   const dispatch = <K extends CoreOperationId>(
@@ -136,10 +179,13 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
       if (!op.events.includes(event.type))
         throw new Error(`${operationId} emitted ${event.type}, which its operation does not list`)
     }
+    if (result.status !== undefined && !(result.status in (op.responses ?? {}))) {
+      throw new Error(`${operationId} answered ${result.status}, which its operation does not list`)
+    }
     tx.commit(operationId)
     return {
       ok: true,
-      status: operations[operationId].status,
+      status: result.status ?? operations[operationId].status,
       data: structuredClone(result.data),
       events: structuredClone(tx.events)
     }
@@ -172,7 +218,7 @@ export function createCore({ seed: rawSeed, clock, ids, planner }: CoreOptions):
     return structuredClone(tx.events)
   }
 
-  return { dispatch: dispatch as Dispatch, checkAccess, recordStored, tick }
+  return { dispatch: dispatch as Dispatch, checkAccess, recordStored, refuse, tick }
 }
 
 /** Fails loudly on a seed whose records point at nothing. Every segment carries a pass (never issued = `none`). */
