@@ -23,6 +23,7 @@
     },
     {
       "at": "2026-10-22T07:40:00.000Z",
+      "story": { "chapter": "fix", "caption": "The installer finishes the repair, but cannot sign it off themselves." },
       "type": "repair",
       "as": "usr_installer",
       "operationId": "completeWorkOrder",
@@ -39,6 +40,10 @@
     },
     {
       "at": "2026-10-22T08:05:00.000Z",
+      "story": {
+        "chapter": "prove",
+        "caption": "Priya Nair, who did not install it, re-tests it on site. Both ways to the water are closed."
+      },
       "type": "retest",
       "as": "usr_reviewer",
       "operationId": "recordRetest",

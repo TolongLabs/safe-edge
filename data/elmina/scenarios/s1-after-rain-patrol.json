@@ -16,6 +16,10 @@
   "events": [
     {
       "at": "2026-10-20T21:30:00.000Z",
+      "story": {
+        "chapter": "spot",
+        "caption": "Overnight storm: 40 mm of rain in an hour. Safe Edge plans a drone check of the lake edge."
+      },
       "type": "plan",
       "as": "usr_manager",
       "operationId": "createPatrolPlan",
@@ -108,6 +112,10 @@
     },
     {
       "at": "2026-10-21T22:36:30.000Z",
+      "story": {
+        "chapter": "spot",
+        "caption": "A dry morning. The drone takes off from the roof dock to photograph each edge."
+      },
       "type": "takeoff",
       "as": "usr_pilot",
       "operationId": "startPatrol",
@@ -122,6 +130,10 @@
     },
     {
       "at": "2026-10-21T22:38:40.000Z",
+      "story": {
+        "chapter": "spot",
+        "caption": "A jogger walks into a photo. The privacy gate deletes it, and the drone takes the view again."
+      },
       "type": "observation",
       "as": "usr_drone_sim",
       "operationId": "recordObservation",
@@ -153,6 +165,10 @@
     },
     {
       "at": "2026-10-21T22:41:00.000Z",
+      "story": {
+        "chapter": "spot",
+        "caption": "Glare hides a ring buoy. Safe Edge marks it unknown and sends someone on foot instead of guessing."
+      },
       "type": "candidate",
       "as": "usr_drone_sim",
       "operationId": "raiseCandidate",
@@ -175,6 +191,10 @@
     },
     {
       "at": "2026-10-21T22:42:00.000Z",
+      "story": {
+        "chapter": "spot",
+        "caption": "The drone's photo shows panel 4 is gone. This stretch no longer counts as safe."
+      },
       "type": "candidate",
       "as": "usr_drone_sim",
       "operationId": "raiseCandidate",
@@ -197,6 +217,7 @@
     },
     {
       "at": "2026-10-21T23:05:00.000Z",
+      "story": { "chapter": "confirm", "caption": "The park manager compares the photos and confirms it needs a fix." },
       "type": "decision",
       "as": "usr_manager",
       "operationId": "decideCandidate",
@@ -213,6 +234,7 @@
     },
     {
       "at": "2026-10-21T23:40:00.000Z",
+      "story": { "chapter": "confirm", "caption": "The crew puts up a temporary barrier at the gap the same morning." },
       "type": "task",
       "as": "usr_crew",
       "operationId": "completeTask",

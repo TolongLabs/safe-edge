@@ -113,6 +113,10 @@
     },
     {
       "at": "2026-10-21T23:56:00.000Z",
+      "story": {
+        "chapter": "fix",
+        "caption": "Fix A would replace panel 4, but a child could still walk around the fence end."
+      },
       "type": "read",
       "as": "usr_manager",
       "operationId": "previewRouteClosure",
@@ -157,6 +161,10 @@
     },
     {
       "at": "2026-10-21T23:59:00.000Z",
+      "story": {
+        "chapter": "fix",
+        "caption": "Fix B replaces the panel and extends the fence, closing both ways to the water."
+      },
       "type": "read",
       "as": "usr_manager",
       "operationId": "previewRouteClosure",
@@ -172,6 +180,10 @@
     },
     {
       "at": "2026-10-22T00:10:00.000Z",
+      "story": {
+        "chapter": "fix",
+        "caption": "The engineer approves fix B, and the work order goes to the installer."
+      },
       "type": "fix",
       "as": "usr_engineer",
       "operationId": "approveRemedy",
