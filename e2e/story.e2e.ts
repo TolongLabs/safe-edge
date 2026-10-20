@@ -11,7 +11,7 @@ const story = (page: Page) => page.getByRole('region', { name: 'Story' })
 const caption = (page: Page) => page.getByTestId('caption')
 const current = (page: Page) => page.getByRole('list', { name: 'Chapters' }).locator('[aria-current="step"]')
 
-async function open(page: Page, path = 'demo/') {
+async function open(page: Page, path = 'demo/scene.html') {
   await page.goto(path)
   await expect(page.locator('canvas')).toBeVisible({ timeout: 90_000 })
 }
