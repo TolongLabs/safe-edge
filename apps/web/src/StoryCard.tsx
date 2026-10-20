@@ -89,7 +89,7 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
           Central Park Lake, by the playground
         </p>
         <h1 style={{ margin: 0, font: '700 20px/26px "Atkinson Hyperlegible Next", system-ui, sans-serif' }}>
-          A fence panel is missing. A child on the path can reach deep water.
+          Last night’s storm knocked out a fence panel. The edge still shows a valid pass: nobody has checked yet.
         </h1>
         <p style={{ margin: 0, color: '#5d6b66' }}>
           Safe Edge finds gaps like this, gets them fixed, and proves the fix before the edge counts as safe.
