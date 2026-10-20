@@ -1,26 +1,9 @@
-import { expect, test as base, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import type { MemoryClient } from '@safe-edge/sdk'
+import { expect, test } from './fixtures'
 
 // The page's presenter handle (apps/web/src/store.ts); typed here so the root typecheck stays free of the app's JSX.
 type Presenter = { demo: MemoryClient; refresh: () => Promise<void> }
-
-// AC8: abort every http(s) request that is not local, record it, and fail the test if any happened.
-const test = base.extend<{ aborted: string[] }>({
-  aborted: [
-    async ({ page }, use) => {
-      const aborted: string[] = []
-      await page.route(/^https?:/, (route) => {
-        const host = new URL(route.request().url()).hostname
-        if (host === 'localhost' || host === '127.0.0.1') return route.continue()
-        aborted.push(route.request().url())
-        return route.abort()
-      })
-      await use(aborted)
-      expect(aborted, 'non-local requests were aborted').toEqual([])
-    },
-    { auto: true }
-  ]
-})
 
 // The demo core assigns IDs in order: the four sample cards are cand_1 (S1) to cand_4.
 const S1 = 'cand_1'
@@ -33,6 +16,10 @@ const open = (page: Page, title: string) =>
     .getByRole('navigation', { name: 'Inbox list' })
     .getByRole('button', { name: new RegExp(title) })
     .click()
+const resetDemo = async (page: Page) => {
+  await page.getByRole('button', { name: /Farah Hashim/ }).click()
+  await page.getByRole('button', { name: 'Reset demo' }).click()
+}
 const list = (page: Page, group: 'Open' | 'Decided') => page.getByRole('list', { name: group })
 
 // What other people do between the manager's steps, made through the demo core as them (the Fix Lens and crew screens
@@ -263,7 +250,7 @@ test('AC7 banner, image labels, reset', async ({ page }) => {
   await open(page, 'Fence panel 4')
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(list(page, 'Decided').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
-  await page.getByRole('button', { name: 'Reset demo' }).click()
+  await resetDemo(page)
   await expect(list(page, 'Open').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
   await expect(page.getByRole('region', { name: /^Finding / })).toHaveCount(0)
 })
@@ -271,7 +258,7 @@ test('AC7 banner, image labels, reset', async ({ page }) => {
 test('AC7 reset clears an open reject form', async ({ page }) => {
   await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
   await page.getByLabel('Reason for rejecting').fill('Old reason')
-  await page.getByRole('button', { name: 'Reset demo' }).click()
+  await resetDemo(page)
   await expect(card(page, S1).getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
   await expect(page.getByLabel('Reason for rejecting')).toHaveCount(0)
 })
