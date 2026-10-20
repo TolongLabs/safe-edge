@@ -9,6 +9,7 @@ const wsl = !!process.env.WSL_DISTRO_NAME
 // build:demo-site refuses folders inside the repository, so the tests' build goes to the system's temp folder.
 const site = join(tmpdir(), 'safe-edge-demo-site')
 if (wsl) process.env.GALLIUM_DRIVER ??= 'd3d12'
+const live = process.env.PLAYWRIGHT_BASE_URL
 
 export default defineConfig({
   testDir: 'e2e',
@@ -19,7 +20,8 @@ export default defineConfig({
   reporter: 'list',
   timeout: 120_000,
   use: {
-    baseURL: 'http://127.0.0.1:4173/',
+    // PLAYWRIGHT_BASE_URL runs the tests against a deployed site instead of a local build.
+    baseURL: live ?? 'http://127.0.0.1:4173/',
     headless: !wsl,
     launchOptions: {
       // Recording mode's Record button captures the tab; this flag accepts the browser's share prompt.
@@ -30,10 +32,12 @@ export default defineConfig({
     }
   },
   // The production demo site, as the judges get it: the dev build runs React's slower development checks.
-  webServer: {
-    command: `bun run build:demo-site ${site} && bun scripts/serve-demo-site.ts ${site} 4173`,
-    url: 'http://127.0.0.1:4173/',
-    timeout: 180_000,
-    reuseExistingServer: false
-  }
+  webServer: live
+    ? undefined
+    : {
+        command: `bun run build:demo-site ${site} && bun scripts/serve-demo-site.ts ${site} 4173`,
+        url: 'http://127.0.0.1:4173/',
+        timeout: 180_000,
+        reuseExistingServer: false
+      }
 })
