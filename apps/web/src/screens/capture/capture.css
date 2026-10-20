@@ -1,0 +1,255 @@
+/* Phone capture (390 px). Colours and sizes come from the tokens in app.css only. */
+.frame.phone > .detail.capture {
+  gap: var(--space-3);
+  padding: var(--space-4);
+  padding-bottom: 0;
+  background: var(--bg-canvas);
+}
+.capture h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 700;
+}
+.capture .hint,
+.capture .note {
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+}
+.capture .note {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+}
+.capture .back {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-default);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.capture .banner {
+  align-items: flex-start;
+  border-radius: var(--radius-lg);
+}
+.capture .banner svg {
+  flex: none;
+}
+.capture .banner.warn {
+  background: var(--state-expiring-bg);
+  border-color: var(--state-expiring-fg);
+}
+.capture .banner.ok {
+  background: var(--state-valid-bg);
+  border-color: var(--state-valid-fg);
+}
+.capture .rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.capture .row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+div.capture .row,
+.capture div.row {
+  cursor: default;
+}
+.capture .row .sub {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+}
+.capture .row .num {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-rail);
+  color: var(--text-on-rail);
+  font-size: var(--fs-dense);
+  font-weight: 700;
+}
+.capture .row b {
+  flex: 1;
+}
+.capture .pill {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+.capture .pill.sent {
+  background: var(--state-valid-bg);
+  color: var(--state-valid-fg);
+}
+.capture .pill.waiting {
+  background: var(--state-expiring-bg);
+  color: var(--state-expiring-fg);
+}
+.skeleton-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.skeleton-rows i {
+  display: block;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-sunken);
+}
+
+/* Camera */
+.capture-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+}
+.viewfinder {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--bg-sunken);
+}
+.viewfinder.off {
+  aspect-ratio: 8 / 5;
+}
+.viewfinder video,
+.viewfinder .ghost {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.viewfinder .ghost .sample-image,
+.viewfinder .ghost svg {
+  width: 100%;
+  height: 100%;
+}
+.viewfinder .ghost svg {
+  object-fit: cover;
+}
+.viewfinder .caption {
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  bottom: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--fs-small);
+  font-weight: 600;
+}
+.ghost-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  font-weight: 600;
+}
+.ghost-slider input {
+  flex: 1;
+  min-height: 44px;
+  accent-color: var(--accent-default);
+}
+.ghost-slider output {
+  min-width: 3ch;
+  text-align: right;
+}
+.taken img {
+  display: block;
+  width: 100%;
+  max-height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+}
+.taken {
+  margin: 0;
+}
+
+/* Pinned action bar */
+.capture .pinned {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: auto calc(-1 * var(--space-4)) 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-island) var(--radius-island) 0 0;
+  background: var(--bg-surface);
+  text-align: center;
+}
+.capture .btn:not(.primary):not([disabled]) {
+  color: var(--text-primary); /* the green outline text reads as disabled on dark */
+}
+.capture .pinned .btn {
+  width: 100%;
+  min-height: 52px;
+}
+.capture .shutter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.capture .shutter-row .btn {
+  width: auto;
+}
+.capture .shutter {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 4px solid var(--accent-default);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--accent-default);
+  cursor: pointer;
+}
+.capture .shutter:disabled {
+  border-color: var(--border-default);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+.capture .gallery:focus-within,
+.capture .shutter:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.capture .gallery[aria-disabled='true'] {
+  opacity: 0.5;
+}
