@@ -40,6 +40,7 @@ export function Compare({
   lens,
   reload,
   workOrder,
+  failed,
   chosen,
   setChosen,
   onSent
@@ -48,6 +49,8 @@ export function Compare({
   lens: Lens
   reload: () => void
   workOrder: WorkOrder | null
+  /** The newest order a re-test rejected, when the finding has no current order: a new one is made on send. */
+  failed: WorkOrder | null
   chosen: string | null
   setChosen: (id: string) => void
   onSent: () => void
@@ -75,24 +78,28 @@ export function Compare({
   const maySend = can('updateWorkOrder') && can('submitWorkOrder')
   const reason = sent
     ? null
-    : !workOrder
-      ? 'There is no work order for this finding yet.'
-      : !pick
-        ? 'Choose a fix first.'
-        : pick.engineerApprovedBy === null
-          ? `An engineer must approve fix ${letter(index)} first.`
-          : finding.status !== 'interim_protected' && finding.status !== 'reopened'
-            ? 'Interim protection must be done first.'
-            : !due
-              ? 'Choose a due date.'
-              : due < today
-                ? 'Choose a due date from today on.'
-                : null
+    : !pick
+      ? 'Choose a fix first.'
+      : pick.engineerApprovedBy === null
+        ? `An engineer must approve fix ${letter(index)} first.`
+        : finding.status !== 'interim_protected' && finding.status !== 'reopened'
+          ? 'Interim protection must be done first.'
+          : !due
+            ? 'Choose a due date.'
+            : due < today
+              ? 'Choose a due date from today on.'
+              : null
+  const failedIndex = failed ? remedies.findIndex((r) => r.id === failed.remedyId) : -1
 
   return (
     <div className="fl-compare">
       <h2 className="fl-question">Which fix closes every way to the water?</h2>
       <p className="fl-muted">Fix Lens follows each way a child could walk from the play area to the lake.</p>
+      {failed && (
+        <p className="banner info" role="status">
+          {failedIndex < 0 ? 'The last fix' : `Fix ${letter(failedIndex)}`} failed its re-test. Choose a fix again.
+        </p>
+      )}
       {denied && (
         <p className="state bad" role="alert">
           {denied}
@@ -197,9 +204,11 @@ export function Compare({
               onClick={() =>
                 // Step 3 opens only after the store holds the submitted order, so "No fix sent yet" never shows.
                 void run(async () => {
-                  await client().updateWorkOrder({ params: { id: workOrder!.id }, body: { remedyId: pick!.id } })
+                  const order = workOrder
+                    ? await client().updateWorkOrder({ params: { id: workOrder.id }, body: { remedyId: pick!.id } })
+                    : await client().createWorkOrder({ body: { findingId: finding.id, remedyId: pick!.id, notes: '' } })
                   await client().submitWorkOrder({
-                    params: { id: workOrder!.id },
+                    params: { id: order.id },
                     body: { installerUserId: installerId, dueAt: `${due}T09:00:00.000Z` }
                   })
                 }).then((ok) => ok && onSent())

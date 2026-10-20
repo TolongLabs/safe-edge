@@ -1,6 +1,7 @@
 import { Info, WarningCircle } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { NotInSession, Screen } from '../../shell/Shell'
+import type { WorkOrder } from '@safe-edge/contracts'
 import { useStore, type Snapshot } from '../../store'
 import { Compare } from './Compare'
 import { must, useLens } from './lens'
@@ -55,10 +56,15 @@ function List() {
 function Lens({ finding }: { finding: Finding }) {
   const s = useStore().snapshot!
   const meta = must(s.metas[finding.candidateId], `sample details for ${finding.candidateId}`)
-  const workOrder = s.workOrders.find((w) => w.findingId === finding.id) ?? null
+  // The current order is the newest one a re-test has not rejected; a rejected one stays in the list as history.
+  const newest = (orders: Snapshot['workOrders']) =>
+    orders.reduce<WorkOrder | null>((a, w) => (a && a.createdAt > w.createdAt ? a : w), null)
+  const orders = s.workOrders.filter((w) => w.findingId === finding.id)
+  const workOrder = newest(orders.filter((w) => w.status !== 'rejected'))
+  const failed = workOrder === null ? newest(orders) : null
   const sent = workOrder !== null && workOrder.status !== 'draft'
-  const { lens, error, reload } = useLens(finding.segmentId, workOrder?.remedyId ?? null)
-  const [step, setStep] = useState(sent ? 3 : 1)
+  const { lens, error, reload } = useLens(finding.segmentId, (workOrder ?? failed)?.remedyId ?? null)
+  const [step, setStep] = useState(sent ? 3 : failed ? 2 : 1)
   const [chosen, setChosen] = useState<string | null>(workOrder?.remedyId ?? null)
   // Nothing is chosen for the manager: sending waits until a fix is picked.
   const when = `Finding ${new Date(finding.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`
@@ -88,6 +94,7 @@ function Lens({ finding }: { finding: Finding }) {
       lens={lens}
       reload={reload}
       workOrder={workOrder}
+      failed={failed}
       chosen={chosen}
       setChosen={setChosen}
       onSent={() => setStep(3)}

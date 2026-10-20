@@ -223,6 +223,47 @@ test('AC81-6 reads from core: a reset clears it, and a sent fix is still there a
   await expect(page.getByRole('link', { name: 'Open the repair check' })).toBeVisible()
 })
 
+test('AC81-5 after a failed re-test a new fix can be chosen and sent', async ({ page }) => {
+  await openLens(page)
+  await compare(page)
+  await sendFix(page)
+  const firstOrder = await page.getByRole('link', { name: 'Open the repair check' }).getAttribute('href')
+  // The installer repairs it and the reviewer rejects the repair (the crew and re-test screens are other tasks').
+  await page.evaluate(async () => {
+    const { demo, refresh } = (window as unknown as { safeEdgeDemo: { demo: any; refresh: () => Promise<void> } })
+      .safeEdgeDemo
+    const wo = (await demo.listWorkOrders())[0]
+    const installer = demo.as('usr_installer')
+    await installer.startWorkOrder({ params: { id: wo.id } })
+    await installer.completeWorkOrder({ params: { id: wo.id }, body: { evidence: [], note: 'Panel replaced' } })
+    const finding = (await demo.listFindings())[0]
+    const { routes } = await demo.previewRouteClosure({ params: { id: finding.segmentId }, body: { remedyIds: [] } })
+    await demo.as('usr_reviewer').recordRetest({
+      body: {
+        workOrderId: wo.id,
+        checklist: [
+          { kind: 'route_check', subjectId: routes[0].id, result: 'fail', reason: 'Gap still open', measuredMm: 150 }
+        ],
+        evidence: [],
+        result: 'rejected',
+        reason: 'Gap still over 10 cm'
+      }
+    })
+    await refresh()
+  })
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Passes' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Passes' })).toBeVisible()
+  await page.goBack()
+  await expect(page.getByText('Fix B failed its re-test. Choose a fix again.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /sent to/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Send fix to/ })).toBeDisabled()
+  await expect(page.getByText('Choose a fix first.')).toBeVisible()
+  await page.getByRole('radio', { name: /^B ·/ }).check()
+  await page.getByRole('button', { name: /^Send fix B to .+ crew$/ }).click()
+  await expect(page.getByRole('heading', { name: /^Fix B sent to .+ crew$/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open the repair check' })).not.toHaveAttribute('href', firstOrder!)
+})
+
 test('AC81-7 works in dark mode', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' })
   await openLens(page)
