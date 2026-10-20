@@ -46,6 +46,25 @@ test('the controls strip replaces the toggle', async ({ page }) => {
   expect(box.y + box.height).toBeGreaterThan(height - 40)
 })
 
+test('the controls strip reads clearly over the night map', async ({ page }) => {
+  await page.goto('demo/scene.html')
+  await expect(page.locator('canvas')).toBeVisible({ timeout: 90_000 })
+  const { background, contrast } = await page.getByText(MOUSE).evaluate((el) => {
+    const rgba = (value: string) => value.match(/[\d.]+/g)!.map(Number)
+    const lum = ([r, g, b]: number[]) =>
+      [r!, g!, b!]
+        .map((v) => v / 255)
+        .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+        .reduce((sum, v, i) => sum + v * [0.2126, 0.7152, 0.0722][i]!, 0)
+    const style = getComputedStyle(el)
+    const [a, b] = [lum(rgba(style.color)), lum(rgba(style.backgroundColor))].sort((x, y) => y - x)
+    return { background: rgba(style.backgroundColor), contrast: (a! + 0.05) / (b! + 0.05) }
+  })
+  // A translucent strip shows the dark map through it, so only a solid one keeps its contrast.
+  expect(background[3] ?? 1).toBe(1)
+  expect(contrast).toBeGreaterThanOrEqual(4.5)
+})
+
 test.describe('on a touch screen', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
 

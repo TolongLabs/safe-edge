@@ -11,7 +11,8 @@ export function ControlsHint({ hidden }: { hidden: boolean }) {
         margin: 0,
         padding: '4px 10px',
         borderRadius: 8,
-        background: 'rgb(251 252 251 / 0.85)',
+        // Solid: over the night map a translucent strip drops the muted text under 4.5:1.
+        background: '#fbfcfb',
         color: '#5d6b66',
         font: '12px/16px "Atkinson Hyperlegible Next", system-ui, sans-serif',
         pointerEvents: 'none'

@@ -127,7 +127,7 @@ export function DetailsMenu({
                 const value = event.target.value
                 onMode(value === 'story' ? { kind: 'story' } : { kind: 'scenario', id: value as Scenario['id'] })
               }}
-              style={{ font: 'inherit', fontWeight: 600, minHeight: 32, width: '100%', minWidth: 0 }}
+              style={{ font: 'inherit', fontWeight: 600, minHeight: 'var(--tap, 32px)', width: '100%', minWidth: 0 }}
             >
               <option value="story">The story, S1 to S3</option>
               {elminaScenarios.map((s) => (
@@ -232,7 +232,7 @@ export function DetailsMenu({
                       <select
                         value={player.speed}
                         onChange={(event) => player.setSpeed(Number(event.target.value))}
-                        style={{ font: 'inherit', minHeight: 32 }}
+                        style={{ font: 'inherit', minHeight: 'var(--tap, 32px)' }}
                       >
                         {SPEEDS.map((s) => (
                           <option key={s} value={s}>
@@ -257,7 +257,7 @@ export function DetailsMenu({
                         .seek(new Date(to).toISOString())
                         .finally(() => setScrubTo((held) => (held === to ? null : held)))
                     }}
-                    style={{ width: '100%', accentColor: '#17302a', height: 24 }}
+                    style={{ width: '100%', accentColor: '#17302a', height: 'var(--tap, 32px)' }}
                   />
                 </>
               )}

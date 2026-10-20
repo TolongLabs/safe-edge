@@ -146,6 +146,14 @@ test('Play again starts over', async ({ page }) => {
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
 
+  test("the story's controls are full-size touch targets", async ({ page }) => {
+    await open(page)
+    for (const control of await page.getByRole('button').all()) {
+      if (!(await control.isVisible())) continue
+      expect((await control.boundingBox())!.height, await control.textContent()).toBeGreaterThanOrEqual(44)
+    }
+  })
+
   test('the story fits a phone', async ({ page }) => {
     await open(page)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390)

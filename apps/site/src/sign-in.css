@@ -148,6 +148,16 @@
   width: 100%;
 }
 
+/* On a touch screen the two links are full-size targets too. */
+@media (pointer: coarse) {
+  .signin-word,
+  .signin-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
+
 @media (max-width: 767px) {
   .signin {
     grid-template-columns: minmax(0, 1fr);

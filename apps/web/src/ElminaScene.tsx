@@ -20,6 +20,14 @@ import { StoryCard } from './StoryCard.tsx'
 import { usePlayback, type PlaybackMode } from './usePlayback.ts'
 
 const layerUrls = { water: waterUrl, parks: parksUrl, paths: pathsUrl, buildings: buildingsUrl }
+/** What inline styles cannot say: a shorter badge on narrow screens, and tap-sized controls on touch screens. */
+const sceneCss = `
+.sim-short { display: none }
+@media (max-width: 640px) { .sim-long { display: none } .sim-short { display: inline } }
+[data-testid="elmina-scene"] { --tap: 32px }
+@media (pointer: coarse) { [data-testid="elmina-scene"] { --tap: 44px } }
+`
+
 const query = new URLSearchParams(location.search)
 /** `?record` opens recording mode: the camera follows a fixed path and the user's camera controls are off. */
 const recording = query.has('record')
@@ -168,11 +176,7 @@ export function ElminaScene() {
       style={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden' }}
       data-testid="elmina-scene"
     >
-      <style>
-        {
-          '.sim-short { display: none } @media (max-width: 640px) { .sim-long { display: none } .sim-short { display: inline } }'
-        }
-      </style>
+      <style>{sceneCss}</style>
       {load && <LoadingCard state={load} />}
       {status === 'ready' && <ControlsHint hidden={recording} />}
       {status === 'ready' && (
