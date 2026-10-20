@@ -65,6 +65,7 @@ export const PolicyRule = named(
     'separation_hold',
     'outside_window',
     'invalid_coverage',
+    'every_item_reported',
     'clock_backwards'
   ])
 )

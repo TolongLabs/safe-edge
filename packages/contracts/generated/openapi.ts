@@ -310,6 +310,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/inventory-checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Per-item results at fixed viewpoints, by segment or patrol
+         * @description Roles: any. Agents need scope `inspection.read`.
+         */
+        get: operations["listInventoryChecks"];
+        put?: never;
+        /**
+         * Report every item an observation's viewpoint expects as present, missing, changed or not visible; core raises a candidate for each item not present
+         * @description Roles: provider, crew, system. Agents are refused. Emits edge.candidate.raised.v1, edge.pass.suspended.v1.
+         */
+        post: operations["recordInventoryCheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/candidates": {
         parameters: {
             query?: never;
@@ -408,6 +432,26 @@ export interface paths {
          * @description Roles: manager. Agents are refused. Emits edge.candidate.decided.v1, edge.work_order.drafted.v1.
          */
         post: operations["decideCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/false-flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * False flags per patrol and class against the budget, and the classes over it, for the board
+         * @description Roles: any. Agents need scope `edge.read`.
+         */
+        get: operations["getFalseFlags"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1176,7 +1220,7 @@ export interface components {
             id: string;
         };
         /** @enum {string} */
-        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "separation_hold" | "outside_window" | "invalid_coverage" | "clock_backwards";
+        PolicyRule: "role_forbidden" | "scope_missing" | "one_way_rule" | "two_person_rule" | "agents_draft_only" | "invalid_transition" | "remedy_not_approved" | "plan_not_approved" | "plan_superseded" | "weather_hold" | "separation_hold" | "outside_window" | "invalid_coverage" | "every_item_reported" | "clock_backwards";
         Denial: {
             /** @constant */
             ok: false;
@@ -1621,6 +1665,35 @@ export interface components {
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
+        ItemResult: {
+            inventoryItemId: string;
+            status: components["schemas"]["ItemStatus"];
+            score: number;
+            uncertainty: components["schemas"]["Uncertainty"] | null;
+            gridCell: string | null;
+            rationale: string;
+        };
+        InventoryCheck: {
+            id: string;
+            observationId: string;
+            segmentId: string;
+            viewpointId: string;
+            /** @description The observation's patrol; null for a phone capture outside a patrol */
+            patrolId: string | null;
+            /** @description In the viewpoint's order */
+            items: components["schemas"]["ItemResult"][];
+            /** @description One per item that was not present */
+            candidateIds: string[];
+            /** @description The model that judged the items; null for scripted or human input */
+            model: string | null;
+            checkedBy: components["schemas"]["ActorRef"];
+            /** Format: date-time */
+            checkedAt: string;
+            simulated: boolean;
+            source: components["schemas"]["Source"];
+        };
+        /** @enum {string} */
+        FlagClass: "fence_panel" | "cover" | "grating" | "gate" | "ring_buoy" | "sign" | "worn_path" | "bank_change" | "vegetation" | "floating_debris" | "water_level_change" | "text_in_image" | "other";
         /** @enum {string} */
         Severity: "low" | "medium" | "high";
         /** @enum {string} */
@@ -1830,6 +1903,7 @@ export interface components {
         DroneProfileList: components["schemas"]["DroneProfile"][];
         PatrolPlanList: components["schemas"]["PatrolPlan"][];
         PatrolList: components["schemas"]["Patrol"][];
+        InventoryCheckList: components["schemas"]["InventoryCheck"][];
         CandidateList: components["schemas"]["Candidate"][];
         FindingList: components["schemas"]["Finding"][];
         TaskList: components["schemas"]["Task"][];
@@ -1885,6 +1959,33 @@ export interface components {
             /** @enum {string} */
             privacyAction: "none" | "discarded";
             simulated: boolean;
+        };
+        RecordInventoryCheckRequest: {
+            observationId: string;
+            items: components["schemas"]["ItemResult"][];
+            model: string | null;
+        };
+        InventoryCheckResult: {
+            check: components["schemas"]["InventoryCheck"];
+            candidates: components["schemas"]["Candidate"][];
+        };
+        FalseFlagReport: {
+            budgetPerPatrol: number;
+            /** @description Patrols with reviewed flags, oldest first */
+            patrols: {
+                patrolId: string;
+                /** Format: date-time */
+                startedAt: string;
+                classes: {
+                    flagClass: components["schemas"]["FlagClass"];
+                    /** @description Flags a person confirmed, rejected or sent to recapture */
+                    reviewed: number;
+                    /** @description Flags a person rejected */
+                    falseFlags: number;
+                }[];
+            }[];
+            /** @description Classes whose latest reviewed patrol went over the budget: core raises their flags at Tier 1, not 2 */
+            overBudget: components["schemas"]["FlagClass"][];
         };
         RaiseCandidateRequest: {
             segmentId: string;
@@ -2651,6 +2752,62 @@ export interface operations {
             403: components["responses"]["Denied"];
         };
     };
+    listInventoryChecks: {
+        parameters: {
+            query?: {
+                segmentId?: string;
+                patrolId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Per-item results at fixed viewpoints, by segment or patrol */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCheckList"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    recordInventoryCheck: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordInventoryCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Report every item an observation's viewpoint expects as present, missing, changed or not visible; core raises a candidate for each item not present */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCheckResult"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
     listCandidates: {
         parameters: {
             query?: {
@@ -2821,6 +2978,28 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    getFalseFlags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description False flags per patrol and class against the budget, and the classes over it, for the board */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FalseFlagReport"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
         };
     };
     recordAgentSummary: {

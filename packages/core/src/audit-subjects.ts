@@ -1,7 +1,8 @@
 import type { OperationId } from '@safe-edge/contracts'
 
 /** Where an operation's input names the record it is about; null when it names none (lists, `getMe`, uploads). */
-type SubjectField = 'params.id' | 'body.segmentId' | 'body.workOrderId' | 'body.findingId' | 'body.planId' | null
+type SubjectField =
+  'params.id' | 'body.segmentId' | 'body.observationId' | 'body.workOrderId' | 'body.findingId' | 'body.planId' | null
 
 /** The audit subject of each operation, explicit per row of the operations table. */
 const AUDIT_SUBJECT: { readonly [K in OperationId]: SubjectField } = {
@@ -22,12 +23,15 @@ const AUDIT_SUBJECT: { readonly [K in OperationId]: SubjectField } = {
   startPatrol: 'body.planId',
   completePatrol: 'params.id',
   recordObservation: 'body.segmentId',
+  recordInventoryCheck: 'body.observationId',
+  listInventoryChecks: null,
   listCandidates: null,
   getCandidate: 'params.id',
   raiseCandidate: 'body.segmentId',
   reportDamage: 'body.segmentId',
   reportMissedPatrol: 'params.id',
   decideCandidate: 'params.id',
+  getFalseFlags: null,
   recordAgentSummary: 'params.id',
   listFindings: null,
   getFinding: 'params.id',

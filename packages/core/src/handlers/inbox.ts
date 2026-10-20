@@ -1,5 +1,5 @@
-import type { Candidate, Denial, Finding, NotFound, Task, Tier, WorkOrder } from '@safe-edge/contracts'
-import { missedPatrolDue, movePass, tierFor } from '../policy.ts'
+import type { Candidate, Denial, Finding, InventoryCheck, NotFound, Task, Tier, WorkOrder } from '@safe-edge/contracts'
+import { falseFlagReport, flagClassOf, missedPatrolDue, movePass, tierFor } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
 
@@ -21,8 +21,8 @@ type CandidateInput = Pick<
 >
 
 /**
- * Raises a candidate on its segment. Core assigns the tier: `tierFor` what was seen, unless the caller is a report that
- * is Tier 2 whatever it names. Suspicion suspends: a Tier 2 candidate suspends the segment's valid or expiring pass in
+ * Raises a candidate on its segment. Core assigns the tier: `tierFor` what was seen, under the false-flag budget, unless
+ * the caller is a report that is Tier 2 whatever it names. Suspicion suspends: a Tier 2 candidate suspends the segment's valid or expiring pass in
  * the same transaction, and the pass's stateReason names `cause` and the candidate.
  */
 function raise(
@@ -40,11 +40,13 @@ function raise(
   const item =
     input.inventoryItemId === null ? null : segment.expectedInventory.find((i) => i.id === input.inventoryItemId)
   if (item === undefined) return tx.notFound(`Segment ${segment.id} expects no item ${input.inventoryItemId}`)
+  const flagClass = flagClassOf(item, input.class)
+  const overBudget = flagClass !== null && falseFlagReport(tx).overBudget.includes(flagClass)
 
   const candidate: Candidate = {
     id: tx.id('cand'),
     ...input,
-    tier: tier ?? tierFor(item, input.itemStatus),
+    tier: tier ?? tierFor(item, input.itemStatus, overBudget),
     status: 'candidate',
     raisedBy: { type: tx.actor.type, id: tx.actor.id },
     raisedAt: tx.now,
@@ -95,9 +97,81 @@ function raise(
 }
 
 export const inbox: Handlers<
-  'raiseCandidate' | 'reportDamage' | 'reportMissedPatrol' | 'decideCandidate' | 'recordAgentSummary' | 'completeTask'
+  | 'raiseCandidate'
+  | 'recordInventoryCheck'
+  | 'reportDamage'
+  | 'reportMissedPatrol'
+  | 'decideCandidate'
+  | 'recordAgentSummary'
+  | 'completeTask'
 > = {
   raiseCandidate: (tx, { body }) => raise(tx, body, 'Tier 2 candidate'),
+
+  // Edge Watch reports every item a viewpoint expects (PRD WATCH-6): an item left out would read as inspected.
+  recordInventoryCheck: (tx, { body }) => {
+    const observation = tx.get('observations', body.observationId)
+    if (!observation) return tx.notFound(`No observation ${body.observationId}`)
+    const earlier = tx.all('inventoryChecks').find((c) => c.observationId === observation.id)
+    if (earlier) {
+      return tx.deny('invalid_transition', `${observation.id} was already checked as ${earlier.id}`, observation.id)
+    }
+    const segment = tx.must('segments', observation.segmentId)
+    const viewpoint = segment.viewpoints.find((v) => v.id === observation.viewpointId)
+    if (viewpoint === undefined) {
+      throw new Error(`store integrity: ${segment.id} has no viewpoint ${observation.viewpointId}`)
+    }
+    const reported = body.items.map((r) => r.inventoryItemId)
+    const unexpected = reported.find((id) => !viewpoint.expectedItemIds.includes(id))
+    if (unexpected) return tx.notFound(`${viewpoint.id} expects no item ${unexpected}`)
+    const twice = reported.find((id, i) => reported.indexOf(id) !== i)
+    if (twice) {
+      return tx.deny('every_item_reported', `${observation.id}'s check reports ${twice} twice`, observation.id)
+    }
+    const unreported = viewpoint.expectedItemIds.find((id) => !reported.includes(id))
+    if (unreported) {
+      const message = `${viewpoint.id} expects ${unreported}, which ${observation.id}'s check does not report`
+      return tx.deny('every_item_reported', message, observation.id)
+    }
+
+    // Each expected item is reported exactly once (checked above), so every lookup finds one.
+    const items = viewpoint.expectedItemIds.map((id) => body.items.find((r) => r.inventoryItemId === id)!)
+    const candidates: Candidate[] = []
+    for (const result of items.filter((r) => r.status !== 'present')) {
+      const { inventoryItemId, status, ...judgement } = result
+      const raised = raise(
+        tx,
+        {
+          segmentId: segment.id,
+          observationIds: [observation.id],
+          inventoryItemId,
+          itemStatus: status,
+          class: 'inventory_item',
+          ...judgement,
+          model: body.model,
+          simulated: observation.simulated
+        },
+        'Tier 2 candidate'
+      )
+      if (!('data' in raised)) return raised
+      candidates.push(raised.data)
+    }
+    const check: InventoryCheck = {
+      id: tx.id('chk'),
+      observationId: observation.id,
+      segmentId: segment.id,
+      viewpointId: viewpoint.id,
+      patrolId: observation.patrolId,
+      items,
+      candidateIds: candidates.map((c) => c.id),
+      model: body.model,
+      checkedBy: { type: tx.actor.type, id: tx.actor.id },
+      checkedAt: tx.now,
+      simulated: observation.simulated,
+      source: tx.source
+    }
+    tx.put('inventoryChecks', check)
+    return ok({ check, candidates })
+  },
 
   // A person saw the damage, so it waits for the manager's confirmation as Tier 2 whatever item it names (PROOF-4).
   reportDamage: (tx, { body }) =>

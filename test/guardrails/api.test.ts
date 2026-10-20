@@ -24,6 +24,7 @@ import {
   playS1toS3,
   raiseTier2,
   S1,
+  s1Check,
   startGuardedApi,
   tier2Candidate
 } from './support.ts'
@@ -220,23 +221,31 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   )
   const validBefore = await json(api.request('get', '/passes?state=valid', { token: 'dev_manager' }))
 
+  const observation = {
+    patrolId: patrol.id,
+    segmentId: S1.segmentId,
+    viewpointId: S1.viewpointId,
+    captureSource: 'drone',
+    image: null,
+    pose: { lon: 101.51341, lat: 3.178948, altM: 9, headingDeg: -30.9, pitchDeg: -36.9 },
+    capturedAt: '2026-10-22T05:30:00.000Z',
+    quality: { sharpness: 0.92, alignmentResidualPx: 1.4, occlusion: 0.05 },
+    privacyAction: 'none',
+    simulated: true
+  }
+  // An observation is checked once, so each automation token checks its own: S1's frame, and one more.
+  const toCheck: Record<string, string> = {
+    dev_system: played.candidate.observationIds[0]!,
+    dev_drone_sim: (await json(api.request('post', '/observations', { token: 'dev_drone_sim', body: observation }))).id
+  }
+
   // What each automation role sends where the table lets it act. A row the table opens to them later has no
   // request here, and the test fails until it gets one.
-  const requests: Partial<Record<OperationId, unknown>> = {
+  const requests = (token: string): Partial<Record<OperationId, unknown>> => ({
     createPatrolPlan: patrolRequest,
     raiseCandidate: tier2Candidate,
-    recordObservation: {
-      patrolId: patrol.id,
-      segmentId: S1.segmentId,
-      viewpointId: S1.viewpointId,
-      captureSource: 'drone',
-      image: null,
-      pose: { lon: 101.51341, lat: 3.178948, altM: 9, headingDeg: -30.9, pitchDeg: -36.9 },
-      capturedAt: '2026-10-22T05:30:00.000Z',
-      quality: { sharpness: 0.92, alignmentResidualPx: 1.4, occlusion: 0.05 },
-      privacyAction: 'none',
-      simulated: true
-    },
+    recordObservation: observation,
+    recordInventoryCheck: s1Check(toCheck[token]!),
     completePatrol: { coverage: [{ segmentId: S1.segmentId, inspectedM: 198.31, unknownM: 0 }] },
     uploadEvidence: { mediaType: 'image/jpeg', dataBase64: '/9j/4AAQ', capturedAt: null, simulated: true },
     previewRouteClosure: { remedyIds: [played.remedy.id] },
@@ -244,7 +253,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     recordWorkOrderExternalError: { step: 'createFinding', message: 'Procore answered 503' },
     reportMissedPatrol: undefined, // no body
     setScenarioClock: { now: MISSED_PATROL_DUE } // the test API's clock is a scenario clock; time stays put
-  }
+  })
   // S1's pass is already suspended, so the missed patrol goes to an expiring pass once its patrol interval has run out.
   const paths: Partial<Record<OperationId, string>> = { reportMissedPatrol: `/segments/${EXPIRING}/missed-patrol` }
   api.setNow(MISSED_PATROL_DUE)
@@ -261,6 +270,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   const writes = httpOperations.filter(([, op]) => op.method !== 'get')
   for (const token of ['dev_system', 'dev_drone_sim']) {
     const { role } = api.actorOf(token)
+    const sent = requests(token)
     for (const [operationId, op] of writes) {
       const allowed = op.roles === 'any' || op.roles.includes(role)
       if (!allowed) {
@@ -268,9 +278,9 @@ test('no system or provider call makes a pass valid, whichever operation it trie
         expect({ token, operationId, ...refused }).toEqual({ token, operationId, ...denied('role_forbidden') })
         continue
       }
-      if (!(operationId in requests)) throw new Error(`No ${role} request for ${operationId}`)
+      if (!(operationId in sent)) throw new Error(`No ${role} request for ${operationId}`)
       const path = paths[operationId] ?? pathFor(op, ids)
-      const response = await api.request(op.method, path, { token, body: requests[operationId] })
+      const response = await api.request(op.method, path, { token, body: sent[operationId] })
       expect({ token, operationId, ok: response.ok }).toEqual({ token, operationId, ok: true })
     }
   }
@@ -397,6 +407,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     result: 'accepted',
     reason: 'Panel 4 is in place; the frame was a shadow'
   })
+  await as('dev_drone_sim', 'post', '/inventory-checks', s1Check(played.candidate.observationIds[0]!))
 
   // The agent's three flows, asked for by the people who use them. The agent writes in process with its own token, so
   // its writes are not on api.log: each flow is reconciled here, from the records it changed (every list the manager

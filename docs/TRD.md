@@ -131,23 +131,24 @@ e2e/                    Playwright tests
 
 IDs are prefixed strings (`seg_…`, `cand_…`). Every record carries `simulated: boolean` and `source` provenance.
 
-| Entity        | Key fields                                                                                                                                                             |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Asset`       | id, townshipId, kind (`drain`, `pond`, `lake`, `retention_pond`, `river_edge`), name, osmId, retainedBySdp, custodianUserId, geometry                                  |
-| `Segment`     | id, assetId, geometry (LineString), side, lengthM, viewpoints[] (pose, expected item IDs), expectedInventory[] (item ID, type, safety-critical), baselineId, passId    |
-| `Opening`     | id, segmentId, type (`fence_gap`, `fence_end`, `gate`, `missing_cover`, `low_barrier`), photoRefs[], measuredMm, status                                                |
-| `Route`       | id, segmentId, fromFeature (path, gate, play area), openingIds[], status (`open`, `closed`, `unknown`)                                                                 |
-| `Remedy`      | id, segmentId, type, blocksOpeningIds[], engineerApprovedBy, quote (amount, currency, date) or `quote_needed`                                                          |
-| `Baseline`    | id, segmentId, capturedAt, imageRefs[], inventorySnapshot, acceptedBy                                                                                                  |
-| `PatrolPlan`  | id, createdAt, contextSnapshotIds[], tasks[], route (GeoJSON), energyWh, returnDockId, rejected[] with reasons, approvedBy                                             |
-| `Patrol`      | id, planId, provider (`sim`, `dji_cloud`, `mavlink`), droneId, pilotUserId, status, coverage per segment                                                               |
-| `Observation` | id, patrolId, segmentId, viewpointId, captureSource (`drone`, `phone`), imageRef, pose, capturedAt, quality (sharpness, alignmentResidualPx, occlusion), privacyAction |
-| `Candidate`   | id, segmentId, observationIds[], inventoryItemId, itemStatus, class, tier (1, 2, 3), score, rationale, model, status                                                   |
-| `Finding`     | id, candidateId, segmentId, class, severity (set by a person), confirmedBy, status                                                                                     |
-| `WorkOrder`   | id, findingId, remedyId, draftedBy (user or agent), status, installerUserId, externalRef (Procore)                                                                     |
-| `Retest`      | id, workOrderId, reviewerUserId, checklist results, evidenceRefs[], result, reason                                                                                     |
-| `EdgePass`    | id, segmentId, state, validFrom, validTo, scope (route and test IDs), issuedBy, exceptions[]                                                                           |
-| `AuditEvent`  | id, at, actor (type, id, role), action, subjectId, before, after, decision, policyVersion, prevHash, hash                                                              |
+| Entity           | Key fields                                                                                                                                                                                      |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Asset`          | id, townshipId, kind (`drain`, `pond`, `lake`, `retention_pond`, `river_edge`), name, osmId, retainedBySdp, custodianUserId, geometry                                                           |
+| `Segment`        | id, assetId, geometry (LineString), side, lengthM, viewpoints[] (pose, expected item IDs), expectedInventory[] (item ID, type, safety-critical), baselineId, passId                             |
+| `Opening`        | id, segmentId, type (`fence_gap`, `fence_end`, `gate`, `missing_cover`, `low_barrier`), photoRefs[], measuredMm, status                                                                         |
+| `Route`          | id, segmentId, fromFeature (path, gate, play area), openingIds[], status (`open`, `closed`, `unknown`)                                                                                          |
+| `Remedy`         | id, segmentId, type, blocksOpeningIds[], engineerApprovedBy, quote (amount, currency, date) or `quote_needed`                                                                                   |
+| `Baseline`       | id, segmentId, capturedAt, imageRefs[], inventorySnapshot, acceptedBy                                                                                                                           |
+| `PatrolPlan`     | id, createdAt, contextSnapshotIds[], tasks[], route (GeoJSON), energyWh, returnDockId, rejected[] with reasons, approvedBy                                                                      |
+| `Patrol`         | id, planId, provider (`sim`, `dji_cloud`, `mavlink`), droneId, pilotUserId, status, coverage per segment                                                                                        |
+| `Observation`    | id, patrolId, segmentId, viewpointId, captureSource (`drone`, `phone`), imageRef, pose, capturedAt, quality (sharpness, alignmentResidualPx, occlusion), privacyAction                          |
+| `InventoryCheck` | id, observationId, segmentId, viewpointId, patrolId, items[] (item ID, status, score, uncertainty, grid cell, rationale) for every item the viewpoint expects, candidateIds[], model, checkedBy |
+| `Candidate`      | id, segmentId, observationIds[], inventoryItemId, itemStatus, class, tier (1, 2, 3), score, rationale, model, status                                                                            |
+| `Finding`        | id, candidateId, segmentId, class, severity (set by a person), confirmedBy, status                                                                                                              |
+| `WorkOrder`      | id, findingId, remedyId, draftedBy (user or agent), status, installerUserId, externalRef (Procore)                                                                                              |
+| `Retest`         | id, workOrderId, reviewerUserId, checklist results, evidenceRefs[], result, reason                                                                                                              |
+| `EdgePass`       | id, segmentId, state, validFrom, validTo, scope (route and test IDs), issuedBy, exceptions[]                                                                                                    |
+| `AuditEvent`     | id, at, actor (type, id, role), action, subjectId, before, after, decision, policyVersion, prevHash, hash                                                                                       |
 
 ## State machines and policy
 
@@ -173,25 +174,28 @@ Policy, enforced in `@safe-edge/core` and therefore in both the server and the d
 
 Base path `/v1`, JSON, described in `packages/contracts/openapi.yaml`. Bearer tokens carry a role; demo mode issues one token per demo user.
 
-| Method and path                     | Role                   | Purpose                                          |
-| ----------------------------------- | ---------------------- | ------------------------------------------------ |
-| `GET /assets`, `GET /segments/{id}` | any                    | Read assets, segments, inventory and pass        |
-| `POST /patrol-plans`                | manager, system        | Score segments and build a route                 |
-| `POST /patrol-plans/{id}/approve`   | pilot                  | Allow the plan to fly                            |
-| `POST /patrols`                     | pilot                  | Start a patrol from an approved plan             |
-| `POST /observations`                | provider, crew         | Ingest drone or phone images and quality data    |
-| `GET /candidates`                   | manager, agent         | The Inbox queue                                  |
-| `POST /candidates/{id}/decision`    | manager                | Confirm, reject (with reason) or recapture       |
-| `POST /work-orders`                 | manager, agent (draft) | Create a draft from a finding and a remedy       |
-| `POST /work-orders/{id}/submit`     | manager, engineer      | Submit; engineer approval of the remedy required |
-| `POST /work-orders/{id}/complete`   | installer              | Record the repair as done                        |
-| `POST /retests`                     | reviewer               | Record a re-test; acceptance issues the pass     |
-| `GET /passes?state=expiring`        | any                    | Pass states for the board                        |
-| `GET /audit?subject={id}`           | manager, gm            | The audit trail                                  |
-| `POST /triage/images`               | manager                | Claude vision triage on a real photo pair        |
-| `POST /agent/ask`                   | manager, gm            | Ask the agent; streams the answer                |
-| `GET /events`                       | any                    | Server-sent events                               |
-| `POST /webhooks`                    | integrator             | Register a webhook endpoint                      |
+| Method and path                     | Role                   | Purpose                                                               |
+| ----------------------------------- | ---------------------- | --------------------------------------------------------------------- |
+| `GET /assets`, `GET /segments/{id}` | any                    | Read assets, segments, inventory and pass                             |
+| `POST /patrol-plans`                | manager, system        | Score segments and build a route                                      |
+| `POST /patrol-plans/{id}/approve`   | pilot                  | Allow the plan to fly                                                 |
+| `POST /patrols`                     | pilot                  | Start a patrol from an approved plan                                  |
+| `POST /observations`                | provider, crew         | Ingest drone or phone images and quality data                         |
+| `POST /inventory-checks`            | provider, crew, system | Report every expected item at a viewpoint; core raises the candidates |
+| `GET /inventory-checks`             | any                    | Per-item results by segment or patrol                                 |
+| `GET /candidates`                   | manager, agent         | The Inbox queue                                                       |
+| `POST /candidates/{id}/decision`    | manager                | Confirm, reject (with reason) or recapture                            |
+| `POST /work-orders`                 | manager, agent (draft) | Create a draft from a finding and a remedy                            |
+| `POST /work-orders/{id}/submit`     | manager, engineer      | Submit; engineer approval of the remedy required                      |
+| `POST /work-orders/{id}/complete`   | installer              | Record the repair as done                                             |
+| `POST /retests`                     | reviewer               | Record a re-test; acceptance issues the pass                          |
+| `GET /passes?state=expiring`        | any                    | Pass states for the board                                             |
+| `GET /false-flags`                  | any                    | False flags per patrol and class against the budget, for the board    |
+| `GET /audit?subject={id}`           | manager, gm            | The audit trail                                                       |
+| `POST /triage/images`               | manager                | Claude vision triage on a real photo pair                             |
+| `POST /agent/ask`                   | manager, gm            | Ask the agent; streams the answer                                     |
+| `GET /events`                       | any                    | Server-sent events                                                    |
+| `POST /webhooks`                    | integrator             | Register a webhook endpoint                                           |
 
 Every write accepts an `Idempotency-Key` header; a retry with the key within 24 hours replays the first answer (see [Security and privacy](#security-and-privacy)). Forbidden transitions return `403` with the policy rule that blocked them.
 
@@ -260,7 +264,7 @@ Pilot pipeline, from the [perception research][ai-perception]:
 3.  **Alignment gate:** register the current view to its baseline on stable hardscape; poor alignment becomes `unreviewable` and asks for recapture.
 4.  **Inventory check first:** for each expected item at the viewpoint, report present, missing, changed or not visible. Only a missing or changed safety item becomes Tier 2.
 5.  **Candidates:** a change model plus class detectors propose further regions as Tier 1. Open-vocabulary detectors only propose; the published aerial benchmark found 69% false positives for the best one ([detection research][detection]).
-6.  **Routing:** keep image quality, alignment quality, detection score and class calibration separate. Low quality means recapture, uncertain means review, and Tier 2 means a priority review and a suspended pass. Count false flags per class against the budget (proposed: fewer than 10 per patrol by week 4); a class over budget drops to Tier 1.
+6.  **Routing:** keep image quality, alignment quality, detection score and class calibration separate. Low quality means recapture, uncertain means review, and Tier 2 means a priority review and a suspended pass. Count false flags per class against the budget (proposed: no more than 10 per patrol by week 4); a class over budget drops to Tier 1. A false flag is a candidate a person rejected. Its class is the item type for an expected-inventory flag (fence panel, ring buoy), else the candidate class. A class is over budget while the latest patrol with reviewed flags of that class rejected more than 10 of them; a patrol that raised none of its flags does not restore it.
 7.  **Human decision and learning:** reviewer labels feed an active-learning set; a locked golden set stays out of training; audits sample unflagged segments.
 
 Hackathon implementation:

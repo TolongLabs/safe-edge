@@ -25,6 +25,7 @@ export const ID_PREFIXES = {
   patrolPlan: 'plan',
   patrol: 'ptl',
   observation: 'obs',
+  inventoryCheck: 'chk',
   candidate: 'cand',
   finding: 'fnd',
   task: 'task',
@@ -56,6 +57,7 @@ export const DroneProfileId = id('drn')
 export const PatrolPlanId = id('plan')
 export const PatrolId = id('ptl')
 export const ObservationId = id('obs')
+export const InventoryCheckId = id('chk')
 export const CandidateId = id('cand')
 export const FindingId = id('fnd')
 export const TaskId = id('task')

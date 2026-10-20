@@ -13,7 +13,10 @@ import {
   EdgePass,
   Finding,
   FindingStatus,
+  FlagClass,
   ImageQuality,
+  InventoryCheck,
+  ItemResult,
   ItemStatus,
   Notice,
   Observation,
@@ -83,6 +86,7 @@ export const DockList = list('DockList', Dock)
 export const DroneProfileList = list('DroneProfileList', DroneProfile)
 export const PatrolPlanList = list('PatrolPlanList', PatrolPlan)
 export const PatrolList = list('PatrolList', Patrol)
+export const InventoryCheckList = list('InventoryCheckList', InventoryCheck)
 export const CandidateList = list('CandidateList', Candidate)
 export const FindingList = list('FindingList', Finding)
 export const TaskList = list('TaskList', Task)
@@ -165,6 +169,46 @@ export const RecordObservationRequest = named(
   })
 )
 export type RecordObservationRequest = z.infer<typeof RecordObservationRequest>
+
+/** Every item the observation's viewpoint expects, each once. Core raises a candidate for each item not present. */
+export const RecordInventoryCheckRequest = named(
+  'RecordInventoryCheckRequest',
+  z.object({ observationId: ObservationId, items: z.array(ItemResult).min(1), model: z.string().nullable() })
+)
+export type RecordInventoryCheckRequest = z.infer<typeof RecordInventoryCheckRequest>
+
+export const InventoryCheckResult = named(
+  'InventoryCheckResult',
+  z.object({ check: InventoryCheck, candidates: z.array(Candidate) })
+)
+export type InventoryCheckResult = z.infer<typeof InventoryCheckResult>
+
+/** False flags (rejected candidates) per patrol and class, against the proposed budget (PRD WATCH-7). */
+export const FalseFlagReport = named(
+  'FalseFlagReport',
+  z.object({
+    budgetPerPatrol: z.number().int().positive(),
+    patrols: z
+      .array(
+        z.object({
+          patrolId: PatrolId,
+          startedAt: Timestamp,
+          classes: z.array(
+            z.object({
+              flagClass: FlagClass,
+              reviewed: z.number().int().positive().describe('Flags a person confirmed, rejected or sent to recapture'),
+              falseFlags: z.number().int().nonnegative().describe('Flags a person rejected')
+            })
+          )
+        })
+      )
+      .describe('Patrols with reviewed flags, oldest first'),
+    overBudget: z
+      .array(FlagClass)
+      .describe('Classes whose latest reviewed patrol went over the budget: core raises their flags at Tier 1, not 2')
+  })
+)
+export type FalseFlagReport = z.infer<typeof FalseFlagReport>
 
 /** Core assigns the tier; callers cannot. */
 export const RaiseCandidateRequest = named(
@@ -539,6 +583,7 @@ export const IdParam = {
   evidence: z.object({ id: EvidenceId })
 }
 
+export const ListInventoryChecksQuery = z.object({ segmentId: SegmentId.optional(), patrolId: PatrolId.optional() })
 export const ListCandidatesQuery = z.object({ status: CandidateStatus.optional(), segmentId: SegmentId.optional() })
 export const ListFindingsQuery = z.object({ status: FindingStatus.optional(), segmentId: SegmentId.optional() })
 export const ListTasksQuery = z.object({ status: z.enum(['open', 'done']).optional(), segmentId: SegmentId.optional() })

@@ -1,4 +1,4 @@
-import { DAY } from '../policy.ts'
+import { DAY, falseFlagReport } from '../policy.ts'
 import { ok, type Handlers } from './handler.ts'
 
 type ReadOperation =
@@ -12,8 +12,10 @@ type ReadOperation =
   | 'listPatrolPlans'
   | 'getPatrolPlan'
   | 'listPatrols'
+  | 'listInventoryChecks'
   | 'getPatrol'
   | 'listCandidates'
+  | 'getFalseFlags'
   | 'getCandidate'
   | 'listFindings'
   | 'getFinding'
@@ -51,12 +53,19 @@ export const reads: Handlers<ReadOperation> = {
     return plan ? ok(plan) : tx.notFound(`No patrol plan ${params.id}`)
   },
   listPatrols: (tx) => ok(tx.all('patrols')),
+  listInventoryChecks: (tx, { query }) =>
+    ok(
+      tx
+        .all('inventoryChecks')
+        .filter((c) => matches(c.segmentId, query.segmentId) && matches(c.patrolId ?? undefined, query.patrolId))
+    ),
   getPatrol: (tx, { params }) => {
     const patrol = tx.get('patrols', params.id)
     return patrol ? ok(patrol) : tx.notFound(`No patrol ${params.id}`)
   },
   listCandidates: (tx, { query }) =>
     ok(tx.all('candidates').filter((c) => matches(c.status, query.status) && matches(c.segmentId, query.segmentId))),
+  getFalseFlags: (tx) => ok(falseFlagReport(tx)),
   getCandidate: (tx, { params }) => {
     const candidate = tx.get('candidates', params.id)
     if (!candidate) return tx.notFound(`No candidate ${params.id}`)

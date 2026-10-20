@@ -11,7 +11,7 @@ import {
 } from '@safe-edge/contracts'
 import type { ThirdParty } from '@safe-edge/planner'
 import { verifyAuditChain } from '../src/index.ts'
-import { S1, playS1toRepair, plannerWith, raiseOnS1, startCore } from './support.ts'
+import { S1, observeS1, playS1toRepair, plannerWith, raiseOnS1, seed, startCore } from './support.ts'
 
 const coreOperations = (Object.keys(operations) as (keyof typeof operations)[]).filter(
   (id): id is CoreOperationId => operations[id].handledBy === 'core'
@@ -120,6 +120,21 @@ describe('the operations table in core', () => {
     }).data
     h.call('releasePlanHold', 'usr_pilot', { params: { id: plan.id, segmentId: S1.segmentId } })
     h.call('completePatrol', 'usr_pilot', { params: { id: patrol.id }, body: { coverage: [] } })
+    const expected = seed.segments.find((s) => s.id === S1.segmentId)!.viewpoints.find((v) => v.id === S1.viewpointId)!
+    h.call('recordInventoryCheck', 'usr_drone_sim', {
+      body: {
+        observationId: observeS1(h).id,
+        items: expected.expectedItemIds.map((id) => ({
+          inventoryItemId: id,
+          status: 'present' as const,
+          score: 0.9,
+          uncertainty: 'low' as const,
+          gridCell: 'B3',
+          rationale: 'In place'
+        })),
+        model: null
+      }
+    })
     // The other suspensions: a segment unpatrolled since the seed's last patrol, and damage the crew saw.
     h.call('reportMissedPatrol', 'usr_system', { params: { id: 'seg_866518980_12' } })
     h.call('reportDamage', 'usr_crew', {
@@ -146,8 +161,10 @@ describe('the operations table in core', () => {
     h.call('listPatrolPlans', reader, {})
     h.call('getPatrolPlan', reader, { params: { id: plan.id } })
     h.call('listPatrols', reader, {})
+    h.call('listInventoryChecks', reader, { query: { segmentId: S1.segmentId } })
     h.call('getPatrol', reader, { params: { id: patrol.id } })
     h.call('listCandidates', 'usr_manager', { query: { status: 'confirmed' } })
+    h.call('getFalseFlags', reader, {})
     h.call('getCandidate', 'usr_reviewer', { params: { id: played.raised.data.id } })
     h.call('listFindings', reader, { query: { segmentId: S1.segmentId } })
     h.call('getFinding', reader, { params: { id: played.findingId } })

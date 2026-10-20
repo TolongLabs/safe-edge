@@ -13,6 +13,7 @@ import {
   type EVENT_DATA,
   type EventType,
   type Finding,
+  type InventoryCheck,
   type NotFound,
   type Notice,
   type Observation,
@@ -45,6 +46,7 @@ export interface Collections {
   patrolPlans: PatrolPlan
   patrols: Patrol
   observations: Observation
+  inventoryChecks: InventoryCheck
   candidates: Candidate
   findings: Finding
   tasks: Task
@@ -71,6 +73,7 @@ const COLLECTION_BY_PREFIX: Partial<Record<string, CollectionName>> = {
   [ID_PREFIXES.patrolPlan]: 'patrolPlans',
   [ID_PREFIXES.patrol]: 'patrols',
   [ID_PREFIXES.observation]: 'observations',
+  [ID_PREFIXES.inventoryCheck]: 'inventoryChecks',
   [ID_PREFIXES.candidate]: 'candidates',
   [ID_PREFIXES.finding]: 'findings',
   [ID_PREFIXES.task]: 'tasks',
@@ -104,6 +107,7 @@ export function createState(seed: Seed): State {
     patrolPlans: new Map(),
     patrols: new Map(),
     observations: new Map(),
+    inventoryChecks: new Map(),
     candidates: new Map(),
     findings: new Map(),
     tasks: new Map(),
