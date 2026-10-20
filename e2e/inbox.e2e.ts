@@ -83,10 +83,13 @@ test('AC1 S1 card shows its evidence', async ({ page }) => {
   await expect(c.getByRole('img', { name: /After image/ })).toBeVisible()
   await expect(c.getByRole('img', { name: 'Flagged region: Fence panel 4 missing' })).toBeVisible()
   await expect(c.getByRole('img', { name: 'Zoomed crop of the flagged region' })).toBeVisible()
-  await expect(c.getByText('Elmina Central Park lake, segment 12 (seg_866518980_11)')).toBeVisible()
-  await expect(c.getByText('Pass suspended')).toBeVisible()
-  await expect(c.getByText(/19 Oct 2026/)).toBeVisible()
-  await expect(c.getByText('Tier 2 Confirm')).toBeVisible()
+  await expect(c.getByText('Elmina Central Park lake, segment 12')).toBeVisible()
+  await expect(c.getByText('Segment seg_866518980_11')).toBeAttached()
+  await expect(c.getByText('The safety pass for this fence is paused until it is fixed')).toBeVisible()
+  await expect(c.getByRole('figure').filter({ hasText: 'Drone' }).getByText('19 Oct 2026, 15:48 MYT')).toBeVisible()
+  await expect(c.getByText('How sure: high')).toBeVisible()
+  await expect(c.getByText('Tier 2 · a person confirms')).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Tier 2 · a person confirms' }).first()).toBeVisible()
   await expect(c.getByText(/AI label: missing/)).toBeVisible()
   await expect(c.getByText(/AI confidence 82%/)).toBeVisible()
   await expect(c.getByText(/AI suggestion, unvalidated/)).toBeVisible()
@@ -96,7 +99,9 @@ test('AC1 S1 card shows its evidence', async ({ page }) => {
   // the summary is sample text, never claimed as the agent's
   await expect(c.getByText(/Sample summary, not written by the agent: .*obs_\d+, cand_1/)).toBeVisible()
   await expect(page.getByText('Drafted by agent')).toHaveCount(0)
-  await expect(page.getByRole('slider', { name: /Compare before and after/ })).toBeVisible()
+  await expect(c.getByText(/^Before · \d+ \w+$/)).toBeVisible()
+  await expect(c.getByText(/Accepted by .* · simulated/)).toBeVisible()
+  await expect(c.getByText(/Drone · simulated/)).toBeVisible()
 })
 
 test('AC1 Tier 3 card shows images and core field task only', async ({ page }) => {
@@ -114,13 +119,13 @@ test('AC1 Tier 3 card shows images and core field task only', async ({ page }) =
   await expect(task.getByText(/Fence panel 3 was not visible .*check it in the field/)).toBeVisible()
   await expect(task.getByText(/Assigned to Farah Hashim/)).toBeVisible()
   // AC2: only Recapture
-  await expect(page.getByRole('button', { name: 'Recapture' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Confirm' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Reject' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Look again', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Not a problem', exact: true })).toHaveCount(0)
 })
 
 test('AC2 reject needs a reason', async ({ page }) => {
-  await page.getByRole('button', { name: 'Reject' }).click()
+  await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
   const submit = page.getByRole('button', { name: 'Submit rejection' })
   await expect(submit).toBeDisabled()
   await expect(page.getByText('Type a reason to enable this.')).toBeVisible()
@@ -129,18 +134,25 @@ test('AC2 reject needs a reason', async ({ page }) => {
   await page.getByLabel('Reason for rejecting').fill('Panel was removed on purpose for repainting')
   await submit.click()
   const c = card(page, S1)
-  await expect(c.getByText(/State: Rejected by Farah Hashim/)).toBeVisible()
+  await expect(c.getByText(/Rejected by Farah Hashim/)).toBeVisible()
   await expect(c.getByText(/Reason: Panel was removed on purpose/)).toBeVisible()
   await expect(list(page, 'Decided').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
   await expect(list(page, 'Open').getByRole('button', { name: /Fence panel 4/ })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Confirm' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toHaveCount(0)
+})
+
+test('AC2 the rejected banner is scrolled into view after submitting', async ({ page }) => {
+  await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
+  await page.getByLabel('Reason for rejecting').fill('Panel was removed on purpose for repainting')
+  await page.getByRole('button', { name: 'Submit rejection' }).click()
+  await expect(card(page, S1).getByText(/Rejected by Farah Hashim/)).toBeInViewport()
 })
 
 test('AC2 recapture records the re-shoot request', async ({ page }) => {
-  await page.getByRole('button', { name: 'Recapture' }).click()
+  await page.getByRole('button', { name: 'Look again', exact: true }).click()
   await expect(
     card(page, S1).getByText(
-      /State: Needs recapture by Farah Hashim \(manager\)\. Re-shoot viewpoint: Playground path, fence line/
+      /Needs recapture by Farah Hashim \(manager\)\. Re-shoot viewpoint: Playground path, fence line/
     )
   ).toBeVisible()
   // Core opens a recapture task for the decision (#139).
@@ -151,9 +163,9 @@ test('AC2 recapture records the re-shoot request', async ({ page }) => {
 
 test('AC3 AC7 confirm opens work and labels every record', async ({ page }) => {
   await page.getByLabel('Severity (pre-filled, you can change it)').selectOption('medium')
-  await page.getByRole('button', { name: 'Confirm' }).click()
+  await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   const c = card(page, S1)
-  await expect(c.getByText(/State: Confirmed by Farah Hashim/)).toBeVisible()
+  await expect(c.getByText(/Confirmed by Farah Hashim/)).toBeVisible()
   const finding = page.getByRole('region', { name: /^Finding / })
   await expect(finding.getByText(/Status: open/)).toBeVisible()
   await expect(finding.getByText(/Severity: medium/)).toBeVisible()
@@ -169,7 +181,7 @@ test('AC3 AC7 confirm opens work and labels every record', async ({ page }) => {
 })
 
 test('AC5 confirming is one click and opens all three records', async ({ page }) => {
-  await page.getByRole('button', { name: 'Confirm' }).click()
+  await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()
   await expect(page.getByRole('region', { name: /^Task / })).toBeVisible()
   const wo = page.getByRole('region', { name: /^Work order / })
@@ -180,7 +192,7 @@ test('AC5 confirming is one click and opens all three records', async ({ page })
 })
 
 test('AC4 submit once the other people have done their steps', async ({ page }) => {
-  await page.getByRole('button', { name: 'Confirm' }).click()
+  await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   const wo = page.getByRole('region', { name: /^Work order / })
   await expect(wo.getByRole('button', { name: 'Submit work order' })).toBeDisabled()
   await otherPeopleAct(page)
@@ -209,26 +221,27 @@ test('AC6 blind-first hides the AI view of Tier 2 until the manager picks a labe
   await expect(c.getByText(/Sample summary/)).toHaveCount(0)
   await expect(c.getByRole('img', { name: /Flagged region/ })).toHaveCount(0)
   await expect(c.getByRole('img', { name: /Zoomed crop/ })).toHaveCount(0)
-  for (const n of ['Confirm', 'Reject', 'Recapture']) await expect(page.getByRole('button', { name: n })).toBeDisabled()
+  for (const n of ['Confirm: needs a fix', 'Not a problem', 'Look again'])
+    await expect(page.getByRole('button', { name: n, exact: true })).toBeDisabled()
   await page.getByRole('radio', { name: 'changed' }).click()
   await expect(c.getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
   await expect(c.getByText(/AI label: missing/)).toBeVisible()
   await expect(c.getByText(/Your label: changed\. Differs with the AI label/)).toBeVisible()
   await expect(c.getByRole('img', { name: /Flagged region/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Confirm' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toBeEnabled()
 })
 
 test('AC6 blind-first does not affect Tier 1 and Tier 3', async ({ page }) => {
   await page.getByLabel('Blind-first mode').check()
   await open(page, 'Worn path')
   await expect(card(page, PATH).getByText(/AI label: general change/)).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Confirm' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toBeEnabled()
   await open(page, 'Fence panel 3 not visible')
-  await expect(page.getByRole('button', { name: 'Recapture' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Look again', exact: true })).toBeEnabled()
 })
 
 test('AC6 the reject form cannot be used while blind-first hides the card', async ({ page }) => {
-  await page.getByRole('button', { name: 'Reject' }).click()
+  await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
   await page.getByLabel('Reason for rejecting').fill('Looks fine')
   await page.getByLabel('Blind-first mode').check()
   await expect(page.getByLabel('Reason for rejecting')).toHaveCount(0)
@@ -236,19 +249,19 @@ test('AC6 the reject form cannot be used while blind-first hides the card', asyn
 })
 
 test('AC7 banner, image labels, reset', async ({ page }) => {
-  await expect(page.getByText(/SAMPLE DATA/)).toBeVisible()
+  await expect(page.getByText('Simulation', { exact: true })).toBeVisible()
   for (const title of ['Fence panel 4', 'Ring buoy moved', 'Worn path', 'Fence panel 3']) {
     await open(page, title)
     const c = page.getByRole('main')
     const images = c.getByRole('img', { name: /^(Before image|After image|Zoomed crop)/ })
-    const tags = c.getByText('Sample image, not a site photo')
+    const tags = c.getByText('Sample illustration, not a site photo')
     const count = await images.count()
     expect(count).toBeGreaterThanOrEqual(2)
     await expect(tags).toHaveCount(count)
     for (let i = 0; i < count; i++) await expect(tags.nth(i)).toBeVisible()
   }
   await open(page, 'Fence panel 4')
-  await page.getByRole('button', { name: 'Confirm' }).click()
+  await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(list(page, 'Decided').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
   await page.getByRole('button', { name: 'Reset demo' }).click()
   await expect(list(page, 'Open').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
@@ -256,7 +269,7 @@ test('AC7 banner, image labels, reset', async ({ page }) => {
 })
 
 test('AC7 reset clears an open reject form', async ({ page }) => {
-  await page.getByRole('button', { name: 'Reject' }).click()
+  await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
   await page.getByLabel('Reason for rejecting').fill('Old reason')
   await page.getByRole('button', { name: 'Reset demo' }).click()
   await expect(card(page, S1).getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
@@ -264,7 +277,7 @@ test('AC7 reset clears an open reject form', async ({ page }) => {
 })
 
 test('AC2 keyboard-only confirm', async ({ page }) => {
-  const confirm = page.getByRole('button', { name: 'Confirm' })
+  const confirm = page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })
   let reached = false
   for (let i = 0; i < 40 && !reached; i++) {
     await page.keyboard.press('Tab')
@@ -277,25 +290,84 @@ test('AC2 keyboard-only confirm', async ({ page }) => {
 
 test('list rows show the re-shoot request and empty groups say so', async ({ page }) => {
   await expect(list(page, 'Open')).toBeVisible()
-  await page.getByRole('button', { name: 'Recapture', exact: true }).click()
+  await page.getByRole('button', { name: 'Look again', exact: true }).click()
   await expect(
     list(page, 'Decided').getByText('Re-shoot viewpoint: Playground path, fence line (vp_866518980_11_2)')
   ).toBeVisible()
-  await expect(page.getByText('Nothing open.')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: /^No changes to review/ })).toHaveCount(0)
   for (const title of ['Ring buoy moved', 'Worn path', 'Fence panel 3']) {
     await open(page, title)
-    await page.getByRole('button', { name: 'Recapture', exact: true }).click()
+    await page.getByRole('button', { name: 'Look again', exact: true }).click()
   }
-  await expect(page.getByText('Nothing open.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /^No changes to review/ })).toBeVisible()
 })
 
-test('AC10 slider handle shows a focus ring', async ({ page }) => {
-  const handle = page.getByRole('slider', { name: /Compare before and after/ })
-  await handle.focus()
-  await page.keyboard.press('ArrowRight')
-  const outline = await page
-    .locator('.knob')
-    .first()
-    .evaluate((e) => getComputedStyle(e).outlineStyle + ' ' + getComputedStyle(e).outlineWidth)
-  expect(outline).toBe('solid 3px')
+test('AC1 every row has a visible tier mark, hollow for Tier 3', async ({ page }) => {
+  const mark = (name: string) => list(page, 'Open').getByRole('img', { name }).first()
+  const style = (name: string) =>
+    mark(name).evaluate((e) => {
+      const s = getComputedStyle(e)
+      return { w: e.getBoundingClientRect().width, bg: s.backgroundColor, border: s.borderTopWidth }
+    })
+  const big = await style('Tier 2 · a person confirms')
+  const small = await style('Tier 1 · watch')
+  const ring = await style('Tier 3 · field check')
+  await expect(mark('Tier 2 · a person confirms')).toBeVisible()
+  await expect(mark('Tier 3 · field check')).toBeVisible()
+  expect(big.w).toBeGreaterThan(small.w)
+  expect(big.bg).not.toBe('rgba(0, 0, 0, 0)')
+  expect(small.w).toBeGreaterThan(0)
+  expect(ring.w).toBeGreaterThan(0)
+  expect(ring.bg).toBe('rgba(0, 0, 0, 0)')
+  expect(ring.border).toBe('2px')
+})
+
+test('AC1 the context line and rows come from the data, in Malaysian time', async ({ page }) => {
+  await expect(page.getByText('Mon 19 Oct · 4 changes from drone images')).toBeVisible()
+  await expect(page.getByText('To review · 4')).toBeVisible()
+  await expect(list(page, 'Open').getByText('simulated')).toHaveCount(4)
+  await expect(
+    list(page, 'Open')
+      .getByRole('button', { name: /Fence panel 4/ })
+      .getByText('15:48')
+  ).toBeVisible()
+})
+
+test('AC4 the Inbox uses the bundled font', async ({ page }) => {
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.fonts].some((f) => f.family.includes('Atkinson Hyperlegible Next') && f.status === 'loaded')
+      )
+    )
+    .toBe(true)
+  expect(await page.evaluate(() => document.fonts.check('16px "Atkinson Hyperlegible Next"'))).toBe(true)
+})
+
+test('AC4 dark mode switches the page background to the dark token', async ({ page }) => {
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor)
+  expect(await bg()).toBe('rgb(231, 235, 232)')
+  await page.emulateMedia({ colorScheme: 'dark' })
+  expect(await bg()).toBe('rgb(17, 26, 23)')
+})
+
+test('AC4 empty state after every card is decided never reads as all clear', async ({ page }) => {
+  for (const title of ['Fence panel 4', 'Ring buoy moved', 'Worn path', 'Fence panel 3']) {
+    await open(page, title)
+    await page.getByRole('button', { name: 'Look again', exact: true }).click()
+  }
+  await expect(page.getByRole('heading', { name: 'No changes to review from the 19 Oct drone images' })).toBeVisible()
+  await expect(page.getByText('1 spot the drone could not see stays unknown')).toBeVisible()
+  await expect(page.getByText(/all clear/i)).toHaveCount(0)
+})
+
+test('AC10 the primary button shows the focus ring when reached by keyboard', async ({ page }) => {
+  const confirm = page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })
+  let reached = false
+  for (let i = 0; i < 40 && !reached; i++) {
+    await page.keyboard.press('Tab')
+    reached = await confirm.evaluate((e) => e === document.activeElement)
+  }
+  expect(reached).toBe(true)
+  expect(await confirm.evaluate((e) => getComputedStyle(e).boxShadow)).not.toBe('none')
 })
