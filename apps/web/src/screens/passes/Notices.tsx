@@ -60,7 +60,6 @@ function NoticeCard({ d, n, act }: { d: Data; n: Notice; act: (run: () => Promis
           {dayTime(must(n.sentAt, `sent time of ${n.id}`))}
         </p>
       )}
-      {n.simulated && <p className="hint">simulated</p>}
       <p className="notice-body">{n.body}</p>
       {n.status === 'draft' && can('sendNotice') && (
         <button className="btn" onClick={() => act(() => client.sendNotice({ params: { id: n.id } }))}>

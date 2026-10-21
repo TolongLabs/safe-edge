@@ -40,13 +40,8 @@ function must<T>(value: T | undefined, what: string): T {
   return value
 }
 
-/** The "Sample" badge comes from the record's own simulated flag; the source says who produced it. */
-const Sample = ({ r, source = false }: { r: { simulated: boolean; source: string }; source?: boolean }) => (
-  <>
-    {r.simulated && <span className="chip sample">Sample</span>}
-    {source && <span className="chip">Source: {r.source}</span>}
-  </>
-)
+/** Who produced the record. */
+const Source = ({ r }: { r: { source: string } }) => <span className="chip">Source: {r.source}</span>
 
 /** The five pass shapes of DESIGN.md: filled dot, half ring, slashed ring, square, hollow ring. */
 export function StateMark({ state }: { state: EdgePass['state'] }) {
@@ -126,7 +121,7 @@ function OtherRoles({ s }: { s: Snapshot }) {
   const orderCard = (wo: Snapshot['workOrders'][number]) => (
     <section className="rec" aria-label={`Work order ${wo.id}`} key={wo.id}>
       <div className="chips">
-        <Sample r={wo} source />
+        <Source r={wo} />
         <span className="chip">{wo.status}</span>
       </div>
       <h3>Work order</h3>
@@ -226,8 +221,6 @@ function Triage({ s }: { s: Snapshot }) {
     .at(0)
   const patrol = firstSeen ? `${dayMonth(firstSeen)} ${sourcesOf(s.evidence)} images` : null
   const unknown = s.evidence.filter((e) => e.candidate.itemStatus === 'not_visible').length
-  // Simulated means labelled: once for the list when every card is, else on each simulated row.
-  const allSimulated = s.evidence.length > 0 && s.evidence.every((e) => e.candidate.simulated)
 
   const context = firstSeen
     ? `${weekdayDate(firstSeen)} · ${s.evidence.length} ${s.evidence.length === 1 ? 'change' : 'changes'} from ${sourcesOf(s.evidence)} images`
@@ -247,7 +240,6 @@ function Triage({ s }: { s: Snapshot }) {
           <div className="list-head">
             <h2>To review · {group(true).length}</h2>
             {patrol && <p>From the {patrol}</p>}
-            {allSimulated && <p>All simulated</p>}
           </div>
           {([true, false] as const).map((open) => (
             <div key={String(open)}>
@@ -282,7 +274,6 @@ function Triage({ s }: { s: Snapshot }) {
                         {clock(must(e.observations[0], `observation of ${e.candidate.id}`).capturedAt)}
                       </span>
                       <span className="meta clamp">{e.segment.name}</span>
-                      {e.candidate.simulated && !allSimulated && <span className="sim">simulated</span>}
                       {!open && <span className="meta wide">{STATE_TEXT[e.candidate.status]}</span>}
                       {e.candidate.status === 'needs_recapture' && (
                         <span className="meta wide clamp">{e.candidate.decisionReason}</span>
@@ -380,7 +371,6 @@ function Zoom({
               ? `Dotted: as in the ${dayMonth(baseline.capturedAt)} baseline`
               : `Not in the ${dayMonth(baseline.capturedAt)} baseline`}
         </b>
-        <small>Sample illustration, not a site photo</small>
       </figcaption>
     </figure>
   )
@@ -459,7 +449,6 @@ function CardDetail({
             ) : (
               sure && !hidden && <span className="chip">How sure: {sure}</span>
             )}
-            <Sample r={c} />
           </p>
           <p className="sub">
             Viewpoint: {meta.viewpointName} ({after.viewpointId})
@@ -489,32 +478,26 @@ function CardDetail({
 
         <div className="frames">
           <figure className="frame-photo">
-            <SampleImage scene={meta.scene} variant="before" tag={false} />
+            <SampleImage scene={meta.scene} variant="before" />
             <figcaption>
               <div className="cap-line">
                 <b>{baseline ? `Before · ${dayMonth(baseline.capturedAt)}` : 'Before · no baseline recorded'}</b>
                 <span>
                   {baseline?.acceptedBy ? `Accepted by ${name(baseline.acceptedBy)}` : 'Not accepted by a person'}
-                  {baseline?.simulated ? ' · simulated' : ''}
                 </span>
               </div>
-              <small>Sample illustration, not a site photo</small>
             </figcaption>
           </figure>
           <figure className="frame-photo">
             <div className="after-wrap">
-              <SampleImage scene={meta.scene} variant="after" tag={false} />
+              <SampleImage scene={meta.scene} variant="after" />
               {box && <FlagOutline box={box} title={meta.title} />}
             </div>
             <figcaption>
               <div className="cap-line">
                 <b>{fmt(after.capturedAt)}</b>
-                <span>
-                  {after.captureSource === 'drone' ? 'Drone' : 'Phone'}
-                  {after.simulated ? ' · simulated' : ''}
-                </span>
+                <span>{after.captureSource === 'drone' ? 'Drone' : 'Phone'}</span>
               </div>
-              <small>Sample illustration, not a site photo</small>
             </figcaption>
           </figure>
         </div>
@@ -628,10 +611,8 @@ function CardDetail({
           <dl className="facts">
             <dt>Captured</dt>
             <dd>{fmt(after.capturedAt)}</dd>
-            <dt>Record</dt>
-            <dd>
-              {c.simulated ? 'Simulated' : 'Real'}, source {c.source}
-            </dd>
+            <dt>Source</dt>
+            <dd>{c.source}</dd>
           </dl>
         </div>
       </article>
@@ -646,7 +627,7 @@ function CardDetail({
         {finding && (
           <section className="rec" aria-label={`Finding ${finding.id}`}>
             <div className="chips">
-              <Sample r={finding} source />
+              <Source r={finding} />
               <span className="chip">{finding.status}</span>
             </div>
             <h3>Finding</h3>
@@ -793,7 +774,7 @@ function TaskCard({ t, s, run }: { t: Task; s: Snapshot; run: (call: () => Promi
   return (
     <section className="rec" aria-label={`Task ${t.id}`}>
       <div className="chips">
-        <Sample r={t} source />
+        <Source r={t} />
         <span className="chip">{t.status}</span>
       </div>
       <h3>{title}</h3>
@@ -864,7 +845,7 @@ function WorkOrderPanel({
   return (
     <section className="rec" aria-label={`Work order ${wo.id}`}>
       <div className="chips">
-        <Sample r={wo} source />
+        <Source r={wo} />
         <span className="chip">{wo.status}</span>
         <span className={wo.draftedBy.type === 'agent' ? 'drafted' : 'chip'}>Drafted by {nameOf(wo.draftedBy.id)}</span>
       </div>

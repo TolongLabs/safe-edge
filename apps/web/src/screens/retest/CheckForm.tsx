@@ -22,7 +22,6 @@ export function CheckForm({
   items,
   intro,
   scene,
-  simulated,
   acceptance,
   signLabel,
   failLabel,
@@ -33,7 +32,6 @@ export function CheckForm({
   items: Item[]
   intro: string
   scene: Scene
-  simulated: boolean
   acceptance?: string
   signLabel: string
   failLabel: string
@@ -41,7 +39,7 @@ export function CheckForm({
   record: (result: 'accepted' | 'rejected', checklist: RetestCheck[], reason: string) => Promise<RetestOutcome>
   onDone: (outcome: RetestOutcome) => void
 }) {
-  // The sample reading is the mockup's 6 cm; the caption says it is not measured.
+  // The gap reading starts at the mockup's 6 cm.
   const SAMPLE_CM = '6'
   const [answers, setAnswers] = useState<Record<string, Answer>>({})
   const [cm, setCm] = useState<Record<string, string>>({})
@@ -112,9 +110,7 @@ export function CheckForm({
                   <legend>{it.title}</legend>
                   {it.kind === 'saved_view' && <p className="rt-help">Compare with the baseline view.</p>}
                   {it.kind === 'route_check' && <p className="rt-help">Is this way to the water closed now?</p>}
-                  {it.kind === 'photo' && (
-                    <Photo scene={scene} plates={[]} caption={{ when: 'Re-test photo', simulated }} />
-                  )}
+                  {it.kind === 'photo' && <Photo scene={scene} plates={[]} when="Re-test photo" />}
                   {it.opening && (
                     <>
                       <label className="rt-field">
@@ -138,7 +134,6 @@ export function CheckForm({
                           Enter the gap as a number of centimetres.
                         </p>
                       )}
-                      {reading(it) === SAMPLE_CM && <p className="rt-help">Sample reading, not measured on site</p>}
                       {acceptance && <p className="rt-help">Acceptance test: {acceptance}</p>}
                     </>
                   )}

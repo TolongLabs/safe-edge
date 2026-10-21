@@ -168,7 +168,6 @@ export function Camera({
                 scene={scene}
                 variant="before"
                 focus={off ? undefined : { x: 0, y: 0, w: 100, h: 100 }}
-                tag={false}
                 name="Baseline picture of this viewpoint"
               />
             </div>
@@ -189,7 +188,7 @@ export function Camera({
           )}
           <p className="caption">
             {scene
-              ? `${off ? 'Baseline' : 'Baseline ghost'}: sample illustration, not a site photo · simulated`
+              ? `${off ? 'Baseline picture' : 'Baseline ghost'} of this viewpoint`
               : 'No baseline picture for this viewpoint yet'}
           </p>
         </div>

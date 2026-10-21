@@ -292,14 +292,6 @@
   padding: var(--space-3) var(--space-4);
   font-size: var(--fs-dense);
 }
-.fl-cap-row {
-  display: flex;
-  justify-content: space-between;
-}
-.fl-cap-sample {
-  color: var(--text-secondary);
-  font-size: var(--fs-small);
-}
 
 /* Step 2 */
 .fl-compare,

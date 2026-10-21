@@ -140,13 +140,11 @@ export function Clearance({ candidateId }: { candidateId: string }) {
     <>
       <p className="rt-help">
         {segment.name} · {candidate.status === 'rejected' ? 'marked not a problem' : 'sent to look again'}
-        {candidate.simulated && ' · simulated'}
       </p>
       <CheckForm
         items={items}
         intro={`The park manager called ${meta.title} a false alarm. You did not decide it, so you can check it.`}
         scene={meta.scene}
-        simulated={candidate.simulated}
         signLabel="Sign and clear this flag"
         failLabel="Keep the pass held"
         rule="Signing clears this flag. A held pass is issued once no other flag on this edge is open."

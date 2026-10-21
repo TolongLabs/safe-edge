@@ -236,7 +236,6 @@ function NoPlan({ data, onPlanned }: { data: Data; onPlanned: (id: string) => vo
           {S1.body.context.map((c) => (
             <li key={c.kind}>
               <b>{READING[c.kind]}</b> {readingValue(c)} · {c.publisher}
-              {c.simulated && <span className="chip sample">Sample</span>}
             </li>
           ))}
         </ul>
@@ -359,7 +358,6 @@ function PlanDetail({ plan, data, onChanged }: { plan: PatrolPlan; data: Data; o
         <h2>{planTitle(plan)}</h2>
         <div className="chips">
           <span className="plate">{plan.id}</span>
-          {plan.simulated && <span className="chip sample">Sample</span>}
           <span className="chip">Source: {plan.source}</span>
           <span className="chip">Planned {fmt(plan.createdAt)}</span>
         </div>
@@ -497,10 +495,7 @@ function PlanDetail({ plan, data, onChanged }: { plan: PatrolPlan; data: Data; o
           {plan.authorisation && (
             <>
               <dt>Authorisation</dt>
-              <dd>
-                {plan.authorisation.ref}
-                {plan.authorisation.simulated && <span className="chip sample">Sample</span>}
-              </dd>
+              <dd>{plan.authorisation.ref}</dd>
             </>
           )}
         </dl>
@@ -516,7 +511,6 @@ function PlanDetail({ plan, data, onChanged }: { plan: PatrolPlan; data: Data; o
               <li key={i}>
                 <b>{READING[c.kind]}</b> {readingValue(c)} · {c.publisher}
                 {c.stationId && ` station ${c.stationId}`} · observed {fmt(c.observedAt)}
-                {c.simulated && <span className="chip sample">Sample</span>}
               </li>
             ))}
           </ul>

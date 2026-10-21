@@ -83,13 +83,13 @@ test('AC1 S1 card shows its evidence', async ({ page }) => {
   await expect(c.getByText(/AI suggestion, unvalidated/)).toBeVisible()
   await expect(c.getByText(/Uncertainty: low/)).toBeVisible()
   await expect(c.getByText(/Reason: Panel 4 is in the baseline/)).toBeVisible()
-  await expect(c.getByText(/Simulated, source provider/)).toBeVisible()
+  await expect(c.getByText('provider', { exact: true })).toBeVisible() // the record's source
   // the summary is sample text, never claimed as the agent's
   await expect(c.getByText(/Sample summary, not written by the agent: .*obs_\d+, cand_1/)).toBeVisible()
   await expect(page.getByText('Drafted by agent')).toHaveCount(0)
   await expect(c.getByText(/^Before · \d+ \w+$/)).toBeVisible()
-  await expect(c.getByText(/Accepted by .* · simulated/)).toBeVisible()
-  await expect(c.getByText(/Drone · simulated/)).toBeVisible()
+  await expect(c.getByText(/^Accepted by /)).toBeVisible()
+  await expect(c.getByText('Drone', { exact: true })).toBeVisible()
 })
 
 test('AC1 Tier 3 card shows images and core field task only', async ({ page }) => {
@@ -164,8 +164,8 @@ test('AC3 AC7 confirm opens work and labels every record', async ({ page }) => {
   const wo = page.getByRole('region', { name: /^Work order / })
   await expect(wo.getByText(/Status: draft\. Drafted by Farah Hashim \(manager\)\./)).toBeVisible()
   await expect(page.getByText('Drafted by agent')).toHaveCount(0)
-  // AC7: Sample badge on card, finding, task and work order
-  for (const r of [c, finding, task, wo]) await expect(r.getByText('Sample', { exact: true }).first()).toBeVisible()
+  // AC7: the top bar's Simulation label covers every record, so none carries a Sample badge of its own
+  await expect(page.getByText('Sample', { exact: true })).toHaveCount(0)
 })
 
 test('the decision controls line up, and severity says when it is still pre-filled', async ({ page }) => {
@@ -264,17 +264,14 @@ test('AC6 the reject form cannot be used while blind-first hides the card', asyn
   await expect(page.getByRole('button', { name: 'Submit rejection' })).toHaveCount(0)
 })
 
-test('AC7 banner, image labels, reset', async ({ page }) => {
+test('AC7 banner, images without per-image labels, reset', async ({ page }) => {
   await expect(page.getByText('Simulation', { exact: true })).toBeVisible()
   for (const title of ['Fence panel 4', 'Ring buoy moved', 'Worn path', 'Fence panel 3']) {
     await open(page, title)
     const c = page.getByRole('main')
     const images = c.getByRole('img', { name: /^(Before image|After image|Close-up)/ })
-    const tags = c.getByText('Sample illustration, not a site photo')
-    const count = await images.count()
-    expect(count).toBeGreaterThanOrEqual(2)
-    await expect(tags).toHaveCount(count)
-    for (let i = 0; i < count; i++) await expect(tags.nth(i)).toBeVisible()
+    expect(await images.count()).toBeGreaterThanOrEqual(2)
+    await expect(c.getByText('Sample illustration, not a site photo')).toHaveCount(0)
   }
   await open(page, 'Fence panel 4')
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
@@ -341,9 +338,8 @@ test('AC1 every row has a visible tier mark, hollow for Tier 3', async ({ page }
 test('AC1 the context line and rows come from the data, in Malaysian time', async ({ page }) => {
   await expect(page.getByText('Mon 19 Oct · 4 changes from drone images')).toBeVisible()
   await expect(page.getByText('To review · 4')).toBeVisible()
-  // every card is simulated, so the list says it once instead of on each row
-  await expect(page.getByRole('navigation', { name: 'Inbox list' }).getByText('All simulated')).toBeVisible()
-  await expect(list(page, 'Open').getByText('simulated')).toHaveCount(0)
+  // the top bar's Simulation label covers the list, so neither its head nor a row repeats it
+  await expect(page.getByRole('navigation', { name: 'Inbox list' }).getByText(/simulated/i)).toHaveCount(0)
   await expect(
     list(page, 'Open')
       .getByRole('button', { name: /Fence panel 4/ })

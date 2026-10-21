@@ -175,7 +175,7 @@ export function Developers() {
               ) : (
                 <>
                   Runs against this page’s demo core as {me.name}. <a href="#/settings">Settings</a> can point it at a
-                  live API instead. <span className="chip sample">Sample data</span>
+                  live API instead.
                 </>
               )}
             </p>

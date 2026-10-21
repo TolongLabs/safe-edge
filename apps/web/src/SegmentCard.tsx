@@ -133,7 +133,6 @@ export function SegmentCard({ segment, onClose }: { segment: SegmentView; onClos
           {segment.lastPatrolledAt ? moment.format(new Date(segment.lastPatrolledAt)) : 'No patrol yet'}
         </dd>
       </dl>
-      <p style={{ margin: 0, fontSize: 12, lineHeight: '16px', color: '#5d6b66' }}>Simulated data</p>
     </section>
   )
 }

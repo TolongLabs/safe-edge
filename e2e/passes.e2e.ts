@@ -78,8 +78,8 @@ test('AC83-1 the township view lists every edge, worst first, with S1 suspended'
   await expect(s1.getByRole('cell', { name: '1', exact: true })).toBeVisible() // one open flag
   await expect(s1.getByRole('cell', { name: 'None', exact: true })).toBeVisible() // no overdue work
   await expect(s1.getByRole('cell', { name: 'Part, length not recorded' })).toBeVisible() // open field check, no length
-  // every pass is sample data: labelled once for the table, not under each badge
-  await expect(page.getByText('Every pass in this table is simulated.')).toBeVisible()
+  // the top bar's Simulation label covers the table, so neither it nor a row repeats it
+  await expect(page.getByText('Every pass in this table is simulated.')).toHaveCount(0)
   await expect(s1).not.toContainText('simulated')
   await expect(s1).not.toContainText('cand_') // flags are named in words, never by id
   // expired and expiring passes show their date
@@ -112,7 +112,7 @@ test('AC83-2 overdue work is escalated by the manager and read by the general ma
   await page.getByRole('button', { name: 'Send escalation' }).click()
   await expect(page.getByText(/^Sent by Farah Hashim ·/)).toBeVisible()
   await expect(page.getByText('Drafted by Farah Hashim', { exact: true })).toBeVisible()
-  await expect(page.getByRole('article', { name: /^Overdue work/ }).getByText('simulated')).toBeVisible()
+  await expect(page.getByRole('article', { name: /^Overdue work/ }).getByText('simulated')).toHaveCount(0)
   await signInAs(page, 'Rosli Ahmad')
   await expect(page.getByText(/^Sent by Farah Hashim ·/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Send escalation' })).toHaveCount(0)

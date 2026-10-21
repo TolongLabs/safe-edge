@@ -73,24 +73,8 @@ export function Handover({ pack, onClose }: { pack: HandoverPack; onClose: () =>
               <tbody>
                 {pack.segments.map(({ segment, pass, passLabel }) => (
                   <tr key={segment.id}>
-                    <td>
-                      {segment.name}
-                      {segment.simulated && (
-                        <>
-                          {' '}
-                          <span className="simulated">simulated</span>
-                        </>
-                      )}
-                    </td>
-                    <td>
-                      {passLabel}
-                      {pass?.simulated && (
-                        <>
-                          {' '}
-                          <span className="simulated">simulated</span>
-                        </>
-                      )}
-                    </td>
+                    <td>{segment.name}</td>
+                    <td>{passLabel}</td>
                     <td className="valid-from">{pass?.validFrom ? day(pass.validFrom) : 'not issued'}</td>
                     <td className="valid-to">{pass?.validTo ? day(pass.validTo) : 'not issued'}</td>
                     <td>{pass ? pass.scope.retestIds.length : 0}</td>
@@ -152,15 +136,7 @@ export function Handover({ pack, onClose }: { pack: HandoverPack; onClose: () =>
               <tbody>
                 {pack.openFindings.map((finding) => (
                   <tr key={finding.id}>
-                    <td>
-                      {finding.id}
-                      {finding.simulated && (
-                        <>
-                          {' '}
-                          <span className="simulated">simulated</span>
-                        </>
-                      )}
-                    </td>
+                    <td>{finding.id}</td>
                     <td>{finding.severity}</td>
                     <td>{finding.status.replace(/_/g, ' ')}</td>
                     <td>{dayTime(finding.createdAt)}</td>

@@ -388,8 +388,7 @@ function SegmentView({ segmentId }: { segmentId: string }) {
           <>
             <Banner kind="ok" icon={<CheckCircle size={22} weight="bold" aria-hidden="true" />}>
               <b>Sent to Edge Watch</b> at {time(last.sent.at)} by {last.sent.by}. Recorded in core as a{' '}
-              {last.sent.captureSource} observation <code translate="no">{last.sent.observationId}</code>
-              {last.sent.simulated ? ', simulated' : ''}.
+              {last.sent.captureSource} observation <code translate="no">{last.sent.observationId}</code>.
               {last.sent.local && ' The photo is kept on this phone, not stored in core.'}
               {sendsToApi && ' The photo was stored by the API.'}
             </Banner>

@@ -10,13 +10,13 @@ export function Photo({
   scene,
   plates,
   onPlace,
-  caption
+  when
 }: {
   scene: Scene
   plates: Plate[]
   /** Click on the photo, as 0 to 1 photo coordinates; omitted where the role may not mark. */
   onPlace?: (x: number, y: number) => void
-  caption: { when: string; simulated: boolean }
+  when: string
 }) {
   return (
     <figure className="fl-photo">
@@ -29,7 +29,7 @@ export function Photo({
           onPlace((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height)
         }}
       >
-        <SampleImage scene={scene} variant="after" tag={false} name="Sample illustration of the finding" />
+        <SampleImage scene={scene} variant="after" name="Sample illustration of the finding" />
         {plates.map((p) => (
           <div
             key={p.key}
@@ -52,11 +52,7 @@ export function Photo({
         ))}
       </div>
       <figcaption>
-        <span className="fl-cap-row">
-          <b>{caption.when}</b>
-          {caption.simulated && <span>simulated</span>}
-        </span>
-        <span className="fl-cap-sample">Sample illustration, not a site photo</span>
+        <b>{when}</b>
       </figcaption>
     </figure>
   )

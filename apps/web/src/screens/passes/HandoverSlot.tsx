@@ -57,7 +57,6 @@ export function HandoverSlot() {
       <h2 id="ho-h">Handover pack</h2>
       <p className="hint">
         The asset, its edges’ passes, accepted re-tests, open findings and upkeep owner, for a receiving authority.
-        Records that are sample data say so.
       </p>
       <label className="asset-field">
         Asset

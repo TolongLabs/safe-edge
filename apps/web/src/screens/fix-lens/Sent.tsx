@@ -48,7 +48,7 @@ export function Sent({
           <h3>Marked photo</h3>
           <Photo
             scene={scene}
-            caption={{ when, simulated: finding.simulated }}
+            when={when}
             plates={closure.openings.flatMap((o) => {
               const mark = o.photoMarks[0]
               const blocked = remedy.blocksOpeningIds.includes(o.id)

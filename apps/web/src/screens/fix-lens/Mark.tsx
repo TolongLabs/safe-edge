@@ -118,7 +118,7 @@ export function Mark({
       <div className="fl-left">
         <Photo
           scene={scene}
-          caption={{ when, simulated: finding.simulated }}
+          when={when}
           onPlace={mayMark && sizeOk ? (x, y) => void place(x, y) : undefined}
           plates={openings.flatMap((o, i) => {
             const mark = o.photoMarks[0]
@@ -166,7 +166,7 @@ export function Mark({
               <button className="btn" type="button" disabled={sampling} onClick={sample}>
                 {sampling ? 'Use the S2 sample markings…' : 'Use the S2 sample markings'}
               </button>
-              <p className="fl-muted">Sample markings for the playground fence, not measured on site.</p>
+              <p className="fl-muted">The panel gap and fence end from scenario S2.</p>
               {sampleError !== null && (
                 <p className="state bad" role="alert">
                   {sampleError}
