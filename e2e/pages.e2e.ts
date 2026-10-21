@@ -72,23 +72,38 @@ for (const path of ['', ...pages.map((p) => p.path), 'sign-in'])
 
 for (const viewport of [
   { width: 1440, height: 900 },
-  { width: 390, height: 844 },
-  { width: 320, height: 640 }
+  { width: 1280, height: 800 },
+  { width: 390, height: 844 }
 ])
-  test(`at ${viewport.width} px each page's hero shows the whole dawn picture, its claim in clear sky`, async ({
+  test(`at ${viewport.width} × ${viewport.height} each page's hero fills the screen, its claim in clear sky`, async ({
     page
   }) => {
     await page.setViewportSize(viewport)
     for (const { path } of pages) {
       await page.goto(path)
       const hero = await page.locator('.page-hero').evaluate((el) => {
+        const box = el.getBoundingClientRect()
         const art = el.querySelector('.page-art')!.getBoundingClientRect()
-        const words = [...el.querySelectorAll('.page-hero-words > *')].map((w) => w.getBoundingClientRect().bottom)
-        // The sun's top, the picture's highest shape, sits 40.8% down its 1600 × 1000 frame.
-        return { art, wordsBottom: Math.max(...words), sunTop: art.bottom - art.width * 0.625 * 0.592 }
+        // The picture is drawn at its width and anchored at the foot. In its 1600 × 1000 frame the sun's top is 40.8%
+        // down, the left tree line 53.7% down, and the buildings start 58.75% across.
+        const drawn = art.width * 0.625
+        const clear = { sun: art.bottom - drawn * 0.592, trees: art.bottom - drawn * 0.463 }
+        const buildings = art.left + art.width * 0.5875
+        const text = [...el.querySelectorAll('.page-hero-words > *')].flatMap((w) => {
+          const range = document.createRange()
+          range.selectNodeContents(w)
+          return [...range.getClientRects()].map((r) => ({ right: r.right, bottom: r.bottom }))
+        })
+        const overlaps = text.filter(
+          (r) => r.bottom > art.top && (r.bottom > clear.trees || (r.bottom > clear.sun && r.right > buildings))
+        )
+        return { box, art, overlaps }
       })
-      expect(hero.art.width / hero.art.height, path).toBeCloseTo(1.6, 2)
-      expect(hero.wordsBottom, path).toBeLessThan(hero.sunTop)
+      expect(Math.abs(hero.box.height - viewport.height), path).toBeLessThanOrEqual(1)
+      expect(Math.abs(hero.art.bottom - hero.box.bottom), path).toBeLessThanOrEqual(1)
+      expect(hero.art.left, path).toBeLessThanOrEqual(hero.box.left)
+      expect(hero.art.right, path).toBeGreaterThanOrEqual(hero.box.right)
+      expect(hero.overlaps, path).toEqual([])
     }
   })
 
