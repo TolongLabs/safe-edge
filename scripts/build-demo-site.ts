@@ -6,7 +6,8 @@
 //   vercel deploy --prebuilt --prod --scope <team> --cwd <dir>
 //
 // <dir> must be outside this repository: inside it, `vercel link --yes` also connects the GitHub repo, which then
-// builds every pull request. Only the built files upload.
+// builds every pull request. Only the built files upload. Pushes to main run the same steps in
+// .github/workflows/deploy.yml.
 import { $ } from 'bun'
 import { readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'

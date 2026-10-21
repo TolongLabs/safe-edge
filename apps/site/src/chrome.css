@@ -170,8 +170,15 @@
   }
 }
 
-/* Night: the fence holds. On the landing page the footer is a whole screen; it waits under the page, and the page
-   lifts off it. */
+/* The narrowest phones keep the mark and the demo button on one row; the link keeps its name, "Safe Edge, home". */
+@media (max-width: 359px) {
+  .wordmark span {
+    display: none;
+  }
+}
+
+/* Night: the fence holds. On every page the footer is a whole screen; on wider screens it waits under the page, and
+   the page lifts off it (motion.ts sets .has-reveal and --footer-h). */
 .footer {
   display: flex;
   flex-direction: column;
@@ -179,10 +186,6 @@
   background: var(--night);
   color: var(--bar);
   --focus: var(--rail-muted);
-}
-
-.footer--page {
-  min-height: 0;
 }
 
 .night {
@@ -204,6 +207,30 @@
 
 .footer-in {
   padding: 8px var(--margin) 24px;
+}
+
+/* The page lifts off the footer: the page rides above it, and the body leaves a footer's height to scroll into. */
+.has-reveal main {
+  position: relative;
+  z-index: var(--z-raised);
+}
+
+.has-reveal main > :last-child {
+  border-radius: 0 0 var(--island-radius) var(--island-radius);
+}
+
+.has-reveal body {
+  padding-bottom: var(--footer-h);
+}
+
+.has-reveal .footer {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 0;
+}
+
+.has-reveal .footer:not([data-shown]) {
+  opacity: 0;
 }
 
 .footer-pass {
