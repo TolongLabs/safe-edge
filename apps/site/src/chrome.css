@@ -170,6 +170,13 @@
   }
 }
 
+/* The narrowest phones keep the mark and the demo button on one row; the link keeps its name, "Safe Edge, home". */
+@media (max-width: 359px) {
+  .wordmark span {
+    display: none;
+  }
+}
+
 /* Night: the fence holds. On the landing page the footer is a whole screen; it waits under the page, and the page
    lifts off it. */
 .footer {
