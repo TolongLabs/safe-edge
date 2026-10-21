@@ -1,15 +1,24 @@
 /* The product pages (drone, agents, SDK, privacy): a claim on the morning sky over the lake, then calm, dense
    chapters on an island with a sticky contents list, and one way into the demo at the end. */
 
-/* The hero: the landing page's dawn, still, under the claim. */
+/* The hero: the landing page's dawn, still and whole. The claim sits on the picture's own sky, which is the hero's
+   colour, so there is no edge between them; the picture sits at the foot and the hero grows upward in plain sky when
+   the words need more room. */
 .page-hero {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   background: var(--sky);
 }
 
+.page-hero > * {
+  grid-area: 1 / 1;
+}
+
+/* The bottom padding keeps the words in clear sky: the sun's top, the highest thing in the picture, is 40.8% down,
+   so the bottom 59.2% of its height, 37% of the width (1000/1600 × 59.2%; a percentage padding reads the width), is
+   kept free. */
 .page-hero-words {
-  padding: calc(12px + var(--bar-h) + clamp(32px, 9svh, 112px)) var(--margin) clamp(32px, 6svh, 64px);
+  position: relative;
+  padding: calc(12px + var(--bar-h) + clamp(32px, 9svh, 112px)) var(--margin) calc(37% + clamp(16px, 3svh, 32px));
 }
 
 .page-title {
@@ -35,11 +44,15 @@
   }
 }
 
+/* Whole at every width up to a screen's height; past that only plain sky is cut from the top. */
 .page-art {
+  align-self: end;
   width: 100%;
-  height: clamp(150px, 24svh, 280px);
+  height: auto;
+  max-height: 100svh;
+  aspect-ratio: 1600 / 1000;
   object-fit: cover;
-  object-position: var(--art-x, 50%) 100%;
+  object-position: 50% 100%;
 }
 
 /* The chapters, with the contents list beside them on wide screens. */

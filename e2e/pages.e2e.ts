@@ -70,6 +70,28 @@ for (const path of ['', ...pages.map((p) => p.path), 'sign-in'])
     expect(broken).toEqual([])
   })
 
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+  { width: 320, height: 640 }
+])
+  test(`at ${viewport.width} px each page's hero shows the whole dawn picture, its claim in clear sky`, async ({
+    page
+  }) => {
+    await page.setViewportSize(viewport)
+    for (const { path } of pages) {
+      await page.goto(path)
+      const hero = await page.locator('.page-hero').evaluate((el) => {
+        const art = el.querySelector('.page-art')!.getBoundingClientRect()
+        const words = [...el.querySelectorAll('.page-hero-words > *')].map((w) => w.getBoundingClientRect().bottom)
+        // The sun's top, the picture's highest shape, sits 40.8% down its 1600 × 1000 frame.
+        return { art, wordsBottom: Math.max(...words), sunTop: art.bottom - art.width * 0.625 * 0.592 }
+      })
+      expect(hero.art.width / hero.art.height, path).toBeCloseTo(1.6, 2)
+      expect(hero.wordsBottom, path).toBeLessThan(hero.sunTop)
+    }
+  })
+
 test('a Copy button copies its code', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('sdk')
