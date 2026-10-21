@@ -1,4 +1,4 @@
-import { CheckCircle, Circle, LockSimple, Prohibit, XCircle } from '@phosphor-icons/react'
+import { CaretRight, CheckCircle, Circle, LockSimple, Prohibit, XCircle } from '@phosphor-icons/react'
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
@@ -261,7 +261,10 @@ function Propose({
   const ok = label.trim() !== '' && blocks.length > 0 && test.trim() !== '' && qtyOk
   return (
     <details className="fl-propose" open={openings.length > 0}>
-      <summary>Propose a fix</summary>
+      <summary>
+        <CaretRight size={18} weight="bold" aria-hidden="true" />
+        Propose a fix
+      </summary>
       <form
         className="fl-form"
         onSubmit={(e) => {
@@ -305,7 +308,7 @@ function Propose({
           </label>
           <label>
             Name of the fix
-            <input value={label} onChange={(e) => setLabel(e.target.value)} />
+            <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} />
           </label>
         </div>
         <fieldset>
@@ -324,24 +327,24 @@ function Propose({
         <div className="fl-triple">
           <label>
             Quantity of
-            <input value={item} onChange={(e) => setItem(e.target.value)} />
+            <input type="text" value={item} onChange={(e) => setItem(e.target.value)} />
           </label>
           <label>
             Amount
-            <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <input type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </label>
           <label>
             Unit
-            <input value={unit} onChange={(e) => setUnit(e.target.value)} />
+            <input type="text" value={unit} onChange={(e) => setUnit(e.target.value)} />
           </label>
         </div>
         <label>
           Acceptance test
-          <input value={test} onChange={(e) => setTest(e.target.value)} />
+          <input type="text" value={test} onChange={(e) => setTest(e.target.value)} />
         </label>
         <label>
           Quote in MYR (leave empty for “quote needed”)
-          <input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <input type="text" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
         </label>
         <button className="btn" type="submit" disabled={!ok}>
           Add this fix
