@@ -312,6 +312,7 @@
 }
 /* Actions: primary and secondary first, the negative one apart on the right. */
 .decide {
+  container-type: inline-size;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -331,26 +332,47 @@
   color: var(--text-secondary);
   font-size: var(--fs-dense);
 }
+/* Severity as one 44 px field, its label inside the box, so it lines up with the buttons beside it. */
 .sev {
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
+  align-items: center;
   gap: var(--space-1);
-  font-size: var(--fs-dense);
-  font-weight: 500;
-}
-select,
-input[type='date'],
-textarea {
   min-height: 44px;
-  padding: 0 var(--space-3);
+  padding-left: var(--space-3);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-raised);
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  font-weight: 500;
+  cursor: pointer;
 }
-textarea {
-  padding: var(--space-3);
-  min-height: 88px;
+/* Too narrow for one row: the field takes its own line above the buttons, so they never split around it. */
+@container (max-width: 720px) {
+  .sev {
+    flex: 1 1 100%;
+  }
+  .sev select {
+    flex: 1;
+  }
+}
+.sev:hover {
+  border-color: var(--text-secondary);
+}
+.sev:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: inset 0 0 0 1px var(--border-focus);
+}
+.sev select,
+.sev select:focus {
+  min-height: 42px;
+  padding-left: var(--space-2);
+  border: 0;
+  box-shadow: none;
+  background-color: transparent;
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+  font-weight: 600;
 }
 .reason {
   display: flex;
@@ -527,8 +549,11 @@ textarea {
   .ai-panel {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Phone islands pad 16 px (DESIGN.md Layout); the sticky decision bar reads the same variable to stay flush. */
+  .list,
   .detail {
-    padding: var(--space-4);
+    --island-padding: var(--space-4);
+    padding: var(--island-padding);
   }
   .decide .btn {
     flex: 1 1 100%;

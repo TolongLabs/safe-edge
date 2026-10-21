@@ -2,9 +2,12 @@ import {
   CaretLeft,
   CaretLineLeft,
   CaretLineRight,
+  Code,
   DotsThree,
+  Drone,
   Info,
   MapTrifold,
+  Robot,
   ShieldCheck,
   Tray,
   WarningCircle,
@@ -13,7 +16,7 @@ import {
 import type { Role } from '@safe-edge/contracts'
 import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from 'react'
 import { can, resetAll, signIn, useSignedIn, useStore } from '../store'
-import { isPhone, parseRoute, useHash } from './route'
+import { isPhone, parseRoute, useHash, type Route } from './route'
 import { getTheme, setTheme, type Theme } from './theme'
 import './shell.css'
 
@@ -172,6 +175,9 @@ export function Screen({
   children: ReactNode
 }) {
   const phone = isPhone(parseRoute(useHash()))
+  useEffect(() => {
+    document.title = `${title} · Safe Edge`
+  }, [title])
   return (
     <div className={`frame${phone ? ' phone' : ''}`}>
       {phone ? (
@@ -230,17 +236,43 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
   }
 }
 
-const NAV: { href: string; route: string; label: string; Icon: Icon; note?: string }[] = [
-  { href: '#/inbox', route: 'inbox', label: 'Inbox', Icon: Tray },
-  {
-    href: 'scene.html', // relative: the demo site serves the app under /demo/
-    route: 'map',
-    label: 'Map',
-    Icon: MapTrifold,
-    note: 'Opens the team map. It shows the seed and the scenario player, not this session’s decisions.'
-  },
-  { href: '#/passes', route: 'passes', label: 'Passes', Icon: ShieldCheck }
+type NavItem = { href: string; route: string; label: string; Icon: Icon; note?: string }
+
+// The day-to-day screens first; the agent and the developer pages sit apart, after a quiet divider.
+const NAV: NavItem[][] = [
+  [
+    { href: '#/inbox', route: 'inbox', label: 'Inbox', Icon: Tray },
+    { href: '#/patrol', route: 'patrol', label: 'Patrol', Icon: Drone },
+    {
+      href: 'scene.html', // relative: the demo site serves the app under /demo/
+      route: 'map',
+      label: 'Map',
+      Icon: MapTrifold,
+      note: 'Opens the team map. It shows the seed and the scenario player, not this session’s decisions.'
+    },
+    { href: '#/passes', route: 'passes', label: 'Passes', Icon: ShieldCheck }
+  ],
+  [
+    { href: '#/agent', route: 'agent', label: 'Agent', Icon: Robot },
+    { href: '#/developers', route: 'developers', label: 'Developers', Icon: Code }
+  ]
 ]
+
+/** The rail item a route belongs to; screens reached from another one (Fix Lens, the repair check) mark none. */
+const railItemOf = (route: Route) => {
+  switch (route.name) {
+    case 'passes':
+    case 'passIssued':
+      return 'passes'
+    case 'inbox':
+    case 'patrol':
+    case 'agent':
+    case 'developers':
+      return route.name
+    default:
+      return null
+  }
+}
 
 export function Rail() {
   const route = parseRoute(useHash())
@@ -251,17 +283,23 @@ export function Rail() {
       ? s.evidence.filter((e) => e.candidate.status === 'candidate').length
       : s.tasks.filter((t) => t.status === 'open').length
     : null
-  const current =
-    route.name === 'passes' || route.name === 'passIssued' ? 'passes' : route.name === 'inbox' ? 'inbox' : null
+  const current = railItemOf(route)
+  const nav = useRef<HTMLElement>(null)
+  // On a phone too narrow for every item the rail scrolls sideways: keep the current one in view.
+  useEffect(() => {
+    const el = nav.current
+    if (!el || el.scrollWidth <= el.clientWidth) return
+    el.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [current])
   return (
-    <nav className={`rail${collapsed ? ' collapsed' : ''}`} aria-label="Main">
+    <nav ref={nav} className={`rail${collapsed ? ' collapsed' : ''}`} aria-label="Main">
       <button
         className="logo"
         aria-expanded={!collapsed}
         aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}
         onClick={() => setCollapsed(!collapsed)}
       >
-        <img className="mark" src="/mark-rail.svg" alt="" width={30} height={30} />
+        <img className="mark" src={`${import.meta.env.BASE_URL}mark-rail.svg`} alt="" width={30} height={30} />
         {collapsed ? (
           <CaretLineRight className="arrow" size={28} weight="bold" aria-hidden="true" />
         ) : (
@@ -272,30 +310,32 @@ export function Rail() {
           <span className="sub">Elmina township</span>
         </span>
       </button>
-      <ul>
-        {NAV.map(({ href, route: id, label, Icon, note }) => (
-          <li key={id}>
-            <a
-              href={href}
-              className="rail-item"
-              aria-current={current === id ? 'page' : undefined}
-              title={note}
-              aria-description={note}
-            >
-              <span className="tile">
-                <Icon size={18} weight="bold" aria-hidden="true" />
-              </span>
-              <span className="label">{label}</span>
-              {id === 'inbox' && open !== null && open > 0 && (
-                <span className="count">
-                  {open}
-                  <span className="sr"> open</span>
+      {NAV.map((group, i) => (
+        <ul key={i}>
+          {group.map(({ href, route: id, label, Icon, note }) => (
+            <li key={id}>
+              <a
+                href={href}
+                className="rail-item"
+                aria-current={current === id ? 'page' : undefined}
+                title={note}
+                aria-description={note}
+              >
+                <span className="tile">
+                  <Icon size={18} weight="bold" aria-hidden="true" />
                 </span>
-              )}
-            </a>
-          </li>
-        ))}
-      </ul>
+                <span className="label">{label}</span>
+                {id === 'inbox' && open !== null && open > 0 && (
+                  <span className="count">
+                    {open}
+                    <span className="sr"> open</span>
+                  </span>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ))}
     </nav>
   )
 }

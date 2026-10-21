@@ -1,0 +1,473 @@
+/* The product pages (drone, agents, SDK, privacy): a claim on the morning sky over the lake, then calm, dense
+   chapters on an island with a sticky contents list, and one way into the demo at the end. */
+
+/* The hero: the landing page's dawn, still, under the claim. */
+.page-hero {
+  display: flex;
+  flex-direction: column;
+  background: var(--sky);
+}
+
+.page-hero-words {
+  padding: calc(12px + var(--bar-h) + clamp(32px, 9svh, 112px)) var(--margin) clamp(32px, 6svh, 64px);
+}
+
+.page-title {
+  max-width: 17ch;
+  font-size: var(--t-hero);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.page-line {
+  max-width: 56ch;
+  margin-top: 20px;
+  font-size: var(--t-lead);
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+@media (min-width: 640px) {
+  .page-hero .sim {
+    display: none;
+  }
+}
+
+.page-art {
+  width: 100%;
+  height: clamp(150px, 24svh, 280px);
+  object-fit: cover;
+  object-position: var(--art-x, 50%) 100%;
+}
+
+/* The chapters, with the contents list beside them on wide screens. */
+.page-body {
+  display: grid;
+  gap: 48px var(--gutter);
+  padding: clamp(56px, 9svh, 112px) var(--margin) var(--chapter);
+  background: var(--island);
+}
+
+.toc-head {
+  margin-bottom: 10px;
+  font-size: var(--t-small);
+  font-weight: 800;
+}
+
+.toc ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.toc a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--hairline);
+  border-radius: var(--radius);
+  font-size: var(--t-small);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 180ms var(--ease),
+    color 180ms var(--ease);
+}
+
+.toc a:hover {
+  background: var(--sky);
+}
+
+@media (min-width: 1024px) {
+  .page-body {
+    grid-template-columns: minmax(200px, 1fr) minmax(0, 3.4fr);
+  }
+
+  .toc {
+    position: sticky;
+    top: calc(12px + var(--bar-h) + 32px);
+    align-self: start;
+  }
+
+  .toc ol {
+    display: grid;
+    gap: 2px;
+  }
+
+  .toc a {
+    min-height: 40px;
+    padding: 0 12px;
+    border: 0;
+    color: var(--moss);
+  }
+
+  .toc a:hover,
+  .toc a[aria-current] {
+    background: var(--sky);
+    color: var(--ink);
+  }
+
+  .toc a[aria-current] {
+    font-weight: 800;
+  }
+}
+
+.chapters {
+  display: grid;
+  gap: clamp(80px, 12svh, 136px);
+  min-width: 0;
+  max-width: 960px;
+}
+
+.chapter {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  min-width: 0;
+}
+
+.chapter-title {
+  max-width: 24ch;
+  font-size: clamp(28px, 3vw, 44px);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.chapter .lead {
+  max-width: 52ch;
+}
+
+.chapter-sub {
+  margin-top: 16px;
+  font-size: var(--t-step);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.points {
+  display: grid;
+  gap: 10px;
+  max-width: 62ch;
+  padding-left: 1.2em;
+}
+
+.points li::marker {
+  color: var(--moss);
+}
+
+/* Inline code reads as a plate of data, never as a costume: the same face, bolder, on mist. */
+:where(.chapter, .closing) :not(pre) > code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--sky);
+  font-family: inherit;
+  font-size: 0.92em;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Spec tables scroll inside their own frame, so a wide one never widens the page. */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--hairline);
+  border-radius: var(--island-radius);
+  scrollbar-color: var(--slate) var(--island);
+}
+
+.spec {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-small);
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+.spec--wide {
+  min-width: 680px;
+}
+
+.spec th,
+.spec td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+  vertical-align: top;
+}
+
+.spec thead th {
+  background: var(--sky);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.spec tbody th {
+  font-weight: 700;
+}
+
+.spec tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.spec .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.spec code {
+  white-space: nowrap;
+}
+
+/* Code blocks: park-green plates, like the app's code plates, with a Copy button once JavaScript runs. */
+.code {
+  --focus: var(--rail-muted);
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--island-radius);
+  background: var(--rail);
+  color: var(--sky);
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 4px 4px 4px 20px;
+  border-bottom: 1px solid var(--rail-hover);
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--rail-muted);
+}
+
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--sky);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 180ms var(--ease);
+}
+
+.code-copy:hover {
+  background: var(--rail-hover);
+}
+
+.code-copy[hidden] {
+  display: none;
+}
+
+.code-copy .icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.code-copy .icon--done,
+.code-copy[data-copied] .icon--copy {
+  display: none;
+}
+
+.code-copy[data-copied] .icon--done {
+  display: block;
+  fill: var(--valid-night);
+}
+
+.code pre {
+  margin: 0;
+  padding: 18px 20px 22px;
+  overflow-x: auto;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  tab-size: 2;
+  scrollbar-color: var(--rail-muted) var(--rail);
+}
+
+.code pre:focus-visible {
+  outline-offset: -3px;
+}
+
+.code code {
+  font-family: inherit;
+  white-space: pre;
+}
+
+/* The drone page's priority score: each part as wide as its weight. */
+.weights {
+  display: grid;
+  gap: 12px;
+}
+
+.weights-formula {
+  font-size: var(--t-lead);
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  text-wrap: pretty;
+}
+
+.weights-bar {
+  display: flex;
+  gap: 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.weights-bar li {
+  display: flex;
+  flex: var(--w) 1 0;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 0;
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--sage);
+  font-size: var(--t-small);
+  line-height: 1.25;
+}
+
+.weights-bar li:nth-child(2) {
+  background: var(--rail);
+  color: var(--sky);
+}
+
+.weights-bar strong {
+  font-size: var(--t-step);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 639px) {
+  .weights-bar span {
+    display: none;
+  }
+}
+
+/* Two lists side by side: what machines may do, and what only people may do. */
+.split {
+  display: grid;
+  gap: 16px;
+}
+
+.split > div {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 24px;
+  border-radius: var(--island-radius);
+  background: var(--mineral);
+}
+
+.split > .split-people {
+  background: var(--rail);
+  color: var(--sage);
+}
+
+.split-people .chapter-sub {
+  color: var(--island);
+}
+
+.split-people .points li::marker {
+  color: var(--rail-muted);
+}
+
+.split .chapter-sub {
+  margin: 0;
+}
+
+@media (min-width: 720px) {
+  .split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* The privacy rules, as rows along one line, each with its sign. */
+.rules {
+  display: grid;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hairline);
+}
+
+.rules li {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 4px 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.rules .icon-plate {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  background: var(--rail);
+}
+
+.rules .icon-plate svg {
+  width: 24px;
+  height: 24px;
+  fill: var(--sky);
+}
+
+.rules-word {
+  font-size: var(--t-step);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.rules-fact {
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+/* Sources sit under what they support, small and plain. */
+.source-line {
+  font-size: var(--t-small);
+  color: var(--moss);
+  text-wrap: pretty;
+}
+
+.source-line a {
+  text-underline-offset: 3px;
+}
+
+/* The way out: one primary action, into the demo. */
+.closing {
+  display: grid;
+  justify-items: start;
+  gap: 20px;
+  padding: var(--chapter) var(--margin);
+  background: var(--sage);
+}
+
+.closing .body {
+  font-size: var(--t-lead);
+  line-height: 1.45;
+}
+
+.closing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}

@@ -6,13 +6,8 @@
     <title>Sign in · Safe Edge</title>
     <meta name="description" content="Open the simulated Safe Edge demo for Elmina as a guest." />
     <meta name="theme-color" content="#17302a" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;800&display=swap"
-    />
     <script type="module" src="/src/sign-in.ts"></script>
   </head>
   <body class="signin">
@@ -24,12 +19,25 @@
       <div class="signin-pitch">
         <p class="signin-line">Every water edge, closed and proven.</p>
         <p class="signin-meta">Elmina · simulated data</p>
+        <nav class="signin-pages" aria-label="Pages">
+          <a href="/drone">Drone</a>
+          <a href="/agent">Agent</a>
+          <a href="/sdk">SDK</a>
+          <a href="/privacy">Privacy</a>
+        </nav>
       </div>
       <img class="signin-art" src="/dawn.svg" alt="" />
     </aside>
 
     <main class="signin-main">
-      <a class="signin-back" href="/">← Back to Safe Edge</a>
+      <a class="signin-back" href="/">
+        <svg viewBox="0 0 256 256" width="16" height="16" fill="currentColor" aria-hidden="true">
+          <path
+            d="M228,128a12,12,0,0,1-12,12H69l51.52,51.51a12,12,0,0,1-17,17l-72-72a12,12,0,0,1,0-17l72-72a12,12,0,0,1,17,17L69,116H216A12,12,0,0,1,228,128Z"
+          />
+        </svg>
+        Back to Safe Edge
+      </a>
       <section class="signin-card" aria-labelledby="signin-title">
         <h1 id="signin-title" class="signin-title">Sign in</h1>
         <label class="signin-field">

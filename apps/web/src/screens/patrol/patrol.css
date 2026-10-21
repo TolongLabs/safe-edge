@@ -1,0 +1,207 @@
+/* Patrol screen. */
+.patrol-list-head h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 600;
+}
+.patrol-list-head p,
+.patrol-note {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.patrol-work .list ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.patrol-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.patrol-row:hover {
+  background: var(--bg-sunken);
+}
+.patrol-row[aria-current='true'] {
+  border-color: var(--bg-rail);
+  background: var(--bg-rail);
+  color: var(--text-on-rail);
+}
+.patrol-row-title {
+  font-weight: 600;
+  line-height: var(--lh-dense);
+}
+.patrol-row-meta {
+  grid-column: 1 / -1;
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-variant-numeric: tabular-nums;
+}
+.patrol-row[aria-current='true'] .patrol-row-meta {
+  color: var(--text-on-rail-muted);
+}
+
+.patrol-plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+.patrol-plan section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.patrol-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.patrol-head h2 {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+.patrol-plan h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: 600;
+}
+.patrol-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-variant-numeric: tabular-nums;
+}
+.patrol-facts dt {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.patrol-facts .chip {
+  margin-left: var(--space-2);
+}
+.patrol-holds,
+.patrol-readings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-variant-numeric: tabular-nums;
+}
+.patrol-holds li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+.patrol-holds p {
+  flex-basis: 100%;
+  color: var(--text-secondary);
+  max-width: 75ch;
+}
+.patrol-readings li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+}
+.patrol-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.patrol-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-variant-numeric: tabular-nums;
+}
+.patrol-table th,
+.patrol-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  text-align: right;
+  white-space: nowrap;
+}
+.patrol-table thead th {
+  vertical-align: bottom;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  font-weight: 500;
+  /* Two-word headers wrap, so the eight columns fit the island at desktop widths. */
+  white-space: normal;
+}
+.patrol-table th:first-child {
+  text-align: left;
+}
+.patrol-table tbody th {
+  min-width: 160px;
+  font-weight: 600;
+  white-space: normal;
+}
+.patrol-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.patrol-table td.unknown {
+  color: var(--state-unknown-fg);
+  font-weight: 600;
+}
+.patrol-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.patrol-actions .state,
+.patrol-actions .banner {
+  flex-basis: 100%;
+}
+/* The action row stays at the foot of the island while the plan scrolls. */
+.patrol-actions.sticky {
+  position: sticky;
+  bottom: calc(-1 * var(--island-padding));
+  margin: 0 calc(-1 * var(--island-padding)) calc(-1 * var(--island-padding));
+  padding: var(--space-4) var(--island-padding);
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-surface);
+}
+.patrol-actions .patrol-note {
+  flex: 1 1 240px;
+}
+
+@media (max-width: 600px) {
+  .patrol-head h2 {
+    font-size: var(--fs-h1);
+    line-height: var(--lh-h1);
+  }
+  .patrol-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .patrol-facts dd {
+    margin-bottom: var(--space-2);
+  }
+}
+/* Long refusals must not squeeze the state icon. */
+.patrol-screen :is(.state, .banner) > svg {
+  flex: none;
+}

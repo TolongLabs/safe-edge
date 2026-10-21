@@ -156,8 +156,7 @@
   gap: var(--space-3);
 }
 .fl-form label,
-.fl-form legend,
-.fl-inline {
+.fl-form legend {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -178,34 +177,14 @@
   gap: var(--space-2);
   font-weight: 400;
 }
-.fl-form input,
-.fl-form select,
-.fl-inline input,
-.fl-inline select {
-  min-height: 44px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  font: inherit;
-}
+/* Fields take app.css's field style; checkboxes and radios take the theme's colour scheme from :root. */
 .fl-form input[type='checkbox'],
 .fl-form input[type='radio'],
 .fl-options input[type='radio'] {
-  min-height: 0;
+  flex: none;
   width: 20px;
   height: 20px;
-  accent-color: var(--accent-default);
-  color-scheme: light dark;
-}
-:root[data-theme='light'] .fl-form input,
-:root[data-theme='light'] .fl-options input {
-  color-scheme: light;
-}
-:root[data-theme='dark'] .fl-form input,
-:root[data-theme='dark'] .fl-options input {
-  color-scheme: dark;
+  margin: 0;
 }
 .fl-pair > *,
 .fl-triple > *,
@@ -228,6 +207,9 @@
   flex: 1;
   min-width: 0;
   border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+.fl-unit:focus-within span {
+  border-color: var(--border-focus);
 }
 .fl-unit span {
   display: grid;
@@ -269,9 +251,10 @@
   left: auto;
   right: -2px;
 }
+/* The sample drawing stays light in Dark too, so proposed-work marks take its own ink, not the theme's text colour. */
 .fl-box.dashed {
   border-style: dashed;
-  border-color: var(--text-primary);
+  border-color: var(--art-post);
   outline: 0;
 }
 .fl-plate {
@@ -288,8 +271,8 @@
   font-weight: 600;
 }
 .fl-box.dashed .fl-plate {
-  background: var(--text-primary);
-  color: var(--bg-surface);
+  background: var(--art-post);
+  color: var(--art-sky);
 }
 .fl-photo figcaption {
   display: flex;
@@ -426,6 +409,10 @@
   gap: var(--space-2);
   font-weight: 600;
 }
+.fl-result svg,
+.fl-failed svg {
+  flex: none;
+}
 .fl-result.closed {
   color: var(--state-valid-fg);
 }
@@ -441,9 +428,53 @@
   min-height: 44px;
   display: flex;
   align-items: center;
+  gap: var(--space-2);
+  list-style: none;
 }
+.fl-propose summary::-webkit-details-marker {
+  display: none;
+}
+.fl-propose summary svg {
+  flex: none;
+  transition: transform 150ms ease-out;
+}
+.fl-propose[open] summary svg {
+  transform: rotate(90deg);
+}
+/* A field in the action row carries its label inside the box, so it lines up with the buttons on one 44 px row. */
 .fl-inline {
-  flex-direction: column;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding-left: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  font-weight: 500;
+  cursor: pointer;
+}
+.fl-inline:hover {
+  border-color: var(--text-secondary);
+}
+.fl-inline:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: inset 0 0 0 1px var(--border-focus);
+}
+.fl-inline select,
+.fl-inline input,
+.fl-inline select:focus,
+.fl-inline input:focus {
+  min-height: 42px;
+  padding-left: var(--space-2);
+  border: 0;
+  box-shadow: none;
+  background-color: transparent;
+  color: var(--text-primary);
+  font-size: var(--fs-body);
+  font-weight: 600;
 }
 
 /* Step 3 */
@@ -556,13 +587,16 @@
   .fl-option {
     padding: var(--space-4);
   }
-  .fl-bar > .btn,
-  .fl-inline {
+  .fl-bar > .btn {
     width: 100%;
+  }
+  .fl-inline {
+    flex: 1 1 100%;
   }
   .fl-inline select,
   .fl-inline input {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
   }
 }
 @media (max-width: 900px) {

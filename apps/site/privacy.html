@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy by design · Safe Edge</title>
+    <meta
+      name="description"
+      content="How Safe Edge's design handles people in frames: patrols watch edges, not people. Frames with people are discarded before storage; there is no face recognition, tracking or audio."
+    />
+    <meta name="theme-color" content="#e6eeea" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="module" src="/src/page.ts"></script>
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-eye-slash" viewBox="0 0 256 256">
+        <path
+          d="M56.88,31.930A12,12,0,1,0,39.12,48.07l16,17.65C20.67,88.66,5.72,121.58,5,123.13a12.08,12.08,0,0,0,0,9.75c.37.82,9.13,20.26,28.49,39.61C59.37,198.34,92,212,128,212a131.34,131.34,0,0,0,51-10l20.09,22.1a12,12,0,0,0,17.76-16.14ZM128,188c-29.590,0-55.47-10.73-76.91-31.88A130.69,130.69,0,0,1,29.52,128c5.27-9.31,18.79-29.9,42-44.29l90.09,99.11A109.33,109.33,0,0,1,128,188Zm123-55.12c-.36.81-9,20-28,39.16a12,12,0,1,1-17-16.9A130.48,130.48,0,0,0,226.48,128a130.36,130.36,0,0,0-21.57-28.12C183.46,78.73,157.59,68,128,68c-3.35,0-6.7.14-10,.42a12,12,0,1,1-2-23.91c3.93-.34,8-.51,12-.51,36,0,68.63,13.67,94.49,39.52,19.35,19.35,28.11,38.8,28.48,39.61A12.08,12.08,0,0,1,251,132.88Z"
+        />
+      </symbol>
+      <symbol id="i-sun-horizon" viewBox="0 0 256 256">
+        <path
+          d="M240,148H203.89c.07-1.33.11-2.66.11-4a76,76,0,0,0-152,0c0,1.34,0,2.67.11,4H16a12,12,0,0,0,0,24H240a12,12,0,0,0,0-24ZM76,144a52,52,0,0,1,104,0c0,1.34-.07,2.670-.17,4H76.17C76.07,146.67,76,145.34,76,144Zm144,56a12,12,0,0,1-12,12H48a12,12,0,0,1,0-24H208A12,12,0,0,1,220,200ZM12.62,92.21a12,12,0,0,1,15.17-7.59l12,4a12,12,0,1,1-7.58,22.77l-12-4A12,12,0,0,1,12.62,92.21Zm56-48.41a12,12,0,1,1,22.76-7.59l4,12A12,12,0,1,1,72.62,55.8Zm140,60a12,12,0,0,1,7.59-15.18l12-4a12,12,0,0,1,7.58,22.77l-12,4a12,12,0,0,1-15.17-7.59Zm-48-55.59,4-12a12,12,0,1,1,22.76,7.59l-4,12a12,12,0,1,1-22.76-7.59Z"
+        />
+      </symbol>
+      <symbol id="i-arrows-out" viewBox="0 0 256 256">
+        <path
+          d="M140,40V216a12,12,0,0,1-24,0V40a12,12,0,0,1,24,0ZM88,116H45l11.52-11.51a12,12,0,0,0-17-17l-32,32a12,12,0,0,0,0,17l32,32a12,12,0,0,0,17-17L45,140H88a12,12,0,0,0,0-24Zm160.49,3.51-32-32a12,12,0,0,0-17,17L211,116H168a12,12,0,0,0,0,24h43l-11.52,11.51a12,12,0,0,0,17,17l32-32A12,12,0,0,0,248.49,119.51Z"
+        />
+      </symbol>
+      <symbol id="i-house" viewBox="0 0 256 256">
+        <path
+          d="M222.14,105.85l-80-80a20,20,0,0,0-28.28,0l-80,80A19.86,19.86,0,0,0,28,120v96a12,12,0,0,0,12,12h64a12,12,0,0,0,12-12V164h24v52a12,12,0,0,0,12,12h64a12,12,0,0,0,12-12V120A19.86,19.86,0,0,0,222.14,105.85ZM204,204H164V152a12,12,0,0,0-12-12H104a12,12,0,0,0-12,12v52H52V121.65l76-76,76,76Z"
+        />
+      </symbol>
+      <symbol id="i-map-pin" viewBox="0 0 256 256">
+        <path
+          d="M128,60a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,60Zm0,64a20,20,0,1,1,20-20A20,20,0,0,1,128,124Zm0-112a92.1,92.1,0,0,0-92,92c0,77.36,81.64,135.4,85.12,137.83a12,12,0,0,0,13.76,0,259,259,0,0,0,42.18-39C205.15,170.57,220,136.37,220,104A92.1,92.1,0,0,0,128,12Zm31.3,174.71A249.35,249.35,0,0,1,128,216.89a249.35,249.35,0,0,1-31.3-30.18C80,167.37,60,137.31,60,104a68,68,0,0,1,136,0C196,137.31,176,167.37,159.3,186.71Z"
+        />
+      </symbol>
+      <symbol id="i-users" viewBox="0 0 256 256">
+        <path
+          d="M125.18,156.94a64,64,0,1,0-82.36,0,100.23,100.23,0,0,0-39.49,32,12,12,0,0,0,19.35,14.2,76,76,0,0,1,122.64,0,12,12,0,0,0,19.36-14.2A100.33,100.33,0,0,0,125.18,156.94ZM44,108a40,40,0,1,1,40,40A40,40,0,0,1,44,108Zm206.1,97.67a12,12,0,0,1-16.78-2.57A76.31,76.31,0,0,0,172,172a12,12,0,0,1,0-24,40,40,0,1,0-10.3-78.67,12,12,0,1,1-6.16-23.19,64,64,0,0,1,57.64,110.8,100.23,100.23,0,0,1,39.49,32A12,12,0,0,1,250.1,205.67Z"
+        />
+      </symbol>
+      <symbol id="i-tag" viewBox="0 0 256 256">
+        <path
+          d="M246.15,133.18,146.83,33.86A19.85,19.85,0,0,0,132.69,28H40A12,12,0,0,0,28,40v92.69a19.85,19.85,0,0,0,5.86,14.14l99.32,99.32a20,20,0,0,0,28.28,0l84.69-84.69A20,20,0,0,0,246.15,133.18Zm-98.83,93.17L52,131V52h79l95.32,95.32ZM104,88A16,16,0,1,1,88,72,16,16,0,0,1,104,88Z"
+        />
+      </symbol>
+    </svg>
+
+    <a class="skip" href="#content">Skip to the content</a>
+
+    <!-- site:header -->
+
+    <main id="main">
+      <section class="page-hero" id="top" aria-labelledby="page-title">
+        <div class="page-hero-words">
+          <h1 id="page-title" class="page-title">We watch edges, not people.</h1>
+          <p class="page-line">
+            Patrols aim at fences, covers, gratings and ring buoys. A frame with a person in it is discarded before it
+            is stored.
+          </p>
+          <p class="sim">
+            <span class="sim-label">Simulation</span> No drone has flown yet. The demo's flights are simulated.
+          </p>
+        </div>
+        <img class="page-art" src="/dawn.svg" alt="" style="--art-x: 85%" />
+      </section>
+
+      <div class="page-body" id="content">
+        <nav class="toc" aria-label="On this page">
+          <p class="toc-head">On this page</p>
+          <ol>
+            <li><a href="#rules">Seven rules</a></li>
+            <li><a href="#status">Built, simulated or planned</a></li>
+            <li><a href="#live">Before live capture</a></li>
+          </ol>
+        </nav>
+
+        <div class="chapters">
+          <section class="chapter" id="rules" aria-labelledby="rules-title">
+            <h2 id="rules-title" class="chapter-title">Seven rules for people in frames.</h2>
+            <p class="lead">
+              Safe Edge is a defect-inspection aid. It does not identify people, and it does not certify a water edge
+              safe.
+            </p>
+            <ul class="rules">
+              <li>
+                <span class="icon-plate" aria-hidden="true"
+                  ><svg><use href="#i-eye-slash" /></svg
+                ></span>
+                <p class="rules-word">Edges, not people.</p>
+                <p class="rules-fact">
+                  Patrols aim at assets. Frames that contain people are discarded before storage, so stored evidence
+                  never shows a person. There is no face recognition, tracking or audio.
+                </p>
+              </li>
+              <li>
+                <span class="icon-plate" aria-hidden="true"
+                  ><svg><use href="#i-sun-horizon" /></svg
+                ></span>
+                <p class="rules-word">Fly when the park is empty.</p>
+                <p class="rules-fact">
+                  Patrols run at first light or another agreed window, and hold for lightning and wet surfaces.
+                </p>
+              </li>
+              <li>
+                <span class="icon-plate" aria-hidden="true"
+                  ><svg><use href="#i-arrows-out" /></svg
+                ></span>
+                <p class="rules-word">50 m from people.</p>
+                <p class="rules-fact">
+                  Plans keep CAAM's 50 m separation from people, with zoom lenses and stand-off distance, and 30 m
+                  during take-off and landing. A camera station with people near it waits for a clear pass.
+                </p>
+              </li>
+              <li>
+                <span class="icon-plate" aria-hidden="true"
+                  ><svg><use href="#i-house" /></svg
+                ></span>
+                <p class="rules-word">No capture over homes.</p>
+                <p class="rules-fact">
+                  Geofences mark homes and playgrounds as no-capture zones. The planner drops any camera station whose
+                  frame would cover one.
+                </p>
+              </li>
+              <li>
+                <span class="icon-plate" aria-hidden="true"
+                  ><svg><use href="#i-map-pin" /></svg
+                ></span>
+                <p class="rules-word">No location in public photos.</p>
+                <p class="rules-fact">
+                  The team's real photos were taken with permission and no people in frame, and their location data is
+                  stripped from the public build.
+                </p>
+              </li>
+              <li>
+                <span class="icon-plate" aria-hidden="true"
+                  ><svg><use href="#i-users" /></svg
+                ></span>
+                <p class="rules-word">Two people per fix.</p>
+                <p class="rules-fact">
+                  The person who records a repair cannot accept it. The reviewer must differ from the installer and from
+                  the person who confirmed the finding.
+                </p>
+              </li>
+              <li>
+                <span class="icon-plate" aria-hidden="true"
+                  ><svg><use href="#i-tag" /></svg
+                ></span>
+                <p class="rules-word">Simulated means labelled.</p>
+                <p class="rules-fact">
+                  Every simulated flight, detection and repair in the demo carries a visible label, and every seeded
+                  record carries <code>simulated: true</code>.
+                </p>
+              </li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="status" aria-labelledby="status-title">
+            <h2 id="status-title" class="chapter-title">What is built, simulated or planned.</h2>
+            <p class="lead">Each rule says where it holds today. Nothing here has met a real drone flight.</p>
+            <div class="table-wrap" role="region" aria-labelledby="status-caption" tabindex="0">
+              <table class="spec spec--wide">
+                <caption id="status-caption" class="visually-hidden">
+                  Where each privacy rule holds today
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Rule</th>
+                    <th scope="col">Today</th>
+                    <th scope="col">Where</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Frames with people discarded</th>
+                    <td>Simulated</td>
+                    <td>The demo's scene marks each frame the privacy gate dropped, where the drone took it.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">No faces, tracking or audio</th>
+                    <td>By design</td>
+                    <td>Safe Edge has no such feature to switch on.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Flight windows and 50 m</th>
+                    <td>Built</td>
+                    <td>
+                      The patrol planner fits every plan to a window and keeps the distances; the flights are simulated.
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">No-capture zones</th>
+                    <td>Built</td>
+                    <td>The patrol planner treats homes and playgrounds as hard constraints.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">No location in public photos</th>
+                    <td>Required</td>
+                    <td>A requirement for every real team photo in the public demo build.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Two people per fix</th>
+                    <td>Built</td>
+                    <td>The core refuses it with <code>two_person_rule</code>, in the API and in the demo.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Simulated means labelled</th>
+                    <td>Built</td>
+                    <td>Every screen of the demo.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="chapter" id="live" aria-labelledby="live-title">
+            <h2 id="live-title" class="chapter-title">Before live capture.</h2>
+            <p class="lead">
+              This page describes the product's design. It is not a privacy policy, and it makes no compliance claim.
+            </p>
+            <p class="body">
+              Malaysia's PDPA can treat an identifiable photo as personal data. A data protection officer and an impact
+              assessment are likely before live capture, and the one-asset pilot lists a data protection impact
+              assessment among the approvals it needs. See the <a href="/drone#phases">drone phases</a>.
+            </p>
+            <p class="body">
+              Blur, notices or a permit alone would not make a patrol privacy-safe. Until a pilot flies under its
+              approvals, the phone patrol carries the loop: the walk crew photographs the same fixed viewpoints.
+            </p>
+          </section>
+        </div>
+      </div>
+
+      <section class="closing" aria-labelledby="closing-title">
+        <h2 id="closing-title" class="section-title">See the labels in the demo.</h2>
+        <p class="body">Every simulated flight, detection and repair in the demo says so on screen.</p>
+        <div class="closing-actions">
+          <a class="button button--ink" href="/sign-in">Open the demo</a>
+          <a class="button button--line" href="/drone">How patrols are planned</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- site:footer -->
+  </body>
+</html>

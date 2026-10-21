@@ -46,7 +46,7 @@ export function LoadingCard({ state }: { state: LoadState }) {
         {failed ? (
           <>
             <p style={{ margin: 0 }}>The Elmina simulation did not load: {state.message}</p>
-            <button type="button" onClick={state.onRetry} style={button(true)}>
+            <button type="button" onClick={state.onRetry} className={button(true)}>
               Retry
             </button>
           </>

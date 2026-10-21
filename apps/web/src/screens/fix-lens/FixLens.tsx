@@ -1,4 +1,4 @@
-import { Info, WarningCircle } from '@phosphor-icons/react'
+import { Info, PaperPlaneTilt, WarningCircle } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { NotInSession, Screen } from '../../shell/Shell'
 import type { WorkOrder } from '@safe-edge/contracts'
@@ -103,6 +103,9 @@ function Lens({ finding }: { finding: Finding }) {
     <Sent finding={finding} workOrder={workOrder} scene={meta.scene} lens={lens} when={when} />
   ) : (
     <div className="empty-state left">
+      <span className="icon-tile">
+        <PaperPlaneTilt size={24} weight="bold" aria-hidden="true" />
+      </span>
       <h2>No fix sent yet</h2>
       <p>Choose a fix in step 2. The work order shows here once the park manager has sent it.</p>
       <button className="btn" onClick={() => setStep(2)}>
