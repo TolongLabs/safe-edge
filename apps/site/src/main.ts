@@ -6,6 +6,7 @@ import './style.css'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Lenis from 'lenis'
+import { HERO_WORDS_IN, arrivesFresh, liftHeroWords, liftOffFooter, riseNightArt } from './motion.ts'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -125,24 +126,7 @@ for (const section of document.querySelectorAll<HTMLElement>('main > section[dat
   })
 }
 
-// On wider screens the footer waits under the page, a whole screen tall, and the page lifts off it.
-const footer = need<HTMLElement>('.footer')
-const fitFooter = () => {
-  root.style.setProperty('--footer-h', `${footer.offsetHeight}px`)
-  root.classList.toggle('has-reveal', window.matchMedia('(min-width: 900px)').matches)
-}
-fitFooter()
-new ResizeObserver(() => {
-  fitFooter()
-  ScrollTrigger.refresh()
-}).observe(footer)
-window.addEventListener('resize', fitFooter)
-// It only shows once the page starts to lift, so it never sits as hidden text under the sections above.
-const page = need<HTMLElement>('main')
-const showFooter = () =>
-  footer.toggleAttribute('data-shown', page.getBoundingClientRect().bottom < window.innerHeight + 1)
-window.addEventListener('scroll', showFooter, { passive: true })
-showFooter()
+const footer = liftOffFooter()
 
 const steps = gsap.utils.toArray<HTMLElement>('.step')
 let current = 0
@@ -181,11 +165,11 @@ motion.add(
     gsap.ticker.lagSmoothing(0)
 
     // First light: the drone flies the patrol line and stops over the gap it found.
-    if (document.visibilityState === 'visible' && window.scrollY < 40) {
+    if (arrivesFresh()) {
       setClock('06:30', 'Dawn patrol')
       gsap
         .timeline({ defaults: { ease: 'expo.out' } })
-        .from('.hero-words > *', { y: 28, opacity: 0, duration: 1.1, stagger: 0.08 })
+        .from('.hero-words > *', HERO_WORDS_IN)
         .from('.drone', { x: -980, y: -140, duration: 2.4, ease: 'power3.out' }, 0.15)
         .from('.beam', { opacity: 0, duration: 0.6 }, 2.2)
         .from('.flag-box', { opacity: 0, scale: 1.3, transformOrigin: '50% 50%', duration: 0.7 }, 2.4)
@@ -202,11 +186,7 @@ motion.add(
         scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
       })
     }
-    gsap.to('.hero-words', {
-      y: -90,
-      ease: 'none',
-      scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true }
-    })
+    liftHeroWords('.hero-words', '.hero')
 
     // The statement fills word by word, in reading order.
     gsap.fromTo(
@@ -289,18 +269,7 @@ motion.add(
       }
     }
 
-    // Night: as the page lifts away, the lake rises into view under it.
-    gsap.from('.night-art', {
-      yPercent: 24,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: 'main',
-        start: 'bottom bottom',
-        end: () => `+=${footer.offsetHeight}`,
-        scrub: true,
-        invalidateOnRefresh: true
-      }
-    })
+    riseNightArt(footer)
 
     return () => {
       gsap.ticker.remove(tick)

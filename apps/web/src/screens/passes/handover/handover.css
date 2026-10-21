@@ -1,0 +1,132 @@
+.handover-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow: auto;
+  background: var(--bg-canvas);
+  padding: var(--space-6);
+}
+
+.handover-sheet {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--text-primary);
+}
+
+.handover-sheet h1 {
+  font-size: var(--fs-h1);
+  line-height: var(--lh-h1);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.handover-sheet h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.handover-sheet table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+
+.handover-sheet th,
+.handover-sheet td {
+  padding: 6px var(--space-3);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.handover-sheet th {
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.simulated {
+  display: inline-block;
+  font-size: var(--fs-small);
+  line-height: var(--lh-small);
+  padding: 1px 6px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+
+.handover-actions {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  padding: var(--space-2) 0;
+  background: var(--bg-canvas);
+}
+
+.handover-actions .btn {
+  min-width: 0;
+}
+
+@media screen and (max-width: 600px) {
+  .handover-sheet .valid-from {
+    display: none;
+  }
+
+  .handover-layer {
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .handover-sheet {
+    padding: var(--space-4);
+  }
+
+  .handover-sheet table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+@media print {
+  body:has(.handover-layer) > #root {
+    display: none !important;
+  }
+
+  .handover-layer {
+    position: static;
+    overflow: visible;
+    padding: 0;
+    background: transparent;
+  }
+
+  .handover-sheet {
+    display: block;
+    max-width: none;
+    color-scheme: light;
+    color: CanvasText;
+    background: Canvas;
+  }
+
+  .handover-sheet h1,
+  .handover-sheet h2,
+  .handover-sheet th,
+  .handover-sheet td,
+  .simulated {
+    color: inherit;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
