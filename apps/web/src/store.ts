@@ -4,6 +4,7 @@ import {
   type EdgePass,
   type Finding,
   type OperationId,
+  type PatrolPlanner,
   type Role,
   type Task,
   type User,
@@ -11,10 +12,30 @@ import {
 } from '@safe-edge/contracts'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { useSyncExternalStore } from 'react'
+import { loadPlanner } from './planner'
 import { raiseSampleCandidates, type SampleMeta } from './sample'
 
+// Core asks its planner synchronously, but the browser has to fetch the planner's map layers first. So core gets a
+// stand-in that fails the way a missing planner does until the Patrol screen has loaded the real one.
+let planner: PatrolPlanner | null = null
+const lazyPlanner: PatrolPlanner = (input) => {
+  if (!planner) throw new Error('The patrol planner is not loaded yet: the Patrol screen loads it before planning')
+  return planner(input)
+}
+
+let plannerLoad: Promise<void> | null = null
+/** Loads the Elmina planner into the demo core once; a failed load can be retried. */
+export const loadPatrolPlanner = () =>
+  (plannerLoad ??= loadPlanner().then(
+    (loaded) => void (planner = loaded),
+    (error: unknown) => {
+      plannerLoad = null
+      throw error
+    }
+  ))
+
 /** The demo core running in the page, acting as the park manager (Farah Hashim). Screens act through `client()`. */
-export const demo = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager' })
+export const demo = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager', planner: lazyPlanner })
 
 const MANAGER = 'usr_manager'
 const KEY = 'safeEdge.signedIn'

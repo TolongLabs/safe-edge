@@ -68,11 +68,11 @@ export function Recorder({
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
       {take.state === 'recording' ? (
-        <button type="button" onClick={() => stop.current()} style={button(false)}>
+        <button type="button" onClick={() => stop.current()} className={button(false)}>
           Stop recording
         </button>
       ) : (
-        <button type="button" onClick={() => void record()} style={button(true)}>
+        <button type="button" onClick={() => void record()} className={button(true)}>
           {take.state === 'done' ? 'Record again' : 'Record'}
         </button>
       )}

@@ -421,8 +421,8 @@ Each state pairs a foreground and a tinted background, and always travels with i
 The desktop layout is a set of islands on the mineral canvas, at 1440 × 900 for the demo.
 
 - **Frame:** 12 px outer padding and 12 px gaps between islands.
-- **Rail:** 232 px expanded, 72 px collapsed. Clicking the logo toggles it (250 ms smart animate); on hover the logo shows the collapse or expand arrow. It holds three items: Inbox (with a count), Map and Passes.
-- **Top bar:** a 64 px island with the page title, one context line, the SIMULATION label and the profile button. Theme and language live in the profile menu.
+- **Rail:** 232 px expanded, 72 px collapsed. Clicking the logo toggles it (250 ms smart animate); on hover the logo shows the collapse or expand arrow. It holds Inbox (with a count), Patrol, Map and Passes, then, after a 1 px divider, Agent and Developers.
+- **Top bar:** a 64 px island with the page title, one context line, the SIMULATION label and the profile button. Theme and language live in the profile menu. Below 600 px the title takes the first row, and the screen's own actions, the SIMULATION label and the profile button follow on the second, in that reading order.
 - **Work area:** one or two islands that fill the rest. The Inbox uses a 340 px list beside a detail island; Fix Lens and Pass issued use one island.
 - **Inside an island:** 28 px padding (48 px on the Pass issued hero), 20 px between blocks. The primary action row sits at the foot of the island.
 - **Phone:** 390 × 844. A 56 px top bar, 16 px side padding, a card per group, and a pinned action bar with one full-width primary button and a status line under it.
@@ -476,7 +476,8 @@ Gentle, consistent corners: 4 px on chips, badges, plates and tags; 8 px on butt
 
 ### Inputs / Fields
 
-- **Style:** Raised White box, 1 px Field Edge border, 8 px corners, 44 px tall, 12 px padding. The label sits above in Label text; helper text sits below in Body Dense.
+- **Style:** Raised White box, 1 px Field Edge border, 8 px corners, 44 px tall, 12 px padding. The label sits above in Label text; helper text sits below in Body Dense. In an action row, a field may carry its label inside the box, at its left, so it lines up with the buttons beside it (the Inbox's "Severity").
+- **Select:** a native select in the field style, with a 16 px Phosphor Bold caret at its right edge. Its option list stays the platform's own, so it follows the theme and works with touch and screen readers.
 - **Focus:** a 2 px border in the focus colour and an accent caret.
 - **Error / Disabled:** a 2 px Danger Red border, with a warning icon and red helper text that says how to fix it.
 - **Number with unit:** the unit (cm) sits in its own segment inside the box. Measurements use centimetres.
@@ -484,10 +485,11 @@ Gentle, consistent corners: 4 px on chips, badges, plates and tags; 8 px on butt
 
 ### Navigation
 
-- **Rail:** Rail Green island. Items are 44 px rows with an 18 px Phosphor Bold icon in a tile, the label, and an optional count. The active item inverts to a Rail Mist pill with dark text. Collapsed, only the icon tiles show.
+- **Rail:** Rail Green island. Items are 44 px rows with an 18 px Phosphor Bold icon in a tile, the label, and an optional count. The active item inverts to a Rail Mist pill with dark text. Collapsed, only the icon tiles show. On a phone the rail is a row of 44 × 44 px icon targets: the current item shows its name under its icon, and the row scrolls sideways inside itself when it cannot fit.
 - **Top bar:** title in H2-weight text, one context line in Body Dense, then the SIMULATION label and the profile button pushed right.
 - **Profile menu:** name and role, then My profile, Settings, Language, Appearance, Help and Sign out.
 - **Phone top bar:** Rail Green bar with back, title, subtitle and a more button, each target 44 × 44 px.
+- **Map page:** the 3D scene is its own page, with a Back link at the top left to the screen that opened it. Its cards stay Light in both modes, because the scene draws its own day and night.
 
 ### Signature components
 
