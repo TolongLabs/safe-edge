@@ -1,6 +1,6 @@
 # Demo
 
-Templates for the submission media. The pitch deck template is an HTML copy of the organisers' presentation template, so the deck can be built as code and printed to PDF.
+Templates for the submission media. The pitch deck template is an HTML copy of the organisers' presentation template, so the deck can be built as code and printed to PDF. [`video.md`](/docs/demo/video.md) says how two agent sessions record the prototype and assemble the video.
 
 Contents:
 
