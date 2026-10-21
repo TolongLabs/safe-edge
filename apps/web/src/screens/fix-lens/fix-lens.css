@@ -540,7 +540,10 @@
   align-items: center;
   gap: var(--space-2);
 }
-.fl-lock svg {
+/* A banner's icon keeps its size when the sentence beside it wraps. */
+.fl-steps ~ .banner > svg,
+.fl-compare .banner > svg,
+.fl-mark .banner > svg {
   flex: none;
 }
 @media (max-width: 600px) {
