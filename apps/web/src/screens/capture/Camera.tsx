@@ -173,26 +173,26 @@ export function Camera({
               />
             </div>
           )}
+          {!off && scene && (
+            <label className="ghost-slider">
+              <span>Ghost</span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={ghost}
+                onChange={(e) => setGhost(Number(e.target.value))}
+                aria-valuetext={`${ghost} percent`}
+              />
+              <output>{ghost}%</output>
+            </label>
+          )}
           <p className="caption">
             {scene
               ? `${off ? 'Baseline' : 'Baseline ghost'}: sample illustration, not a site photo · simulated`
               : 'No baseline picture for this viewpoint yet'}
           </p>
         </div>
-        {!off && scene && (
-          <label className="ghost-slider">
-            <span>Ghost</span>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={ghost}
-              onChange={(e) => setGhost(Number(e.target.value))}
-              aria-valuetext={`${ghost} percent`}
-            />
-            <output>{ghost}%</output>
-          </label>
-        )}
         <p className="hint">
           {off ? 'Stand where the baseline was taken, take the photo with your phone, then choose it.' : note}
         </p>
@@ -204,12 +204,13 @@ export function Camera({
             <p className="hint">Photos are recorded as taken on a phone.</p>
           </>
         ) : (
-          <div className="shutter-row">
+          <>
             {gallery(false)}
-            <button className="shutter" aria-label="Take photo" disabled={!ready || busy} onClick={still}>
-              <CameraIcon size={28} weight="bold" aria-hidden="true" />
+            <button className="btn primary" disabled={!ready || busy} onClick={still}>
+              <CameraIcon size={22} weight="bold" aria-hidden="true" />
+              Take photo
             </button>
-          </div>
+          </>
         )}
       </div>
     </>

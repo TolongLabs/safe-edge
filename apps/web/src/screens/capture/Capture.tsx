@@ -249,10 +249,11 @@ function SegmentView({ segmentId }: { segmentId: string }) {
 
   const segment = state && 'segments' in state ? state.segments.find((s) => s.id === segmentId) : undefined
   const context = `${segment?.name ?? 'Loading'} · ${person(user.name)}`
+  const toSegments = { label: 'All segments', href: '#/capture' }
 
   if (!segment)
     return (
-      <Screen title="Capture" context={context}>
+      <Screen title="Capture" context={context} back={toSegments}>
         <main className="detail island capture" aria-label="Viewpoints">
           {state && 'error' in state ? (
             <>
@@ -276,15 +277,12 @@ function SegmentView({ segmentId }: { segmentId: string }) {
 
   if (segment.viewpoints.length === 0)
     return (
-      <Screen title="Capture" context={context}>
+      <Screen title="Capture" context={context} back={toSegments}>
         <main className="detail island center capture" aria-label="Viewpoints">
           <div className="empty-state">
             <Tray size={24} weight="bold" aria-hidden="true" />
             <h2>No viewpoints for this edge</h2>
             <p>Ask the park manager to set them. An edge nobody photographed stays unknown, not safe.</p>
-            <a className="back" href="#/capture">
-              All segments
-            </a>
           </div>
         </main>
       </Screen>
@@ -334,11 +332,12 @@ function SegmentView({ segmentId }: { segmentId: string }) {
   // Camera
   if (open && mayCapture)
     return (
-      <Screen title={open.name} context={`Viewpoint ${open.n} of ${views.length}`}>
+      <Screen
+        title="Capture"
+        context={`Viewpoint ${open.n} of ${views.length} · ${open.name}`}
+        back={{ label: 'Back to viewpoints', onClick: leaveViewpoint }}
+      >
         <main className="detail island capture" aria-label={`Viewpoint ${open.n}`}>
-          <button className="back" onClick={leaveViewpoint}>
-            Back to viewpoints
-          </button>
           {previewUrl && (
             <figure className="taken">
               <img src={previewUrl} alt="The photo you took, not yet sent" />
@@ -370,11 +369,8 @@ function SegmentView({ segmentId }: { segmentId: string }) {
   const offlineNow = !online
 
   return (
-    <Screen title="Capture" context={context}>
+    <Screen title="Capture" context={context} back={toSegments}>
       <main className="detail island capture" aria-label="Viewpoints">
-        <a className="back" href="#/capture">
-          All segments
-        </a>
         <ApiBanner />
         <CrewNote />
         {drainError && (

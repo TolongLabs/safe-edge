@@ -1,9 +1,9 @@
 /* Phone capture (390 px). Colours and sizes come from the tokens in app.css only. */
 .frame.phone > .detail.capture {
   gap: var(--space-3);
-  padding: var(--space-4);
-  padding-bottom: 0;
-  background: var(--bg-canvas);
+  /* 16 px sides on a phone; on a wide screen the phone column stays readable in the middle */
+  padding: var(--space-4) max(var(--space-4), (100% - 640px) / 2) 0;
+  background-color: var(--bg-canvas);
 }
 .capture h2 {
   font-size: var(--fs-h2);
@@ -21,20 +21,6 @@
   background: var(--bg-surface);
   color: var(--text-primary);
   font-size: var(--fs-body);
-}
-.capture .back {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-start;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--accent-default);
-  font: inherit;
-  font-weight: 600;
-  text-decoration: underline;
-  cursor: pointer;
 }
 .capture .banner {
   align-items: flex-start;
@@ -174,19 +160,29 @@ div.capture .row,
   font-weight: 600;
 }
 .ghost-slider {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  right: var(--space-2);
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: var(--fs-small);
   font-weight: 600;
 }
 .ghost-slider input {
   flex: 1;
+  min-width: 0;
   min-height: 44px;
   accent-color: var(--accent-default);
 }
 .ghost-slider output {
-  min-width: 3ch;
+  min-width: 4ch;
   text-align: right;
 }
 .taken img {
@@ -220,33 +216,7 @@ div.capture .row,
   width: 100%;
   min-height: 52px;
 }
-.capture .shutter-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-.capture .shutter-row .btn {
-  width: auto;
-}
-.capture .shutter {
-  display: grid;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  border: 4px solid var(--accent-default);
-  border-radius: 50%;
-  background: var(--bg-surface);
-  color: var(--accent-default);
-  cursor: pointer;
-}
-.capture .shutter:disabled {
-  border-color: var(--border-default);
-  color: var(--text-disabled);
-  cursor: not-allowed;
-}
-.capture .gallery:focus-within,
-.capture .shutter:focus-visible {
+.capture .gallery:focus-within {
   outline: none;
   box-shadow: var(--focus-ring);
 }
