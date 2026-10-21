@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drone patrols · Safe Edge</title>
+    <meta
+      name="description"
+      content="How Safe Edge plans drone patrols over township water edges: ranked segments, a battery-aware route, flight windows, CAAM's 50 m separation and a remote pilot who can always intervene."
+    />
+    <meta name="theme-color" content="#e6eeea" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="module" src="/src/page.ts"></script>
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-copy" viewBox="0 0 256 256">
+        <path
+          d="M216,28H88A12,12,0,0,0,76,40V76H40A12,12,0,0,0,28,88V216a12,12,0,0,0,12,12H168a12,12,0,0,0,12-12V180h36a12,12,0,0,0,12-12V40A12,12,0,0,0,216,28ZM156,204H52V100H156Zm48-48H180V88a12,12,0,0,0-12-12H100V52H204Z"
+        />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 256 256">
+        <path
+          d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"
+        />
+      </symbol>
+    </svg>
+
+    <a class="skip" href="#content">Skip to the content</a>
+
+    <!-- site:header -->
+
+    <main id="main">
+      <section class="page-hero" id="top" aria-labelledby="page-title">
+        <div class="page-hero-words">
+          <h1 id="page-title" class="page-title">Automated patrols. Never autonomous.</h1>
+          <p class="page-line">
+            The planner decides which water edges to fly and when. A licensed remote pilot approves every flight and can
+            take control at any time.
+          </p>
+          <p class="sim">
+            <span class="sim-label">Simulation</span> The demo flies a simulated drone over real Elmina map data.
+          </p>
+        </div>
+        <img class="page-art" src="/dawn.svg" alt="" style="--art-x: 40%" />
+      </section>
+
+      <div class="page-body" id="content">
+        <nav class="toc" aria-label="On this page">
+          <p class="toc-head">On this page</p>
+          <ol>
+            <li><a href="#planner">The ranking</a></li>
+            <li><a href="#route">The route</a></li>
+            <li><a href="#windows">Flight windows</a></li>
+            <li><a href="#pilot">Separation and the pilot</a></li>
+            <li><a href="#export">Mission export</a></li>
+            <li><a href="#phases">Phases</a></li>
+            <li><a href="#phone">Phone patrol</a></li>
+            <li><a href="#subang">Elmina and Subang</a></li>
+          </ol>
+        </nav>
+
+        <div class="chapters">
+          <section class="chapter" id="planner" aria-labelledby="planner-title">
+            <h2 id="planner-title" class="chapter-title">Every segment gets a score.</h2>
+            <p class="lead">
+              The planner splits each water edge into segments and ranks them, so the next patrol flies where the risk
+              has grown.
+            </p>
+            <p class="body">
+              Each segment has a side, a length, the views it needs and the items it should hold: fence runs, covers,
+              gratings, gates, ring buoys and signs. From the camera footprint and overlap, the planner derives offset
+              flight lines and camera stations for every selected segment.
+            </p>
+            <figure class="weights">
+              <p class="weights-formula">
+                priority = 0.25 × expiry + 0.35 × reviewed flag + 0.25 × rain + 0.15 × water level
+              </p>
+              <ol class="weights-bar" aria-hidden="true">
+                <li style="--w: 25"><strong>0.25</strong><span>Expiry</span></li>
+                <li style="--w: 35"><strong>0.35</strong><span>Reviewed flag</span></li>
+                <li style="--w: 25"><strong>0.25</strong><span>Rain</span></li>
+                <li style="--w: 15"><strong>0.15</strong><span>Water level</span></li>
+              </ol>
+            </figure>
+            <div class="table-wrap" role="region" aria-labelledby="score-caption" tabindex="0">
+              <table class="spec">
+                <caption id="score-caption" class="visually-hidden">
+                  The parts of a segment's priority score
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Part</th>
+                    <th scope="col" class="num">Weight</th>
+                    <th scope="col">What it reads</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Expiry</th>
+                    <td class="num">0.25</td>
+                    <td>The segment's pass expiry</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Reviewed flag</th>
+                    <td class="num">0.35</td>
+                    <td>The highest human-reviewed open flag on the segment</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Rain</th>
+                    <td class="num">0.25</td>
+                    <td>
+                      Recent rain, in the JPS one-hour categories: light 1–10 mm, moderate 11–30 mm, heavy 31–60 mm,
+                      very heavy above 60 mm
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Water level</th>
+                    <td class="num">0.15</td>
+                    <td>The latest water level reading</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body">
+              Each part runs from 0 to 1, and the screen shows every part. A missing or stale input shows “unknown” and
+              asks for review; it never scores zero. The weights are a product hypothesis, to tune with SDP.
+            </p>
+          </section>
+
+          <section class="chapter" id="route" aria-labelledby="route-title">
+            <h2 id="route-title" class="chapter-title">A route the battery can fly.</h2>
+            <p class="lead">
+              The route grows one segment at a time, taking the best priority per watt-hour, until the battery says
+              stop.
+            </p>
+            <ul class="points">
+              <li>Each step adds the feasible task with the highest added priority per added watt-hour.</li>
+              <li>The drone always keeps a return path to its dock, with a battery reserve.</li>
+              <li>Geofences are hard constraints: no-fly areas, and homes and playgrounds as no-capture zones.</li>
+              <li>Segments left out are listed, each with its reason.</li>
+            </ul>
+            <p class="body">The battery model in the simulation is a stated assumption until an aircraft is chosen.</p>
+            <h3 class="chapter-sub">When the plan changes</h3>
+            <p class="body">
+              The planner re-plans the part of the route not yet flown, and re-orders only uncommitted stops, when:
+            </p>
+            <ul class="points">
+              <li>a JPS heavy-rain reading or a data.gov.my weather warning comes in;</li>
+              <li>a manager confirms a new flag;</li>
+              <li>a pass comes within 30 days of expiry;</li>
+              <li>someone reports damage;</li>
+              <li>a repair is completed, which queues a re-test patrol.</li>
+            </ul>
+          </section>
+
+          <section class="chapter" id="windows" aria-labelledby="windows-title">
+            <h2 id="windows-title" class="chapter-title">Fly when the park is empty.</h2>
+            <p class="lead">
+              Every plan fits an agreed flight window, and holds when the weather or the airspace says no.
+            </p>
+            <div class="table-wrap" role="region" aria-labelledby="windows-caption" tabindex="0">
+              <table class="spec">
+                <caption id="windows-caption" class="visually-hidden">
+                  Flight windows and holds
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Window or hold</th>
+                    <th scope="col">What the plan does</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">First light</th>
+                    <td>The default window, while the park is empty.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Next dry window</th>
+                    <td>
+                      No launch above the dock's 2 mm/h rain limit. After heavy rain, the next dry morning comes first.
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Lightning hold</th>
+                    <td>No launch during a lightning warning.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Altitude cap</th>
+                    <td>The plan carries the altitude cap that air traffic control sets.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body">
+              Subang averaged 211.8 rain days a year from 2020 to 2024 and logged 289 lightning days in 2024, so patrols
+              fly the next dry window, usually the next morning.
+            </p>
+          </section>
+
+          <section class="chapter" id="pilot" aria-labelledby="pilot-title">
+            <h2 id="pilot-title" class="chapter-title">50 m from people. A pilot who can always intervene.</h2>
+            <p class="lead">
+              Flights are automated, never fully autonomous. CAAM does not allow operations where the remote pilot
+              cannot intervene.
+            </p>
+            <p class="body">
+              A plan becomes a flight only after a user with the pilot role approves it. A patrol from an unapproved
+              plan cannot start: the API refuses it and names the rule, <code>plan_not_approved</code>.
+            </p>
+            <p class="body">The whole flight keeps the distances of CAR 2016 regulation 143:</p>
+            <div class="table-wrap" role="region" aria-labelledby="distance-caption" tabindex="0">
+              <table class="spec spec--wide">
+                <caption id="distance-caption" class="visually-hidden">
+                  Separation distances the planner keeps
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col" class="num">Distance</th>
+                    <th scope="col">From</th>
+                    <th scope="col">When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row" class="num">50 m</th>
+                    <td>People, vehicles and structures not under the pilot's control</td>
+                    <td>At camera stations, along flight lines and on transits</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="num">30 m</th>
+                    <td>People</td>
+                    <td>During the climb from the dock and the descent onto it</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" class="num">150 m</th>
+                    <td>An open-air assembly of more than 1,000 persons</td>
+                    <td>The whole flight</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body">
+              A camera station with people near it waits for a clear pass or moves to a longer zoom stand-off. A stop
+              whose transit passes people waits for them, and the dock holds take-off while its climb or transits are
+              not clear. The pilot or observer confirms the path is clear.
+            </p>
+          </section>
+
+          <section class="chapter" id="export" aria-labelledby="export-title">
+            <h2 id="export-title" class="chapter-title">Missions export, marked not flight-ready.</h2>
+            <p class="lead">
+              A planned route exports as a DJI WPML KMZ and a QGroundControl <code>.plan</code>, both stamped “not
+              flight-ready”.
+            </p>
+            <div class="table-wrap" role="region" aria-labelledby="export-caption" tabindex="0">
+              <table class="spec">
+                <caption id="export-caption" class="visually-hidden">
+                  Mission export formats
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Format</th>
+                    <th scope="col">Files</th>
+                    <th scope="col">For</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">DJI WPML KMZ</th>
+                    <td><code>wpmz/template.kml</code>, <code>wpmz/waylines.wpml</code></td>
+                    <td>DJI Pilot 2</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">QGroundControl plan</th>
+                    <td><code>.plan</code> JSON</td>
+                    <td>QGroundControl</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body">
+              Every file says NOT FLIGHT-READY: a format sample generated from a Safe Edge patrol plan, not validated on
+              any aircraft or ground station. Neither format holds a time window or a hold, so the notice carries the
+              plan's window and the places that wait for a person to confirm the path clear. A remote pilot reviews and
+              approves every live flight.
+            </p>
+            <div class="code">
+              <div class="code-head">
+                <span>Shell, from the repository</span>
+                <button class="code-copy" type="button" hidden>
+                  <svg class="icon icon--copy" aria-hidden="true"><use href="#i-copy" /></svg>
+                  <svg class="icon icon--done" aria-hidden="true"><use href="#i-check" /></svg>
+                  <span class="code-copy-label" aria-live="polite">Copy</span>
+                </button>
+              </div>
+              <pre tabindex="0"><code># Plan a demo patrol over the real Elmina water edges; write the KMZ and the .plan
+bun run export:mission ./missions
+
+# Open the .plan with MAVSDK's QGroundControl importer, as CI does
+bun run check:qgc-plan</code></pre>
+            </div>
+          </section>
+
+          <section class="chapter" id="phases" aria-labelledby="phases-title">
+            <h2 id="phases-title" class="chapter-title">From simulation to docked patrols.</h2>
+            <p class="lead">Today the drone is a labelled simulation. Real flights wait for their approvals.</p>
+            <div class="table-wrap" role="region" aria-labelledby="phases-caption" tabindex="0">
+              <table class="spec spec--wide">
+                <caption id="phases-caption" class="visually-hidden">
+                  Drone integration phases
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Phase</th>
+                    <th scope="col">When</th>
+                    <th scope="col">How it flies</th>
+                    <th scope="col">What it needs</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">0. Hackathon simulation</th>
+                    <td>By 23 Oct 2026</td>
+                    <td>No real flight. A CAAM Standard ATF needs at least 14 working days.</td>
+                    <td>Labelled simulation on real Elmina map data, plus one real phone patrol at a permitted site</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">0.5. Phone patrol</th>
+                    <td>From the start, and wherever a drone cannot fly</td>
+                    <td>The walk crew photographs the fixed viewpoints each week on a phone</td>
+                    <td>SDP permission and a photo protocol; no aviation approval</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">1. Pilot, one water asset</th>
+                    <td>About 2 months of approvals, then 8 weeks of flying</td>
+                    <td>
+                      Visual-line-of-sight patrols by a licensed hired operator, bundling several assets per sortie,
+                      plus the next dry window after heavy rain
+                    </td>
+                    <td>
+                      Standard ATF (RM250 per aircraft per location area, up to 90 days), SDP landowner letter, JUPEM
+                      imagery approval where required, MBSA's drone request, a data protection impact assessment, Subang
+                      air-traffic coordination and a remote-pilot SOP
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">2. Docked patrols</th>
+                    <td>Only if CAAM accepts a safety case for a residential control zone</td>
+                    <td>
+                      A dock on a facility roof (a management office or Elmina Lakeside Mall, not the open park)
+                      launches supervised BVLOS patrols
+                    </td>
+                    <td>A CAAM Special UAS Project with a SORA or PDRA safety case and liability insurance</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="chapter" id="phone" aria-labelledby="phone-title">
+            <h2 id="phone-title" class="chapter-title">No drone? The phone patrol.</h2>
+            <p class="lead">
+              The protocol, not the aircraft, is the product. Where a drone cannot fly, the walk crew captures the same
+              fixed viewpoints on a phone.
+            </p>
+            <p class="body">
+              A phone screen walks the crew to each fixed viewpoint, ghosts the baseline photo over the camera, and
+              sends the new photo into Edge Watch exactly like a drone image. The Inbox, Fix Lens and the proof stay the
+              same. It runs today with no aviation approval, so a pilot can start before the first flight.
+            </p>
+            <p class="body">
+              The proposed thresholds to stop or scale back the drone layer: false flags stay above 10 per patrol by
+              week 4, less than 80% of the planned edge length is inspected, or an approval is refused. The phone patrol
+              then carries the loop.
+            </p>
+          </section>
+
+          <section class="chapter" id="subang" aria-labelledby="subang-title">
+            <h2 id="subang-title" class="chapter-title">Elmina sits on the Subang approach.</h2>
+            <p class="lead">
+              A mapped point in Elmina Central Park is about 6.5 km from Subang airport, inside its Class C control
+              zone.
+            </p>
+            <p class="body">
+              In August 2023 an aircraft crashed in Elmina two minutes before its scheduled landing at Subang. Expect
+              altitude caps, per-flight calls to air traffic control and refused windows. None of CAAM's published dock
+              approvals is in a residential control zone.
+            </p>
+            <p class="body">
+              Docks already fly in Malaysia: CAAM has published dock-based BVLOS approvals at a Rawang warehouse (2025)
+              and at Bintulu Port and Samalaju (2026). Each is site-specific, so Elmina needs its own case.
+            </p>
+            <p class="body">
+              The core stays vendor-neutral: the same core drives a simulator, a DJI dock through the Cloud API or an
+              open autopilot through MAVLink. See the <a href="/sdk#providers">provider adapters</a>.
+            </p>
+            <p class="source-line">
+              Crash report:
+              <a href="https://www.nst.com.my/amp/news/nation/2023/08/944279/elmina-air-crash-what-we-know-so-far"
+                >New Straits Times, August 2023</a
+              >.
+            </p>
+          </section>
+        </div>
+      </div>
+
+      <section class="closing" aria-labelledby="closing-title">
+        <h2 id="closing-title" class="section-title">See a patrol on the map.</h2>
+        <p class="body">
+          The demo's map shows a simulated patrol over real Elmina map data, and labels every simulated thing.
+        </p>
+        <div class="closing-actions">
+          <a class="button button--ink" href="/sign-in">Open the demo</a>
+          <a class="button button--line" href="/privacy">How patrols protect privacy</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- site:footer -->
+  </body>
+</html>

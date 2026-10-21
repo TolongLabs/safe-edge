@@ -10,6 +10,7 @@
 import { $ } from 'bun'
 import { readdir } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import { CLEAN_PATHS } from '../apps/site/chrome.ts'
 
 const target = process.argv[2]
 if (!target) throw new Error('Usage: bun run build:demo-site <dir outside the repository>')
@@ -27,7 +28,8 @@ await Bun.write(
   JSON.stringify(
     {
       version: 3,
-      routes: [{ src: '^/sign-in/?$', dest: '/sign-in.html' }, { handle: 'filesystem' }]
+      // /sign-in and the product pages (/drone, /sdk, ...) serve their .html file.
+      routes: [...CLEAN_PATHS.map((path) => ({ src: `^/${path}/?$`, dest: `/${path}.html` })), { handle: 'filesystem' }]
     },
     null,
     2
