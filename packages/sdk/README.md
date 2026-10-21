@@ -127,3 +127,4 @@ try {
 
 - `SafeEdgeDeniedError`: a 403. `rule` is the `PolicyRule` that refused it (`role_forbidden`, `two_person_rule`, `one_way_rule` and so on).
 - `SafeEdgeApiError`: `status` and `error` for `invalid_input` (400), `unauthenticated` (401), `not_found` (404) and the API's other contract errors.
+- `SafeEdgeHttpError` (http transport only): `status` of an answer with no JSON body, so not the Safe Edge API's. A wrong base URL (one without `/v1`), a proxy page or the server's own plain-text 500 throw it.

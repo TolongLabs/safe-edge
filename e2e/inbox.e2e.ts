@@ -68,7 +68,7 @@ test('AC1 S1 card shows its evidence', async ({ page }) => {
   await expect(c.getByRole('heading', { name: /Fence panel 4 missing/ })).toBeVisible()
   await expect(c.getByRole('img', { name: /Before image/ })).toBeVisible()
   await expect(c.getByRole('img', { name: /After image/ })).toBeVisible()
-  await expect(c.getByRole('img', { name: 'Flagged region: Fence panel 4 missing' })).toBeVisible()
+  await expect(c.getByRole('img', { name: 'Flagged region: Fence panel 4 missing', exact: true })).toBeVisible()
   await expect(c.getByRole('img', { name: 'Close-up of the flagged region: Fence panel 4 missing' })).toBeVisible()
   await expect(c.getByText(/^Dotted: as in the \d+ \w+ baseline$/)).toBeVisible()
   await expect(c.getByText('Elmina Central Park lake, segment 12')).toBeVisible()

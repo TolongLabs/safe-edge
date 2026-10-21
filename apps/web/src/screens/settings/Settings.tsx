@@ -1,4 +1,5 @@
 import { CheckCircle, LockSimple, WarningCircle } from '@phosphor-icons/react'
+import { SafeEdgeApiError } from '@safe-edge/sdk'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { anthropicFailure, checkAnthropicKey } from '../../agent'
 import {
@@ -176,7 +177,10 @@ function LiveApiCard() {
     } catch (error) {
       const text = liveFailure(error, url)
       if (text === null) setFatal({ error })
-      else setCheck({ kind: 'error', field: error instanceof TypeError ? 'url' : 'token', text })
+      else {
+        const refused = error instanceof SafeEdgeApiError && error.status === 401
+        setCheck({ kind: 'error', field: refused ? 'token' : 'url', text })
+      }
     }
   }
 

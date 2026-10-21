@@ -1,7 +1,7 @@
 import { Key, Robot, WarningCircle } from '@phosphor-icons/react'
 import type { SafeEdgeAgent } from '@safe-edge/agent-tools/claude'
 import type { AgentStopped } from '@safe-edge/contracts'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { anthropicFailure, demoAgent, isCancelled } from '../../agent'
 import { useSettings } from '../../settings'
 import './agent-run.css'
@@ -18,6 +18,8 @@ export function useAgentRun() {
   const [problem, setProblem] = useState<AgentProblem | null>(null)
   const [fatal, setFatal] = useState<{ error: unknown } | null>(null)
   const abort = useRef<AbortController | null>(null)
+  // A screen that closes mid-run (another card, Reset demo, another page) stops it: no more calls billed to the key.
+  useEffect(() => () => abort.current?.abort(), [])
   if (fatal) throw fatal.error
 
   /**

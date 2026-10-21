@@ -346,7 +346,20 @@ export function Report({
               </button>
               <button
                 className="btn"
-                onClick={() => download('monthly-report.json', 'application/json', JSON.stringify(latest, null, 2))}
+                onClick={() =>
+                  download(
+                    'monthly-report.json',
+                    'application/json',
+                    // An agent's draft carries the same label out of the page as on it.
+                    JSON.stringify(
+                      latestByline
+                        ? { ...latest, agent: { label: 'AI suggestion, unvalidated', ...latestByline } }
+                        : latest,
+                      null,
+                      2
+                    )
+                  )
+                }
               >
                 JSON
               </button>

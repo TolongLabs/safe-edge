@@ -398,7 +398,7 @@ function Ask({ users, onRan }: { users: User[]; onRan: () => void }) {
               <span>
                 {asked.text === ''
                   ? 'Stopped before the agent wrote anything.'
-                  : 'Stopped. The text above is unfinished and was not checked for sources.'}
+                  : 'Stopped. The agent’s text above is unfinished, unvalidated and was not checked for sources.'}
               </span>
             </p>
           )}

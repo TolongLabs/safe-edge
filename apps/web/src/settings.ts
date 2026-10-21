@@ -1,5 +1,5 @@
 import type { Actor } from '@safe-edge/contracts'
-import { createSafeEdgeClient, SafeEdgeApiError, SafeEdgeDeniedError } from '@safe-edge/sdk'
+import { createSafeEdgeClient, SafeEdgeApiError, SafeEdgeDeniedError, SafeEdgeHttpError } from '@safe-edge/sdk'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 
 // The person's own keys for this demo (the Settings screen): an Anthropic API key that runs the agent in the page, and
@@ -84,6 +84,8 @@ export function liveFailure(error: unknown, baseUrl: string): string | null {
     return `The API refused this token (401): ${error.message}. Print one with bun run dev:token usr_manager.`
   if (error instanceof SafeEdgeApiError) return `The API answered ${error.status} ${error.error}: ${error.message}`
   if (error instanceof SafeEdgeDeniedError) return `The API refused this (${error.rule}): ${error.message}`
+  if (error instanceof SafeEdgeHttpError)
+    return `${baseUrl} answered ${error.status}, but not as a Safe Edge API. Check that it is the API’s address, ending in /v1.`
   return null
 }
 

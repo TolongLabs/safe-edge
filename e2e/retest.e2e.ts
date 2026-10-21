@@ -213,10 +213,11 @@ test('AC82-2 and AC82-4 the reviewer checks, signs, and the pass shows where it 
   ).toBeVisible()
   await expect(page.getByText('Sample reading, not measured on site')).toHaveCount(2)
   await expect(page.getByText('Sample illustration, not a site photo')).toBeVisible()
+  // Phone screens sit on the canvas with white cards, in both themes.
   const main = page.getByRole('main')
-  await expect(main).toHaveCSS('background-color', 'rgb(251, 252, 251)')
+  await expect(main).toHaveCSS('background-color', 'rgb(231, 235, 232)')
   await page.emulateMedia({ colorScheme: 'dark' })
-  await expect(main).toHaveCSS('background-color', 'rgb(28, 41, 37)')
+  await expect(main).toHaveCSS('background-color', 'rgb(17, 26, 23)')
   const sign = page.getByRole('button', { name: 'Sign and issue the pass' })
   await expect(sign).toBeDisabled()
   const total = REPAIR_CHECKS.length
@@ -364,7 +365,7 @@ test('AC82-2 a failed re-test reopens the finding and a new fix can be sent', as
   await signInAs(page, 'Hafiz Rahman')
   await page.goto('demo/#/retest')
   await expect(page.getByRole('heading', { name: 'Repairs for you' })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Fence panel 4 missing.*submitted.*Start work/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Fence panel 4 missing.*Submitted.*Start work/ })).toBeVisible()
 })
 
 test.describe('AC82-6 the guest link', () => {
