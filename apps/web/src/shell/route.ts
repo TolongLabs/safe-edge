@@ -7,9 +7,15 @@ export type Route =
   | { name: 'passIssued'; passId: string }
   | { name: 'retest'; workOrderId: string | null }
   | { name: 'capture'; segmentId: string | null }
+  | { name: 'patrol' }
+  | { name: 'agent' }
+  | { name: 'developers' }
   | { name: 'notFound' }
 
-/** Hash routes: `#/inbox` (also empty), `#/fix-lens[/id]`, `#/passes[/id]`, `#/retest[/id]`, `#/capture[/id]`. */
+/**
+ * Hash routes: `#/inbox` (also empty), `#/fix-lens[/id]`, `#/passes[/id]`, `#/retest[/id]`, `#/capture[/id]`,
+ * `#/patrol`, `#/agent`, `#/developers`.
+ */
 export function parseRoute(hash: string): Route {
   let parts: string[]
   try {
@@ -33,6 +39,10 @@ export function parseRoute(hash: string): Route {
       return { name: 'retest', workOrderId: id ?? null }
     case 'capture':
       return { name: 'capture', segmentId: id ?? null }
+    case 'patrol':
+    case 'agent':
+    case 'developers':
+      return id === undefined ? { name: head } : { name: 'notFound' }
     default:
       return { name: 'notFound' }
   }

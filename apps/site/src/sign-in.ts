@@ -1,3 +1,4 @@
+import './fonts.ts'
 import './base.css'
 import './sign-in.css'
 

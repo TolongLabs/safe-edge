@@ -1,10 +1,23 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
-// The scene's frame: a branded card while it loads or when it fails, and a small strip that says what the mouse or
-// fingers do, in place of a controls toggle.
+// The scene's frame: a branded card while it loads or when it fails, a small strip that says what the mouse or
+// fingers do, in place of a controls toggle, and a way back to the app. The offline fixture fails any test that
+// fetched from outside, fonts included.
 
 const MOUSE = 'LMB rotate · MMB zoom · RMB pan'
 const TOUCH = 'Drag to rotate · Pinch to zoom · Two fingers to pan'
+
+test('the map has a way back to the app', async ({ page }) => {
+  await page.goto('demo/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible()
+  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Map' }).click()
+  await expect(page.locator('canvas')).toBeVisible({ timeout: 90_000 })
+  await page.getByRole('link', { name: 'Back to Safe Edge' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible()
+  // Opened directly, Back links to the app instead of leaving the site.
+  await page.goto('demo/scene.html')
+  await expect(page.getByRole('link', { name: 'Back to Safe Edge' })).toHaveAttribute('href', /\/demo\/$/)
+})
 
 test('the scene loads behind a branded card', async ({ page }) => {
   // Hold the seed back so the card is still up to be seen; a local load is otherwise over in milliseconds.

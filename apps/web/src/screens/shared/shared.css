@@ -1,0 +1,36 @@
+/* Shared by Patrol, Agent and Developers: code samples. */
+.code-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.code-block figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-weight: 500;
+}
+/* One typeface (DESIGN.md), so code keeps Atkinson; the sunken inset marks it as code. */
+.code-block pre {
+  margin: 0;
+  max-height: 360px;
+  overflow: auto;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+  font: inherit;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+  tab-size: 2;
+}
+.code-block code {
+  font: inherit;
+}

@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SDK and API · Safe Edge</title>
+    <meta
+      name="description"
+      content="Connect to Safe Edge: a typed TypeScript SDK, a v1 REST API described in OpenAPI 3.1, CloudEvents by webhook and server-sent events, provider adapters and an MCP server."
+    />
+    <meta name="theme-color" content="#e6eeea" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="module" src="/src/page.ts"></script>
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-copy" viewBox="0 0 256 256">
+        <path
+          d="M216,28H88A12,12,0,0,0,76,40V76H40A12,12,0,0,0,28,88V216a12,12,0,0,0,12,12H168a12,12,0,0,0,12-12V180h36a12,12,0,0,0,12-12V40A12,12,0,0,0,216,28ZM156,204H52V100H156Zm48-48H180V88a12,12,0,0,0-12-12H100V52H204Z"
+        />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 256 256">
+        <path
+          d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"
+        />
+      </symbol>
+    </svg>
+
+    <a class="skip" href="#content">Skip to the content</a>
+
+    <!-- site:header -->
+
+    <main id="main">
+      <section class="page-hero" id="top" aria-labelledby="page-title">
+        <div class="page-hero-words">
+          <h1 id="page-title" class="page-title">One typed client, in the browser or on the API.</h1>
+          <p class="page-line">
+            Read edges, flags and passes, and subscribe to events. The same calls run on the in-browser demo or against
+            the v1 REST API.
+          </p>
+          <p class="sim">
+            <span class="sim-label">Simulation</span> The in-browser demo runs on labelled, simulated Elmina records.
+          </p>
+        </div>
+        <img class="page-art" src="/dawn.svg" alt="" style="--art-x: 70%" />
+      </section>
+
+      <div class="page-body" id="content">
+        <nav class="toc" aria-label="On this page">
+          <p class="toc-head">On this page</p>
+          <ol>
+            <li><a href="#quickstart">Quickstart</a></li>
+            <li><a href="#rest">REST API</a></li>
+            <li><a href="#roles">Roles and scopes</a></li>
+            <li><a href="#events">Events</a></li>
+            <li><a href="#delivery">Webhooks and SSE</a></li>
+            <li><a href="#providers">Provider adapters</a></li>
+            <li><a href="#mcp">MCP server</a></li>
+          </ol>
+        </nav>
+
+        <div class="chapters">
+          <section class="chapter" id="quickstart" aria-labelledby="quickstart-title">
+            <h2 id="quickstart-title" class="chapter-title">Start in the browser, ship against the API.</h2>
+            <p class="lead">
+              <code>@safe-edge/sdk</code> has one method per operation in the contracts' operations table, so inputs and
+              results are typed from the contract.
+            </p>
+            <p class="body">
+              <code>createSafeEdgeClient</code> takes a transport. <code>memory</code> runs the Safe Edge core in the
+              page on the labelled Elmina seed; <code>http</code> calls the v1 API. A screen written against the shared
+              <code>SafeEdgeClient</code> type runs on either.
+            </p>
+            <div class="code">
+              <div class="code-head">
+                <span>TypeScript, the memory transport</span>
+                <button class="code-copy" type="button" hidden>
+                  <svg class="icon icon--copy" aria-hidden="true"><use href="#i-copy" /></svg>
+                  <svg class="icon icon--done" aria-hidden="true"><use href="#i-check" /></svg>
+                  <span class="code-copy-label" aria-live="polite">Copy</span>
+                </button>
+              </div>
+              <pre tabindex="0"><code>import { createSafeEdgeClient, elminaSeed } from '@safe-edge/sdk'
+
+const demo = createSafeEdgeClient({ transport: 'memory', userId: 'usr_manager' })
+const segments = await demo.listSegments()
+const s1 = await demo.getSegment({ params: { id: elminaSeed.story.s1.segmentId } })
+const open = await demo.listFindings({ query: { status: 'open' } })</code></pre>
+            </div>
+            <div class="code">
+              <div class="code-head">
+                <span>TypeScript, the http transport</span>
+                <button class="code-copy" type="button" hidden>
+                  <svg class="icon icon--copy" aria-hidden="true"><use href="#i-copy" /></svg>
+                  <svg class="icon icon--done" aria-hidden="true"><use href="#i-check" /></svg>
+                  <span class="code-copy-label" aria-live="polite">Copy</span>
+                </button>
+              </div>
+              <pre tabindex="0"><code>import { createSafeEdgeClient } from '@safe-edge/sdk'
+
+const token = '&lt;your bearer token&gt;'
+const api = createSafeEdgeClient({ transport: 'http', baseUrl: 'http://localhost:3000/v1', token })
+const expiring = await api.listPasses({ query: { state: 'expiring', expiresWithinDays: 30 } })</code></pre>
+            </div>
+            <div class="table-wrap" role="region" aria-labelledby="options-caption" tabindex="0">
+              <table class="spec spec--wide">
+                <caption id="options-caption" class="visually-hidden">
+                  createSafeEdgeClient options
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Transport</th>
+                    <th scope="col">Option</th>
+                    <th scope="col">What it is</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row" rowspan="3"><code>memory</code></th>
+                    <td><code>userId</code></td>
+                    <td>
+                      The seeded user the client acts as, such as <code>usr_manager</code>; switch with
+                      <code>client.as(userId)</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>planner</code>, optional</td>
+                    <td>
+                      Needed by <code>createPatrolPlan</code> and by re-planning; build it with
+                      <code>createElminaPlanner</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>clock</code>, optional</td>
+                    <td>The scenario clock; the wall clock when absent. The simulated drone flies on it.</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" rowspan="3"><code>http</code></th>
+                    <td><code>baseUrl</code></td>
+                    <td>The API's <code>/v1</code> base, such as <code>http://localhost:3000/v1</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>token</code></td>
+                    <td>The bearer token; the API maps it to a user and a role</td>
+                  </tr>
+                  <tr>
+                    <td><code>fetch</code>, optional</td>
+                    <td>The fetch to call the API with; the global fetch when absent</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body">
+              Every seeded record carries <code>simulated: true</code> and <code>source: 'fixture'</code>. Show the
+              label on screen.
+            </p>
+          </section>
+
+          <section class="chapter" id="rest" aria-labelledby="rest-title">
+            <h2 id="rest-title" class="chapter-title">A v1 REST API, described in OpenAPI 3.1.</h2>
+            <p class="lead">
+              JSON under <code>/v1</code>, generated from the Zod contracts in <code>packages/contracts</code>: 65
+              operations, each with the roles allowed to call it.
+            </p>
+            <ul class="points">
+              <li>Bearer tokens carry a role. Demo tokens work only in demo mode; the API rejects them.</li>
+              <li>
+                Every write accepts an <code>Idempotency-Key</code> header. A retry with the key within 24 hours replays
+                the first answer. The SDK sends a fresh key on every write; pass your own to retry safely.
+              </li>
+              <li>A refused action returns <code>403</code> with the policy rule that blocked it.</li>
+              <li>Responses are checked against the contract on the client too.</li>
+            </ul>
+            <div class="table-wrap" role="region" aria-labelledby="rest-caption" tabindex="0">
+              <table class="spec spec--wide">
+                <caption id="rest-caption" class="visually-hidden">
+                  A selection of v1 operations, with the roles allowed and the scope an agent needs
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Method and path</th>
+                    <th scope="col">Roles</th>
+                    <th scope="col">Agent scope</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>GET /assets</code>, <code>GET /segments/{id}</code></td>
+                    <td>any</td>
+                    <td><code>edge.read</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>POST /patrol-plans</code></td>
+                    <td>manager, system</td>
+                    <td><code>patrol.propose</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>POST /patrol-plans/{id}/approve</code></td>
+                    <td>pilot</td>
+                    <td>refused</td>
+                  </tr>
+                  <tr>
+                    <td><code>GET /candidates</code></td>
+                    <td>manager</td>
+                    <td><code>inspection.read</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>POST /candidates/{id}/decision</code></td>
+                    <td>manager</td>
+                    <td>refused</td>
+                  </tr>
+                  <tr>
+                    <td><code>POST /work-orders</code></td>
+                    <td>manager</td>
+                    <td><code>workorder.draft</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>POST /work-orders/{id}/submit</code></td>
+                    <td>manager, engineer</td>
+                    <td>refused</td>
+                  </tr>
+                  <tr>
+                    <td><code>POST /retests</code></td>
+                    <td>reviewer</td>
+                    <td>refused</td>
+                  </tr>
+                  <tr>
+                    <td><code>GET /passes</code></td>
+                    <td>any</td>
+                    <td><code>edge.read</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>GET /events</code></td>
+                    <td>any</td>
+                    <td><code>edge.read</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>POST /webhooks</code></td>
+                    <td>integrator</td>
+                    <td>refused</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body">
+              In the OpenAPI document, <code>x-safe-edge-roles</code> lists the roles allowed and
+              <code>x-safe-edge-agent-scope</code> names the scope an agent token needs; when it is absent, agents are
+              refused.
+            </p>
+            <div class="code">
+              <div class="code-head">
+                <span>TypeScript, a refusal</span>
+                <button class="code-copy" type="button" hidden>
+                  <svg class="icon icon--copy" aria-hidden="true"><use href="#i-copy" /></svg>
+                  <svg class="icon icon--done" aria-hidden="true"><use href="#i-check" /></svg>
+                  <span class="code-copy-label" aria-live="polite">Copy</span>
+                </button>
+              </div>
+              <pre tabindex="0"><code>import { SafeEdgeDeniedError } from '@safe-edge/sdk'
+
+try {
+  await demo.as('usr_agent').submitWorkOrder({
+    params: { id: 'wo_1' },
+    body: { installerUserId: 'usr_installer', dueAt: '2026-10-21T08:00:00.000Z' }
+  })
+} catch (error) {
+  if (error instanceof SafeEdgeDeniedError) console.log(error.rule) // 'agents_draft_only'
+  else throw error
+}</code></pre>
+            </div>
+          </section>
+
+          <section class="chapter" id="roles" aria-labelledby="roles-title">
+            <h2 id="roles-title" class="chapter-title">Roles for people, scopes for the agent.</h2>
+            <p class="lead">The server checks the role, or the agent's scope, on every request.</p>
+            <div class="table-wrap" role="region" aria-labelledby="roles-caption" tabindex="0">
+              <table class="spec">
+                <caption id="roles-caption" class="visually-hidden">
+                  Roles and agent scopes
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Kind</th>
+                    <th scope="col">Values</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">Roles</th>
+                    <td>
+                      <code>manager</code>, <code>engineer</code>, <code>reviewer</code>, <code>installer</code>,
+                      <code>pilot</code>, <code>gm</code>, <code>crew</code>, <code>integrator</code>,
+                      <code>agent</code>, <code>system</code>, <code>provider</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Agent scopes</th>
+                    <td>
+                      <code>edge.read</code>, <code>inspection.read</code>, <code>finding.propose</code>,
+                      <code>workorder.draft</code>, <code>notice.draft</code>, <code>patrol.propose</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">Never issued</th>
+                    <td>
+                      <code>edge.pass.accept</code>, <code>repair.verify</code>, <code>workorder.submit</code>,
+                      <code>notice.send</code>: absent from the contract, so no token can hold them
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="body">
+              Policy lives in the core, so the server and the in-browser demo enforce the same rules. The person who
+              records a repair cannot accept it, and only an accepted re-test by a reviewer makes a pass valid. See
+              <a href="/agents">what the agent can and cannot do</a>.
+            </p>
+          </section>
+
+          <section class="chapter" id="events" aria-labelledby="events-title">
+            <h2 id="events-title" class="chapter-title">Thirteen events, as CloudEvents 1.0.</h2>
+            <p class="lead">
+              Every state change the loop cares about is an event with <code>source</code>
+              <code>safe-edge://townships/{id}</code> and <code>subject</code> <code>segments/{id}</code>.
+            </p>
+            <p class="body">
+              Payloads carry IDs and <code>simulated</code>, never images. Consumers fetch records and evidence through
+              the API. The AsyncAPI document is in <code>packages/contracts</code>.
+            </p>
+            <div class="table-wrap" role="region" aria-labelledby="events-caption" tabindex="0">
+              <table class="spec spec--wide">
+                <caption id="events-caption" class="visually-hidden">
+                  Event types
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>edge.patrol.planned.v1</code></td>
+                    <td>The planner built a patrol plan; a pilot must approve it before it flies.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.patrol.started.v1</code></td>
+                    <td>A pilot started a patrol from an approved plan.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.patrol.completed.v1</code></td>
+                    <td>A patrol landed and reported coverage per segment.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.candidate.raised.v1</code></td>
+                    <td>A provider, the system or the agent raised a candidate; the core assigned its tier.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.candidate.decided.v1</code></td>
+                    <td>A manager confirmed, rejected or asked to recapture a candidate.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.pass.suspended.v1</code></td>
+                    <td>
+                      A segment's pass was suspended by a Tier 2 candidate: a missing or changed safety item, a damage
+                      report or a missed patrol.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.work_order.drafted.v1</code></td>
+                    <td>A person or the agent drafted a work order.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.work_order.submitted.v1</code></td>
+                    <td>A manager or engineer submitted a work order with an approved remedy.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.repair.completed.v1</code></td>
+                    <td>The installer marked the repair complete.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.retest.recorded.v1</code></td>
+                    <td>A reviewer recorded a re-test of a repair they did not install.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.pass.issued.v1</code></td>
+                    <td>An accepted re-test issued a pass valid for at most 12 months.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.pass.expiring.v1</code></td>
+                    <td>A pass entered its last 30 days.</td>
+                  </tr>
+                  <tr>
+                    <td><code>edge.pass.expired.v1</code></td>
+                    <td>A pass reached its end date.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="chapter" id="delivery" aria-labelledby="delivery-title">
+            <h2 id="delivery-title" class="chapter-title">Signed webhooks, or a live stream.</h2>
+            <p class="lead">
+              An integrator registers a webhook for the event types it needs. A screen can read the same events as
+              server-sent events from <code>GET /v1/events</code>.
+            </p>
+            <ul class="points">
+              <li>
+                Deliveries are signed per Standard Webhooks: every one carries <code>webhook-id</code>,
+                <code>webhook-timestamp</code> and <code>webhook-signature</code>, a base64 HMAC-SHA256 of the ID, the
+                timestamp and the raw body.
+              </li>
+              <li>The signing secret (<code>whsec_…</code>) appears only in the registration's response.</li>
+              <li>
+                A webhook's origin must be on the API's allowlist, <code>SAFE_EDGE_WEBHOOK_ORIGINS</code>, checked at
+                registration and again before every delivery.
+              </li>
+              <li>
+                Network errors, timeouts, 408, 429 and 5xx are retried; each webhook keeps its latest 20 failures.
+              </li>
+              <li>The stream has no replay: events from before it opened are not sent.</li>
+            </ul>
+            <div class="code">
+              <div class="code-head">
+                <span>TypeScript, the http client</span>
+                <button class="code-copy" type="button" hidden>
+                  <svg class="icon icon--copy" aria-hidden="true"><use href="#i-copy" /></svg>
+                  <svg class="icon icon--done" aria-hidden="true"><use href="#i-check" /></svg>
+                  <span class="code-copy-label" aria-live="polite">Copy</span>
+                </button>
+              </div>
+              <pre tabindex="0"><code>const hook = await api.registerWebhook({
+  body: { url: 'https://example.com/safe-edge', eventTypes: ['edge.pass.suspended.v1', 'edge.pass.issued.v1'] }
+})
+// hook.secret signs every delivery; this response is the only place it appears
+
+const events = await api.streamEvents() // subscribed once this resolves
+for await (const event of events) console.log(event.type, event.subject)</code></pre>
+            </div>
+          </section>
+
+          <section class="chapter" id="providers" aria-labelledby="providers-title">
+            <h2 id="providers-title" class="chapter-title">No vendor lock-in for drones or work orders.</h2>
+            <p class="lead">Provider adapters keep the core independent of any drone vendor or work-order system.</p>
+            <div class="table-wrap" role="region" aria-labelledby="providers-caption" tabindex="0">
+              <table class="spec spec--wide">
+                <caption id="providers-caption" class="visually-hidden">
+                  Provider adapters and their status
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Adapter</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Maps to</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>drone-sim</code></td>
+                    <td>Working</td>
+                    <td>
+                      The scene's flight model and scenario events. It waits in flight at unreleased separation holds
+                      and follows approved re-plans.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><code>drone-dji-cloud</code></td>
+                    <td>Typed stub</td>
+                    <td>DJI Cloud API: dock binding, wayline tasks, live stream start and the media upload callback</td>
+                  </tr>
+                  <tr>
+                    <td><code>drone-mavlink</code></td>
+                    <td>Typed stub</td>
+                    <td>MAVLink mission upload through a small server-side bridge</td>
+                  </tr>
+                  <tr>
+                    <td><code>workorder-procore</code></td>
+                    <td>Sandbox</td>
+                    <td>Procore Observations. API-created observations do not notify assignees automatically.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="chapter" id="mcp" aria-labelledby="mcp-title">
+            <h2 id="mcp-title" class="chapter-title">An MCP server for AI assistants.</h2>
+            <p class="lead">
+              Claude Code or Claude Desktop can read, propose and draft through the MCP server, with the same narrow
+              scopes as the built-in agent.
+            </p>
+            <p class="body">
+              The server runs over stdio and calls the v1 API with the agent's token, so the API enforces every scope
+              and state rule. It reads the API's address and the token from your environment; the token has no default.
+            </p>
+            <div class="code">
+              <div class="code-head">
+                <span>apps/mcp/mcp.json</span>
+                <button class="code-copy" type="button" hidden>
+                  <svg class="icon icon--copy" aria-hidden="true"><use href="#i-copy" /></svg>
+                  <svg class="icon icon--done" aria-hidden="true"><use href="#i-check" /></svg>
+                  <span class="code-copy-label" aria-live="polite">Copy</span>
+                </button>
+              </div>
+              <pre tabindex="0"><code>{
+  "mcpServers": {
+    "safe-edge": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["apps/mcp/src/index.ts"],
+      "env": {
+        "SAFE_EDGE_API_URL": "${SAFE_EDGE_API_URL:-http://localhost:3000/v1}",
+        "SAFE_EDGE_AGENT_TOKEN": "${SAFE_EDGE_AGENT_TOKEN}"
+      }
+    }
+  }
+}</code></pre>
+            </div>
+            <p class="body">
+              The eight tools, and what none of them can do, are on the <a href="/agents#tools">agents page</a>.
+            </p>
+          </section>
+        </div>
+      </div>
+
+      <section class="closing" aria-labelledby="closing-title">
+        <h2 id="closing-title" class="section-title">The demo runs on this client.</h2>
+        <p class="body">
+          The in-browser demo uses the memory transport, on the same core and the same rules as the API.
+        </p>
+        <div class="closing-actions">
+          <a class="button button--ink" href="/sign-in">Open the demo</a>
+          <a class="button button--line" href="/agents">What the agent can do</a>
+        </div>
+      </section>
+    </main>
+
+    <!-- site:footer -->
+  </body>
+</html>
