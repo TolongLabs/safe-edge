@@ -48,7 +48,7 @@ const Sample = ({ r, source = false }: { r: { simulated: boolean; source: string
 )
 
 /** The five pass shapes of DESIGN.md: filled dot, half ring, slashed ring, square, hollow ring. */
-function StateMark({ state }: { state: EdgePass['state'] }) {
+export function StateMark({ state }: { state: EdgePass['state'] }) {
   const shape = {
     valid: <circle cx="9" cy="9" r="6" fill="currentColor" />,
     expiring: (

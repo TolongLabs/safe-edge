@@ -24,63 +24,71 @@ export function Installer({
   const { run, denied } = useRun(() => undefined)
   const started = workOrder.status === 'in_progress'
   const id = { params: { id: workOrder.id } }
+  const noNote = note.trim() === ''
   return (
-    <section className="rt-card" aria-label="Your repair">
-      <h2>{started ? 'Repair started' : 'Repair waiting to start'}</h2>
-      {remedy && (
-        <>
-          <p>
-            <b>{remedy.label}</b>
-          </p>
-          <ul className="rt-quantities">
-            {remedy.quantities.map((q) => (
-              <li key={q.item}>
-                {q.amount} {q.unit} · {q.item}
-              </li>
-            ))}
-          </ul>
-          <Photo
-            scene={scene}
-            caption={{
-              when: `Finding ${new Date(finding.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`,
-              simulated: finding.simulated
-            }}
-            plates={closure.openings.flatMap((o, n) => {
-              const mark = o.photoMarks[0]
-              const blocked = remedy.blocksOpeningIds.includes(o.id)
-              return mark
-                ? [
-                    {
-                      key: o.id,
-                      text: `${n + 1} ${OPENING_LABEL[o.type]}`,
-                      x: mark.x,
-                      y: mark.y,
-                      name: `${blocked ? 'Work at' : 'Not blocked by this fix:'} opening ${n + 1}, ${OPENING_LABEL[o.type]}`,
-                      dashed: blocked
-                    }
-                  ]
-                : []
-            })}
-          />
-          <p>Acceptance test: {remedy.acceptanceTest}</p>
-        </>
-      )}
-      {!started ? (
-        <button className="btn primary" onClick={() => void run(() => client().startWorkOrder(id))}>
-          Start work
-        </button>
-      ) : (
-        <>
+    <section className="rt-work" aria-label="Your repair">
+      <div className="rt-card">
+        <h2>{started ? 'Repair started' : 'Repair waiting to start'}</h2>
+        {remedy && (
+          <>
+            <p>
+              <b>{remedy.label}</b>
+            </p>
+            <ul className="rt-quantities">
+              {remedy.quantities.map((q) => (
+                <li key={q.item}>
+                  {q.amount} {q.unit} · {q.item}
+                </li>
+              ))}
+            </ul>
+            <Photo
+              scene={scene}
+              caption={{
+                when: `Finding ${new Date(finding.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`,
+                simulated: finding.simulated
+              }}
+              plates={closure.openings.flatMap((o, n) => {
+                const mark = o.photoMarks[0]
+                const blocked = remedy.blocksOpeningIds.includes(o.id)
+                return mark
+                  ? [
+                      {
+                        key: o.id,
+                        text: `${n + 1} ${OPENING_LABEL[o.type]}`,
+                        x: mark.x,
+                        y: mark.y,
+                        name: `${blocked ? 'Work at' : 'Not blocked by this fix:'} opening ${n + 1}, ${OPENING_LABEL[o.type]}`,
+                        dashed: blocked
+                      }
+                    ]
+                  : []
+              })}
+            />
+            <p>Acceptance test: {remedy.acceptanceTest}</p>
+          </>
+        )}
+        {started && (
           <label className="rt-field">
             <span>Note for the person who checks it</span>
             <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
           </label>
-          <p className="rt-help">
-            The photo sent with this note is a sample picture, not a site photo. A different person checks the repair.
+        )}
+      </div>
+      {started && <p className="rt-help">The photo sent with this note is a sample picture, not a site photo.</p>}
+      <div className="rt-bar">
+        {denied && (
+          <p role="alert" className="rt-error">
+            {denied}
           </p>
+        )}
+        {!started ? (
+          <button className="btn primary" onClick={() => void run(() => client().startWorkOrder(id))}>
+            Start work
+          </button>
+        ) : (
           <button
             className="btn primary"
-            disabled={note.trim() === ''}
+            disabled={noNote}
             aria-describedby="rt-done-why"
             onClick={() =>
               void run(() =>
@@ -93,18 +101,15 @@ export function Installer({
           >
             Mark work complete
           </button>
-          {note.trim() === '' && (
-            <p id="rt-done-why" className="rt-help">
-              Write a note first.
-            </p>
-          )}
-        </>
-      )}
-      {denied && (
-        <p role="alert" className="rt-error">
-          {denied}
+        )}
+        <p id="rt-done-why" className="rt-status" role="status">
+          {!started
+            ? 'Once you start, the repair shows as in progress.'
+            : noNote
+              ? 'Write a note first.'
+              : 'A different person checks the repair.'}
         </p>
-      )}
+      </div>
     </section>
   )
 }
