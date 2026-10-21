@@ -200,7 +200,7 @@ export function Compare({
           {can('createRemedy') && sampleFits && (
             <div className="fl-sample">
               <button className="btn" type="button" disabled={sampling} onClick={sampleFixes}>
-                Use the two sample fixes
+                {sampling ? 'Use the two sample fixes…' : 'Use the two sample fixes'}
               </button>
               <p className="fl-muted">Sample fixes for the playground fence; prices are not quoted.</p>
               {sampleError !== null && (

@@ -487,7 +487,8 @@ Gentle, consistent corners: 4 px on chips, badges, plates and tags; 8 px on butt
 
 - **Rail:** Rail Green island. Items are 44 px rows with an 18 px Phosphor Bold icon in a tile, the label, and an optional count. The active item inverts to a Rail Mist pill with dark text. Collapsed, only the icon tiles show. On a phone the rail is a row of 44 × 44 px icon targets: the current item shows its name under its icon, and the row scrolls sideways inside itself when it cannot fit.
 - **Top bar:** title in H2-weight text, one context line in Body Dense, then the SIMULATION label and the profile button pushed right.
-- **Profile menu:** name and role, then My profile, Settings, Language, Appearance, Help and Sign out.
+- **Profile menu:** name and role, then My profile, Settings, Language, Appearance, Help and Sign out. The demo build has name and role, Settings, Sign in as (one row per seeded person), Appearance and Reset demo.
+- **Settings:** one card per key in a reading-width column: an H2 title, a line on what the key does, a green state line once saved (with Forget or Disconnect as a small Danger button), the field and its Secondary save button in one row, and a Sunken Grey footer with a lock icon that says where the value is kept and where it is sent. Each key is checked with a real call before it is saved; a failed check marks its field with the Danger border and a line that says how to fix it.
 - **Phone top bar:** Rail Green bar with back, title, subtitle and a more button, each target 44 × 44 px.
 - **Map page:** the 3D scene is its own page, with a Back link at the top left to the screen that opened it. Its cards stay Light in both modes, because the scene draws its own day and night.
 

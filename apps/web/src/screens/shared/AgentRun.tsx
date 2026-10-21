@@ -56,7 +56,7 @@ export function useAgentRun() {
     busy,
     problem,
     run,
-    /** Stops the run in progress (Ask streams; the drafts stop between turns). */
+    /** Stops the run in progress: aborts the request open to Claude. A draft the agent already saved stays. */
     stop: () => abort.current?.abort()
   }
 }

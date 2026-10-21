@@ -206,8 +206,8 @@ Published evidence decides what the AI may claim ([detection research][detection
 
 web
 
-- A web app, desktop-first for the manager and engineer, with phone screens for field capture and re-test. Its rail holds Inbox, Patrol, Map and Passes, then the Agent and Developers pages.
-- A public site: the landing page, a page each for the drone, the agent, the SDK and privacy, and a guest sign-in into the demo.
+- A web app, desktop-first for the manager and engineer, with phone screens for field capture and re-test. Its rail holds Inbox, Patrol, Map and Passes, then the Agent and Developers pages. Settings, from the profile menu, holds a person's own Anthropic key, which runs the agent in the demo, and a token for a live API that the Developers page can call.
+- A public site: the landing page, a page each for the drone, the agent, the SDK and privacy, a guest sign-in into the demo, and a not-found page.
 - A 3D simulation of Elmina in the browser, built on Three.js, for the demo and for planning views.
 - A REST API, a TypeScript SDK and an MCP server.
 - English first. Bahasa Malaysia for public notices and field screens later.

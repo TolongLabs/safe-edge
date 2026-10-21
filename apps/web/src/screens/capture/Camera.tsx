@@ -148,7 +148,7 @@ export function Camera({
         ) : (
           !ready && (
             <p className="hint" role="status">
-              Starting the camera
+              Starting the camera…
             </p>
           )
         )}
@@ -197,19 +197,27 @@ export function Camera({
           {off ? 'Stand where the baseline was taken, take the photo with your phone, then choose it.' : note}
         </p>
       </div>
+      {/* The status line says why a button is off while the camera starts or a photo is sending. */}
       <div className="pinned">
         {off ? (
           <>
             {gallery(true)}
-            <p className="hint">Photos are recorded as taken on a phone.</p>
+            <p className="hint">{busy ? 'Sending the photo…' : 'Photos are recorded as taken on a phone.'}</p>
           </>
         ) : (
           <>
             {gallery(false)}
-            <button className="btn primary" disabled={!ready || busy} onClick={still}>
+            <button className="btn primary" disabled={!ready || busy} aria-describedby="take-status" onClick={still}>
               <CameraIcon size={22} weight="bold" aria-hidden="true" />
               Take photo
             </button>
+            <p className="hint" id="take-status">
+              {busy
+                ? 'Sending the photo…'
+                : ready
+                  ? 'Photos are recorded as taken on a phone.'
+                  : 'Take photo unlocks once the camera has started.'}
+            </p>
           </>
         )}
       </div>

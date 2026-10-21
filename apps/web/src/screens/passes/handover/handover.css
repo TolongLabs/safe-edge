@@ -7,13 +7,25 @@
   padding: var(--space-6);
 }
 
+/* The page is an island on the canvas (Solid Surface): its text never sits on the bare canvas. */
 .handover-sheet {
   max-width: 960px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-6);
+  padding: 0 var(--space-8) var(--space-8);
+  border-radius: var(--radius-island);
+  background: var(--bg-surface);
   color: var(--text-primary);
+}
+
+.handover-sheet header,
+.handover-sheet section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 
 .handover-sheet h1 {
@@ -39,7 +51,7 @@
 
 .handover-sheet th,
 .handover-sheet td {
-  padding: 6px var(--space-3);
+  padding: var(--space-2) var(--space-3);
   text-align: left;
   vertical-align: top;
   border-bottom: 1px solid var(--border-default);
@@ -52,16 +64,22 @@
   color: var(--text-secondary);
 }
 
-.simulated {
+/* A date never breaks across two lines. */
+.handover-sheet td:is(.valid-from, .valid-to) {
+  white-space: nowrap;
+}
+
+.handover-sheet .simulated {
   display: inline-block;
   font-size: var(--fs-small);
   line-height: var(--lh-small);
-  padding: 1px 6px;
+  padding: 0 var(--space-1);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
 }
 
+/* Sticky at the top of the sheet; the negative margin lets its fill reach the sheet's edges as it scrolls. */
 .handover-actions {
   position: sticky;
   top: 0;
@@ -70,8 +88,10 @@
   flex-direction: row;
   gap: var(--space-2);
   justify-content: flex-end;
-  padding: var(--space-2) 0;
-  background: var(--bg-canvas);
+  margin: 0 calc(-1 * var(--space-8));
+  padding: var(--space-4) var(--space-8) var(--space-2);
+  border-radius: var(--radius-island) var(--radius-island) 0 0;
+  background: var(--bg-surface);
 }
 
 .handover-actions .btn {
@@ -89,7 +109,14 @@
   }
 
   .handover-sheet {
-    padding: var(--space-4);
+    padding: 0 var(--space-4) var(--space-4);
+    border-radius: 0;
+  }
+
+  .handover-actions {
+    margin: 0 calc(-1 * var(--space-4));
+    padding: var(--space-3) var(--space-4) var(--space-2);
+    border-radius: 0;
   }
 
   .handover-sheet table {
@@ -113,16 +140,22 @@
   .handover-sheet {
     display: block;
     max-width: none;
+    padding: 0;
+    border-radius: 0;
     color-scheme: light;
     color: CanvasText;
     background: Canvas;
+  }
+
+  .handover-sheet section {
+    margin-top: var(--space-6);
   }
 
   .handover-sheet h1,
   .handover-sheet h2,
   .handover-sheet th,
   .handover-sheet td,
-  .simulated {
+  .handover-sheet .simulated {
     color: inherit;
   }
 

@@ -47,12 +47,6 @@
 .agent-scope {
   color: var(--text-secondary);
 }
-.agent-work code,
-.agent-detail code {
-  font: inherit;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
 
 .agent-detail {
   gap: var(--space-6);
@@ -129,15 +123,24 @@
 .agent-skeleton i {
   height: 44px;
 }
+/* The empty state's own 520 px cap is narrower than this section's other lines. */
+.agent-work .empty-state.agent-empty {
+  max-width: 75ch;
+}
+.agent-empty b {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+/* The shared table pattern (Passes, Developers, Agent): no inner scroll box, which would cut a row mid-text. The
+   table flows in the island and the island scrolls it; the header sticks, so the wrapper must not set overflow. */
 .agent-table-wrap {
-  max-height: 420px;
-  overflow: auto;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
 }
 .agent-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
 }
@@ -150,10 +153,19 @@
 }
 .agent-table thead th {
   position: sticky;
-  top: 0;
-  background: var(--bg-sunken);
+  /* The island's padding is inside its scrollport: stick at its top edge, or rows show above the header. */
+  top: calc(-1 * var(--island-padding));
+  z-index: 1;
+  background: var(--bg-surface);
   color: var(--text-secondary);
   font-weight: 500;
+  white-space: nowrap;
+}
+.agent-table thead th:first-child {
+  border-top-left-radius: var(--radius-md);
+}
+.agent-table thead th:last-child {
+  border-top-right-radius: var(--radius-md);
 }
 .agent-table tbody th {
   white-space: nowrap;
@@ -163,11 +175,83 @@
 }
 .agent-quote {
   margin: 0;
-  max-width: 75ch;
   padding: var(--space-4) var(--space-5);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   background: var(--bg-sunken);
+}
+
+/* Ask the agent */
+.agent-ask-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.agent-ask-form label {
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-weight: 500;
+}
+.agent-ask-row {
+  display: flex;
+  gap: var(--space-2);
+}
+.agent-ask-row input {
+  flex: 1;
+  min-width: 0;
+}
+.agent-ask-row input[aria-invalid] {
+  border: 2px solid var(--danger-default);
+}
+.agent-ask-row .btn {
+  flex: none;
+  min-width: 88px;
+}
+.agent-hint,
+.agent-field-error,
+.agent-asked {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.agent-field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: var(--danger-text);
+}
+.agent-field-error svg {
+  flex: none;
+  margin-top: 2px;
+}
+.agent-ask .agent-line {
+  margin-top: var(--space-1);
+}
+.agent-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* Quiet: a hairline, not the accent outline, so the suggestions stay below Ask in weight. */
+.agent-suggest .btn {
+  border: 1px solid var(--border-default);
+  background: var(--bg-raised);
+  font-weight: 500;
+  text-align: left;
+}
+.agent-answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+.agent-answer-text {
+  max-width: 75ch;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 600px) {
@@ -179,9 +263,46 @@
     font-size: var(--fs-h1);
     line-height: var(--lh-h1);
   }
+  .agent-suggest .btn {
+    min-height: 44px;
+  }
+  /* Rows become cards: the operation as the title, each cell under its column's name. */
+  .agent-table-wrap {
+    border: 0;
+  }
+  .agent-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .agent-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .agent-table tr {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+  }
+  .agent-table th,
+  .agent-table td,
+  .agent-table tbody tr:last-child > * {
+    padding: 0;
+    border: 0;
+  }
   .agent-table tbody th {
     white-space: normal;
-    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .agent-table td[data-label]::before {
+    content: attr(data-label) ': ';
+    color: var(--text-secondary);
   }
 }
 /* Long refusals must not squeeze the state icon. */

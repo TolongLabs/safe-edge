@@ -44,7 +44,7 @@ export function WaitingList() {
         )}
         {found === null && !error ? (
           <div className="rt-skel" role="status">
-            <p className="rt-help">Looking for repairs and false alarms</p>
+            <p className="rt-help">Looking for repairs and false alarms…</p>
             <i />
             <i />
           </div>
@@ -96,7 +96,7 @@ export function WaitingList() {
                       <span className="rt-row-text">
                         <span className="rt-row-title">{title}</span>
                         <span className="rt-help">
-                          {w.status.replace('_', ' ')}
+                          {w.status.replace('_', ' ').replace(/^./, (c) => c.toUpperCase())}
                           {w.simulated && ' · simulated'}
                           {action ? '' : ` · ${next}`}
                         </span>

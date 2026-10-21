@@ -31,9 +31,15 @@
   align-items: flex-start;
   gap: var(--space-4);
 }
-.table-scroll {
-  max-height: 560px;
-  overflow: auto;
+.board .sample-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.board .sample-line .chip {
+  height: 24px;
+  font-size: var(--fs-small);
 }
 .banner-icon {
   flex: none;
@@ -43,37 +49,54 @@
 .board .banner + .btn {
   color: var(--text-primary);
 }
-.table-scroll table {
+/* One scroll per screen: the table flows in its island and the board scrolls it, so no row is cut at a hidden
+   edge. The wrapper sets no overflow, which would capture the sticky header. */
+.edge-table {
+  container: edges / inline-size;
+}
+.edge-table table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
+  font-variant-numeric: tabular-nums;
 }
-.table-scroll th,
-.table-scroll td {
-  padding: 6px var(--space-3);
+.edge-table th,
+.edge-table td {
+  padding: var(--space-2) var(--space-3);
   text-align: left;
   vertical-align: top;
   border-bottom: 1px solid var(--border-default);
 }
-.table-scroll thead th {
+.edge-table thead th {
   position: sticky;
   top: 0;
+  z-index: 1;
   background: var(--bg-surface);
   color: var(--text-secondary);
   font-size: var(--fs-small);
   line-height: var(--lh-small);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
-.table-scroll tbody th {
+.edge-table tbody th {
   font-weight: 600;
 }
-.table-scroll .plate {
-  margin-left: var(--space-1);
+.edge-table .owner,
+.edge-table .overdue {
+  white-space: nowrap;
+}
+.edge-table .num {
+  text-align: right;
+}
+.edge-table .plate {
   padding: 1px 6px;
   font-size: var(--fs-small);
   line-height: var(--lh-small);
+  white-space: nowrap;
 }
 .board .head .btn {
   white-space: nowrap;
@@ -106,15 +129,37 @@
 }
 .reason-line {
   display: block;
+  /* A long reason wraps under its badge instead of widening the Pass column. */
+  max-width: 36ch;
+  margin-top: var(--space-1);
   color: var(--text-secondary);
   font-size: max(12px, var(--fs-small));
   line-height: var(--lh-small);
 }
+/* Each card flows top-down on its own: heading, hint, what the actions act on, the actions, the lines that say why
+   an action is disabled or what failed, then what the actions made. Cards keep their own height. */
 .lower {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
   gap: var(--space-3);
   flex: none;
+}
+.lower .card-foot,
+.lower .card-after,
+.lower .card-all {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.lower .card-foot {
+  gap: var(--space-2);
+}
+.lower .card-foot:empty {
+  display: none;
+}
+.notice > .btn {
+  align-self: flex-start;
 }
 .notice {
   display: flex;
@@ -174,42 +219,52 @@
   .board .head {
     flex-direction: column;
   }
-  .table-scroll {
-    max-height: none;
+}
+/* By the table's own width, whatever the rail takes: everything on one line where every column fits (about
+   976 px), then headers and overdue counts wrap, and below 760 px, where badges would break too, a card per edge.
+   Never a sideways scroll that hides a column. Person names stay on one line throughout. */
+@container edges (max-width: 979px) {
+  .edge-table thead th,
+  .edge-table .overdue {
+    white-space: normal;
   }
-  .table-scroll thead {
+}
+@container edges (max-width: 759px) {
+  .edge-table thead {
     position: absolute;
     width: 1px;
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
   }
-  .table-scroll table,
-  .table-scroll tbody,
-  .table-scroll tr,
-  .table-scroll th,
-  .table-scroll td {
+  .edge-table table,
+  .edge-table tbody,
+  .edge-table tr,
+  .edge-table th,
+  .edge-table td {
     display: block;
   }
-  .table-scroll tr {
+  .edge-table tr {
     padding: var(--space-3) 0;
     border-bottom: 1px solid var(--border-default);
   }
-  .table-scroll th,
-  .table-scroll td {
+  .edge-table th,
+  .edge-table td {
     padding: 2px 0;
     border: 0;
   }
-  .table-scroll .pass-badge {
-    white-space: normal;
+  .edge-table tbody th {
+    margin-bottom: var(--space-1);
   }
-  .table-scroll td[data-label] {
+  .edge-table td[data-label] {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
     gap: var(--space-3);
   }
-  .table-scroll td[data-label]::before {
+  .edge-table td[data-label]::before {
     content: attr(data-label);
+    flex: none;
     color: var(--text-secondary);
     font-size: var(--fs-small);
   }
@@ -249,5 +304,9 @@
     color-scheme: light;
     color: CanvasText;
     background: Canvas;
+  }
+  .print-sheet .agent-byline,
+  .print-sheet .agent-byline b {
+    color: inherit;
   }
 }

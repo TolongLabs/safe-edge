@@ -131,3 +131,13 @@ export const day = (iso: string | number) =>
 export const dayTime = (iso: string) =>
   intl({ day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
 export const month = (now: number) => intl({ month: 'long' }).format(new Date(now))
+/** The month as YYYY-MM, in Malaysian time: what the agent's monthly report takes. */
+export function monthKey(now: number) {
+  const parts = intl({ year: 'numeric', month: '2-digit' }).formatToParts(new Date(now))
+  const part = (type: 'year' | 'month') =>
+    must(
+      parts.find((p) => p.type === type),
+      `${type} of ${now}`
+    ).value
+  return `${part('year')}-${part('month')}`
+}

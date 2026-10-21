@@ -218,7 +218,8 @@
   box-shadow: var(--focus-ring);
 }
 
-/* The pinned action bar: what is missing, one full-width primary, and the status line under it. */
+/* The pinned action bar: what is missing, one full-width primary, and the status line under it.
+   The same sheet as Capture's pinned bar: Island White on the canvas, rounded at the top. */
 .rt-bar {
   position: sticky;
   bottom: 0;
@@ -228,7 +229,7 @@
   gap: var(--space-2);
   margin: auto calc(-1 * var(--space-4)) 0;
   padding: var(--space-3) var(--space-4) var(--space-4);
-  border-top: 1px solid var(--border-default);
+  border-radius: var(--radius-island) var(--radius-island) 0 0;
   background: var(--bg-surface);
 }
 .rt-bar .btn,
@@ -263,4 +264,8 @@
   margin-top: var(--space-3);
   border-radius: var(--radius-md);
   background: var(--bg-sunken);
+}
+/* On the phone canvas Sunken Grey barely shows (in Dark not at all), so the blocks take the cards' Island White. */
+.frame.phone .rt-skel i {
+  background: var(--bg-surface);
 }

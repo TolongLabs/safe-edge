@@ -243,6 +243,12 @@ a {
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
 }
+/* One typeface (DESIGN.md): an inline record ID takes Code Small, not the browser's monospace. Code blocks keep theirs. */
+:not(pre) > code {
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
 button,
 a,
 label,

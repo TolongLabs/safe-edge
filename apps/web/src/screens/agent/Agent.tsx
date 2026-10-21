@@ -1,10 +1,11 @@
 import { LockSimple, Robot, ShieldCheck, WarningCircle } from '@phosphor-icons/react'
 import { agentInstructions, agentTools } from '@safe-edge/agent-tools'
-import { operations, type AuditEvent, type OperationId, type User } from '@safe-edge/contracts'
+import { operations, type AgentAnswer, type AuditEvent, type OperationId, type User } from '@safe-edge/contracts'
 import { SafeEdgeDeniedError } from '@safe-edge/sdk'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Screen } from '../../shell/Shell'
 import { can, client, demo, onReset, useStore } from '../../store'
+import { AgentByline, AgentProblemLine, NeedsKey, useAgentRun } from '../shared/AgentRun'
 import { clock, peopleWho, useCoreRead, type Read } from '../shared/core'
 import './agent.css'
 
@@ -18,6 +19,13 @@ const NEVER = (Object.entries(operations) as [OperationId, (typeof operations)[O
 /** The agent's own lines on the audit chain (refused attempts included); null when the signed-in role may not read it. */
 const readActivity = async (): Promise<AuditEvent[] | null> =>
   can('listAudit') ? (await client().listAudit({})).filter((a) => a.actor.type === 'agent') : null
+
+/** Questions the eight tools can answer exactly (list_expiring_passes counts days, not calendar months). */
+const SUGGESTED = [
+  'Which passes expire in the next 30 days?',
+  'Who looks after the edge whose pass ends next?',
+  'Which findings are still open, and for how long?'
+]
 
 type Check =
   | { kind: 'refused'; candidateId: string; rule: string; message: string }
@@ -75,7 +83,7 @@ export function Agent() {
                   <b>{t.title}</b>
                   <span className={`chip${t.readOnly ? '' : ' drafts'}`}>{t.readOnly ? 'Read only' : 'Drafts'}</span>
                 </div>
-                <code>{t.name}</code>
+                <code translate="no">{t.name}</code>
                 <span className="agent-scope">Scope: {t.scope}</span>
               </li>
             ))}
@@ -135,6 +143,8 @@ export function Agent() {
             )}
           </section>
 
+          <Ask users={s.users} onRan={activity.reload} />
+
           <section aria-labelledby="ag-activity">
             <h3 id="ag-activity">What the agent did this session</h3>
             <Activity read={activity} users={s.users} />
@@ -156,7 +166,7 @@ export function Agent() {
               Every change in the operations table that has no agent scope: {NEVER.length} of them. Core refuses each
               for the agent token with the rule agents_draft_only.
             </p>
-            <div className="agent-table-wrap" tabIndex={0} role="region" aria-label="What the agent can never do">
+            <div className="agent-table-wrap" role="region" aria-label="What the agent can never do">
               <table className="agent-table">
                 <thead>
                   <tr>
@@ -169,10 +179,12 @@ export function Agent() {
                   {NEVER.map(([id, op]) => (
                     <tr key={id}>
                       <th scope="row">
-                        <code>{id}</code>
+                        <code translate="no">{id}</code>
                       </th>
-                      <td>{op.summary}</td>
-                      <td>{op.roles === 'any' ? 'Anyone signed in' : op.roles.join(', ') || 'No person'}</td>
+                      <td data-label="What it does">{op.summary}</td>
+                      <td data-label="Who may">
+                        {op.roles === 'any' ? 'Anyone signed in' : op.roles.join(', ') || 'No person'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -223,13 +235,13 @@ function Activity({ read, users }: { read: Read<AuditEvent[] | null>; users: Use
     )
   if (read.data.length === 0)
     return (
-      <div className="empty-state left">
+      <div className="empty-state left agent-empty">
         <span className="icon-tile">
           <Robot size={24} weight="bold" aria-hidden="true" />
         </span>
         <p>
-          Nothing yet. The agent has not read, proposed or drafted anything in this session; its refused attempts show
-          here too.
+          <b>Nothing on the audit chain yet.</b> The agent has not proposed or drafted anything in this session, and has
+          not been refused. Reads are not audited.
         </p>
       </div>
     )
@@ -238,11 +250,164 @@ function Activity({ read, users }: { read: Read<AuditEvent[] | null>; users: Use
       {read.data.map((a) => (
         <li key={a.id}>
           <span className="agent-time">{clock(a.at)}</span>
-          <code>{a.action}</code>
-          <span className="agent-subject">{a.subjectId}</span>
+          <code translate="no">{a.action}</code>
+          <span className="agent-subject" translate="no">
+            {a.subjectId}
+          </span>
           <span className={`chip ${a.decision}`}>{a.decision === 'denied' ? `Refused · ${a.rule}` : 'Allowed'}</span>
         </li>
       ))}
     </ul>
+  )
+}
+
+/** One question and what the agent has written for it so far; `answer` once it finished. */
+type Asked = { question: string; text: string; answer: AgentAnswer | null; stopped: boolean }
+
+/** The Ask panel: the agent answers a question with the same tools as the MCP server, streaming as it writes. */
+function Ask({ users, onRan }: { users: User[]; onRan: () => void }) {
+  const agent = useAgentRun()
+  const [question, setQuestion] = useState('')
+  const [empty, setEmpty] = useState(false)
+  const [asked, setAsked] = useState<Asked | null>(null)
+  // Set by Stop, read when the run resolves: a stop the person asked for leaves the partial text, labelled.
+  const stopping = useRef(false)
+  const button = useRef<HTMLButtonElement>(null)
+  useEffect(() => onReset(() => setAsked(null)), [])
+
+  if (!can('askAgent'))
+    return (
+      <section aria-labelledby="ag-ask">
+        <h3 id="ag-ask">Ask the agent</h3>
+        <p className="banner info">
+          <LockSimple size={20} weight="bold" aria-hidden="true" />
+          <span>
+            <b>Asking the agent is for the park manager and the general manager.</b> {peopleWho('askAgent', users)} can
+            ask it.
+          </span>
+        </p>
+      </section>
+    )
+
+  const ask = async (q: string) => {
+    if (agent.busy) return
+    const text = q.trim()
+    setEmpty(text === '')
+    if (text === '') return
+    stopping.current = false
+    setAsked({ question: text, text: '', answer: null, stopped: false })
+    const result = await agent.run((a, signal) =>
+      a.ask(text, async (chunk) => setAsked((x) => x && { ...x, text: x.text + chunk }), signal)
+    )
+    if (result) setAsked((x) => x && { ...x, answer: result.answer })
+    else if (stopping.current) setAsked((x) => x && { ...x, stopped: true })
+    else setAsked(null)
+    // Anything it proposed, drafted or was refused is on the audit chain now.
+    onRan()
+  }
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    void ask(question)
+  }
+  const pick = (q: string) => {
+    setQuestion(q)
+    // The suggestions are disabled while it runs; keep keyboard focus on the button that becomes Stop.
+    button.current?.focus()
+    void ask(q)
+  }
+  const stop = () => {
+    stopping.current = true
+    agent.stop()
+  }
+
+  const off = !agent.ready || agent.busy
+  const describedBy = !agent.ready ? 'ag-ask-key' : empty ? 'ag-ask-empty' : 'ag-ask-hint'
+  return (
+    <section aria-labelledby="ag-ask" className="agent-ask">
+      <h3 id="ag-ask">Ask the agent</h3>
+      <p className="agent-note">
+        Claude answers from Safe Edge records through the same eight tools, and must name each record it relied on; an
+        answer that names none is marked uncited. It may propose or draft, never decide.
+      </p>
+      <form className="agent-ask-form" onSubmit={submit}>
+        <label htmlFor="ag-question">Your question</label>
+        <div className="agent-ask-row">
+          <input
+            id="ag-question"
+            type="text"
+            value={question}
+            onChange={(e) => {
+              setQuestion(e.target.value)
+              setEmpty(false)
+            }}
+            disabled={!agent.ready}
+            readOnly={agent.busy}
+            autoComplete="off"
+            enterKeyHint="send"
+            aria-invalid={empty || undefined}
+            aria-describedby={describedBy}
+          />
+          {/* One button that turns into Stop, so focus stays on it for the whole run. Never a submit button: the run
+              can end inside its click, and a type flipped back to submit would ask again. Enter in the field still
+              submits the form, its only field. */}
+          <button
+            ref={button}
+            type="button"
+            className="btn"
+            disabled={!agent.ready}
+            aria-describedby={describedBy}
+            onClick={agent.busy ? stop : () => void ask(question)}
+          >
+            {agent.busy ? 'Stop' : 'Ask'}
+          </button>
+        </div>
+        {empty && (
+          <p id="ag-ask-empty" className="agent-field-error">
+            <WarningCircle size={16} weight="bold" aria-hidden="true" />
+            <span>Type a question first, or pick one below.</span>
+          </p>
+        )}
+        {agent.ready && !empty && (
+          <p id="ag-ask-hint" className="agent-hint">
+            {agent.busy ? 'The agent is answering. Stop ends the run.' : 'Press Enter to ask.'}
+          </p>
+        )}
+        {!agent.ready && <NeedsKey id="ag-ask-key" />}
+      </form>
+      <div className="agent-suggest" role="group" aria-label="Suggested questions">
+        {SUGGESTED.map((q) => (
+          <button key={q} type="button" className="btn small" disabled={off} onClick={() => pick(q)}>
+            {q}
+          </button>
+        ))}
+      </div>
+      {agent.problem && <AgentProblemLine problem={agent.problem} />}
+      {asked && (
+        <div className="agent-answer" aria-busy={agent.busy}>
+          <p className="agent-asked">You asked: &ldquo;{asked.question}&rdquo;</p>
+          {asked.text === '' && agent.busy && (
+            <p className="agent-hint" role="status">
+              Reading Safe Edge records…
+            </p>
+          )}
+          {asked.text !== '' && <p className="agent-answer-text">{asked.answer?.answer ?? asked.text}</p>}
+          {asked.answer && <AgentByline model={asked.answer.model} citations={asked.answer.citations} />}
+          {asked.stopped && (
+            <p className="state warn agent-stopped">
+              <WarningCircle size={20} weight="bold" aria-hidden="true" />
+              <span>
+                {asked.text === ''
+                  ? 'Stopped before the agent wrote anything.'
+                  : 'Stopped. The text above is unfinished and was not checked for sources.'}
+              </span>
+            </p>
+          )}
+        </div>
+      )}
+      {/* The answer streams in visibly; screen readers hear it once, when it is complete. */}
+      <p className="sr" aria-live="polite">
+        {asked?.answer ? `The agent answered: ${asked.answer.answer}` : asked?.stopped ? 'Stopped.' : ''}
+      </p>
+    </section>
   )
 }

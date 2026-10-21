@@ -1,5 +1,5 @@
 import { Info, PaperPlaneTilt, WarningCircle } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { NotInSession, Screen } from '../../shell/Shell'
 import type { WorkOrder } from '@safe-edge/contracts'
 import { useStore, type Snapshot } from '../../store'
@@ -65,6 +65,13 @@ function Lens({ finding }: { finding: Finding }) {
   const sent = workOrder !== null && workOrder.status !== 'draft'
   const { lens, error, reload } = useLens(finding.segmentId, (workOrder ?? failed)?.remedyId ?? null)
   const [step, setStep] = useState(sent ? 3 : failed ? 2 : 1)
+  const main = useRef<HTMLElement>(null)
+  // A new step starts at its top: the island scrolls on a wide screen, the page on a phone.
+  const go = (n: number) => {
+    setStep(n)
+    main.current?.scrollTo({ top: 0 })
+    window.scrollTo({ top: 0 })
+  }
   const [chosen, setChosen] = useState<string | null>(workOrder?.remedyId ?? null)
   // Nothing is chosen for the manager: sending waits until a fix is picked.
   const when = `Finding ${new Date(finding.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`
@@ -81,13 +88,13 @@ function Lens({ finding }: { finding: Finding }) {
     </div>
   ) : !lens ? (
     <div className="fl-skel" role="status">
-      <p className="fl-muted">Loading the photo and openings</p>
+      <p className="fl-muted">Loading the photo and openings…</p>
       <i />
       <i />
       <i />
     </div>
   ) : step === 1 ? (
-    <Mark finding={finding} scene={meta.scene} lens={lens} reload={reload} when={when} onNext={() => setStep(2)} />
+    <Mark finding={finding} scene={meta.scene} lens={lens} reload={reload} when={when} onNext={() => go(2)} />
   ) : step === 2 ? (
     <Compare
       finding={finding}
@@ -97,7 +104,7 @@ function Lens({ finding }: { finding: Finding }) {
       failed={failed}
       chosen={chosen}
       setChosen={setChosen}
-      onSent={() => setStep(3)}
+      onSent={() => go(3)}
     />
   ) : sent ? (
     <Sent finding={finding} workOrder={workOrder} scene={meta.scene} lens={lens} when={when} />
@@ -108,18 +115,18 @@ function Lens({ finding }: { finding: Finding }) {
       </span>
       <h2>No fix sent yet</h2>
       <p>Choose a fix in step 2. The work order shows here once the park manager has sent it.</p>
-      <button className="btn" onClick={() => setStep(2)}>
+      <button className="btn" onClick={() => go(2)}>
         Compare fixes
       </button>
     </div>
   )
   return (
     <Screen title="Fix Lens" context={`${meta.title} · ${meta.viewpointName}`}>
-      <main className="detail island">
+      <main className="detail island" ref={main}>
         <ol className="fl-steps" aria-label="Steps">
           {STEPS.map((name, i) => (
             <li key={name}>
-              <button aria-current={step === i + 1 ? 'step' : undefined} onClick={() => setStep(i + 1)}>
+              <button aria-current={step === i + 1 ? 'step' : undefined} onClick={() => go(i + 1)}>
                 <span className="fl-step-n" aria-hidden="true">
                   {i + 1}
                 </span>

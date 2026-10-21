@@ -1,8 +1,9 @@
 import type { Candidate, CandidateEvidence, EdgePass, ItemStatus, Severity } from '@safe-edge/contracts'
 import { SafeEdgeDeniedError } from '@safe-edge/sdk'
-import { CheckCircle, Info, LockSimple, Tray, Warning, XCircle } from '@phosphor-icons/react'
+import { CheckCircle, Info, LockSimple, Robot, Tray, Warning, XCircle } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
-import { SampleImage } from '../../scenes'
+import { CloseUp, closeUp, outlinesBaseline, SampleImage, type Box, type Scene } from '../../scenes'
+import { AgentByline, AgentProblemLine, NeedsKey, useAgentRun } from '../shared/AgentRun'
 import { Screen } from '../../shell/Shell'
 import { onReset, refresh, rememberDone, useSignedIn, useStore, can, type Snapshot } from '../../store'
 import './inbox.css'
@@ -225,6 +226,8 @@ function Triage({ s }: { s: Snapshot }) {
     .at(0)
   const patrol = firstSeen ? `${dayMonth(firstSeen)} ${sourcesOf(s.evidence)} images` : null
   const unknown = s.evidence.filter((e) => e.candidate.itemStatus === 'not_visible').length
+  // Simulated means labelled: once for the list when every card is, else on each simulated row.
+  const allSimulated = s.evidence.length > 0 && s.evidence.every((e) => e.candidate.simulated)
 
   const context = firstSeen
     ? `${weekdayDate(firstSeen)} · ${s.evidence.length} ${s.evidence.length === 1 ? 'change' : 'changes'} from ${sourcesOf(s.evidence)} images`
@@ -244,6 +247,7 @@ function Triage({ s }: { s: Snapshot }) {
           <div className="list-head">
             <h2>To review · {group(true).length}</h2>
             {patrol && <p>From the {patrol}</p>}
+            {allSimulated && <p>All simulated</p>}
           </div>
           {([true, false] as const).map((open) => (
             <div key={String(open)}>
@@ -278,7 +282,7 @@ function Triage({ s }: { s: Snapshot }) {
                         {clock(must(e.observations[0], `observation of ${e.candidate.id}`).capturedAt)}
                       </span>
                       <span className="meta clamp">{e.segment.name}</span>
-                      {e.candidate.simulated && <span className="sim">simulated</span>}
+                      {e.candidate.simulated && !allSimulated && <span className="sim">simulated</span>}
                       {!open && <span className="meta wide">{STATE_TEXT[e.candidate.status]}</span>}
                       {e.candidate.status === 'needs_recapture' && (
                         <span className="meta wide clamp">{e.candidate.decisionReason}</span>
@@ -322,6 +326,66 @@ function useRun() {
   return { run, denied }
 }
 
+/** The dashed red outline and tag of a flagged region, `box` in percent of the image under it. */
+function FlagOutline({ box, title, tagAbove = false }: { box: Box; title: string; tagAbove?: boolean }) {
+  return (
+    <div
+      role="img"
+      aria-label={`Flagged region: ${title}`}
+      className={`ovl${tagAbove ? ' tag-above' : ''}`}
+      style={{ left: `${box.x}%`, top: `${box.y}%`, width: `${box.w}%`, height: `${box.h}%` }}
+    >
+      <span className="tag">{title}</span>
+    </div>
+  )
+}
+
+/**
+ * The after image close up on the flagged region, with what the baseline shows there drawn faint and dotted. One
+ * close-up with the outline reads at the panel's 280 px; a before and after pair would halve it, a fence panel to a
+ * few pixels.
+ */
+function Zoom({
+  scene,
+  box,
+  title,
+  baseline
+}: {
+  scene: Scene
+  box: Box
+  title: string
+  baseline: CandidateEvidence['baseline']
+}) {
+  const outlined = baseline !== null && outlinesBaseline(scene)
+  const { region } = closeUp(box)
+  return (
+    <figure className="frame-photo crop-fig">
+      <div className="after-wrap">
+        <CloseUp scene={scene} box={box} baseline={outlined} name={`Close-up of the flagged region: ${title}`} />
+        {/* Named by the close-up itself, so the after image keeps the one "Flagged region" image of the card. */}
+        <div aria-hidden="true">
+          <FlagOutline box={region} title={title} tagAbove={region.y + region.h > 86 && region.y >= 15} />
+        </div>
+      </div>
+      <figcaption>
+        <b className="legend">
+          {outlined && (
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <rect x="2" y="2" width="12" height="12" />
+            </svg>
+          )}
+          {baseline === null
+            ? 'No baseline recorded to compare'
+            : outlined
+              ? `Dotted: as in the ${dayMonth(baseline.capturedAt)} baseline`
+              : `Not in the ${dayMonth(baseline.capturedAt)} baseline`}
+        </b>
+        <small>Sample illustration, not a site photo</small>
+      </figcaption>
+    </figure>
+  )
+}
+
 function CardDetail({
   e,
   s,
@@ -356,6 +420,7 @@ function CardDetail({
   const [severityPicked, setSeverityPicked] = useState(false)
   const { client } = useSignedIn()
   const { run, denied } = useRun()
+  const agent = useAgentRun()
 
   const finding = s.findings.find((f) => f.candidateId === c.id)
   // Core's tasks name no candidate: an interim task names its finding; the field check was found when it was raised.
@@ -368,6 +433,9 @@ function CardDetail({
   const sure = c.uncertainty ? SURE[c.uncertainty] : null
   const baseline = e.baseline
   const box = hidden ? null : meta.box
+  // The agent may summarise a card awaiting a decision; blind-first keeps it away like every other AI conclusion.
+  const summarise = open && !hidden && can('draftInbox')
+  const keyHint = `agent-key-${c.id}`
 
   return (
     <>
@@ -436,16 +504,7 @@ function CardDetail({
           <figure className="frame-photo">
             <div className="after-wrap">
               <SampleImage scene={meta.scene} variant="after" tag={false} />
-              {box && (
-                <div
-                  role="img"
-                  aria-label={`Flagged region: ${meta.title}`}
-                  className="ovl"
-                  style={{ left: `${box.x}%`, top: `${box.y}%`, width: `${box.w}%`, height: `${box.h}%` }}
-                >
-                  <span className="tag">{meta.title}</span>
-                </div>
-              )}
+              {box && <FlagOutline box={box} title={meta.title} />}
             </div>
             <figcaption>
               <div className="cap-line">
@@ -468,8 +527,43 @@ function CardDetail({
             </span>
           </p>
         )}
-        {c.tier !== 3 && !hidden && (
-          <p className="why-text">{`Sample summary, not written by the agent: ${meta.summary} Evidence: ${after.id}, ${c.id}.`}</p>
+        {!hidden && (c.agentSummary || c.tier !== 3 || summarise) && (
+          <div className="summary">
+            {c.agentSummary ? (
+              <>
+                <p className="why-text">{c.agentSummary.text}</p>
+                <AgentByline model={c.agentSummary.model} citations={c.agentSummary.citations} />
+              </>
+            ) : (
+              c.tier !== 3 && (
+                <p className="why-text">{`Sample summary, not written by the agent: ${meta.summary} Evidence: ${after.id}, ${c.id}.`}</p>
+              )
+            )}
+            {summarise && (
+              <div className="summarise">
+                <button
+                  className="btn"
+                  disabled={!agent.ready || agent.busy}
+                  aria-describedby={agent.ready ? undefined : keyHint}
+                  onClick={async () => {
+                    const done = await agent.run((a, signal) => a.draftInbox(c, finding ?? null, signal))
+                    // Core emits no event when it stores a summary, so the card reads it back itself.
+                    if (done) await refresh()
+                  }}
+                >
+                  <Robot size={20} weight="bold" aria-hidden="true" />
+                  {agent.busy ? 'Summarising…' : 'Summarise with the agent'}
+                </button>
+                {agent.busy && (
+                  <button className="btn" onClick={agent.stop}>
+                    Stop
+                  </button>
+                )}
+              </div>
+            )}
+            {summarise && !agent.ready && <NeedsKey id={keyHint} />}
+            {agent.problem && <AgentProblemLine problem={agent.problem} />}
+          </div>
         )}
         {c.tier !== 3 && (
           <p className="passline">
@@ -507,17 +601,12 @@ function CardDetail({
             <>
               <h3>Zoom on the flagged item</h3>
               <div className="ai-panel">
-                <figure className="crop-fig" aria-label="Zoomed crop">
-                  <div className="crop">
-                    <SampleImage
-                      scene={meta.scene}
-                      variant="after"
-                      focus={meta.box!}
-                      name="Zoomed crop of the flagged region"
-                    />
-                  </div>
-                  <figcaption>Zoomed crop of the flagged region</figcaption>
-                </figure>
+                <Zoom
+                  scene={meta.scene}
+                  box={must(meta.box ?? undefined, `flagged region of ${c.id}`)}
+                  title={meta.title}
+                  baseline={baseline}
+                />
                 <div className="ai-box">
                   <p className="label">AI suggestion, unvalidated</p>
                   <p className="big">AI label: {c.itemStatus?.replace('_', ' ') ?? 'general change'}</p>

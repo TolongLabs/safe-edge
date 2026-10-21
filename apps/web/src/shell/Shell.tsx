@@ -390,7 +390,9 @@ function NotFound({ heading, line, icon }: { heading: string; line: string; icon
           <a className="btn primary" href="#/inbox">
             Back to Inbox
           </a>
-          <p className="address">Address: {useHash()}</p>
+          <p className="address">
+            Address: <span translate="no">{useHash()}</span>
+          </p>
         </div>
       </main>
     </Screen>
@@ -408,7 +410,7 @@ export const NotInSession = () => (
 export const PageNotFound = () => (
   <NotFound
     heading="Page not found"
-    line="There is no page at this address. The menu on the left lists the pages that exist."
+    line="There is no page at this address. The main menu lists the pages that exist."
     icon={<WarningCircle size={24} weight="bold" aria-hidden="true" />}
   />
 )
