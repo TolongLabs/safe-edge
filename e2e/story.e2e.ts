@@ -3,7 +3,8 @@ import { expect, test, type Page } from '@playwright/test'
 // The scene tells one story, S1 to S3, in four chapters: it opens on the problem, plays one caption at a time, holds
 // each long enough to read, and ends on the proven pass. The old panel's controls live in a details menu.
 
-const HEADLINE = 'A fence panel is missing. A child on the path can reach deep water.'
+const HEADLINE =
+  'Last night’s storm knocked out a fence panel. The edge still shows a valid pass: nobody has checked yet.'
 const SOLUTION = 'Safe Edge finds gaps like this, gets them fixed, and proves the fix before the edge counts as safe.'
 const TAKEOFF = 'A dry morning. The drone takes off from the roof dock to photograph each edge.'
 
@@ -169,6 +170,17 @@ test.describe('on a 320 px phone', () => {
       await inside(await chip.boundingBox())
     const hint = (await page.getByText(/Drag to rotate/).boundingBox())!
     expect(hint.y).toBeGreaterThanOrEqual(card.y + card.height)
+  })
+
+  test('the first screen fits, with both buttons on screen', async ({ page }) => {
+    await open(page)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320)
+    const box = (await story(page).boundingBox())!
+    expect(box.y).toBeGreaterThanOrEqual(0)
+    expect(box.x + box.width).toBeLessThanOrEqual(320)
+    expect(box.y + box.height).toBeLessThanOrEqual(640)
+    for (const name of [/Play the story/, 'Look around'])
+      await expect(story(page).getByRole('button', { name })).toBeInViewport()
   })
 
   test('every control uses the design font', async ({ page }) => {

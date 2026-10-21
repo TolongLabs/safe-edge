@@ -167,6 +167,34 @@ test('AC3 AC7 confirm opens work and labels every record', async ({ page }) => {
   for (const r of [c, finding, task, wo]) await expect(r.getByText('Sample', { exact: true }).first()).toBeVisible()
 })
 
+test('the decision controls line up, and severity says when it is still pre-filled', async ({ page }) => {
+  const decision = page.getByRole('group', { name: 'Decision' })
+  const severity = decision.getByRole('combobox', { name: /^Severity/ })
+  const controls = [
+    severity.locator('xpath=ancestor::label'),
+    decision.getByRole('button', { name: 'Confirm: needs a fix', exact: true }),
+    decision.getByRole('button', { name: 'Look again' }),
+    decision.getByRole('button', { name: 'Not a problem' })
+  ]
+  const sameRow = async (row: typeof controls) => {
+    const [first, ...rest] = await Promise.all(row.map(async (l) => (await l.boundingBox())!))
+    for (const b of rest) {
+      expect(Math.abs(b.y - first!.y)).toBeLessThanOrEqual(1)
+      expect(Math.abs(b.height - first!.height)).toBeLessThanOrEqual(1)
+    }
+  }
+  // At the demo's 1440 x 900 every control shares one row.
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await sameRow(controls)
+  // Narrower, the field takes its own line and the three buttons still share theirs.
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await sameRow(controls.slice(1))
+  await expect(decision.getByText('(pre-filled')).toBeVisible()
+  await severity.selectOption('low')
+  await expect(decision.getByText('(pre-filled')).toHaveCount(0)
+  await expect(severity).toHaveValue('low')
+})
+
 test('AC5 confirming is one click and opens all three records', async ({ page }) => {
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()
