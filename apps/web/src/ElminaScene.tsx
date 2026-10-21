@@ -1,3 +1,4 @@
+import { CaretLeft } from '@phosphor-icons/react'
 import {
   createElminaScene,
   type ElminaLayers,
@@ -12,6 +13,7 @@ import parksUrl from '../../../data/elmina/osm/parks.geojson?url'
 import pathsUrl from '../../../data/elmina/osm/paths.geojson?url'
 import waterUrl from '../../../data/elmina/osm/water.geojson?url'
 import seedUrl from '../../../data/elmina/fixtures/seed.json?url'
+import { button } from './button.ts'
 import { ControlsHint } from './ControlsHint.tsx'
 import { DetailsMenu } from './DetailsMenu.tsx'
 import { LoadingCard, type LoadState } from './LoadingCard.tsx'
@@ -20,13 +22,52 @@ import { StoryCard } from './StoryCard.tsx'
 import { usePlayback, type PlaybackMode } from './usePlayback.ts'
 
 const layerUrls = { water: waterUrl, parks: parksUrl, paths: pathsUrl, buildings: buildingsUrl }
-/** What inline styles cannot say: a shorter badge on narrow screens, and tap-sized controls on touch screens. */
+/**
+ * What inline styles cannot say: a shorter badge on narrow screens, tap-sized controls on touch screens, and the
+ * buttons' and fields' hover, focus and disabled states (DESIGN.md, Light only: the scene draws its own night).
+ */
 const sceneCss = `
 .sim-short { display: none }
 @media (max-width: 640px) { .sim-long { display: none } .sim-short { display: inline } }
 [data-testid="elmina-scene"] { --tap: 32px }
 @media (pointer: coarse) { [data-testid="elmina-scene"] { --tap: 44px } }
+[data-testid="elmina-scene"] :focus-visible { outline: none; box-shadow: 0 0 0 2px #fbfcfb, 0 0 0 4px #24443b }
+.scene-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;
+  min-height: var(--tap, 32px); padding: 0 14px; border: 1.5px solid #17302a; border-radius: 8px;
+  background: #fbfcfb; color: #17302a; font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  touch-action: manipulation;
+}
+.scene-btn:hover { background: #e6eeea }
+.scene-btn.primary { background: #17302a; color: #ffffff }
+.scene-btn.primary:hover { border-color: #24443b; background: #24443b }
+.scene-btn:disabled, .scene-btn:disabled:hover {
+  border: 1px solid #cfd6d2; background: #eef2ef; color: #8e9994; cursor: not-allowed;
+}
+/* Buttons that float over the map lift a little; their focus ring keeps that lift. */
+.scene-btn.float { box-shadow: 0 1px 2px rgb(22 27 26 / 0.06) }
+.scene-btn.float:focus-visible { box-shadow: 0 0 0 2px #fbfcfb, 0 0 0 4px #24443b, 0 1px 2px rgb(22 27 26 / 0.06) }
+.scene-select {
+  appearance: none; box-sizing: border-box; min-height: var(--tap, 32px); padding: 0 32px 0 10px;
+  border: 1px solid #8e9994; border-radius: 8px; color: #1c2925; font: inherit; font-weight: 600; cursor: pointer;
+  background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%235d6b66' d='M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z'/%3E%3C/svg%3E") no-repeat right 10px center / 14px 14px;
+}
+.scene-select:hover { border-color: #5d6b66 }
+.scene-select:focus-visible { border-color: #24443b; box-shadow: inset 0 0 0 1px #24443b }
+/* High-contrast mode drops background images, so the native arrow comes back there. */
+@media (forced-colors: active) { .scene-select { appearance: auto; background-image: none; padding-right: 10px } }
 `
+
+/**
+ * Where Back goes: the app page that opened the map, through the browser's history so that page can come back as it
+ * was (its demo data lives in the page); a direct visit links to the app instead.
+ */
+const app = new URL('./', location.href)
+const cameFromApp = (() => {
+  if (!document.referrer || history.length < 2) return false
+  const from = new URL(document.referrer)
+  return from.origin === app.origin && (from.pathname === app.pathname || from.pathname === `${app.pathname}index.html`)
+})()
 
 const query = new URLSearchParams(location.search)
 /** `?record` opens recording mode: the camera follows a fixed path and the user's camera controls are off. */
@@ -186,6 +227,22 @@ export function ElminaScene() {
     >
       <style>{sceneCss}</style>
       {load && <LoadingCard state={load} />}
+      {!recording && (
+        <a
+          href={app.href}
+          aria-label="Back to Safe Edge"
+          className={`${button(false)} float`}
+          style={{ position: 'absolute', top: 8, left: 12, paddingLeft: 10 }}
+          onClick={(event) => {
+            if (!cameFromApp) return
+            event.preventDefault()
+            history.back()
+          }}
+        >
+          <CaretLeft size={16} weight="bold" aria-hidden="true" />
+          Back
+        </a>
+      )}
       {status === 'ready' && <ControlsHint hidden={recording} />}
       {status === 'ready' && (
         <p
