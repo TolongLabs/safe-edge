@@ -50,6 +50,28 @@
   color: var(--rail-muted);
 }
 
+/* The product pages, for a reader who wants more before going in. Full-size targets on every screen. */
+.signin-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+  font-size: var(--t-small);
+  font-weight: 600;
+}
+
+.signin-pages a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--sky);
+  text-decoration-color: var(--rail-muted);
+  text-underline-offset: 3px;
+}
+
+.signin-pages a:hover {
+  color: var(--island);
+}
+
 .signin-art {
   width: calc(100% + 2 * var(--margin));
   max-width: none;
@@ -70,6 +92,9 @@
 }
 
 .signin-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   justify-self: start;
   font-size: var(--t-small);
   font-weight: 600;

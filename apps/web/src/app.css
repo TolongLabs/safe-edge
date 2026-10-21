@@ -99,11 +99,17 @@
   --elevation-3: 0 16px 40px rgba(22, 27, 26, 0.18), 0 2px 6px rgba(22, 27, 26, 0.08);
   --island-padding: 28px;
   --focus-ring: 0 0 0 2px var(--bg-surface), 0 0 0 4px var(--border-focus);
+  /* The select caret: Phosphor's bold CaretDown in Moss Grey (Dark: #b4bdb8). */
+  --caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%235d6b66' d='M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z'/%3E%3C/svg%3E");
+  /* Native popups, date pickers and scrollbars follow the theme too. */
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --bg-canvas: #111a17;
+    color-scheme: dark;
+    --caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%23b4bdb8' d='M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z'/%3E%3C/svg%3E");
     --bg-surface: #1c2925;
     --bg-sunken: #111a17;
     --bg-raised: #24302c;
@@ -147,6 +153,8 @@
 
 :root[data-theme='dark'] {
   --bg-canvas: #111a17;
+  color-scheme: dark;
+  --caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%23b4bdb8' d='M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z'/%3E%3C/svg%3E");
   --bg-surface: #1c2925;
   --bg-sunken: #111a17;
   --bg-raised: #24302c;
@@ -195,6 +203,10 @@ body {
   background: var(--bg-canvas);
   color: var(--text-primary);
   font: 400 var(--fs-body) / var(--lh-body) var(--font-sans);
+  accent-color: var(--accent-default);
+  caret-color: var(--accent-default);
+  scrollbar-color: var(--border-strong) transparent;
+  -webkit-tap-highlight-color: transparent;
 }
 h1,
 h2,
@@ -225,6 +237,95 @@ textarea {
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+a {
+  color: var(--text-link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+button,
+a,
+label,
+select,
+summary {
+  touch-action: manipulation;
+}
+/* Times, counts and measurements line up in columns. */
+time,
+.time,
+.count {
+  font-variant-numeric: tabular-nums;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+/* At 16 px or more, a phone does not zoom the page when a field takes focus. */
+@media (pointer: coarse) {
+  :root :is(select, textarea, input) {
+    font-size: max(16px, 1em);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Fields (DESIGN.md Inputs): Raised White, Field Edge border, 8 px corners, 44 px tall; 2 px focus-colour border.
+   :where keeps these at zero specificity, so textarea, select and any screen's own rule refine them. */
+:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])) {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-raised);
+  color: var(--text-primary);
+}
+textarea {
+  padding: var(--space-3);
+  min-height: 88px;
+}
+/* A native select keeps its semantics and popup; only the closed box takes the field style and a Phosphor caret. */
+select {
+  appearance: none;
+  padding-right: calc(var(--space-3) + 16px + var(--space-2));
+  background-image: var(--caret);
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 16px 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+/* High-contrast mode drops background images, so the native arrow comes back there. */
+@media (forced-colors: active) {
+  select {
+    appearance: auto;
+    background-image: none;
+    padding-right: var(--space-3);
+  }
+}
+:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])):hover {
+  border-color: var(--text-secondary);
+}
+:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])):focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: inset 0 0 0 1px var(--border-focus);
+}
+:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])):disabled {
+  background-color: var(--bg-sunken);
+  border-color: var(--border-default);
+  color: var(--text-disabled);
+  cursor: not-allowed;
 }
 .sr {
   position: absolute;
@@ -302,7 +403,8 @@ textarea {
   padding: 0 var(--space-3);
   font-size: var(--fs-dense);
 }
-.btn[disabled] {
+.btn:disabled,
+.btn:disabled:hover {
   background: var(--bg-sunken);
   border: 1px solid var(--border-default);
   color: var(--text-disabled);

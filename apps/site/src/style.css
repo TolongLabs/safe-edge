@@ -1,74 +1,6 @@
 /* The landing page is one day at Central Park Lake: each section is an hour, with its own ground. */
 
-/* State marks: shape carries the state as well as colour. */
-.mark {
-  display: inline-block;
-  flex: none;
-  width: 12px;
-  height: 12px;
-}
-
-.mark--suspended {
-  background: var(--red);
-}
-
-.mark--valid {
-  border-radius: 50%;
-  background: var(--valid);
-}
-
-.mark--open {
-  border: 2px solid var(--moss);
-  border-radius: 50%;
-  background: var(--sky);
-}
-
-/* The top bar: one solid island that floats over the day. */
-.topbar {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: var(--z-sticky);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 16px;
-  height: var(--bar-h);
-  padding: 0 6px 0 14px;
-  border-radius: var(--island-radius);
-  background: var(--island);
-  box-shadow: var(--lift);
-}
-
-.wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  justify-self: start;
-  min-height: 44px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
-.topbar-end {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  justify-self: end;
-}
-
-.topbar-end .sim-label {
-  display: none;
-}
-
 @media (min-width: 640px) {
-  .topbar-end .sim-label {
-    display: inline-block;
-  }
-
   .hero .sim {
     display: none;
   }
@@ -135,27 +67,6 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
-}
-
-.sim {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  margin-top: 20px;
-  font-size: var(--t-small);
-  color: var(--moss);
-}
-
-.sim-label {
-  padding: 1px 6px;
-  border: 1.5px solid var(--ink);
-  border-radius: 4px;
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
 .scene {
@@ -969,116 +880,6 @@ input[type='range']::-moz-range-thumb {
   will-change: transform;
 }
 
-/* Night: the fence holds. The footer is a whole screen; it waits under the page, and the page lifts off it. */
-.footer {
-  display: flex;
-  flex-direction: column;
-  min-height: 100svh;
-  background: var(--night);
-  color: var(--bar);
-  --focus: var(--rail-muted);
-}
-
-.night {
-  position: relative;
-  flex: 1;
-  min-height: clamp(180px, 26svh, 300px);
-  overflow: hidden;
-}
-
-.night-art {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: max(100%, 1100px);
-  height: auto;
-  transform: translateX(-50%);
-}
-
-.footer-in {
-  padding: 8px var(--margin) 24px;
-}
-
-.footer-pass {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-  font-size: var(--t-small);
-  color: var(--sage);
-}
-
-.footer-pass .mark--valid {
-  background: var(--valid-night);
-}
-
-.plate-code {
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: var(--rail-hover);
-  color: var(--sky);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
-.footer-lead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px 24px;
-  margin-top: 28px;
-}
-
-.footer-word {
-  font-size: var(--t-section);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  color: var(--sky);
-}
-
-.footer-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 28px 32px;
-  margin-top: 36px;
-  font-size: var(--t-small);
-}
-
-.footer-cols > * {
-  display: grid;
-  align-content: start;
-  gap: 6px;
-}
-
-.footer-cols a {
-  justify-self: start;
-  padding: 2px 0;
-  text-decoration-color: var(--moss);
-  text-underline-offset: 3px;
-}
-
-.footer-cols a:hover {
-  color: var(--island);
-}
-
-.footer-head {
-  margin-bottom: 4px;
-  font-weight: 800;
-  color: var(--island);
-}
-
-.footer-end {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-top: 48px;
-  font-size: var(--t-small);
-}
-
 .has-reveal main {
   position: relative;
   z-index: var(--z-raised);
@@ -1102,20 +903,9 @@ input[type='range']::-moz-range-thumb {
   opacity: 0;
 }
 
-@media (max-width: 639px) {
-  .topbar {
-    grid-template-columns: 1fr auto;
-  }
-
+/* The clock needs the middle of the bar to itself, beside the page links. */
+@media (max-width: 1239px) {
   .clock {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 1ms !important;
   }
 }

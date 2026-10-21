@@ -1,11 +1,14 @@
 import { WarningCircle } from '@phosphor-icons/react'
 import { SafeEdgeApiError } from '@safe-edge/sdk'
 import { useEffect, useState, type ReactNode } from 'react'
+import { Agent } from './screens/agent/Agent'
 import { Capture } from './screens/capture/Capture'
+import { Developers } from './screens/developers/Developers'
 import { FixLens } from './screens/fix-lens/FixLens'
 import { Inbox } from './screens/inbox/Inbox'
 import { Passes } from './screens/passes/Passes'
 import { PassIssued } from './screens/passes/issued/PassIssued'
+import { Patrol } from './screens/patrol/Patrol'
 import { Retest } from './screens/retest/Retest'
 import { isPhone, parseRoute, useHash, type Route } from './shell/route'
 import { ErrorBoundary, NotInSession, PageNotFound, Rail, Screen } from './shell/Shell'
@@ -94,6 +97,12 @@ function RouteView({ route }: { route: Route }) {
         <Capture segmentId={null} />
       )
     }
+    case 'patrol':
+      return <Patrol />
+    case 'agent':
+      return <Agent />
+    case 'developers':
+      return <Developers />
     case 'notFound':
       return <PageNotFound />
   }
