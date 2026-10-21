@@ -1,0 +1,160 @@
+/* Pass issued: hero on the left, the loop timeline on Sunken Grey on the right (DESIGN.md, Layout).
+   `.detail.pi-main`: app.css loads last, so its `.detail` padding would win over one class. */
+.detail.pi-main {
+  padding: var(--space-12);
+}
+.pi-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: center;
+  min-height: 100%;
+}
+.pi-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 460px;
+  justify-self: center;
+}
+.pi-hero section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.pi-hero h3 {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.pi-seal {
+  display: grid;
+  place-items: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--state-valid-bg);
+  color: var(--state-valid-fg);
+}
+.pi-seal.not-valid {
+  background: var(--state-unknown-bg);
+  color: var(--state-unknown-fg);
+}
+.pi-title {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+}
+.pi-place {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+}
+/* Pass badge: state tint, state text and its shape mark (DESIGN.md, Chips and badges). */
+.pi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--state-unknown-bg);
+  color: var(--state-unknown-fg);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-weight: 500;
+}
+.pi-badge .mark {
+  width: 12px;
+  height: 12px;
+}
+.pi-badge.valid {
+  background: var(--state-valid-bg);
+  color: var(--state-valid-fg);
+}
+.pi-badge.expiring {
+  background: var(--state-expiring-bg);
+  color: var(--state-expiring-fg);
+}
+.pi-badge.suspended {
+  background: var(--state-suspended-bg);
+  color: var(--state-suspended-fg);
+}
+.pi-badge.expired {
+  background: var(--state-expired-bg);
+  color: var(--state-expired-fg);
+}
+.pi-ways {
+  color: var(--text-secondary);
+}
+.pi-routes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.pi-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+.pi-timeline-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--bg-sunken);
+}
+.pi-timeline-card h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+}
+/* One grid for every row, so times of different lengths keep the marks in one column. */
+.pi-timeline {
+  display: grid;
+  grid-template-columns: auto 16px minmax(0, 1fr);
+  gap: var(--space-5) var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+.pi-timeline li {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: start;
+}
+.pi-time {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  font-weight: 600;
+}
+.pi-mark {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 2px solid var(--text-primary);
+  border-radius: var(--radius-full);
+}
+.pi-mark.last {
+  background: var(--state-valid-fg);
+  border-color: var(--state-valid-fg);
+}
+.pi-who {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+}
+@media (max-width: 900px) {
+  .detail.pi-main {
+    padding: var(--space-5) var(--space-4);
+  }
+  .pi-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .pi-hero {
+    max-width: none;
+  }
+  .pi-timeline-card {
+    padding: var(--space-5);
+  }
+}

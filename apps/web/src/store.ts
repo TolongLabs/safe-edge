@@ -48,8 +48,14 @@ const stored = () => {
 }
 // `signedId` is the person the page shows and acts as; it changes only together with the snapshot read for them.
 // `target` is the person the next read is for (a sign-in in progress).
-let signedId = stored() ?? MANAGER
+// A guest link (`?as=reviewer` or `?as=manager`) picks the person only on a tab's first load, when none is remembered.
+const asParam = new URLSearchParams(window.location.search).get('as')
+const guest =
+  stored() === null ? (asParam === 'reviewer' ? 'usr_reviewer' : asParam === 'manager' ? MANAGER : null) : null
+let signedId = stored() ?? guest ?? MANAGER
 let target = signedId
+/** The address has no screen yet and the guest came as the reviewer: the start screen is the re-test list, not the Inbox. */
+export const startsAtRetest = () => asParam === 'reviewer' && signedId === 'usr_reviewer'
 const remember = (id: string) => {
   try {
     sessionStorage.setItem(KEY, id)
