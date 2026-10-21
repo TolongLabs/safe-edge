@@ -360,20 +360,23 @@ The rules ask for real data ([brief]). These sources are public:
 - **Plain words:** "eliminate jargon, acronyms, marketing speak, and any ambiguous terms such as 'platform'." Test the two-sentence pitch on a smart friend; if they ask clarifying questions, revise it (Michael Seibel, [YC][yc-seibel]).
 - **Specific numbers and user stories:** "Specific numbers are good" and "Tell stories about users" ([Paul Graham][pg-investors]).
 
-**Our read:** one way to cover the brief's eight areas and the six criteria in ten slides, adapted from [Sequoia's template][sequoia] and the sources above:
+**Our read:** the organisers' [presentation template][sdp-template] fixes the slide order, and they asked teams to use every slide and keep its flow. Its ten numbered slides match the ten-main-slide limit, so we assume the title, team and thank-you slides don't count. Fill it like this, adapted from [Sequoia's template][sequoia] and the sources above. Build it in the [HTML copy of the template](/docs/demo/README.md).
 
-| Slide | Content                                                          | Covers                          |
-| ----- | ---------------------------------------------------------------- | ------------------------------- |
-| 1     | One sentence: "We help [group] do [thing] better", and the track | Solution, strategic fit         |
-| 2     | Problem, with field evidence: a count, a quote, a baseline       | Problem, evidence               |
-| 3     | The named user                                                   | Target user                     |
-| 4     | Solution and the outcome for that user                           | Solution                        |
-| 5     | How it works, in three steps                                     | How it works                    |
-| 6     | Why it's new: today's alternatives and our insight               | Innovation                      |
-| 7     | Impact: the outcome metric, baseline and target                  | Impact                          |
-| 8     | Fit with an SDP pillar, value to SDP and residents, scaling      | Strategic fit, commercial value |
-| 9     | Pilot: site, duration, cost, approvals, decision gate            | Feasibility, implementation     |
-| 10    | Team and the ask: "approve an N-week pilot at X"                 | Team, implementation            |
+| Template slide              | Content                                                                                     | Covers                        |
+| --------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------- |
+| Title                       | One sentence: "We help [group] do [thing] better", and the track                            | Solution, strategic fit       |
+| Team Information            | Team name, leader, university, and each member's email and contact number                   | Team                          |
+| 1. The Problem              | Problem, with field evidence: a count, a quote, a baseline                                  | Problem, evidence             |
+| 2. Target User              | The named user                                                                              | Target user                   |
+| 3. Your Solution            | Solution and the outcome for that user                                                      | Solution                      |
+| 4. Innovation               | Why it's new: today's alternatives and our insight                                          | Innovation                    |
+| 5. How it Works             | How it works, in three steps                                                                | How it works                  |
+| 6. Impact                   | The outcome metric, baseline and target; fit with an SDP pillar; value to SDP and residents | Impact, strategic fit         |
+| 7. Feasibility              | Resources, stakeholders, cost and approvals                                                 | Feasibility, commercial value |
+| 7. Implementation           | Pilot: site, duration, decision gate, then scaling                                          | Implementation                |
+| 7. Visual Concept           | Screenshots, mockups and diagrams of the prototype                                          | How it works                  |
+| 8. Why Your Team Should Win | At most 100 words, ending with the ask: "approve an N-week pilot at X"                      | Team, implementation          |
+| Thank You                   | Nothing to fill                                                                             |                               |
 
 Put the interview log, data sources, cost breakdown, risks and backup answers in the appendix.
 
@@ -382,6 +385,7 @@ Put the interview log, data sources, cost breakdown, risks and backup answers in
 [yc-seibel]: https://www.ycombinator.com/library/4b-how-to-pitch-your-company
 [pg-investors]: https://paulgraham.com/investors.html
 [sequoia]: https://sequoiacap.com/article/writing-a-business-plan/
+[sdp-template]: https://docs.google.com/presentation/d/1mvGUwn8Oi6let8VaZUzvJkcEpGvYPcrE/edit
 
 ### Five-minute video
 
