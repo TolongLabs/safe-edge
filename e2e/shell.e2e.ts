@@ -35,6 +35,19 @@ test('AC160-1 rail links, current page and the Map link', async ({ page }) => {
   await expect(page.getByRole('banner').getByText('Simulation', { exact: true })).toBeVisible()
 })
 
+test('rail order and the Patrol, Agent and Developers pages', async ({ page }) => {
+  const rail = page.getByRole('navigation', { name: 'Main' })
+  await expect(rail.getByRole('link')).toHaveText([/^Inbox/, 'Patrol', 'Map', 'Passes', 'Agent', 'Developers'])
+  for (const name of ['Patrol', 'Agent', 'Developers']) {
+    await rail.getByRole('link', { name, exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`#/${name.toLowerCase()}$`))
+    await expect(rail.getByRole('link', { name, exact: true })).toHaveAttribute('aria-current', 'page')
+    await expect(rail.locator('[aria-current="page"]')).toHaveCount(1)
+    await expect(page).toHaveTitle(`${name} · Safe Edge`)
+  }
+})
+
 test('AC160-1 the rail collapses and expands by keyboard', async ({ page }) => {
   const rail = page.getByRole('navigation', { name: 'Main' })
   const width = () => rail.evaluate((e) => e.getBoundingClientRect().width)
@@ -45,11 +58,24 @@ test('AC160-1 the rail collapses and expands by keyboard', async ({ page }) => {
   await expect(rail.getByRole('button', { name: 'Expand navigation' })).toHaveAttribute('aria-expanded', 'false')
   await expect.poll(width).toBe(72)
   await expect(collapsedNames()).toBeVisible()
+  await expect(rail.getByRole('link', { name: 'Developers' })).toBeVisible()
   await page.keyboard.press('Enter')
   await expect.poll(width).toBe(232)
 })
 
 test('AC160-2 deep links open the same screen after a reload', async ({ page }) => {
+  for (const [hash, name] of [
+    ['#/patrol', 'Patrol'],
+    ['#/agent', 'Agent'],
+    ['#/developers', 'Developers']
+  ] as const) {
+    await page.goto(`demo/${hash}`)
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+    await page.goto(`demo/${hash}/extra`)
+    await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible()
+  }
   await page.goto('demo/#/passes')
   await expect(page.getByRole('heading', { level: 1, name: 'Passes' })).toBeVisible()
   await page.reload()
