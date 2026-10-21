@@ -91,7 +91,9 @@ test('AC83-1 the township view lists every edge, worst first, with S1 suspended'
   const map = page.getByRole('link', { name: 'Open the Map' })
   await expect(map).toHaveAttribute('href', 'scene.html')
   await expect(page.getByText(/shows the demo's starting data and the scenario player/)).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Export handover pack' })).toBeDisabled()
+  await expect(page.getByRole('combobox', { name: 'Asset' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Download JSON' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Printable page' })).toBeDisabled()
 })
 
 test('AC83-2 overdue work is escalated by the manager and read by the general manager', async ({ page }) => {
@@ -139,7 +141,7 @@ test('AC83-3 the monthly report is drafted by a person and exported', async ({ p
   const text = (await (await mdFile.createReadStream()).toArray()).join('')
   expect(text).toContain('Drafted by Farah Hashim')
   const js = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'JSON' }).click()
+  await page.getByRole('button', { name: 'JSON', exact: true }).click()
   const json = JSON.parse((await (await (await js).createReadStream()).toArray()).join(''))
   expect(json).toMatchObject({ kind: 'monthly_report', status: 'draft', simulated: true })
   // the printable page: only the report shows when printing
