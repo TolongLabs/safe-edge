@@ -149,6 +149,48 @@ describe('the operations table in core', () => {
       }
     })
 
+    // Fix Lens corrections: a mis-marked opening, a stale route and a stale remedy are removed, and the engineer
+    // confirms the marking that stays.
+    const mark = [{ evidenceId: 'evd_s1_photo', x: 0.45, y: 0.6 }]
+    const misMarked = h.call('createOpening', 'usr_manager', {
+      body: { segmentId: S1.segmentId, type: 'fence_gap', photoMarks: mark, measuredMm: null }
+    }).data
+    h.call('deleteOpening', 'usr_manager', { params: { id: misMarked.id } })
+    const marked = h.call('createOpening', 'usr_manager', {
+      body: { segmentId: S1.segmentId, type: 'fence_gap', photoMarks: mark, measuredMm: 1200 }
+    }).data
+    const linked = h.call('createRoute', 'usr_manager', {
+      body: {
+        segmentId: S1.segmentId,
+        fromFeature: { kind: 'gate', label: 'Gate' },
+        openingIds: [marked.id],
+        status: 'open'
+      }
+    }).data
+    const stale = h.call('createRoute', 'usr_manager', {
+      body: {
+        segmentId: S1.segmentId,
+        fromFeature: { kind: 'gate', label: 'Old gate' },
+        openingIds: [marked.id],
+        status: 'open'
+      }
+    }).data
+    h.call('deleteRoute', 'usr_manager', { params: { id: stale.id } })
+    const staleRemedy = h.call('createRemedy', 'usr_engineer', {
+      body: {
+        segmentId: S1.segmentId,
+        type: 'other',
+        label: 'Superseded',
+        blocksOpeningIds: [marked.id],
+        quantities: [],
+        acceptanceTest: 'Superseded',
+        quote: 'quote_needed'
+      }
+    }).data
+    h.call('deleteRemedy', 'usr_engineer', { params: { id: staleRemedy.id } })
+    h.call('confirmOpening', 'usr_engineer', { params: { id: marked.id } })
+    h.call('confirmRoute', 'usr_engineer', { params: { id: linked.id } })
+
     // Reads, each checked against its response schema by `call`.
     const reader = 'usr_gm'
     h.call('listAssets', reader, {})

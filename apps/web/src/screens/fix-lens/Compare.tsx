@@ -5,6 +5,7 @@ import {
   Info,
   LockSimple,
   Prohibit,
+  Trash,
   WarningCircle,
   Wrench,
   XCircle
@@ -12,7 +13,19 @@ import {
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
-import { OPENING_LABEL, REMEDY_LABEL, addProposed, letter, must, plain, quoteWords, useRun, type Lens } from './lens'
+import {
+  OPENING_LABEL,
+  REMEDY_LABEL,
+  addProposed,
+  letter,
+  must,
+  plain,
+  quoteWords,
+  recordNames,
+  removeProposed,
+  useRun,
+  type Lens
+} from './lens'
 import { PlanDrawing } from './PlanDrawing'
 
 type Closure = Lens['per'][string]
@@ -68,7 +81,8 @@ export function Compare({
   const { snapshot } = useStore()
   const { user } = useSignedIn()
   const s = snapshot!
-  const { run, denied } = useRun(reload)
+  const names = recordNames(lens, s.users)
+  const { run, refusal } = useRun(reload, names)
   const { openings, remedies } = lens.base
   const name = (id: string) =>
     plain(
@@ -164,10 +178,12 @@ export function Compare({
           </span>
         </p>
       )}
-      {denied && (
-        <p className="banner error" role="alert">
+      {refusal && (
+        <p className="banner error fl-refusal" role="alert">
           <WarningCircle size={20} weight="bold" aria-hidden="true" />
-          <span>{denied}</span>
+          <span>
+            {refusal.text} <small>(rule: {refusal.rule})</small>
+          </span>
         </p>
       )}
       {remedies.length === 0 && (
@@ -257,6 +273,21 @@ export function Compare({
                   <LockSimple size={20} weight="bold" aria-hidden="true" />
                   <span>An engineer approves this fix. Not approved yet.</span>
                 </p>
+              )}
+              {can('deleteRemedy') && (
+                <button
+                  className="btn small danger"
+                  type="button"
+                  onClick={() =>
+                    void run(async () => {
+                      await client().deleteRemedy({ params: { id: r.id } })
+                      removeProposed(finding.segmentId, r.id)
+                    })
+                  }
+                >
+                  <Trash size={18} weight="bold" aria-hidden="true" />
+                  Remove fix {L}
+                </button>
               )}
             </div>
           )

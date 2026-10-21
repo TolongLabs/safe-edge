@@ -658,6 +658,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/openings/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove a mis-marked opening; refused while a route or remedy uses it, or once confirmed or blocked
+         * @description Roles: manager, engineer. Agents are refused.
+         */
+        post: operations["deleteOpening"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routes/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove a mis-linked route; refused once confirmed or named by a pass or re-test
+         * @description Roles: manager, engineer. Agents are refused.
+         */
+        post: operations["deleteRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remedies/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove a remedy; refused once approved or used by a work order
+         * @description Roles: manager, engineer. Agents are refused.
+         */
+        post: operations["deleteRemedy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/openings/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Engineer confirms an opening marking; recorded, not yet required for approval
+         * @description Roles: engineer. Agents are refused.
+         */
+        post: operations["confirmOpening"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routes/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Engineer confirms a route link; recorded, not yet required for approval
+         * @description Roles: engineer. Agents are refused.
+         */
+        post: operations["confirmRoute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/work-orders": {
         parameters: {
             query?: never;
@@ -1301,6 +1401,7 @@ export interface components {
             measuredMm: number | null;
             /** @enum {string} */
             status: "open" | "blocked";
+            engineerConfirmedBy: string | null;
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
@@ -1316,6 +1417,7 @@ export interface components {
             };
             openingIds: string[];
             status: components["schemas"]["RouteStatus"];
+            engineerConfirmedBy: string | null;
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
@@ -2136,6 +2238,7 @@ export interface components {
                 };
                 openingIds: string[];
                 status: components["schemas"]["RouteStatus"];
+                engineerConfirmedBy: string | null;
                 simulated: boolean;
                 source: components["schemas"]["Source"];
                 projectedStatus: components["schemas"]["RouteStatus"];
@@ -3286,6 +3389,146 @@ export interface operations {
                 };
             };
             400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteOpening: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Remove a mis-marked opening; refused while a route or remedy uses it, or once confirmed or blocked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Opening"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteRoute: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Remove a mis-linked route; refused once confirmed or named by a pass or re-test */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Route"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteRemedy: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Remove a remedy; refused once approved or used by a work order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Remedy"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    confirmOpening: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Engineer confirms an opening marking; recorded, not yet required for approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Opening"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    confirmRoute: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Engineer confirms a route link; recorded, not yet required for approval */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Route"];
+                };
+            };
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
             404: components["responses"]["NotFound"];
