@@ -1,3 +1,4 @@
+import { CaretDown, CaretUp } from '@phosphor-icons/react'
 import { DRONE_DRAWN_SCALE, type DayPhase, type FlightState } from '@safe-edge/scene'
 import { elminaRainfall, elminaScenarios, rainAt, type Scenario } from '@safe-edge/sdk'
 import { useState } from 'react'
@@ -86,15 +87,15 @@ export function DetailsMenu({
         aria-expanded={open}
         aria-controls="details"
         onClick={() => setOpen((o) => !o)}
-        style={{
-          ...button(false),
-          position: 'absolute',
-          top: 8,
-          right: 12,
-          boxShadow: '0 1px 2px rgb(22 27 26 / 0.06)'
-        }}
+        className={`${button(false)} float`}
+        style={{ position: 'absolute', top: 8, right: 12 }}
       >
-        Details {open ? '▴' : '▾'}
+        Details
+        {open ? (
+          <CaretUp size={16} weight="bold" aria-hidden="true" />
+        ) : (
+          <CaretDown size={16} weight="bold" aria-hidden="true" />
+        )}
       </button>
       {open && (
         <section
@@ -127,7 +128,8 @@ export function DetailsMenu({
                 const value = event.target.value
                 onMode(value === 'story' ? { kind: 'story' } : { kind: 'scenario', id: value as Scenario['id'] })
               }}
-              style={{ font: 'inherit', fontWeight: 600, minHeight: 'var(--tap, 32px)', width: '100%', minWidth: 0 }}
+              className="scene-select"
+              style={{ width: '100%', minWidth: 0 }}
             >
               <option value="story">The story, S1 to S3</option>
               {elminaScenarios.map((s) => (
@@ -220,11 +222,11 @@ export function DetailsMenu({
                     <button
                       type="button"
                       onClick={playback.playing ? playback.pause : playback.play}
-                      style={button(true)}
+                      className={button(true)}
                     >
                       {playback.playing ? 'Pause' : now >= end ? 'Play again' : now > start ? 'Resume' : 'Play'}
                     </button>
-                    <button type="button" onClick={() => void playback.reset()} style={button(false)}>
+                    <button type="button" onClick={() => void playback.reset()} className={button(false)}>
                       Reset
                     </button>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -232,7 +234,7 @@ export function DetailsMenu({
                       <select
                         value={player.speed}
                         onChange={(event) => player.setSpeed(Number(event.target.value))}
-                        style={{ font: 'inherit', minHeight: 'var(--tap, 32px)' }}
+                        className="scene-select"
                       >
                         {SPEEDS.map((s) => (
                           <option key={s} value={s}>

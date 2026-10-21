@@ -23,8 +23,9 @@ const clock = new Intl.DateTimeFormat('en-GB', {
 })
 const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
-// Above the controls strip, which takes two lines on the narrowest phones.
-const BOTTOM = 56
+// Above the bottom strips: the controls strip and the OpenStreetMap credit share one row on a wide screen and stack
+// on a phone, where the scene page raises --strip-room (sceneCss in ElminaScene.tsx).
+const BOTTOM = 'var(--strip-room, 56px)'
 
 const card: CSSProperties = {
   position: 'absolute',
@@ -76,7 +77,8 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
       <button
         type="button"
         onClick={() => setStage('intro')}
-        style={{ ...button(true), position: 'absolute', left: 12, bottom: BOTTOM }}
+        className={button(true)}
+        style={{ position: 'absolute', left: 12, bottom: BOTTOM }}
       >
         Play the story
       </button>
@@ -111,12 +113,12 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
                 setStage('story')
                 playback.play()
               }}
-              style={button(true)}
+              className={button(true)}
             >
               {`Play the story · about ${STORY_SECONDS} s`}
             </button>
           )}
-          <button type="button" onClick={lookAround} style={button(false)}>
+          <button type="button" onClick={lookAround} className={button(false)}>
             Look around
           </button>
         </div>
@@ -200,11 +202,11 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
             <button
               type="button"
               onClick={() => void playback.reset().then(() => playback.play())}
-              style={button(true)}
+              className={button(true)}
             >
               Play again
             </button>
-            <button type="button" onClick={lookAround} style={button(false)}>
+            <button type="button" onClick={lookAround} className={button(false)}>
               Look around
             </button>
           </>
@@ -213,7 +215,8 @@ export function StoryCard({ playback, recording }: { playback: Playback; recordi
             <button
               type="button"
               onClick={playback.playing ? playback.pause : playback.play}
-              style={{ ...button(true), minWidth: 88 }}
+              className={button(true)}
+              style={{ minWidth: 88 }}
             >
               {playback.playing ? 'Pause' : 'Play'}
             </button>

@@ -1,0 +1,150 @@
+/* Developers screen. */
+.dev {
+  gap: var(--space-8);
+}
+.dev section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.dev-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.dev-head h2 {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+.dev-head p {
+  max-width: 75ch;
+  color: var(--text-secondary);
+}
+.dev h3 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 600;
+}
+.dev-note {
+  max-width: 75ch;
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-variant-numeric: tabular-nums;
+}
+.dev :not(pre) > code {
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* Code samples run one per row: their lines are long and must not be cut. */
+.dev-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.dev-try-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+.dev-try-row label,
+.dev-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--fs-dense);
+  font-weight: 500;
+}
+.dev-try-row label {
+  flex: 0 1 380px;
+  min-width: 0;
+}
+.dev-try-row select {
+  width: 100%;
+}
+.dev-filter {
+  max-width: 420px;
+}
+.dev-table-wrap {
+  max-height: 560px;
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.dev-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.dev-table th,
+.dev-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  text-align: left;
+  vertical-align: top;
+}
+.dev-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.dev-table tbody th,
+.dev-path {
+  white-space: nowrap;
+}
+.dev-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.dev-method {
+  display: inline-block;
+  min-width: 48px;
+  padding: 0 var(--space-1);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  font-size: var(--fs-small);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.dev-events {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-3);
+}
+.dev-events li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.dev-fields {
+  color: var(--text-secondary);
+}
+@media (max-width: 600px) {
+  .dev-head h2 {
+    font-size: var(--fs-h1);
+    line-height: var(--lh-h1);
+  }
+  .dev-try-row .btn {
+    width: 100%;
+  }
+}
+/* Long refusals must not squeeze the state icon. */
+.dev :is(.state, .banner) > svg {
+  flex: none;
+}
