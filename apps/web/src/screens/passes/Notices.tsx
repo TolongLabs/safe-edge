@@ -1,6 +1,6 @@
 import type { Notice } from '@safe-edge/contracts'
 import { SafeEdgeDeniedError } from '@safe-edge/sdk'
-import { DownloadSimple, Info } from '@phosphor-icons/react'
+import { DownloadSimple, Info, PaperPlaneTilt } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { can, useSignedIn } from '../../store'
 import { dayTime, month, must, personName as nameOf, type Data, type Row } from './board'
@@ -53,7 +53,8 @@ function NoticeCard({ d, n, act }: { d: Data; n: Notice; act: (run: () => Promis
       {n.simulated && <p className="hint">simulated</p>}
       <p className="notice-body">{n.body}</p>
       {n.status === 'draft' && can('sendNotice') && (
-        <button className="btn primary" onClick={() => act(() => client.sendNotice({ params: { id: n.id } }))}>
+        <button className="btn" onClick={() => act(() => client.sendNotice({ params: { id: n.id } }))}>
+          <PaperPlaneTilt size={20} weight="bold" aria-hidden="true" />
           Send {n.kind === 'escalation' ? 'escalation' : 'report'}
         </button>
       )}
