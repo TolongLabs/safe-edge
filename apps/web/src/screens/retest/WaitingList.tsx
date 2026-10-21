@@ -1,4 +1,4 @@
-import { Info, WarningCircle } from '@phosphor-icons/react'
+import { CaretRight, Info, WarningCircle } from '@phosphor-icons/react'
 import { Screen } from '../../shell/Shell'
 import { can, useSignedIn, useStore } from '../../store'
 import { must, plain } from '../fix-lens/lens'
@@ -50,21 +50,19 @@ export function WaitingList() {
           </div>
         ) : rows.length === 0 && alarms.length === 0 ? (
           error ? null : (
-            <div className="rt-card">
-              <div className="empty-state left">
-                <span className="icon-tile">
-                  <Info size={24} weight="bold" aria-hidden="true" />
-                </span>
-                <h2>No repairs are waiting</h2>
-                <p>
-                  {finished
-                    ? 'No repair is waiting for a check right now. This does not mean the lake edge is safe.'
-                    : 'This does not mean the lake edge is safe: nothing has been sent for repair yet. A manager sends a fix from Fix Lens, then the installer marks it complete, then it can be checked here.'}
-                </p>
-                <a className="btn primary" href="#/inbox">
-                  Back to Inbox
-                </a>
-              </div>
+            <div className="empty-state left">
+              <span className="icon-tile">
+                <Info size={24} weight="bold" aria-hidden="true" />
+              </span>
+              <h2>No repairs are waiting</h2>
+              <p>
+                {finished
+                  ? 'No repair is waiting for a check right now. This does not mean the lake edge is safe.'
+                  : 'This does not mean the lake edge is safe: nothing has been sent for repair yet. A manager sends a fix from Fix Lens, then the installer marks it complete, then it can be checked here.'}
+              </p>
+              <a className="btn primary" href="#/inbox">
+                Back to Inbox
+              </a>
             </div>
           )
         ) : (
@@ -95,13 +93,16 @@ export function WaitingList() {
                 return (
                   <li key={w.id}>
                     <a className="rt-row" href={`#/retest/${w.id}`}>
-                      <span className="rt-row-title">{title}</span>
-                      <span className="rt-help">
-                        {w.status.replace('_', ' ')}
-                        {w.simulated && ' · simulated'}
-                        {action ? '' : ` · ${next}`}
+                      <span className="rt-row-text">
+                        <span className="rt-row-title">{title}</span>
+                        <span className="rt-help">
+                          {w.status.replace('_', ' ')}
+                          {w.simulated && ' · simulated'}
+                          {action ? '' : ` · ${next}`}
+                        </span>
+                        {action && <span className="rt-action">{action}</span>}
                       </span>
-                      {action && <span className="rt-action">{action}</span>}
+                      <CaretRight size={20} weight="bold" aria-hidden="true" />
                     </a>
                   </li>
                 )
@@ -109,19 +110,20 @@ export function WaitingList() {
               {alarms.map((a) => {
                 const mine = can('recordClearance')
                 const body = (
-                  <>
+                  <span className="rt-row-text">
                     <span className="rt-row-title">Check a false alarm: {a.title}</span>
                     <span className="rt-help">
                       {a.status === 'rejected' ? 'Marked not a problem' : 'Sent to look again'}
                       {mine ? '' : ' · A reviewer checks this false alarm'}
                     </span>
                     {mine && <span className="rt-action">Check a false alarm</span>}
-                  </>
+                  </span>
                 )
                 return (
                   <li key={a.candidateId}>
                     <a className="rt-row" href={`#/retest/${a.candidateId}`}>
                       {body}
+                      <CaretRight size={20} weight="bold" aria-hidden="true" />
                     </a>
                   </li>
                 )

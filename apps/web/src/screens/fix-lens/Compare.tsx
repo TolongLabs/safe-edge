@@ -1,4 +1,14 @@
-import { CheckCircle, Circle, LockSimple, Prohibit, XCircle } from '@phosphor-icons/react'
+import {
+  CaretRight,
+  CheckCircle,
+  Circle,
+  Info,
+  LockSimple,
+  Prohibit,
+  WarningCircle,
+  Wrench,
+  XCircle
+} from '@phosphor-icons/react'
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
@@ -97,16 +107,23 @@ export function Compare({
       <p className="fl-muted">Fix Lens follows each way a child could walk from the play area to the lake.</p>
       {failed && (
         <p className="banner info" role="status">
-          {failedIndex < 0 ? 'The last fix' : `Fix ${letter(failedIndex)}`} failed its re-test. Choose a fix again.
+          <Info size={20} weight="bold" aria-hidden="true" />
+          <span>
+            {failedIndex < 0 ? 'The last fix' : `Fix ${letter(failedIndex)}`} failed its re-test. Choose a fix again.
+          </span>
         </p>
       )}
       {denied && (
-        <p className="state bad" role="alert">
-          {denied}
+        <p className="banner error" role="alert">
+          <WarningCircle size={20} weight="bold" aria-hidden="true" />
+          <span>{denied}</span>
         </p>
       )}
       {remedies.length === 0 && (
         <div className="empty-state left">
+          <span className="icon-tile">
+            <Wrench size={24} weight="bold" aria-hidden="true" />
+          </span>
           <h3>No fixes proposed yet</h3>
           <p>
             {can('createRemedy')
@@ -261,7 +278,10 @@ function Propose({
   const ok = label.trim() !== '' && blocks.length > 0 && test.trim() !== '' && qtyOk
   return (
     <details className="fl-propose" open={openings.length > 0}>
-      <summary>Propose a fix</summary>
+      <summary>
+        <CaretRight size={18} weight="bold" aria-hidden="true" />
+        Propose a fix
+      </summary>
       <form
         className="fl-form"
         onSubmit={(e) => {
@@ -305,7 +325,7 @@ function Propose({
           </label>
           <label>
             Name of the fix
-            <input value={label} onChange={(e) => setLabel(e.target.value)} />
+            <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} />
           </label>
         </div>
         <fieldset>
@@ -324,24 +344,24 @@ function Propose({
         <div className="fl-triple">
           <label>
             Quantity of
-            <input value={item} onChange={(e) => setItem(e.target.value)} />
+            <input type="text" value={item} onChange={(e) => setItem(e.target.value)} />
           </label>
           <label>
             Amount
-            <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <input type="text" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
           </label>
           <label>
             Unit
-            <input value={unit} onChange={(e) => setUnit(e.target.value)} />
+            <input type="text" value={unit} onChange={(e) => setUnit(e.target.value)} />
           </label>
         </div>
         <label>
           Acceptance test
-          <input value={test} onChange={(e) => setTest(e.target.value)} />
+          <input type="text" value={test} onChange={(e) => setTest(e.target.value)} />
         </label>
         <label>
           Quote in MYR (leave empty for “quote needed”)
-          <input inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
+          <input type="text" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} />
         </label>
         <button className="btn" type="submit" disabled={!ok}>
           Add this fix

@@ -335,6 +335,9 @@ export function createElminaScene(
   renderer.domElement.addEventListener('pointerdown', onPointerDown)
   renderer.domElement.addEventListener('pointerup', onPointerUp)
 
+  // The ODbL credit stays on screen. It wears the scene's strip style (DESIGN.md Light: Island White, Ink link, 12 px
+  // type): solid, because a translucent strip over the night map drops the text under 4.5:1. A page that needs the
+  // bottom-right corner for something else lifts it with --osm-credit-bottom.
   const attribution = document.createElement('a')
   attribution.href = 'https://www.openstreetmap.org/copyright'
   attribution.target = '_blank'
@@ -342,12 +345,16 @@ export function createElminaScene(
   attribution.textContent = '© OpenStreetMap contributors'
   Object.assign(attribution.style, {
     position: 'absolute',
-    right: '0',
-    bottom: '0',
-    padding: '2px 6px',
-    font: '12px system-ui, sans-serif',
-    color: '#333',
-    background: 'rgb(255 255 255 / 0.8)'
+    right: '12px',
+    bottom: 'var(--osm-credit-bottom, 12px)',
+    padding: '4px 10px',
+    borderRadius: '8px',
+    background: '#fbfcfb',
+    color: '#17302a',
+    font: '500 12px/16px "Atkinson Hyperlegible Next", system-ui, sans-serif',
+    textDecorationThickness: '1px',
+    textUnderlineOffset: '0.2em',
+    whiteSpace: 'nowrap'
   })
   if (getComputedStyle(container).position === 'static') container.style.position = 'relative'
   container.append(attribution)

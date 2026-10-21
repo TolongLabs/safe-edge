@@ -1,7 +1,19 @@
-/* Repair check (phone first): cards on the island, pass/fail segments, a pinned action bar (DESIGN.md). */
-.rt-main {
+/* Repair check (DESIGN.md Layout, Phone): 16 px sides, a card per group, pass/fail segments and a pinned action bar.
+   On a wide screen the same phone column sits centred, 640 px wide, under the full-width phone top bar.
+   `.detail.rt-main`: app.css loads last, so its `.detail` padding would win over one class. */
+.detail.rt-main {
   gap: var(--space-4);
-  padding: var(--space-4);
+  padding: var(--space-4) max(var(--space-4), (100% - 640px) / 2) var(--space-6);
+}
+/* The pinned bar sits flush on the bottom edge. */
+.detail.rt-main:has(.rt-bar) {
+  padding-bottom: 0;
+}
+@media (max-width: 600px) {
+  /* A phone scrolls the page, not the island, so the bar pins to the screen. */
+  .detail.rt-main {
+    overflow-y: visible;
+  }
 }
 .rt-main h2 {
   font-size: var(--fs-h2);
@@ -15,48 +27,63 @@
 .rt-question {
   font-size: var(--fs-h3);
 }
-.rt-fixed {
-  color: var(--text-secondary);
+/* A screen with a pinned bar fills the island, so a short one still keeps its bar at the foot. */
+.rt-checks,
+.rt-work {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  gap: var(--space-4);
 }
+
+/* The waiting list: one row per repair or false alarm, opening its check. */
 .rt-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.rt-list li {
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
-  background: var(--bg-raised);
+  gap: var(--space-3);
 }
 .rt-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  align-items: center;
+  gap: var(--space-3);
   min-height: 56px;
   padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
+  background: var(--bg-surface);
   color: var(--text-primary);
   text-decoration: none;
 }
 .rt-row:hover {
-  background: var(--accent-subtle);
+  background: var(--bg-sunken);
+}
+.rt-row > svg {
+  flex: none;
+  color: var(--text-secondary);
+}
+.rt-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .rt-row-title {
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.rt-quantities {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  font-weight: 600;
 }
 .rt-action {
-  color: var(--accent-default);
+  color: var(--text-link);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  font-weight: 600;
 }
+.rt-quantities {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Cards and checks */
 .rt-card {
   display: flex;
   flex-direction: column;
@@ -69,59 +96,41 @@
 .rt-items {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-  margin: 0;
+  gap: var(--space-6);
   padding: 0;
   list-style: none;
 }
 .rt-item fieldset {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
 .rt-item legend {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   padding: 0;
-  font-size: var(--fs-body);
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
   font-weight: 600;
 }
+
+/* Fields take app.css's field style; the label sits above in Label text. */
 .rt-field {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   font-size: var(--fs-dense);
-  font-weight: 600;
+  line-height: var(--lh-dense);
+  font-weight: 500;
 }
-.rt-field input:not([type]),
-.rt-field input[inputmode],
+.rt-field input,
 .rt-field textarea {
-  box-sizing: border-box;
   width: 100%;
-  min-height: 44px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--bg-raised);
-  color: var(--text-primary);
-  font: 400 var(--fs-body) / var(--lh-body) var(--font-sans);
 }
-.rt-field textarea {
-  padding: var(--space-3);
-}
-.rt-field input:focus-visible,
-.rt-field textarea:focus-visible {
-  outline: none;
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 1px var(--border-focus);
-}
-.rt-field input[aria-invalid='true'] {
-  border-color: var(--danger-default);
-  box-shadow: 0 0 0 1px var(--danger-default);
-}
+/* Number with unit: the unit (cm) is its own segment of the box. */
 .rt-number {
   display: flex;
   max-width: 200px;
@@ -129,13 +138,13 @@
 .rt-number input {
   flex: 1;
   min-width: 0;
-  border-radius: var(--radius-md) 0 0 var(--radius-md) !important;
-  font-weight: 600 !important;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  font-weight: 600;
 }
 .rt-unit {
   display: grid;
   place-items: center;
-  width: 52px;
+  min-width: 48px;
   border: 1px solid var(--border-strong);
   border-left: 0;
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
@@ -143,9 +152,22 @@
   color: var(--text-secondary);
   font-weight: 600;
 }
+.rt-number:focus-within .rt-unit {
+  border-color: var(--border-focus);
+}
+.rt-number:has(input[aria-invalid='true']) input,
+.rt-number:has(input[aria-invalid='true']) .rt-unit {
+  border: 2px solid var(--danger-text);
+  box-shadow: none;
+}
+.rt-number:has(input[aria-invalid='true']) .rt-unit {
+  border-left: 0;
+}
+
+/* Pass / Fail: two 44 px segments; the chosen side takes its state tint. */
 .rt-pf {
   display: flex;
-  max-width: 280px;
+  max-width: 320px;
 }
 .rt-seg {
   position: relative;
@@ -159,6 +181,9 @@
   background: var(--bg-raised);
   font-weight: 600;
   cursor: pointer;
+}
+.rt-seg:hover {
+  background: var(--bg-sunken);
 }
 .rt-seg.pass {
   border-radius: var(--radius-md) 0 0 var(--radius-md);
@@ -177,46 +202,60 @@
   cursor: pointer;
 }
 .rt-seg.on.pass {
+  z-index: 1;
   border-color: var(--state-valid-fg);
   background: var(--state-valid-bg);
   color: var(--state-valid-fg);
 }
 .rt-seg.on.fail {
+  z-index: 1;
   border-color: var(--state-suspended-fg);
   background: var(--state-suspended-bg);
   color: var(--state-suspended-fg);
 }
 .rt-seg:has(input:focus-visible) {
-  z-index: 1;
+  z-index: 2;
   box-shadow: var(--focus-ring);
 }
+
+/* The pinned action bar: what is missing, one full-width primary, and the status line under it. */
 .rt-bar {
   position: sticky;
   bottom: 0;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin: auto calc(-1 * var(--space-4)) calc(-1 * var(--space-4));
-  padding: var(--space-4);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  margin: auto calc(-1 * var(--space-4)) 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--border-default);
   background: var(--bg-surface);
-  box-shadow: 0 -1px 0 var(--border-default);
+}
+.rt-bar .btn,
+.rt-buttons {
+  width: 100%;
 }
 .rt-buttons {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
-.rt-buttons .btn {
-  width: 100%;
-}
 .rt-status {
   color: var(--text-secondary);
   font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
 }
 .rt-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
   color: var(--danger-text);
   font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.rt-error svg {
+  flex: none;
+  margin-top: 2px;
 }
 .rt-skel i {
   display: block;
@@ -224,19 +263,4 @@
   margin-top: var(--space-3);
   border-radius: var(--radius-md);
   background: var(--bg-sunken);
-}
-@media (min-width: 700px) {
-  .rt-main {
-    padding: var(--island-padding);
-  }
-  .rt-bar {
-    margin: auto 0 0;
-    border-radius: var(--radius-lg);
-  }
-  .rt-buttons {
-    flex-direction: row;
-  }
-  .rt-buttons .btn {
-    width: auto;
-  }
 }

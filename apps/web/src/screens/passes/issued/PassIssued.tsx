@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Screen } from '../../../shell/Shell'
 import { can, client, useStore, type Snapshot } from '../../../store'
 import { ROLE_WORDS, must, plain } from '../../fix-lens/lens'
+import { StateMark } from '../../inbox/Inbox'
 import { actionWords, plainReason, useFlagNames } from '../../retest/names'
 import './issued.css'
 
@@ -133,8 +134,8 @@ export function PassIssued({ passId }: { passId: string }) {
         </span>
         <h2 className="pi-title">{valid ? 'Safety pass issued' : `Safety pass ${pass.state}`}</h2>
         <p className="pi-place">{place}</p>
-        <p className={`pi-badge ${valid ? 'valid' : 'not-valid'}`}>
-          <span className="pi-dot" aria-hidden="true" />
+        <p className={`pi-badge ${pass.state}`}>
+          <StateMark state={pass.state} />
           {badge}
         </p>
         {pass.stateReason && names && <p className="rt-help">{plainReason(pass.stateReason, s, names)}</p>}

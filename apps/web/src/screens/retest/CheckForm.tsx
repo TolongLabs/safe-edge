@@ -1,5 +1,5 @@
 import type { Opening, RetestCheck, RetestOutcome } from '@safe-edge/contracts'
-import { Check, X } from '@phosphor-icons/react'
+import { Check, Warning, X } from '@phosphor-icons/react'
 import { useState } from 'react'
 import type { Scene } from '../../scenes'
 import { Photo } from '../fix-lens/Photo'
@@ -100,7 +100,7 @@ export function CheckForm({
 
   return (
     <section className="rt-checks" aria-label="Checks">
-      <p className="rt-fixed">{intro}</p>
+      <p>{intro}</p>
       <div className="rt-card">
         <h2>{items.length} checks at the fence</h2>
         <ol className="rt-items">
@@ -118,9 +118,12 @@ export function CheckForm({
                   {it.opening && (
                     <>
                       <label className="rt-field">
-                        <span>{it.title} reading</span>
+                        <span>
+                          Reading<span className="sr"> for {it.title}</span>
+                        </span>
                         <span className="rt-number">
                           <input
+                            type="text"
                             inputMode="decimal"
                             value={reading(it)}
                             aria-invalid={badReading(it)}
@@ -131,6 +134,7 @@ export function CheckForm({
                       </label>
                       {badReading(it) && (
                         <p className="rt-error" role="alert">
+                          <Warning size={16} weight="bold" aria-hidden="true" />
                           Enter the gap as a number of centimetres.
                         </p>
                       )}
@@ -158,8 +162,10 @@ export function CheckForm({
                     ))}
                   </div>
                   <label className="rt-field">
-                    <span>Reason for {it.title}</span>
-                    <input value={a.reason} onChange={(e) => put(it.key, { reason: e.target.value })} />
+                    <span>
+                      Reason<span className="sr"> for {it.title}</span>
+                    </span>
+                    <input type="text" value={a.reason} onChange={(e) => put(it.key, { reason: e.target.value })} />
                   </label>
                 </fieldset>
               </li>
@@ -167,8 +173,8 @@ export function CheckForm({
           })}
         </ol>
       </div>
+      <p className="rt-help">{rule}</p>
       <div className="rt-bar">
-        <p className="rt-help">{rule}</p>
         {why && (
           <p id="rt-why" className="rt-help">
             {why}

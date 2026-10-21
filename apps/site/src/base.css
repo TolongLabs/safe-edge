@@ -48,6 +48,7 @@
   color: var(--ink);
   background: var(--night);
   -webkit-text-size-adjust: 100%;
+  color-scheme: light;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -214,4 +215,12 @@ a {
   min-height: 44px;
   padding: 0 16px;
   font-size: var(--t-small);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+  }
 }

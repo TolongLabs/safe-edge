@@ -48,7 +48,7 @@ const Sample = ({ r, source = false }: { r: { simulated: boolean; source: string
 )
 
 /** The five pass shapes of DESIGN.md: filled dot, half ring, slashed ring, square, hollow ring. */
-function StateMark({ state }: { state: EdgePass['state'] }) {
+export function StateMark({ state }: { state: EdgePass['state'] }) {
   const shape = {
     valid: <circle cx="9" cy="9" r="6" fill="currentColor" />,
     expiring: (
@@ -353,6 +353,7 @@ function CardDetail({
   const [rejecting, setRejecting] = useState(false)
   const [reason, setReason] = useState('')
   const [severity, setSeverity] = useState<Severity>(c.tier === 2 ? 'high' : 'medium')
+  const [severityPicked, setSeverityPicked] = useState(false)
   const { client } = useSignedIn()
   const { run, denied } = useRun()
 
@@ -622,8 +623,21 @@ function CardDetail({
           {c.tier !== 3 && (
             <>
               <label className="sev">
-                Severity (pre-filled, you can change it)
-                <select value={severity} onChange={(ev) => setSeverity(ev.target.value as Severity)}>
+                Severity
+                {/* Says so until the person picks a severity themselves (TRD: a person sets it). */}
+                {!severityPicked && (
+                  <span>
+                    {' '}
+                    (pre-filled<span className="sr">, you can change it</span>)
+                  </span>
+                )}
+                <select
+                  value={severity}
+                  onChange={(ev) => {
+                    setSeverity(ev.target.value as Severity)
+                    setSeverityPicked(true)
+                  }}
+                >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
