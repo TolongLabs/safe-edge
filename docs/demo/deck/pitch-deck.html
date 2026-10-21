@@ -1,0 +1,723 @@
+<!doctype html>
+<!--
+  Safe Edge pitch deck, draft content on the organisers' template (pitch-deck-template.html).
+  The text comes from docs/PRODUCT.md, docs/PRD.md and docs/research/shortlist/safe-edge.md. Search for "TO FILL"
+  to find what is still missing. Keep every template slide and its order; appendix slides follow "Thank You".
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Safe Edge pitch deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Questrial&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      // Deck controller: fixed 1920x1080 design canvas scaled to the viewport,
+      // keyboard navigation, auto-hiding controls, presenter notes (N) and a
+      // print page rule sized so each slide lands on one landscape PDF page.
+      ;(() => {
+        const DESIGN_W = 1920
+        const DESIGN_H = 1080
+        const STORE_KEY = 'sdp-deck:slide:'
+        const HIDE_MS = 1800
+        const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text'
+        const pad2 = (n) => String(n).padStart(2, '0')
+
+        const CSS = `
+          :host { position: fixed; inset: 0; display: block; background: #0a0a0a; overflow: hidden; }
+          .stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+          .canvas { position: relative; flex-shrink: 0; transform-origin: center center; background: #fff; will-change: transform; }
+          ::slotted(*) { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; box-sizing: border-box !important; overflow: hidden; opacity: 0; visibility: hidden; pointer-events: none; }
+          ::slotted([data-deck-active]) { opacity: 1; visibility: visible; pointer-events: auto; }
+          .tapzones { position: fixed; inset: 0; display: flex; z-index: 2147482000; pointer-events: none; }
+          .tapzone { flex: 1; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+          @media (hover: hover) and (pointer: fine) { .tapzones { display: none; } }
+          .overlay { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 6px); display: flex; align-items: center; gap: 4px; padding: 4px; background: #0a0a0a; color: #fff; border-radius: 999px; font: 500 12px/1 "Geist", ui-sans-serif, system-ui, sans-serif; font-feature-settings: "tnum" 1; letter-spacing: 0.02em; opacity: 0; pointer-events: none; transition: opacity 220ms ease, transform 220ms ease; z-index: 2147483000; user-select: none; }
+          .overlay[data-visible] { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+          .btn { appearance: none; background: transparent; border: 0; margin: 0; padding: 0; color: rgba(255,255,255,0.72); font: inherit; cursor: default; display: inline-flex; align-items: center; justify-content: center; height: 28px; min-width: 28px; border-radius: 999px; }
+          .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+          .btn:focus { outline: none; }
+          .btn svg { width: 14px; height: 14px; display: block; }
+          .count { min-width: 46px; padding: 0 8px; text-align: center; font-variant-numeric: tabular-nums; color: #fff; }
+          .count .sep, .count .total { color: rgba(255,255,255,0.5); }
+          .hint { padding: 0 12px 0 10px; color: rgba(255,255,255,0.45); font-size: 11px; letter-spacing: 0.05em; }
+          .notes { position: fixed; left: 24px; bottom: 22px; max-width: 620px; padding: 14px 18px; background: #0a0a0a; color: rgba(255,255,255,0.88); border-radius: 8px; font: 400 15px/1.5 "Geist", ui-sans-serif, system-ui, sans-serif; opacity: 0; visibility: hidden; transition: opacity 220ms ease; z-index: 2147483000; pointer-events: none; }
+          .notes[data-visible] { opacity: 1; visibility: visible; }
+          .notes .nl { display: block; font: 600 10px/1 "Geist", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 7px; }
+          @media print {
+            :host { position: static; inset: auto; background: none; overflow: visible; }
+            .stage { position: static; display: block; }
+            .canvas { transform: none !important; width: auto !important; height: auto !important; background: none; }
+            ::slotted(*) { position: relative !important; inset: auto !important; width: var(--deck-w) !important; height: var(--deck-h) !important; opacity: 1 !important; visibility: visible !important; pointer-events: auto; break-after: page; page-break-after: always; break-inside: avoid; }
+            ::slotted(*:last-child) { break-after: auto; page-break-after: auto; }
+            .overlay, .tapzones, .notes { display: none !important; }
+          }
+        `
+
+        class DeckStage extends HTMLElement {
+          static get observedAttributes() {
+            return ['width', 'height', 'noscale']
+          }
+
+          constructor() {
+            super()
+            this._root = this.attachShadow({ mode: 'open' })
+            this._index = 0
+            this._slides = []
+            this._notes = []
+            this._notesOn = false
+            this._hideTimer = null
+            this._idleTimer = null
+            this._storageKey = STORE_KEY + (location.pathname || '/')
+            this._onKey = this._onKey.bind(this)
+            this._onResize = this._onResize.bind(this)
+            this._onSlotChange = this._onSlotChange.bind(this)
+            this._onMouseMove = this._onMouseMove.bind(this)
+          }
+
+          get designWidth() {
+            return parseInt(this.getAttribute('width'), 10) || DESIGN_W
+          }
+          get designHeight() {
+            return parseInt(this.getAttribute('height'), 10) || DESIGN_H
+          }
+          get index() {
+            return this._index
+          }
+          get length() {
+            return this._slides.length
+          }
+
+          connectedCallback() {
+            this._render()
+            this._loadNotes()
+            this._syncPrintRule()
+            window.addEventListener('keydown', this._onKey)
+            window.addEventListener('resize', this._onResize)
+            window.addEventListener('mousemove', this._onMouseMove, { passive: true })
+          }
+
+          disconnectedCallback() {
+            window.removeEventListener('keydown', this._onKey)
+            window.removeEventListener('resize', this._onResize)
+            window.removeEventListener('mousemove', this._onMouseMove)
+            if (this._hideTimer) clearTimeout(this._hideTimer)
+            if (this._idleTimer) clearTimeout(this._idleTimer)
+          }
+
+          attributeChangedCallback() {
+            if (this._canvas) {
+              this._sizeCanvas()
+              this._fit()
+              this._syncPrintRule()
+            }
+          }
+
+          _sizeCanvas() {
+            this._canvas.style.width = this.designWidth + 'px'
+            this._canvas.style.height = this.designHeight + 'px'
+            this._canvas.style.setProperty('--deck-w', this.designWidth + 'px')
+            this._canvas.style.setProperty('--deck-h', this.designHeight + 'px')
+          }
+
+          _render() {
+            const style = document.createElement('style')
+            style.textContent = CSS
+
+            const stage = document.createElement('div')
+            stage.className = 'stage'
+            const canvas = document.createElement('div')
+            canvas.className = 'canvas'
+            const slot = document.createElement('slot')
+            slot.addEventListener('slotchange', this._onSlotChange)
+            canvas.appendChild(slot)
+            stage.appendChild(canvas)
+
+            const tapzones = document.createElement('div')
+            tapzones.className = 'tapzones'
+            tapzones.setAttribute('aria-hidden', 'true')
+            const back = document.createElement('div')
+            back.className = 'tapzone'
+            const mid = document.createElement('div')
+            mid.className = 'tapzone'
+            mid.style.pointerEvents = 'none'
+            const fwd = document.createElement('div')
+            fwd.className = 'tapzone'
+            back.addEventListener('click', () => this._go(this._index - 1, 'tap'))
+            fwd.addEventListener('click', () => this._go(this._index + 1, 'tap'))
+            tapzones.append(back, mid, fwd)
+
+            const overlay = document.createElement('div')
+            overlay.className = 'overlay'
+            overlay.setAttribute('role', 'toolbar')
+            overlay.setAttribute('aria-label', 'Deck controls')
+            overlay.innerHTML = `
+              <button class="btn prev" type="button" aria-label="Previous slide" title="Previous (←)">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+              </button>
+              <span class="count" aria-live="polite"><span class="current">1</span><span class="sep"> / </span><span class="total">1</span></span>
+              <button class="btn next" type="button" aria-label="Next slide" title="Next (→)">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+              </button>
+              <span class="hint">R Reset · N Notes</span>
+            `
+            overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'))
+            overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'))
+
+            const notes = document.createElement('div')
+            notes.className = 'notes'
+            notes.setAttribute('aria-live', 'polite')
+
+            this._root.append(style, stage, tapzones, overlay, notes)
+            this._canvas = canvas
+            this._slot = slot
+            this._overlay = overlay
+            this._notesEl = notes
+            this._countEl = overlay.querySelector('.current')
+            this._totalEl = overlay.querySelector('.total')
+            this._sizeCanvas()
+          }
+
+          _syncPrintRule() {
+            const id = 'deck-stage-print-page'
+            let tag = document.getElementById(id)
+            if (!tag) {
+              tag = document.createElement('style')
+              tag.id = id
+              document.head.appendChild(tag)
+            }
+            tag.textContent =
+              '@page { size: ' +
+              this.designWidth +
+              'px ' +
+              this.designHeight +
+              'px; margin: 0; } ' +
+              '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } ' +
+              '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }'
+          }
+
+          _onSlotChange() {
+            this._collectSlides()
+            this._restoreIndex()
+            this._applyIndex({ showOverlay: false, reason: 'init' })
+            this._fit()
+          }
+
+          _collectSlides() {
+            const assigned = this._slot.assignedElements({ flatten: true })
+            this._slides = assigned.filter((el) => !/^(TEMPLATE|SCRIPT|STYLE)$/.test(el.tagName))
+            this._slides.forEach((slide, i) => {
+              let label = slide.getAttribute('data-label')
+              if (!label) {
+                const h = slide.querySelector('h1, h2, h3, [data-title]')
+                if (h) label = (h.textContent || '').trim().slice(0, 40)
+              }
+              slide.setAttribute(
+                'data-screen-label',
+                /^\d+\s/.test(label || '') ? label : `${pad2(i + 1)} ${label || 'Slide'}`
+              )
+              if (!slide.hasAttribute('data-om-validate')) slide.setAttribute('data-om-validate', VALIDATE_ATTR)
+              slide.setAttribute('data-deck-slide', String(i))
+            })
+            if (this._totalEl) this._totalEl.textContent = String(this._slides.length || 1)
+            if (this._index >= this._slides.length) this._index = Math.max(0, this._slides.length - 1)
+          }
+
+          _loadNotes() {
+            const tag = document.getElementById('speaker-notes')
+            try {
+              const parsed = JSON.parse(tag ? tag.textContent : '[]')
+              if (Array.isArray(parsed)) this._notes = parsed
+            } catch (e) {
+              this._notes = []
+            }
+          }
+
+          _restoreIndex() {
+            try {
+              const n = parseInt(localStorage.getItem(this._storageKey), 10)
+              if (Number.isFinite(n) && n >= 0 && n < this._slides.length) this._index = n
+            } catch (e) {}
+          }
+
+          _applyIndex({ showOverlay = true, reason = 'init' } = {}) {
+            if (!this._slides.length) return
+            const prev = this._prevIndex == null ? -1 : this._prevIndex
+            this._slides.forEach((s, i) => {
+              if (i === this._index) s.setAttribute('data-deck-active', '')
+              else s.removeAttribute('data-deck-active')
+            })
+            if (this._countEl) this._countEl.textContent = String(this._index + 1)
+            try {
+              localStorage.setItem(this._storageKey, String(this._index))
+            } catch (e) {}
+            try {
+              window.postMessage({ slideIndexChanged: this._index }, '*')
+            } catch (e) {}
+            this.dispatchEvent(
+              new CustomEvent('slidechange', {
+                detail: { index: this._index, previousIndex: prev, total: this._slides.length, reason },
+                bubbles: true,
+                composed: true
+              })
+            )
+            this._renderNote()
+            this._prevIndex = this._index
+            if (showOverlay) this._flashOverlay()
+          }
+
+          _renderNote() {
+            if (!this._notesEl) return
+            if (!this._notes.length) this._loadNotes()
+            const note = this._notes[this._index]
+            if (this._notesOn && note) {
+              this._notesEl.innerHTML =
+                '<span class="nl">Note · ' + pad2(this._index + 1) + '</span>' + String(note).replace(/</g, '&lt;')
+              this._notesEl.setAttribute('data-visible', '')
+            } else {
+              this._notesEl.removeAttribute('data-visible')
+            }
+          }
+
+          _toggleNotes() {
+            this._notesOn = !this._notesOn
+            this._renderNote()
+          }
+
+          _flashOverlay() {
+            if (!this._overlay) return
+            this._overlay.setAttribute('data-visible', '')
+            if (this._hideTimer) clearTimeout(this._hideTimer)
+            this._hideTimer = setTimeout(() => this._overlay.removeAttribute('data-visible'), HIDE_MS)
+          }
+
+          _fit() {
+            if (!this._canvas) return
+            if (this.hasAttribute('noscale')) {
+              this._canvas.style.transform = 'none'
+              return
+            }
+            const s = Math.min(window.innerWidth / this.designWidth, window.innerHeight / this.designHeight)
+            this._canvas.style.transform = `scale(${s})`
+          }
+
+          _onResize() {
+            this._fit()
+          }
+
+          _onMouseMove() {
+            this._flashOverlay()
+          }
+
+          _onKey(e) {
+            const t = e.target
+            if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+            if (e.metaKey || e.ctrlKey || e.altKey) return
+            const key = e.key
+            let handled = true
+            if (key === 'ArrowRight' || key === 'PageDown' || key === ' ') {
+              this._go(this._index + 1, 'keyboard')
+            } else if (key === 'ArrowLeft' || key === 'PageUp') {
+              this._go(this._index - 1, 'keyboard')
+            } else if (key === 'Home') {
+              this._go(0, 'keyboard')
+            } else if (key === 'End') {
+              this._go(this._slides.length - 1, 'keyboard')
+            } else if (key === 'r' || key === 'R') {
+              this._go(0, 'keyboard')
+            } else if (key === 'n' || key === 'N') {
+              this._toggleNotes()
+            } else if (/^[0-9]$/.test(key)) {
+              const n = key === '0' ? 9 : parseInt(key, 10) - 1
+              if (n < this._slides.length) this._go(n, 'keyboard')
+            } else {
+              handled = false
+            }
+            if (handled) {
+              e.preventDefault()
+              this._flashOverlay()
+            }
+          }
+
+          _go(i, reason = 'api') {
+            if (!this._slides.length) return
+            const clamped = Math.max(0, Math.min(this._slides.length - 1, i))
+            if (clamped === this._index) {
+              this._flashOverlay()
+              return
+            }
+            this._index = clamped
+            this._applyIndex({ showOverlay: true, reason })
+          }
+
+          goTo(i) {
+            this._go(i, 'api')
+          }
+          next() {
+            this._go(this._index + 1, 'api')
+          }
+          prev() {
+            this._go(this._index - 1, 'api')
+          }
+          reset() {
+            this._go(0, 'api')
+          }
+        }
+
+        if (!customElements.get('deck-stage')) customElements.define('deck-stage', DeckStage)
+      })()
+    </script>
+    <style>
+      /* The template uses Metropolis and Century Gothic. Montserrat and Questrial stand in where they aren't installed. */
+      :root {
+        --title-font: Metropolis, Montserrat, sans-serif;
+        --body-font: 'Century Gothic', 'URW Gothic', Questrial, sans-serif;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0a0a0a;
+      }
+      .slide {
+        background: center / cover no-repeat;
+      }
+      .cover {
+        background-image: url(assets/cover.webp);
+      }
+      .title {
+        background-image: url(assets/title-background.webp);
+      }
+      .content {
+        background-image: url(assets/content-background.webp);
+      }
+
+      /* Title slides (slide layout 6): white, bold, centred on y = 511. */
+      .title h1 {
+        position: absolute;
+        top: 511px;
+        left: 240px;
+        width: 1440px;
+        margin: 0;
+        transform: translateY(-50%);
+        color: #fff;
+        font: 700 80px/1.1 var(--title-font);
+        text-align: center;
+      }
+      .title h1 small {
+        font-size: 72px;
+      }
+
+      /* Content slides (slide layout 2): a 44 pt title and 28 pt bullets, both Century Gothic. */
+      .content h2 {
+        position: absolute;
+        top: 180px;
+        left: 112px;
+        width: 1656px;
+        margin: 0;
+        padding: 0 14px;
+        box-sizing: border-box;
+        transform: translateY(-50%);
+        color: #000;
+        font: 700 88px/1.1 var(--body-font);
+      }
+      .content ul {
+        position: absolute;
+        top: 305px;
+        left: 112px;
+        width: 1656px;
+        height: 685px;
+        margin: 0;
+        padding: 7px 14px;
+        box-sizing: border-box;
+        list-style: none;
+        color: #000;
+        font: 56px/1.1 var(--body-font);
+      }
+      .content li {
+        position: relative;
+        margin-top: 20px;
+        padding-left: 36px;
+      }
+      .content li::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      /* Draft only, until the deck is designed: a paragraph slide, smaller appendix text and visible placeholders. */
+      .content p {
+        position: absolute;
+        top: 305px;
+        left: 112px;
+        width: 1656px;
+        margin: 0;
+        padding: 7px 14px;
+        box-sizing: border-box;
+        color: #000;
+        font: 46px/1.3 var(--body-font);
+      }
+      .content ul.appendix {
+        font-size: 36px;
+      }
+      .content ul.appendix li {
+        margin-top: 14px;
+      }
+      .todo {
+        background: #ffe14d;
+      }
+    </style>
+  </head>
+  <body>
+    <deck-stage width="1920" height="1080">
+      <section class="slide cover" aria-label="Township of Tomorrow, presentation template"></section>
+
+      <section class="slide title">
+        <h1>Sime Darby Property<br />University Hackathon 2026</h1>
+      </section>
+
+      <section class="slide title">
+        <h1>
+          <small>People · Safety and security</small><br />Safe Edge<br /><small
+            >We help SDP's park teams find, fix and prove the gaps at township water edges</small
+          >
+        </h1>
+      </section>
+
+      <section class="slide content">
+        <h2>Team Information</h2>
+        <ul>
+          <li>Team name: <mark class="todo">TO FILL</mark></li>
+          <li>Team leader: <mark class="todo">TO FILL</mark></li>
+          <li>University: <mark class="todo">TO FILL</mark></li>
+          <li>Members: <mark class="todo">TO FILL: four names</mark></li>
+          <li>Email: <mark class="todo">TO FILL</mark></li>
+          <li>Contact number: <mark class="todo">TO FILL</mark></li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>1. The Problem</h2>
+        <ul>
+          <li>Bomba counted 371 child and teen drowning deaths, Jan 2023 to Aug 2026</li>
+          <li>8 of 21 reported township water incidents began in a drain; in 2, a child went in after a ball</li>
+          <li>After handover, fences break and covers go missing, and nobody walks every edge</li>
+          <li>
+            “The bigger issue is … clear accountability for maintenance and public safety”: former SDP Head of Township
+          </li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>2. Target User</h2>
+        <ul>
+          <li>SDP's Elmina park maintenance manager, who must keep every retained water edge closed</li>
+          <li>No public record of edge fences, and a weekly walk misses what a storm breaks</li>
+          <li>A repair can look finished and still leave a way round the fence end</li>
+          <li>Supported by the drainage engineer, a reviewer and the township general manager</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>3. Your Solution</h2>
+        <ul>
+          <li>Safe Edge: one loop from patrol to proven fix for every edge SDP maintains</li>
+          <li>Drones, or a phone walk, check fences, covers, buoys and signs</li>
+          <li>A named owner confirms each flag; Fix Lens tests the repair on the site photo first</li>
+          <li>A second person proves the fix on site; the edge gets a pass that expires</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>4. Innovation</h2>
+        <ul>
+          <li>Drone inspection and AI change detection already exist, for example PUB in Singapore</li>
+          <li>New: the protocol around them, from flag to owner, fix, independent proof and expiry</li>
+          <li>Fix Lens shows when a partial repair leaves a recorded route open, before it is bought</li>
+          <li>AI can flag and suspend, never approve; it watches edges, not people</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>5. How it Works</h2>
+        <ul>
+          <li>Patrol: a drone or the walk crew covers each edge</li>
+          <li>Flag: a missing safety item suspends the pass</li>
+          <li>Confirm: the manager decides in the Edge Inbox</li>
+          <li>Fix: Fix Lens checks the repair closes every route</li>
+          <li>Prove: a second person re-tests it on site</li>
+          <li>Repeat: the pass expires and the next patrol checks</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>6. Impact</h2>
+        <ul>
+          <li>Main measure: confirmed open routes to water that stay closed at day 30</li>
+          <li>Days from finding to interim protection, and to independent acceptance</li>
+          <li>Parks stay usable: closing a whole park never counts as a fix</li>
+          <li>Families get safer parks; SDP gets a tested record to hand to the council</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>7. Feasibility</h2>
+        <ul>
+          <li>The phone patrol can start now, with no aviation approval</li>
+          <li>Drones follow after about two months of CAAM, JUPEM, MBSA and privacy approvals</li>
+          <li>Pilot ceiling: RM10,000 for one asset; drones are priced on top</li>
+          <li>Already built: web app, API, SDK, MCP server and DJI mission exports</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>7. Implementation</h2>
+        <ul>
+          <li>Pilot: one retained drain in Elmina Central Park, eight weeks</li>
+          <li>Before work: written access, named owner and engineer, a quote and funds</li>
+          <li>Count every route, then compare today's method with Fix Lens</li>
+          <li>Install the fix, re-test it independently, check again at day 30</li>
+          <li>Scale only if closure, park access, cost and ownership hold</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>7. Visual Concept</h2>
+        <!-- TO FILL: retake the screenshots after the frontend revamp lands on main. -->
+        <ul>
+          <li><mark class="todo">TO FILL: 3D Elmina scene with the SIMULATION badge</mark></li>
+          <li><mark class="todo">TO FILL: Edge Inbox flag card</mark></li>
+          <li><mark class="todo">TO FILL: Fix Lens, partial fix, route still open</mark></li>
+          <li><mark class="todo">TO FILL: phone re-test and the pass</mark></li>
+          <li>Live demo: safe-edge-two.vercel.app</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>8. Why Your Team Should Win</h2>
+        <p>
+          Township children keep drowning in drains and ponds, and after handover nobody clearly owns the fix. Safe Edge
+          gives every water edge an owner and a working loop: patrol, flag, confirm, fix, prove. Fix Lens shows when a
+          repair looks finished but still leaves a way round the fence end, before SDP pays for it. The AI can flag but
+          never approve, and every simulated part is labelled. The phone patrol can start without aviation approval. Our
+          ask: an eight-week pilot on one retained drain in Elmina Central Park, with a named owner and a RM10,000
+          ceiling.
+        </p>
+      </section>
+
+      <section class="slide title">
+        <h1>Thank You</h1>
+      </section>
+
+      <section class="slide content">
+        <h2>Appendix: Sources</h2>
+        <ul class="appendix">
+          <li>371 deaths: Bomba figures in The Star, 16 Oct 2026</li>
+          <li>
+            8 of 21 incidents: our table of news reports, Selangor and KL, 2023 to 2026; selected reports, not a rate
+          </li>
+          <li>Accountability quote: a former SDP Head of Township, written answers, 16 Oct 2026</li>
+          <li>
+            Edge record: OpenStreetMap around Elmina Central Park maps 18 water bodies, 28 waterways and no fences
+          </li>
+          <li>SDP fit: Sustainability Report 2025, pp. 94–95; Integrated Annual Report 2025, pp. 51, 64, 149</li>
+          <li>Drone costs: our model from Malaysian listings, Oct 2026; excludes installation and insurance</li>
+          <li>Approvals: CAAM Standard ATF, at least 14 working days, RM250 per aircraft per area</li>
+          <li><mark class="todo">TO FILL: full links, once the repo or a sources page is public</mark></li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>Appendix: Real and Simulated</h2>
+        <ul class="appendix">
+          <li>Real: the OpenStreetMap map of Elmina and a timestamped JPS rainfall reading</li>
+          <li>Real: patrol routes and mission exports that open in DJI Pilot 2 and QGroundControl</li>
+          <li>Real: the Inbox, Fix Lens, re-test, board, roles and audit trail</li>
+          <li>Real: the API, SDK and MCP server; agents and AI tools cannot approve</li>
+          <li>Real: the agent drafts work with Claude, using the viewer's own key</li>
+          <li>Simulated and labelled: flights, the drone camera, detections, site photos and repairs</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>Appendix: What We Proved</h2>
+        <ul class="appendix">
+          <li>Proved: the loop from flag to pass runs end to end in software, under automated tests</li>
+          <li>Proved: the server refuses any agent that tries to confirm, accept or send</li>
+          <li>Not obtained: SDP site access, a named owner, field photos and interviews</li>
+          <li>Not obtained: a contractor quote and the practitioner comparison</li>
+          <li>Planned for the mentoring sprint, by 11 Nov: field photos, interviews, quotes, a 5-person test</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>Appendix: Pilot Cost</h2>
+        <ul class="appendix">
+          <li>Survey, engineer review and independent acceptance: RM1,500</li>
+          <li>Interim protection and the permanent repair: RM5,000</li>
+          <li>Routine checks, day-30 check and first renewal: RM1,000</li>
+          <li>Record export setup and support: RM500</li>
+          <li>Contingency: RM2,000</li>
+          <li>Total RM10,000: a ceiling we set, not a quote; a priced quote replaces it</li>
+          <li>Drones on top: a hired operator RM23,017 to RM64,642 in year one; a dock RM88,548</li>
+          <li>A weekly two-person walk costs about RM1,800 a year in staff time</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>Appendix: Drone Approvals</h2>
+        <ul class="appendix">
+          <li>CAAM Standard ATF: at least 14 working days, RM250 per aircraft per area, up to 90 days</li>
+          <li>JUPEM imagery approval where required, and MBSA's drone request</li>
+          <li>An SDP landowner letter and a data protection impact assessment</li>
+          <li>Subang air traffic: Elmina Central Park is about 6.5 km from Subang, inside its control zone</li>
+          <li>Docked patrols only if CAAM accepts a safety case for a residential area</li>
+          <li>Until then, the phone patrol carries the whole loop</li>
+        </ul>
+      </section>
+
+      <section class="slide content">
+        <h2>Appendix: Risks</h2>
+        <ul class="appendix">
+          <li>It may not beat a good engineer: the pilot compares both on the same evidence</li>
+          <li>A record does not fund a repair: no work starts without funds and an owner</li>
+          <li>Photos can mislead: tape and a 100 mm gauge decide sizes; unknown never passes</li>
+          <li>Drones: control-zone limits and false flags from growth and glare</li>
+          <li>The pilot measures routes closed and kept closed, not lives saved</li>
+        </ul>
+      </section>
+    </deck-stage>
+
+    <!-- Presenter notes: one string per slide, in slide order. Press N to show them. -->
+    <script type="application/json" id="speaker-notes">
+      [
+        "",
+        "",
+        "Safe Edge, People track, safety and security. In one line: drones and AI find what changed at SDP's water edges; Safe Edge makes sure a named owner fixes it and a second person proves the fix.",
+        "",
+        "Bomba's figure is national, for children and teens, January 2023 to August 2026. The 21 incidents are news reports we collected for Selangor and Kuala Lumpur township waters since 2023; they show how it happens, not how often. The quote is from a former SDP Head of Township we consulted on 16 October.",
+        "These are roles to confirm with SDP by name; nobody has committed yet. The engineer approves the remedy, a reviewer who did not install it re-tests it, and the general manager funds it and sees overdue work.",
+        "The drone is optional. The protocol is the product: the phone patrol feeds the same Inbox, Fix Lens and proof.",
+        "PUB ran a Smart Drain Inspector challenge and flies drones over reservoirs; DJI FlightHub 2 compares photos from repeated routes. We claim the operating protocol, not the drone or the AI. Frames with people are dropped before storage.",
+        "Six steps, the Edge Loop. Only people confirm a finding, accept a repair or issue a pass. Unknown, for example under canopy or glare, always opens a field task and never becomes a pass.",
+        "This pilot cannot prove lives saved or fewer drownings. It measures a hazard proxy: confirmed open routes at baseline, and how many stay closed 30 days after the repair.",
+        "Approvals: CAAM Standard ATF, JUPEM imagery approval where required, MBSA's drone request, an SDP landowner letter, a data protection impact assessment and Subang air-traffic coordination. RM10,000 is a ceiling we set for the repair decision on one asset, not a quote.",
+        "The pilot asks SDP for one retained drain, a named custodian, an engineer, an independent reviewer and a budget. If the app shows no better repair choice and no time saved against today's method, we drop the app claim.",
+        "Every simulated view carries the SIMULATION label.",
+        "",
+        "",
+        "",
+        "",
+        "Every gap is stated as not obtained. A real negative result is more useful than a made-up success.",
+        "",
+        "",
+        ""
+      ]
+    </script>
+  </body>
+</html>

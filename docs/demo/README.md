@@ -16,8 +16,8 @@ The organisers asked teams to use every template slide and keep its flow. The [s
 
 ## Build the deck
 
-1.  Copy `deck/pitch-deck-template.html` to `deck/pitch-deck.html` in the same folder, so the `assets/` paths still work.
-1.  Replace the prompt text on each slide with our content. Keep every slide and its order.
+1.  Open [`deck/pitch-deck.html`](/docs/demo/deck/pitch-deck.html), the draft. It already holds our content from `PRODUCT.md`, the PRD and the [Safe Edge pitch](/docs/research/shortlist/safe-edge.md). Search it for "TO FILL" to find the team details and screenshots still missing.
+1.  Keep every template slide and its order.
 1.  Put supporting detail on appendix slides after "Thank You". Copy a content slide to make one.
 1.  Open the file in Chrome or Edge. Move between slides with the arrow keys, the controls that show when you move the mouse, or a tap on either side of the screen on a phone. Press 1 to 9 to jump to slides 1 to 9 (0 is slide 10), and R to go back to the first slide. The deck reopens on the last slide shown.
 1.  Write presenter notes in the `speaker-notes` block at the end of the file, one string per slide. Press N to show them.
