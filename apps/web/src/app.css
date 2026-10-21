@@ -282,7 +282,11 @@ p {
 
 /* Fields (DESIGN.md Inputs): Raised White, Field Edge border, 8 px corners, 44 px tall; 2 px focus-colour border.
    :where keeps these at zero specificity, so textarea, select and any screen's own rule refine them. */
-:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])) {
+:where(
+  select,
+  textarea,
+  input:is([type='date'], [type='text'], [type='search'], [type='number'], [type='password'], [type='url'])
+) {
   min-height: 44px;
   padding: 0 var(--space-3);
   border: 1px solid var(--border-strong);
@@ -313,15 +317,27 @@ select {
     padding-right: var(--space-3);
   }
 }
-:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])):hover {
+:where(
+  select,
+  textarea,
+  input:is([type='date'], [type='text'], [type='search'], [type='number'], [type='password'], [type='url'])
+):hover {
   border-color: var(--text-secondary);
 }
-:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])):focus {
+:where(
+  select,
+  textarea,
+  input:is([type='date'], [type='text'], [type='search'], [type='number'], [type='password'], [type='url'])
+):focus {
   outline: none;
   border-color: var(--border-focus);
   box-shadow: inset 0 0 0 1px var(--border-focus);
 }
-:where(select, textarea, input:is([type='date'], [type='text'], [type='search'], [type='number'])):disabled {
+:where(
+  select,
+  textarea,
+  input:is([type='date'], [type='text'], [type='search'], [type='number'], [type='password'], [type='url'])
+):disabled {
   background-color: var(--bg-sunken);
   border-color: var(--border-default);
   color: var(--text-disabled);

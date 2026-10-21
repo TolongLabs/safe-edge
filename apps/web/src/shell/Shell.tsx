@@ -5,6 +5,7 @@ import {
   Code,
   DotsThree,
   Drone,
+  GearSix,
   Info,
   MapTrifold,
   Robot,
@@ -114,6 +115,10 @@ function ProfileMenu({ compact = false }: { compact?: boolean }) {
             <b>{plain(user.name)}</b>
             <span>{roleLabel(user.role)}</span>
           </p>
+          <a className="menu-item" href="#/settings" onClick={() => setOpen(false)}>
+            <GearSix size={18} weight="bold" aria-hidden="true" />
+            Settings
+          </a>
           <h2>Sign in as</h2>
           <ul>
             {people.map((u) => (

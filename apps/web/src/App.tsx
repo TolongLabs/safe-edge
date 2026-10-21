@@ -10,6 +10,7 @@ import { Passes } from './screens/passes/Passes'
 import { PassIssued } from './screens/passes/issued/PassIssued'
 import { Patrol } from './screens/patrol/Patrol'
 import { Retest } from './screens/retest/Retest'
+import { Settings } from './screens/settings/Settings'
 import { isPhone, parseRoute, useHash, type Route } from './shell/route'
 import { ErrorBoundary, NotInSession, PageNotFound, Rail, Screen } from './shell/Shell'
 import { client, start, useStore } from './store'
@@ -106,6 +107,8 @@ function RouteView({ route }: { route: Route }) {
       return <Agent />
     case 'developers':
       return <Developers />
+    case 'settings':
+      return <Settings />
     case 'notFound':
       return <PageNotFound />
   }
