@@ -111,6 +111,13 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
       body: { planId: flying.id, provider: 'sim', droneId: 'drn_assumed' }
     })
   )
+  // S1's openings and routes, for the paths of the Fix Lens corrections (a read: the preview changes nothing).
+  const closure = await json(
+    api.request('post', `/segments/${S1.segmentId}/route-closure`, {
+      token: 'dev_manager',
+      body: { remedyIds: [played.remedy.id] }
+    })
+  )
   const ids = {
     candidates: proposed.id,
     notices: notice.id,
@@ -118,6 +125,8 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     patrols: patrol.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
+    openings: closure.openings[0].id,
+    routes: closure.routes[0].id,
     tasks: played.decision.tasks[0]!.id,
     segments: S1.segmentId
   }
@@ -257,12 +266,21 @@ test('no system or provider call makes a pass valid, whichever operation it trie
   // S1's pass is already suspended, so the missed patrol goes to an expiring pass once its patrol interval has run out.
   const paths: Partial<Record<OperationId, string>> = { reportMissedPatrol: `/segments/${EXPIRING}/missed-patrol` }
   api.setNow(MISSED_PATROL_DUE)
+  // S1's openings and routes, for the paths of the Fix Lens corrections (a read: the preview changes nothing).
+  const closure = await json(
+    api.request('post', `/segments/${S1.segmentId}/route-closure`, {
+      token: 'dev_manager',
+      body: { remedyIds: [played.remedy.id] }
+    })
+  )
   const ids = {
     'patrol-plans': flying.id,
     patrols: patrol.id,
     candidates: played.candidate.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
+    openings: closure.openings[0].id,
+    routes: closure.routes[0].id,
     tasks: played.decision.tasks[0]!.id,
     notices: notice.id,
     segments: S1.segmentId
@@ -460,11 +478,62 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     data: { citations: expect.arrayContaining([proposed.id]) }
   })
 
+  // The Fix Lens corrections, as the people who make them: a mis-marked opening and a stale route and remedy are removed,
+  // and the engineer confirms the marking that stays.
+  const mark = [{ evidenceId: 'evd_s1_photo', x: 0.45, y: 0.6 }]
+  const misMarked = await as('dev_manager', 'post', '/openings', {
+    segmentId: S1.segmentId,
+    type: 'fence_gap',
+    photoMarks: mark,
+    measuredMm: null
+  })
+  await as('dev_manager', 'post', `/openings/${misMarked.id}/delete`)
+  const marked = await as('dev_manager', 'post', '/openings', {
+    segmentId: S1.segmentId,
+    type: 'fence_gap',
+    photoMarks: mark,
+    measuredMm: 1200
+  })
+  const linked = await as('dev_manager', 'post', '/routes', {
+    segmentId: S1.segmentId,
+    fromFeature: { kind: 'gate', label: 'Gate' },
+    openingIds: [marked.id],
+    status: 'open'
+  })
+  const stale = await as('dev_manager', 'post', '/routes', {
+    segmentId: S1.segmentId,
+    fromFeature: { kind: 'gate', label: 'Old gate' },
+    openingIds: [marked.id],
+    status: 'open'
+  })
+  await as('dev_engineer', 'post', `/routes/${stale.id}/delete`)
+  const staleRemedy = await as('dev_engineer', 'post', '/remedies', {
+    segmentId: S1.segmentId,
+    type: 'other',
+    label: 'Superseded',
+    blocksOpeningIds: [marked.id],
+    quantities: [],
+    acceptanceTest: 'Superseded',
+    quote: 'quote_needed'
+  })
+  await as('dev_engineer', 'post', `/remedies/${staleRemedy.id}/delete`)
+  await as('dev_engineer', 'post', `/openings/${marked.id}/confirm`)
+  await as('dev_engineer', 'post', `/routes/${linked.id}/confirm`)
+
   // And one refused attempt at every write: the agent at a people-only row, otherwise a role the row leaves out.
+  // S1's openings and routes, for the paths of the Fix Lens corrections (a read: the preview changes nothing).
+  const closure = await json(
+    api.request('post', `/segments/${S1.segmentId}/route-closure`, {
+      token: 'dev_manager',
+      body: { remedyIds: [played.remedy.id] }
+    })
+  )
   const ids = {
     candidates: played.candidate.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
+    openings: closure.openings[0].id,
+    routes: closure.routes[0].id,
     notices: notice.id,
     tasks: played.decision.tasks[0]!.id,
     'patrol-plans': plan.id,
@@ -504,7 +573,8 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
         e.action === r.operationId &&
         e.actor.id === r.actor!.id &&
         e.subjectId === record.id &&
-        Bun.deepEquals(e.after, record)
+        // A removal's audit event keeps the record it removed as `before`, with no `after`.
+        Bun.deepEquals(e.after ?? e.before, record)
     )
   }
   expect(

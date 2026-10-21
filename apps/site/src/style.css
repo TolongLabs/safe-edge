@@ -880,29 +880,6 @@ input[type='range']::-moz-range-thumb {
   will-change: transform;
 }
 
-.has-reveal main {
-  position: relative;
-  z-index: var(--z-raised);
-}
-
-.has-reveal main > :last-child {
-  border-radius: 0 0 var(--island-radius) var(--island-radius);
-}
-
-.has-reveal body {
-  padding-bottom: var(--footer-h);
-}
-
-.has-reveal .footer {
-  position: fixed;
-  inset: auto 0 0;
-  z-index: 0;
-}
-
-.has-reveal .footer:not([data-shown]) {
-  opacity: 0;
-}
-
 /* The clock needs the middle of the bar to itself, beside the page links. */
 @media (max-width: 1239px) {
   .clock {

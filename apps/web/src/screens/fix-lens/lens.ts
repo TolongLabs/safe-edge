@@ -1,4 +1,4 @@
-import type { OpeningType, Remedy, Role, RouteClosure } from '@safe-edge/contracts'
+import type { OpeningType, Remedy, Role, RouteClosure, User } from '@safe-edge/contracts'
 import { SafeEdgeDeniedError } from '@safe-edge/sdk'
 import { useCallback, useEffect, useState } from 'react'
 import { client, onReset, refresh } from '../../store'
@@ -57,8 +57,32 @@ export const addProposed = (segmentId: string, id: string) => {
   const ids = (proposed[segmentId] ??= [])
   if (!ids.includes(id)) ids.push(id)
 }
+export const removeProposed = (segmentId: string, id: string) => {
+  proposed[segmentId] = (proposed[segmentId] ?? []).filter((x) => x !== id)
+}
 
 export type Lens = { base: RouteClosure; per: Record<string, RouteClosure> }
+
+/** A refusal from core says in plain words, record ids become their names on screen. */
+export const plainReason = (message: string, names: Record<string, string>) =>
+  message.replace(/\b[a-z]+_[A-Za-z0-9]+\b/g, (id) => names[id] ?? 'another record')
+
+export function recordNames(lens: Lens, users: User[]): Record<string, string> {
+  const names: Record<string, string> = {}
+  lens.base.openings.forEach((o, index) => {
+    names[o.id] = `Opening ${index + 1}, ${OPENING_LABEL[o.type]}`
+  })
+  lens.base.routes.forEach((r) => {
+    names[r.id] = r.fromFeature.label
+  })
+  lens.base.remedies.forEach((r, index) => {
+    names[r.id] = `fix ${letter(index)}`
+  })
+  users.forEach((u) => {
+    names[u.id] = plain(u.name)
+  })
+  return names
+}
 
 /**
  * Everything on screen is read back from core: one preview with every remedy proposed here (the openings, routes and
@@ -88,21 +112,27 @@ export function useLens(segmentId: string, sentRemedyId: string | null) {
 }
 
 /** Runs a write and says whether core accepted it; a refusal is shown with its rule, anything else is a bug and is thrown. */
-export function useRun(reload: () => void) {
-  const [denied, setDenied] = useState<string | null>(null)
+export function useRun(reload: () => void, names: Record<string, string> = {}) {
+  const [refusal, setRefusal] = useState<{ text: string; rule: string; message: string } | null>(null)
   const run = async (call: () => Promise<unknown>): Promise<boolean> => {
-    setDenied(null)
+    setRefusal(null)
     let accepted = true
     try {
       await call()
     } catch (error) {
       if (!(error instanceof SafeEdgeDeniedError)) throw error
-      setDenied(`Core refused this (${error.rule}): ${error.message}`)
+      setRefusal({
+        text: `Could not complete this: ${plainReason(error.message, names)}.`,
+        rule: error.rule,
+        message: error.message
+      })
       accepted = false
     }
     reload()
     await refresh()
     return accepted
   }
-  return { run, denied }
+  // `denied` keeps the one-line form the re-test screens show; Fix Lens shows `refusal` in plain words.
+  const denied = refusal && `Core refused this (${refusal.rule}): ${refusal.message}`
+  return { run, denied, refusal }
 }

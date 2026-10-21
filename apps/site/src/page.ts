@@ -2,9 +2,12 @@ import './fonts.ts'
 import './base.css'
 import './chrome.css'
 import './pages.css'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { HERO_WORDS_IN, arrivesFresh, liftHeroWords, liftOffFooter, riseNightArt } from './motion.ts'
 
-// The product pages read without JavaScript. With it, code blocks get a working Copy button and the contents list
-// marks the chapter being read.
+// The product pages read without JavaScript. With it, code blocks get a working Copy button, the contents list
+// marks the chapter being read, and the hero and the night footer move as they do on the landing page.
 
 for (const block of document.querySelectorAll<HTMLElement>('.code')) {
   const button = block.querySelector<HTMLButtonElement>('.code-copy')
@@ -45,3 +48,11 @@ for (const id of links.keys()) {
   if (!chapter) throw new Error(`The contents list links to #${id}, which is not on the page`)
   reading.observe(chapter)
 }
+
+const footer = liftOffFooter()
+gsap.matchMedia().add('(prefers-reduced-motion: no-preference)', () => {
+  if (arrivesFresh()) gsap.from('.page-hero-words > *', HERO_WORDS_IN)
+  liftHeroWords('.page-hero-words', '.page-hero')
+  riseNightArt(footer)
+})
+document.fonts.ready.then(() => ScrollTrigger.refresh())

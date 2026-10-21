@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// The landing page ends on the night footer, which fills the screen and carries the way into the demo.
+// The landing page ends on the night footer, which fills the screen and carries the way into the demo; the product
+// pages end on the same footer, lifted off the same way.
 
 /** Scrolls until the page rests at its very end: smooth scrolling and pinned sections can move the end meanwhile. */
 const scrollToEnd = async (page: Page) => {
@@ -37,17 +38,18 @@ for (const [size, use] of [
       await expect(page.locator('footer').getByRole('link', { name: 'Open the demo' })).toHaveCount(1)
     })
 
-    test('the end of the scroll shows only the footer', async ({ page }) => {
-      await page.goto('/')
-      await scrollToEnd(page)
-      const view = await page.evaluate(() => {
-        const box = document.querySelector('footer')!.getBoundingClientRect()
-        const top = document.elementFromPoint(innerWidth / 2, 10)
-        return { top: box.top, bottom: box.bottom, height: innerHeight, inFooter: !!top?.closest('footer') }
+    for (const path of ['/', '/drone', '/agent', '/sdk', '/privacy'])
+      test(`the end of the scroll on ${path} shows only the footer`, async ({ page }) => {
+        await page.goto(path)
+        await scrollToEnd(page)
+        const view = await page.evaluate(() => {
+          const box = document.querySelector('footer')!.getBoundingClientRect()
+          const top = document.elementFromPoint(innerWidth / 2, 10)
+          return { top: box.top, bottom: box.bottom, height: innerHeight, inFooter: !!top?.closest('footer') }
+        })
+        expect(view.top).toBeLessThanOrEqual(1)
+        expect(view.bottom).toBeGreaterThanOrEqual(view.height - 1)
+        expect(view.inFooter).toBe(true)
       })
-      expect(view.top).toBeLessThanOrEqual(1)
-      expect(view.bottom).toBeGreaterThanOrEqual(view.height - 1)
-      expect(view.inFooter).toBe(true)
-    })
   })
 }

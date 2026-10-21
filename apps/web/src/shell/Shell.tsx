@@ -162,16 +162,21 @@ function ProfileMenu({ compact = false }: { compact?: boolean }) {
   )
 }
 
+/** Where the phone top bar's back button goes: Inbox unless a screen names a nearer step. */
+export type Back = { label: string; href: string } | { label: string; onClick: () => void }
+
 /** One screen's frame: the top bar (title, context line, SIMULATION label, profile) and its islands. */
 export function Screen({
   title,
   context,
   actions,
+  back = { label: 'Back to Inbox', href: '#/inbox' },
   children
 }: {
   title: string
   context?: string
   actions?: ReactNode
+  back?: Back
   children: ReactNode
 }) {
   const phone = isPhone(parseRoute(useHash()))
@@ -182,9 +187,15 @@ export function Screen({
     <div className={`frame${phone ? ' phone' : ''}`}>
       {phone ? (
         <header className="topbar phone-bar">
-          <a className="icon-btn" href="#/inbox" aria-label="Back to Inbox">
-            <CaretLeft size={24} weight="bold" aria-hidden="true" />
-          </a>
+          {'href' in back ? (
+            <a className="icon-btn" href={back.href} aria-label={back.label}>
+              <CaretLeft size={24} weight="bold" aria-hidden="true" />
+            </a>
+          ) : (
+            <button className="icon-btn" onClick={back.onClick} aria-label={back.label}>
+              <CaretLeft size={24} weight="bold" aria-hidden="true" />
+            </button>
+          )}
           <div className="titles">
             <h1>{title}</h1>
             {context && <p className="context">{context}</p>}

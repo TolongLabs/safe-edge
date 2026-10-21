@@ -127,8 +127,10 @@ export type EventData<T extends EventType> = z.output<(typeof EVENT_DATA)[T]>
 
 interface StagedWrite {
   collection: CollectionName
+  id: string
   before: AnyRecord | null
-  after: AnyRecord
+  /** null for a removal */
+  after: AnyRecord | null
 }
 
 /**
@@ -139,8 +141,8 @@ export class Tx {
   readonly source: Source
   readonly events: EdgeEvent[] = []
   private readonly writes: StagedWrite[] = []
-  /** Staged records by `<collection>:<id>`. */
-  private readonly staged = new Map<string, AnyRecord>()
+  /** Staged records by `<collection>:<id>`; null for a staged removal. */
+  private readonly staged = new Map<string, AnyRecord | null>()
 
   constructor(
     private readonly state: State,
@@ -159,7 +161,9 @@ export class Tx {
   }
 
   get<C extends CollectionName>(collection: C, id: string): Collections[C] | undefined {
-    return (this.staged.get(`${collection}:${id}`) ?? this.state[collection].get(id)) as Collections[C] | undefined
+    const staged = this.staged.get(`${collection}:${id}`)
+    if (staged === null) return undefined
+    return (staged ?? this.state[collection].get(id)) as Collections[C] | undefined
   }
 
   /** A record another record points at. Missing means the store is corrupt, so it throws. */
@@ -177,14 +181,20 @@ export class Tx {
 
   all<C extends CollectionName>(collection: C): Collections[C][] {
     const stored = [...this.state[collection].keys()]
-    const added = this.writes.filter((w) => w.collection === collection && !this.state[collection].has(w.after.id))
-    const ids = new Set([...stored, ...added.map((w) => w.after.id)])
-    return [...ids].map((id) => this.must(collection, id))
+    const written = this.writes.filter((w) => w.collection === collection).map((w) => w.id)
+    const ids = new Set([...stored, ...written])
+    return [...ids].filter((id) => this.get(collection, id) !== undefined).map((id) => this.must(collection, id))
   }
 
   put<C extends CollectionName>(collection: C, record: Collections[C]): void {
-    this.writes.push({ collection, before: this.get(collection, record.id) ?? null, after: record })
+    this.writes.push({ collection, id: record.id, before: this.get(collection, record.id) ?? null, after: record })
     this.staged.set(`${collection}:${record.id}`, record)
+  }
+
+  /** Stages the removal of a record, which leaves the state on commit. */
+  remove<C extends CollectionName>(collection: C, record: Collections[C]): void {
+    this.writes.push({ collection, id: record.id, before: record, after: null })
+    this.staged.set(`${collection}:${record.id}`, null)
   }
 
   emit<T extends EventType>(type: T, data: EventData<T>, segmentId?: string): void {
@@ -225,11 +235,14 @@ export class Tx {
   /** Applies the staged writes and their audit events together, after every hash is computed. */
   commit(action: string): void {
     const entries: AuditEntry[] = []
-    for (const { before, after } of this.writes) {
-      entries.push(this.entry(entries, action, after.id, before, after, null, this.segmentOf(after)))
+    for (const { id, before, after } of this.writes) {
+      entries.push(this.entry(entries, action, id, before, after, null, this.segmentOf(after ?? before!)))
     }
-    for (const { collection, after } of this.writes)
-      (this.state[collection] as Map<string, AnyRecord>).set(after.id, after)
+    for (const { collection, id, after } of this.writes) {
+      const records = this.state[collection] as Map<string, AnyRecord>
+      if (after === null) records.delete(id)
+      else records.set(id, after)
+    }
     this.state.audit.push(...entries)
   }
 

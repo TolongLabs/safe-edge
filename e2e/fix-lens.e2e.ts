@@ -276,3 +276,103 @@ test('AC81-7 works in dark mode', async ({ page }) => {
   expect(bg).not.toBe('rgb(231, 235, 232)')
   await expect(page.getByText('Closes all 2 ways to the water')).toBeVisible()
 })
+
+test('AC81-8 the sample markings and fixes fill Fix Lens in one click each', async ({ page }) => {
+  await openLens(page)
+  await page.getByRole('button', { name: 'Use the S2 sample markings' }).click()
+  await expect(page.getByText('2 openings and 2 ways recorded.')).toBeVisible()
+  await page.getByRole('button', { name: 'Next: compare fixes' }).click()
+  await page.getByRole('button', { name: 'Use the two sample fixes' }).click()
+  await expect(page.getByText('Leaves 1 way to the water open, Playground path, around the fence end')).toBeVisible()
+  await expect(page.getByText('Closes all 2 ways to the water')).toBeVisible()
+})
+
+test('AC81-8 a walk crew member sees no sample buttons on either step', async ({ page }) => {
+  await openLens(page)
+  await signInAs(page, 'Siti Aminah')
+  await expect(page.getByRole('button', { name: 'Use the S2 sample markings' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Compare fixes', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Use the two sample fixes' })).toHaveCount(0)
+})
+
+test('AC81-8 the sample fixes are offered only when the panel gap and the fence end are marked', async ({ page }) => {
+  await openLens(page)
+  await page.getByLabel('Add an opening: type').selectOption({ label: 'Gate' })
+  await page.getByLabel('Across the photo').fill('30')
+  await page.getByLabel('Down the photo').fill('60')
+  await page.getByRole('button', { name: 'Add opening' }).click()
+  await expect(page.getByRole('img', { name: /^Opening 1, Gate/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Use the S2 sample markings' })).toHaveCount(0)
+  await page.getByLabel('Name of the way').fill('Path through the gate')
+  await page.getByRole('checkbox', { name: /^Opening 1, Gate/ }).check()
+  await page.getByRole('button', { name: 'Add way to the water' }).click()
+  await page.getByRole('button', { name: 'Next: compare fixes' }).click()
+  await expect(page.getByRole('heading', { name: 'No fixes proposed yet' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Use the two sample fixes' })).toHaveCount(0)
+})
+
+test('AC81-9 a mis-marked third opening is added and removed', async ({ page }) => {
+  await openLens(page)
+  await markOpenings(page)
+  await page.getByLabel('Add an opening: type').selectOption({ label: 'Gate' })
+  await page.getByLabel('Across the photo').fill('10')
+  await page.getByLabel('Down the photo').fill('10')
+  await page.getByRole('button', { name: 'Add opening' }).click()
+  await expect(page.getByText('3 openings and 2 ways recorded.')).toBeVisible()
+  await page.getByRole('button', { name: 'Remove Opening 3, Gate' }).click()
+  await expect(page.getByText('2 openings and 2 ways recorded.')).toBeVisible()
+})
+
+test('AC81-9 removing an opening a way uses is refused in plain words', async ({ page }) => {
+  await openLens(page)
+  await markOpenings(page)
+  await page.getByRole('button', { name: 'Remove Opening 2, Fence end' }).click()
+  await expect(page.getByRole('alert')).toContainText(
+    'Playground path, around the fence end still uses Opening 2, Fence end'
+  )
+  expect(await page.getByRole('alert').textContent()).not.toMatch(/\b(opn|rte|rem|usr)_/)
+})
+
+test('AC81-9 the engineer confirms markings, and the manager sees the tags without any Confirm button', async ({
+  page
+}) => {
+  await openLens(page)
+  await markOpenings(page)
+  await signInAs(page, 'Lim Wei Jie')
+  await page.getByRole('button', { name: 'Confirm Opening 1, Panel gap' }).click()
+  await page.getByRole('button', { name: 'Confirm Playground path, through the panel gap' }).click()
+  await expect(page.getByText('Confirmed by Lim Wei Jie')).toHaveCount(2)
+  await expect(page.getByText('1 of 2 openings and 1 of 2 ways confirmed by an engineer')).toBeVisible()
+  await expect(
+    page.getByText('An engineer confirms the markings; it is not yet required to approve a fix.')
+  ).toBeVisible()
+  await signInAs(page, 'Farah Hashim')
+  await expect(page.getByText('Confirmed by Lim Wei Jie')).toHaveCount(2)
+  await expect(page.getByRole('button', { name: /^Confirm/ })).toHaveCount(0)
+})
+
+test('AC81-9 the manager removes an unapproved fix, and cannot remove an approved one', async ({ page }) => {
+  await openLens(page)
+  await compare(page)
+  await page.getByRole('button', { name: 'Remove fix A' }).click()
+  await expect(page.getByRole('radio', { name: /Replace panel 4 and extend the fence end/ })).toBeVisible()
+  await expect(page.getByRole('radio', { name: /^B ·/ })).toHaveCount(0)
+  await signInAs(page, 'Lim Wei Jie')
+  await page.getByRole('button', { name: 'Approve fix A as Lim Wei Jie' }).click()
+  await expect(page.getByText('Approved by Lim Wei Jie')).toBeVisible()
+  await signInAs(page, 'Farah Hashim')
+  await page.getByRole('button', { name: 'Remove fix A' }).click()
+  await expect(page.getByRole('alert')).toContainText('fix A is approved by Lim Wei Jie')
+  await expect(page.getByText('Approved by Lim Wei Jie', { exact: true })).toBeVisible()
+})
+
+test('AC81-9 a walk crew member sees no Remove or Confirm buttons on either step', async ({ page }) => {
+  await openLens(page)
+  await compare(page)
+  await signInAs(page, 'Siti Aminah')
+  await expect(page.getByRole('button', { name: /^Remove/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Confirm/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Mark the openings', exact: true }).click()
+  await expect(page.getByRole('button', { name: /^Remove/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /^Confirm/ })).toHaveCount(0)
+})

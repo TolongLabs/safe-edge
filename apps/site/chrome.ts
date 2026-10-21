@@ -64,7 +64,7 @@ function footer(page: PageKey) {
             <a href="#rules">The rules</a>
           </nav>`
     : ''
-  return `<footer class="footer${home ? '' : ' footer--page'}">
+  return `<footer class="footer">
       <div class="night" aria-hidden="true">
         <img class="night-art" src="/night.svg" alt="" width="1600" height="440" />
       </div>
