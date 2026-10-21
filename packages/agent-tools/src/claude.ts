@@ -10,7 +10,7 @@ import {
   monthlyReportPrompt,
   toolDescription,
   type AgentToolContext
-} from '@safe-edge/agent-tools'
+} from './index.ts'
 import {
   ID_PREFIXES,
   WorkOrder,
@@ -25,8 +25,9 @@ import {
 } from '@safe-edge/contracts'
 
 // The one Claude agent of the TRD "Agent layer and MCP server": the tool runner over the same tools the MCP server
-// serves (packages/agent-tools), calling the API through a client that holds the agent's own token. The API, not
-// this module, enforces scope and state, so a refused call comes back to the model as a tool error naming the rule.
+// serves (index.ts), calling Safe Edge through a client that holds the agent's own token. The API (or the demo core in
+// the browser), not this module, enforces scope and state, so a refused call comes back to the model as a tool error
+// naming the rule. It runs in the API with the server's key and in the web demo with the person's own key.
 
 export const AGENT_MODEL = 'claude-opus-5-5'
 const MAX_TURNS = 10
@@ -52,7 +53,18 @@ export interface AgentOptions {
   context: Omit<AgentToolContext, 'model'>
 }
 
-export function createAgent({ claude, context }: AgentOptions) {
+/** The agent's three workflows: the Ask panel, the Inbox card and the monthly report. */
+export interface SafeEdgeAgent {
+  ask(
+    question: string,
+    onText: (text: string) => Promise<void>,
+    signal: AbortSignal
+  ): Promise<{ ok: true; answer: AgentAnswer } | AgentStopped>
+  draftInbox(candidate: Candidate, finding: Finding | null): Promise<{ ok: true; draft: InboxDraft } | AgentStopped>
+  draftMonthlyReport(month: string): Promise<{ ok: true; report: MonthlyReportDraft } | AgentStopped>
+}
+
+export function createAgent({ claude, context }: AgentOptions): SafeEdgeAgent {
   /**
    * Runs the tool loop on one user turn, streaming text to `onText`, and checks how Claude stopped. Aborting `signal`
    * aborts the request open to Claude and ends the loop with the SDK's `APIUserAbortError`.
