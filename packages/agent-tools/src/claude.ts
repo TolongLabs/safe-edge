@@ -60,8 +60,16 @@ export interface SafeEdgeAgent {
     onText: (text: string) => Promise<void>,
     signal: AbortSignal
   ): Promise<{ ok: true; answer: AgentAnswer } | AgentStopped>
-  draftInbox(candidate: Candidate, finding: Finding | null): Promise<{ ok: true; draft: InboxDraft } | AgentStopped>
-  draftMonthlyReport(month: string): Promise<{ ok: true; report: MonthlyReportDraft } | AgentStopped>
+  /** `signal` (the web demo's Stop) aborts the run; the API runs a draft to the end. */
+  draftInbox(
+    candidate: Candidate,
+    finding: Finding | null,
+    signal?: AbortSignal
+  ): Promise<{ ok: true; draft: InboxDraft } | AgentStopped>
+  draftMonthlyReport(
+    month: string,
+    signal?: AbortSignal
+  ): Promise<{ ok: true; report: MonthlyReportDraft } | AgentStopped>
 }
 
 export function createAgent({ claude, context }: AgentOptions): SafeEdgeAgent {
@@ -143,10 +151,7 @@ export function createAgent({ claude, context }: AgentOptions): SafeEdgeAgent {
      * (the open draft confirming made, which the draft request returns). Only IDs of stored records go into the prompt;
      * the evidence text reaches Claude inside tool results.
      */
-    async draftInbox(
-      candidate: Candidate,
-      finding: Finding | null
-    ): Promise<{ ok: true; draft: InboxDraft } | AgentStopped> {
+    async draftInbox(candidate, finding, signal) {
       const prompt = [
         `Prepare the Inbox card for candidate ${candidate.id} on segment ${candidate.segmentId}.`,
         '1. Read the candidate with get_inspection_evidence and the segment with get_edge_context.',
@@ -155,7 +160,7 @@ export function createAgent({ claude, context }: AgentOptions): SafeEdgeAgent {
           : `2. Call draft_work_order once for finding ${finding.id}, with remedyId null (an engineer picks the remedy later) and notes that say what to repair and where, naming the record IDs. A person edits and submits it.`,
         `3. Reply with only the card summary, at most four sentences: what changed and where, the tier, your uncertainty, and the record IDs it rests on, including ${candidate.id} and ${candidate.segmentId}.`
       ].join('\n')
-      const result = await run(prompt, 'medium')
+      const result = await run(prompt, 'medium', undefined, signal)
       if (!result.ok) return result
       // Distinct work orders: a repeated draft request returns the finding's same open draft.
       const returned = result.calls
@@ -189,8 +194,8 @@ export function createAgent({ claude, context }: AgentOptions): SafeEdgeAgent {
     },
 
     /** The board's monthly governance report, saved as a notice draft; `month` is a checked YYYY-MM. */
-    async draftMonthlyReport(month: string): Promise<{ ok: true; report: MonthlyReportDraft } | AgentStopped> {
-      const result = await run(monthlyReportPrompt(month), 'high')
+    async draftMonthlyReport(month, signal) {
+      const result = await run(monthlyReportPrompt(month), 'high', undefined, signal)
       if (!result.ok) return result
       const reports = result.calls
         .filter((call) => call.name === 'draft_escalation')

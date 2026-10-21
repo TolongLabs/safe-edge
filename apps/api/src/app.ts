@@ -24,6 +24,7 @@ import { Database } from 'bun:sqlite'
 import type { DataGovMyClient, EvidenceReader } from '@safe-edge/providers'
 import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { Hono, type Context } from 'hono'
+import { cors } from 'hono/cors'
 import { createMiddleware } from 'hono/factory'
 import { HTTPException } from 'hono/http-exception'
 import { streamSSE } from 'hono/streaming'
@@ -75,6 +76,11 @@ export interface ApiOptions {
   every?: Every
   /** data.gov.my, polled for warnings that re-plan open plans (wall clock only). Without it, nothing is polled. */
   weather?: DataGovMyClient
+  /**
+   * The exact origins (`scheme://host[:port]`) whose pages may call the API from a browser, such as the web demo's
+   * Developers page with a person's own token. Without it, the API sends no CORS headers.
+   */
+  corsOrigins?: readonly string[]
 }
 
 /** A write sent with an Idempotency-Key: who sent it to where with which key, and a digest of its body. */
@@ -119,7 +125,8 @@ export function createApp({
   webhooks,
   idempotencyRetentionMs,
   every,
-  weather
+  weather,
+  corsOrigins
 }: ApiOptions) {
   const app = new Hono<Env>().basePath('/v1')
   // Every change to the API's state goes through a journaled command, so a restart replays it (journal.ts). Core and
@@ -201,6 +208,18 @@ export function createApp({
     console.error(error)
     return c.text('Internal Server Error', 500)
   })
+  // Before every route, so a preflight never reaches authentication. The headers are the ones the SDK sends (http.ts);
+  // tokens travel in Authorization, never in cookies, so no credentials.
+  if (corsOrigins) {
+    app.use(
+      cors({
+        origin: [...corsOrigins],
+        allowMethods: [...new Set(Object.values(operations).map((op: OperationSpec) => op.method.toUpperCase()))],
+        allowHeaders: ['Authorization', 'Content-Type', 'Idempotency-Key'],
+        maxAge: 600
+      })
+    )
+  }
   app.get('/health', (c) => c.json({ status: 'ok' }))
   // Where getEvidenceUrl points. The signed query is the credential, so it takes no bearer token.
   app.get('/evidence/:id/content', (c) => {

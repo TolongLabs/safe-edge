@@ -12,6 +12,8 @@ process.env.NODE_ENV ??= 'development'
 process.env.SAFE_EDGE_CLOCK ??= 'scenario'
 // The API's state, kept across restarts; delete the directory to start again from the seed.
 process.env.SAFE_EDGE_DATA_DIR ??= join(import.meta.dir, '../.data')
+// The web app's dev server (apps/web/vite.config.ts) may call the API, so its Developers page can use a dev token.
+process.env.SAFE_EDGE_CORS_ORIGINS ??= `http://localhost:${process.env.WEB_PORT ?? 5173}`
 const tokens = await ensureDevTokens(process.env)
 process.env.SAFE_EDGE_DEV_TOKENS_FILE = tokens.file
 process.env.SAFE_EDGE_AGENT_TOKEN = tokens.tokenOf('usr_agent')

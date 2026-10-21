@@ -48,7 +48,8 @@ export function startApi({
   webhooks: { origins = [], allowLoopback = true, retryDelaysMs = [] } = {},
   clock = scenarioClock(seed.asOf),
   every,
-  weather
+  weather,
+  corsOrigins
 }: {
   heartbeatMs?: number
   /** Loopback webhooks allowed and no retries by default, so a failed delivery is final at once. */
@@ -59,6 +60,7 @@ export function startApi({
   clock?: ApiClock
   every?: Every
   weather?: ApiOptions['weather']
+  corsOrigins?: ApiOptions['corsOrigins']
 } = {}) {
   const agent = claude && { claude, token: 'tok_agent' }
   const app = createApp({
@@ -73,7 +75,8 @@ export function startApi({
     webhooks: { origins, allowLoopback, retryDelaysMs },
     idempotencyRetentionMs: 24 * 60 * 60 * 1000,
     every,
-    weather
+    weather,
+    corsOrigins
   })
   const log: Exchange[] = []
   const server = Bun.serve({

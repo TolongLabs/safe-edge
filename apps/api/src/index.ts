@@ -65,6 +65,16 @@ const weather =
     ? createDataGovMyClient({ fetch, clock: { now: Date.now, sleep: (ms) => Bun.sleep(ms) } })
     : undefined
 
+// Pages on SAFE_EDGE_CORS_ORIGINS (comma-separated exact origins, such as the web demo's) may call the API from a
+// browser. Unset, the API sends no CORS headers. bun run dev allows the web app's dev server (dev.ts).
+const corsOrigins = process.env.SAFE_EDGE_CORS_ORIGINS?.split(',').map((origin) => {
+  const trimmed = origin.trim()
+  if (!URL.canParse(trimmed) || new URL(trimmed).origin !== trimmed) {
+    throw new Error(`SAFE_EDGE_CORS_ORIGINS lists exact origins such as http://localhost:5173, not "${origin}"`)
+  }
+  return trimmed
+})
+
 // Bun serves the default export on PORT (3000 by default). Its idle timeout is 10 s, so the event stream's heartbeat
 // comes every 5 s.
 const app = createApp({
@@ -81,7 +91,8 @@ const app = createApp({
   // On the wall clock the automation (drone-sim, tick, missed patrols, weather) repeats on timers; a scenario clock runs
   // it when set.
   every: (ms, run) => void setInterval(() => void run(), ms),
-  weather
+  weather,
+  corsOrigins
 })
 
 export default {

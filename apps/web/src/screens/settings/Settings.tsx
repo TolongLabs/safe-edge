@@ -1,9 +1,15 @@
 import { CheckCircle, LockSimple, WarningCircle } from '@phosphor-icons/react'
-import type { Actor } from '@safe-edge/contracts'
-import { SafeEdgeApiError, SafeEdgeDeniedError } from '@safe-edge/sdk'
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { anthropicFailure, checkAnthropicKey } from '../../agent'
-import { liveClient, setAnthropicKey, setLiveApi, useSettings, type LiveApi } from '../../settings'
+import {
+  liveClient,
+  liveFailure,
+  setAnthropicKey,
+  setLiveApi,
+  useActsAs,
+  useSettings,
+  type Check
+} from '../../settings'
 import { Screen } from '../../shell/Shell'
 import './settings.css'
 
@@ -18,8 +24,6 @@ export function Settings() {
     </Screen>
   )
 }
-
-type Check<T> = { kind: 'idle' } | { kind: 'checking' } | { kind: 'error'; text: string } | { kind: 'done'; value: T }
 
 /** One setting: a title, what it does, its state and form, and a footer that says where the value goes. */
 function Card({
@@ -139,44 +143,6 @@ function AgentKey() {
 }
 
 const origin = window.location.origin
-
-/** A failed connection in words that say how to get past it; null for anything else, which is a bug to throw. */
-function liveFailure(error: unknown, baseUrl: string): string | null {
-  if (error instanceof TypeError)
-    return `Could not reach ${baseUrl}. Check that the API runs there and that SAFE_EDGE_CORS_ORIGINS lists ${origin}.`
-  if (error instanceof SafeEdgeApiError && error.status === 401)
-    return `The API refused this token (401): ${error.message}. Print one with bun run dev:token usr_manager.`
-  if (error instanceof SafeEdgeApiError) return `The API answered ${error.status} ${error.error}: ${error.message}`
-  if (error instanceof SafeEdgeDeniedError) return `The API refused this (${error.rule}): ${error.message}`
-  return null
-}
-
-/** Who the saved token acts as, asked again whenever the saved API changes, so a server that stopped shows. */
-function useActsAs(api: LiveApi | null) {
-  const [state, setState] = useState<Check<Actor>>({ kind: 'idle' })
-  const [fatal, setFatal] = useState<{ error: unknown } | null>(null)
-  if (fatal) throw fatal.error
-  useEffect(() => {
-    if (!api) return setState({ kind: 'idle' })
-    let live = true
-    setState({ kind: 'checking' })
-    liveClient(api)
-      .getMe()
-      .then(
-        (actor) => live && setState({ kind: 'done', value: actor }),
-        (error: unknown) => {
-          if (!live) return
-          const text = liveFailure(error, api.baseUrl)
-          if (text === null) setFatal({ error })
-          else setState({ kind: 'error', text })
-        }
-      )
-    return () => {
-      live = false
-    }
-  }, [api])
-  return state
-}
 
 function LiveApiCard() {
   const { liveApi } = useSettings()

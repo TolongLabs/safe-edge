@@ -7,6 +7,8 @@
   flex-direction: column;
   gap: var(--space-3);
   min-width: 0;
+  /* The events grid and the operations table follow the section's width, not the window's. */
+  container-type: inline-size;
 }
 .dev-head {
   display: flex;
@@ -52,6 +54,11 @@
   align-items: flex-end;
   gap: var(--space-3);
 }
+/* Where Run sends the call, beside the button, so the demo core and a live API never get mixed up. */
+.dev-try-target {
+  flex: 1 1 280px;
+  align-self: center;
+}
 .dev-try-row label,
 .dev-filter {
   display: flex;
@@ -70,15 +77,16 @@
 .dev-filter {
   max-width: 420px;
 }
+/* One scroll per screen, as on Passes and Agent: the table flows in the section and the screen scrolls it, so no row
+   is cut at a hidden edge. The wrapper sets no overflow, which would capture the sticky header. */
 .dev-table-wrap {
-  max-height: 560px;
-  overflow: auto;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
 }
 .dev-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
 }
@@ -91,12 +99,19 @@
 }
 .dev-table thead th {
   position: sticky;
-  top: 0;
+  /* The island's padding is inside its scrollport: stick at its top edge, or rows show above the header. */
+  top: calc(-1 * var(--island-padding));
   z-index: 1;
-  background: var(--bg-sunken);
+  background: var(--bg-surface);
   color: var(--text-secondary);
   font-weight: 500;
   white-space: nowrap;
+}
+.dev-table thead th:first-child {
+  border-top-left-radius: var(--radius-md);
+}
+.dev-table thead th:last-child {
+  border-top-right-radius: var(--radius-md);
 }
 .dev-table tbody th,
 .dev-path {
@@ -117,10 +132,79 @@
   letter-spacing: 0.02em;
   text-align: center;
 }
+/* Six columns with unbroken paths do not fit a tablet: each operation becomes a card with its labels. */
+@container (max-width: 899px) {
+  .dev-table-wrap {
+    border: 0;
+  }
+  .dev-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .dev-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .dev-table tr {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+  }
+  .dev-table th,
+  .dev-table td,
+  .dev-table tbody tr:last-child > * {
+    padding: 0;
+    border: 0;
+  }
+  .dev-table tbody th {
+    margin-bottom: var(--space-1);
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .dev-table td[data-label] {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .dev-table td[data-label]::before {
+    content: attr(data-label);
+    color: var(--text-secondary);
+  }
+  .dev-path {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+@container (max-width: 299px) {
+  .dev-table td[data-label] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+/* Side by side, every event is the same size: equal rows, 4 across a wide screen, 2 on a tablet, the Data line at the
+   foot of each. A phone stacks them one per row, each as tall as its own text, so no box carries a blank block. */
 .dev-events {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
+}
+@container (min-width: 440px) {
+  .dev-events {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+  }
+}
+@container (min-width: 960px) {
+  .dev-events {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 .dev-events li {
   display: flex;
@@ -132,7 +216,12 @@
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
 }
+.dev-events code {
+  overflow-wrap: anywhere;
+}
 .dev-fields {
+  margin-top: auto;
+  padding-top: var(--space-2);
   color: var(--text-secondary);
 }
 @media (max-width: 600px) {

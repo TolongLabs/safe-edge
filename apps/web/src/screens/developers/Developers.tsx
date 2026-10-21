@@ -1,8 +1,9 @@
-import { Play, WarningCircle } from '@phosphor-icons/react'
+import { Play, WarningCircle, WarningOctagon } from '@phosphor-icons/react'
 import { EVENT_DATA, EVENT_SUMMARIES, EVENT_TYPES, operations, type OperationId } from '@safe-edge/contracts'
 import { SafeEdgeDeniedError } from '@safe-edge/sdk'
 import { useEffect, useState } from 'react'
 import mcpConfig from '../../../../mcp/mcp.json?raw'
+import { liveClient, liveFailure, useActsAs, useSettings } from '../../settings'
 import { Screen } from '../../shell/Shell'
 import { onReset, useSignedIn } from '../../store'
 import { CodeBlock } from '../shared/CodeBlock'
@@ -48,7 +49,9 @@ const TRY = [
 ] as const satisfies readonly OperationId[]
 type TryId = (typeof TRY)[number]
 
-type Result = { id: TryId; as: string; json: string; count: number | null } | { id: TryId; as: string; refused: string }
+type Result = { id: TryId; as: string } & (
+  { json: string; count: number | null } | { refused: string } | { failed: string }
+)
 
 const matches = (id: OperationId, words: string) => {
   const op = operations[id]
@@ -71,20 +74,30 @@ const matches = (id: OperationId, words: string) => {
 
 export function Developers() {
   const { user: me, client: signedIn } = useSignedIn()
+  const { liveApi } = useSettings()
+  const actsAs = useActsAs(liveApi)
   const [filter, setFilter] = useState('')
   const [tryId, setTryId] = useState<TryId>('getMe')
   const [result, setResult] = useState<Result | null>(null)
   const [busy, setBusy] = useState(false)
   const [fatal, setFatal] = useState<{ error: unknown } | null>(null)
   useEffect(() => onReset(() => setResult(null)), [])
+  // A result from the demo core must not read as the live API's, or the other way round.
+  useEffect(() => setResult(null), [liveApi])
   if (fatal) throw fatal.error
 
   const run = async () => {
     setBusy(true)
-    const as = me.name
+    // The demo core acts as the signed-in person; a live API as whoever its token belongs to.
+    const as = !liveApi
+      ? me.name
+      : actsAs.kind === 'done'
+        ? `${actsAs.value.id} (${actsAs.value.role})`
+        : 'the saved token'
+    const client = liveApi ? liveClient(liveApi) : signedIn
     try {
-      // Every TRY read takes no input; the call goes to the demo core as the signed-in person.
-      const data: unknown = await (signedIn[tryId] as () => Promise<unknown>).call(signedIn)
+      // Every TRY read takes no input.
+      const data: unknown = await (client[tryId] as () => Promise<unknown>).call(client)
       setResult({
         id: tryId,
         as,
@@ -92,7 +105,10 @@ export function Developers() {
         count: Array.isArray(data) ? data.length : null
       })
     } catch (error) {
-      if (error instanceof SafeEdgeDeniedError) setResult({ id: tryId, as, refused: refusalText(error) })
+      if (error instanceof SafeEdgeDeniedError) return setResult({ id: tryId, as, refused: refusalText(error) })
+      // A live API that is down, blocks this origin or refuses the token is not a bug in this page.
+      const failed = liveApi && liveFailure(error, liveApi.baseUrl)
+      if (failed) setResult({ id: tryId, as, failed })
       else setFatal({ error })
     } finally {
       setBusy(false)
@@ -108,15 +124,16 @@ export function Developers() {
           <h2>Build on Safe Edge</h2>
           <p>
             One typed client with a method per operation in the contracts. The memory transport runs core in the page,
-            as this demo does; the http transport calls the v1 API. Same rules, same refusals.
+            as this demo does; the http transport calls the v1 API, as Try it does once Settings points it at one. Same
+            rules, same refusals.
           </p>
         </header>
 
         <section aria-labelledby="dev-try" className="dev-try">
           <h3 id="dev-try">Try it</h3>
           <p className="dev-note">
-            Runs one read against this page&apos;s demo core as {me.name}. What your role may not read comes back as
-            core&apos;s refusal. <span className="chip sample">Sample data</span>
+            Runs one read that needs no input and prints what comes back. What the caller may not read comes back as
+            core’s refusal, with its rule.
           </p>
           <div className="dev-try-row">
             <label>
@@ -129,12 +146,47 @@ export function Developers() {
                 ))}
               </select>
             </label>
-            <button className="btn primary" disabled={busy} onClick={() => void run()}>
+            <button
+              className="btn primary"
+              disabled={busy}
+              onClick={() => void run()}
+              aria-describedby="dev-try-target"
+            >
               <Play size={18} weight="bold" aria-hidden="true" />
               {busy ? 'Running…' : 'Run'}
             </button>
+            <p className="dev-note dev-try-target" id="dev-try-target">
+              {liveApi ? (
+                <>
+                  Runs against the live API at <b translate="no">{liveApi.baseUrl}</b>
+                  {actsAs.kind === 'done' ? (
+                    <>
+                      {' '}
+                      as{' '}
+                      <b translate="no">
+                        {actsAs.value.id} ({actsAs.value.role})
+                      </b>
+                    </>
+                  ) : actsAs.kind === 'checking' ? (
+                    ' (checking who its token acts as…)'
+                  ) : null}
+                  . <a href="#/settings">Change it in Settings</a>.
+                </>
+              ) : (
+                <>
+                  Runs against this page’s demo core as {me.name}. <a href="#/settings">Settings</a> can point it at a
+                  live API instead. <span className="chip sample">Sample data</span>
+                </>
+              )}
+            </p>
           </div>
           <div aria-live="polite">
+            {liveApi && actsAs.kind === 'error' && !(result && 'failed' in result) && (
+              <p className="state bad">
+                <WarningOctagon size={20} weight="bold" aria-hidden="true" />
+                <span>{actsAs.text}</span>
+              </p>
+            )}
             {result &&
               ('refused' in result ? (
                 <p className="state warn" role="alert">
@@ -143,9 +195,16 @@ export function Developers() {
                     {result.id} as {result.as}: {result.refused}
                   </span>
                 </p>
+              ) : 'failed' in result ? (
+                <p className="state bad" role="alert">
+                  <WarningOctagon size={20} weight="bold" aria-hidden="true" />
+                  <span>
+                    {result.id}: {result.failed}
+                  </span>
+                </p>
               ) : (
                 <CodeBlock
-                  label={`${result.id} as ${result.as}${result.count === null ? '' : ` · ${result.count} ${result.count === 1 ? 'record' : 'records'}`}`}
+                  label={`${result.id} as ${result.as}${liveApi ? ` · ${liveApi.baseUrl}` : ''}${result.count === null ? '' : ` · ${result.count} ${result.count === 1 ? 'record' : 'records'}`}`}
                   code={result.json}
                 />
               ))}
@@ -183,7 +242,7 @@ export function Developers() {
           {shown.length === 0 ? (
             <p className="state neutral">No operation matches &ldquo;{filter}&rdquo;.</p>
           ) : (
-            <div className="dev-table-wrap" tabIndex={0} role="region" aria-label="Operations">
+            <div className="dev-table-wrap" role="region" aria-label="Operations">
               <table className="dev-table">
                 <thead>
                   <tr>
@@ -201,14 +260,18 @@ export function Developers() {
                       <th scope="row">
                         <code>{id}</code>
                       </th>
-                      <td className="dev-path">
-                        <span className={`dev-method ${op.method}`}>{op.method.toUpperCase()}</span>{' '}
-                        <code>{op.path}</code>
+                      <td className="dev-path" data-label="Method and path">
+                        <span>
+                          <span className={`dev-method ${op.method}`}>{op.method.toUpperCase()}</span>{' '}
+                          <code>{op.path}</code>
+                        </span>
                       </td>
-                      <td>{op.summary}</td>
-                      <td>{op.roles === 'any' ? 'any role' : op.roles.join(', ') || 'agent only'}</td>
-                      <td>{op.agentScope ?? 'none: people only'}</td>
-                      <td>{op.handledBy}</td>
+                      <td data-label="Summary">{op.summary}</td>
+                      <td data-label="Who may">
+                        {op.roles === 'any' ? 'any role' : op.roles.join(', ') || 'agent only'}
+                      </td>
+                      <td data-label="Agent scope">{op.agentScope ?? 'none: people only'}</td>
+                      <td data-label="Runs in">{op.handledBy}</td>
                     </tr>
                   ))}
                 </tbody>
