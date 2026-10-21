@@ -6,6 +6,7 @@ Contents:
 
 1.  [Pitch deck template](#pitch-deck-template)
 1.  [Build the deck](#build-the-deck)
+1.  [Example deck](#example-deck)
 1.  [Sources](#sources)
 
 ## Pitch deck template
@@ -24,6 +25,20 @@ The organisers asked teams to use every template slide and keep its flow. The [s
 1.  Print to PDF with margins set to "None". Each slide prints as one 1920 × 1080 page.
 
 The template uses Metropolis and Century Gothic. Install both for an exact match. Without them, the page uses Montserrat and Questrial from Google Fonts.
+
+## Example deck
+
+[`example-pitch-deck.html`](/docs/demo/example-pitch-deck.html) is a finished 11-slide deck from an earlier hackathon, with its names replaced by placeholders. Use it as the reference for design and visual assets; our deck still keeps the organisers' slides and their order. Open it in Chrome or Edge; it uses the same controls as our deck.
+
+Copy these from it:
+
+- **One family of visual assets:** 3D renders of white clay objects with a single orange accent, on white. The same style serves as the large art panels and the small card icons.
+- **A split layout:** text on the left, a large art panel or screenshot on the right.
+- **Numbers as cards:** an icon, a big number, a one-line claim and its source in a monospace line underneath.
+- **Steady chrome:** the logo top left and a "02 / 11 · Section" tag on every slide.
+- **A dark closing slide** with QR codes for the code and the live demo.
+
+Its images are embedded in the HTML as base64, so the file needs nothing else. Make our own renders in the same style; the orange accent already matches the organisers' template.
 
 ## Sources
 
