@@ -195,3 +195,24 @@ test('AC83-4 loading, error and the dark theme', async ({ page }) => {
   await expect(page.getByRole('table')).toBeVisible()
   await page.screenshot({ path: 'test-results/passes-dark.png' })
 })
+
+test('with both drafts open, only the composer opened last has the primary Save draft', async ({ page }) => {
+  await confirmS1(page)
+  await submitOverdueWorkOrder(page)
+  await openBoard(page)
+  const primary = page.locator('.board .btn.primary')
+  await page.getByRole('button', { name: 'Draft escalation' }).click()
+  await page.getByRole('textbox', { name: /Escalation for/ }).fill('Kept text')
+  await page.getByRole('button', { name: 'Draft the report' }).click()
+  await expect(primary).toHaveCount(1)
+  await expect(
+    page
+      .locator('form.compose')
+      .filter({ has: page.getByRole('textbox', { name: 'Monthly report' }) })
+      .locator('.btn.primary')
+  ).toHaveCount(1)
+  await expect(page.getByRole('textbox', { name: /Escalation for/ })).toHaveValue('Kept text')
+  await page.getByRole('button', { name: 'Cancel' }).last().click()
+  await expect(primary).toHaveCount(1)
+  await expect(page.getByRole('button', { name: 'Save draft' })).toHaveClass(/primary/)
+})
