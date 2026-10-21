@@ -1,5 +1,6 @@
 // Builds the public demo for Vercel as prebuilt output (Build Output API v3): the landing page at /, the web app in
-// demo mode at /demo/. It fails if any secret from the environment (Bun loads .env) appears in the files.
+// demo mode at /demo/, and the not-found page for every other path. It fails if any secret from the environment (Bun
+// loads .env) appears in the files.
 //
 //   bun run build:demo-site <dir>
 //   vercel link --yes --project safe-edge --scope <team> --cwd <dir>   (once)
@@ -29,8 +30,14 @@ await Bun.write(
   JSON.stringify(
     {
       version: 3,
-      // /sign-in and the product pages (/drone, /sdk, ...) serve their .html file.
-      routes: [...CLEAN_PATHS.map((path) => ({ src: `^/${path}/?$`, dest: `/${path}.html` })), { handle: 'filesystem' }]
+      // /sign-in and the product pages (/drone, /sdk, ...) serve their .html file. A path with no file answers 404
+      // with the site's own not-found page, not Vercel's.
+      routes: [
+        ...CLEAN_PATHS.map((path) => ({ src: `^/${path}/?$`, dest: `/${path}.html` })),
+        { handle: 'filesystem' },
+        { handle: 'error' },
+        { src: '^/.*$', dest: '/404.html', status: 404 }
+      ]
     },
     null,
     2

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page not found · Safe Edge</title>
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#e6eeea" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script type="module" src="/src/not-found.ts"></script>
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-arrow-right" viewBox="0 0 256 256">
+        <path
+          d="M224.49,136.49l-72,72a12,12,0,0,1-17-17L187,140H40a12,12,0,0,1,0-24H187L135.51,64.48a12,12,0,0,1,17-17l72,72A12,12,0,0,1,224.49,136.49Z"
+        />
+      </symbol>
+    </svg>
+
+    <a class="skip" href="#main">Skip to the content</a>
+
+    <!-- site:header -->
+
+    <main id="main">
+      <section class="page-hero" id="top" aria-labelledby="page-title">
+        <div class="page-hero-words">
+          <h1 id="page-title" class="page-title">No edge at this address.</h1>
+          <p class="page-line">
+            <span class="plate-code" translate="no">404</span> This path stops short of the water: there is no page
+            here. The link may be old, or the address mistyped.
+          </p>
+          <div class="lost-actions">
+            <a class="button button--ink" href="/">Go to the home page</a>
+            <a class="button button--line" href="/sign-in">Open the demo</a>
+            <!-- A route that stops at a bar before the water: the plan drawings' sign for a way that is closed. -->
+            <svg class="lost-route" viewBox="0 0 76 16" width="76" height="16" aria-hidden="true" focusable="false">
+              <circle cx="5" cy="8" r="4" />
+              <path class="lost-route-dash" d="M14 8H64" />
+              <path class="lost-route-bar" d="M70 1V15" />
+            </svg>
+          </div>
+        </div>
+        <img class="page-art" src="/dawn.svg" alt="" width="1600" height="1000" />
+      </section>
+
+      <nav class="ways" id="ways" aria-labelledby="ways-title">
+        <h2 id="ways-title" class="chapter-title">Pages on this site</h2>
+        <ul class="ways-list">
+          <li>
+            <a class="way" href="/drone">
+              <span class="way-name">Drone patrols</span>
+              <span class="way-what">Ranked edges, a battery-aware route, and a pilot who can always step in.</span>
+              <svg class="way-arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right" /></svg>
+            </a>
+          </li>
+          <li>
+            <a class="way" href="/agent">
+              <span class="way-name">The agent and MCP</span>
+              <span class="way-what">It reads, proposes and drafts. Only people approve.</span>
+              <svg class="way-arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right" /></svg>
+            </a>
+          </li>
+          <li>
+            <a class="way" href="/sdk">
+              <span class="way-name">SDK and API</span>
+              <span class="way-what">A typed client, a REST API, events and an MCP server.</span>
+              <svg class="way-arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right" /></svg>
+            </a>
+          </li>
+          <li>
+            <a class="way" href="/privacy">
+              <span class="way-name">Privacy</span>
+              <span class="way-what">Patrols watch edges, not people.</span>
+              <svg class="way-arrow" aria-hidden="true" focusable="false"><use href="#i-arrow-right" /></svg>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </main>
+
+    <!-- site:footer -->
+  </body>
+</html>
