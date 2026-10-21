@@ -51,8 +51,6 @@ export function Passes() {
   const rows = useMemo(() => (ok ? buildRows(ok.data, ok.now) : []), [ok])
   const titles = Object.fromEntries(Object.entries(snapshot?.metas ?? {}).map(([id, m]) => [id, m.title]))
   const noPass = rows.filter((r) => (r.pass?.state ?? 'none') === 'none').length
-  // Every seeded pass is sample data: one label for the table, instead of one under each of 47 badges.
-  const allSimulated = rows.length > 0 && rows.every((r) => r.pass?.simulated === true)
   return (
     <Screen
       title="Passes"
@@ -90,12 +88,6 @@ export function Passes() {
                   <p className="hint">
                     {noPass} edge{noPass === 1 ? ' has' : 's have'} no pass yet. Unknown is never shown as safe.
                   </p>
-                  {allSimulated && (
-                    <p className="hint sample-line">
-                      <span className="chip sample">Sample</span>
-                      Every pass in this table is simulated.
-                    </p>
-                  )}
                 </div>
                 <a className="btn" href="scene.html">
                   <MapTrifold size={20} weight="bold" aria-hidden="true" />
@@ -111,7 +103,7 @@ export function Passes() {
                   </p>
                 </div>
               ) : (
-                <PassTable rows={rows} titles={titles} allSimulated={allSimulated} />
+                <PassTable rows={rows} titles={titles} />
               )}
               <p className="hint">
                 Showing {rows.length} edge{rows.length === 1 ? '' : 's'}. The Map shows the demo&apos;s starting data

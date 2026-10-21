@@ -43,10 +43,7 @@ export function Installer({
             </ul>
             <Photo
               scene={scene}
-              caption={{
-                when: `Finding ${new Date(finding.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`,
-                simulated: finding.simulated
-              }}
+              when={`Finding ${new Date(finding.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`}
               plates={closure.openings.flatMap((o, n) => {
                 const mark = o.photoMarks[0]
                 const blocked = remedy.blocksOpeningIds.includes(o.id)
@@ -74,7 +71,6 @@ export function Installer({
           </label>
         )}
       </div>
-      {started && <p className="rt-help">The photo sent with this note is a sample picture, not a site photo.</p>}
       <div className="rt-bar">
         {denied && (
           <p role="alert" className="rt-error">

@@ -30,7 +30,6 @@ export type Sent = {
   local: boolean
   sharpness: number
   captureSource: 'drone' | 'phone'
-  simulated: boolean
 }
 
 /** A reason without a trailing full stop, so callers can put it after a colon. */
@@ -150,8 +149,7 @@ async function record(item: Queued): Promise<Sent> {
     thumb: URL.createObjectURL(new Blob([item.bytes], { type: item.mediaType })),
     local: !http,
     sharpness: item.sharpness,
-    captureSource: observation.captureSource,
-    simulated: observation.simulated
+    captureSource: observation.captureSource
   }
 }
 

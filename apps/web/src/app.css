@@ -52,14 +52,29 @@
   --art-grass: #b9cdbb;
   --art-bank: #b9ad98;
   --art-post: #1f332d;
-  --art-panel: #cdd9d4;
   --art-water: #7f9ea4;
   --art-canopy: #3f5f45;
   --art-canopy-dark: #2c4a35;
   --art-canopy-deep: #1d3526;
-  --art-ground: #21322a;
   --art-path: #c9b48a;
   --art-buoy: #b02e28;
+  --art-cloud: #f4f7f5;
+  --art-tree: #8fa98f;
+  --art-tree-dark: #6d8a70;
+  --art-grass-light: #c8d9c6;
+  --art-grass-dark: #94ae97;
+  --art-bank-dark: #9a8c74;
+  --art-stone: #a8a091;
+  --art-water-light: #a9c3c6;
+  --art-reed: #5f7a52;
+  --art-trunk: #5b4838;
+  --art-paving: #d6cfc0;
+  --art-paving-edge: #b2a893;
+  --art-play: #d6a23f;
+  --art-play-surface: #c58e6e;
+  --art-roof: #4e7d88;
+  --art-white: #f8f8f4;
+  --art-rope: #e6dcc0;
 
   --font-sans: 'Atkinson Hyperlegible Next', system-ui, sans-serif;
   --fs-display: 30px;
@@ -451,10 +466,6 @@ select {
   font-size: var(--fs-dense);
   font-weight: 500;
   white-space: nowrap;
-}
-.chip.sample {
-  background: var(--simulation-subtle);
-  color: var(--text-secondary);
 }
 .plate {
   display: inline-flex;

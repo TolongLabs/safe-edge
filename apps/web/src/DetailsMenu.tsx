@@ -156,7 +156,6 @@ export function DetailsMenu({
                 <p style={{ margin: 0 }}>
                   {day && `${dayWords[day]}, `}
                   {rainWords(rainAt(elminaScenarios, player.scenario.id, player.now))}
-                  <span style={{ color: '#5d6b66' }}> · simulated</span>
                 </p>
                 <p style={{ margin: 0, fontSize: 12, lineHeight: '16px', color: '#5d6b66' }}>
                   Real reading:{' '}

@@ -138,7 +138,6 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
       <p className="rt-help">
         {segment.name.includes(assetName) ? segment.name : `${segment.name} · ${assetName}`} ·{' '}
         {status.replace('_', ' ')}
-        {workOrder.simulated && ' · simulated'}
         {workOrder.dueAt &&
           ` · due ${new Date(workOrder.dueAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`}
       </p>

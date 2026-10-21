@@ -170,7 +170,7 @@ test('AC82-1 and AC82-3 the installer starts and completes, and never sees the s
   await signInAs(page, 'Hafiz Rahman')
   await page.goto('demo/#/retest')
   await expect(page.getByRole('link', { name: /Start work/ })).toBeVisible()
-  await expect(page.getByText('simulated')).toBeVisible()
+  await expect(page.getByText('simulated')).toHaveCount(0)
   await page.getByRole('link', { name: /Fence panel 4/ }).click()
   await expect(page.getByRole('img', { name: /^Work at opening 1/ })).toBeVisible()
   await page.getByRole('button', { name: 'Start work' }).click()
@@ -211,8 +211,8 @@ test('AC82-2 and AC82-4 the reviewer checks, signs, and the pass shows where it 
       /^Fixed by Hafiz Rahman (today|\d+ \w+) at \d\d:\d\d\. You did not install it, so you can check it\.$/
     )
   ).toBeVisible()
-  await expect(page.getByText('Sample reading, not measured on site')).toHaveCount(2)
-  await expect(page.getByText('Sample illustration, not a site photo')).toBeVisible()
+  await expect(page.getByText('Sample reading, not measured on site')).toHaveCount(0)
+  await expect(page.getByRole('img', { name: 'Sample illustration of the finding' })).toBeVisible()
   // Phone screens sit on the canvas with white cards, in both themes.
   const main = page.getByRole('main')
   await expect(main).toHaveCSS('background-color', 'rgb(231, 235, 232)')
@@ -308,7 +308,7 @@ test('AC82-4 a pass held by another open flag is cleared by the false-alarm chec
   await expect(page.getByRole('heading', { level: 1, name: 'Check a false alarm' })).toBeVisible()
   await expect(page.locator('body')).not.toContainText(/\b(cand|rt|seg|wo|fnd)_\w+/)
   await expect(page.getByRole('button', { name: 'Sign and clear this flag' })).toBeDisabled()
-  await expect(page.getByText('Sample illustration, not a site photo')).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Sample illustration of the finding' })).toBeVisible()
   await answer(page, CLEARANCE_CHECKS)
   await page.getByRole('button', { name: 'Sign and clear this flag' }).click()
   await expect(page.getByRole('heading', { name: 'Safety pass issued' })).toBeVisible()

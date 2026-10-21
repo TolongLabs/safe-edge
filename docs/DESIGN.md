@@ -335,7 +335,7 @@ Contents:
 
 Every water edge reads like a route through a park: a line of numbered stops, each stop a segment wearing its pass state. The palette borrows from park signage: a mineral-grey ground, off-white islands that hold the work, and a dark park-green rail and code plates with white type. The tone is calm and exact. A missing fence is serious, but the screen states the fact, the consequence and the next step, and never shouts.
 
-The interface is built for a non-technical reader in a hurry. Each screen answers one question and offers one primary action: "Is this a real problem?", "Which fix closes every way to the water?", "Does the repair pass?". Plain place names lead ("Central Park Lake, by the playground"); segment codes such as LK·S12 follow as small plates. Simulated data is always labelled.
+The interface is built for a non-technical reader in a hurry. Each screen answers one question and offers one primary action: "Is this a real problem?", "Which fix closes every way to the water?", "Does the repair pass?". Plain place names lead ("Central Park Lake, by the playground"); segment codes such as LK·S12 follow as small plates. One SIMULATION label in the top bar marks the whole screen as simulated; records, rows and images do not repeat it.
 
 The system rejects the KPI-tile operations dashboard and the dark CCTV wall. State is carried by shape as well as colour, so it survives glare, colour blindness and greyscale print.
 
@@ -464,7 +464,7 @@ Gentle, consistent corners: 4 px on chips, badges, plates and tags; 8 px on butt
 
 - **Chip:** Raised White, hairline border, 4 px corners, 28 px tall, Label text ("How sure: high").
 - **Pass badge:** state tint with state text and its shape mark, 4 px corners ("Valid to 20 Oct 2027").
-- **SIMULATION label:** Overline text in a 1.5 px Ink outline, 4 px corners. It sits in every top bar and on every simulated image caption.
+- **SIMULATION label:** Overline text in a 1.5 px Ink outline, 4 px corners. It sits in every top bar, once per screen, and covers everything on that screen.
 
 ### Cards / Containers
 
@@ -498,7 +498,7 @@ Gentle, consistent corners: 4 px on chips, badges, plates and tags; 8 px on butt
 - **State mark:** the five pass shapes (filled dot, half ring, slashed ring, square, hollow ring) at 12 px (Small) or 18 px (Medium).
 - **Severity mark:** a single ink dot whose size alone shows low, medium or high, inside a 16 px box. Never colour.
 - **Flag row:** severity mark, title, place, and time; the selected row inverts to Rail Green.
-- **Evidence frame:** a photo with a caption bar (when, who, "simulated"). Size Default for lists and the phone, Size Large (270 px photo) for the Inbox decision. The changed spot gets a dashed red outline and a red tag ("Panel 4 missing").
+- **Evidence frame:** a photo with a caption bar (when, who). Size Default for lists and the phone, Size Large (270 px photo) for the Inbox decision. The changed spot gets a dashed red outline and a red tag ("Panel 4 missing").
 - **Fix Lens plan:** a top-down drawing per fix option. Existing fence in Ink, proposed work as dashed lines labelled "proposed, not installed", blocked routes as grey dashed lines ending in a stop bar, and an open route as a solid red arrow into the water with a "Still open" label.
 - **Loop timeline:** time, state mark, what happened and who, one row per step of the Edge Loop, on Sunken Grey.
 - **Logo:** the Step edge isometric glyph. Glyph for 40 px and up, Small (solid faces, no lines) for 16 to 32 px, and App icon on a rounded tile; each in Light and Rail versions.
@@ -519,7 +519,7 @@ Every screen ships with all four states, in Light and Dark.
 - **Do** give each screen one question and one primary button.
 - **Do** lead with the place name and show the code as a plate beside it.
 - **Do** pair every pass state with its shape mark and words.
-- **Do** label every simulated flight, photo and repair with SIMULATION or "simulated".
+- **Do** keep the SIMULATION label in every top bar and on the Map.
 - **Do** say what a button will do before it is pressed ("The safety pass for this fence is paused until it is fixed").
 - **Do** keep text at 12 px or larger and contrast at 4.5:1 or better in both modes.
 
@@ -531,6 +531,7 @@ Every screen ships with all four states, in Light and Dark.
 - **Don't** put a thick coloured stripe on one side of a banner, row or card.
 - **Don't** use a second icon family or a second typeface.
 - **Don't** show an empty list as "all clear"; say what was not seen.
+- **Don't** repeat "simulated", "Sample" or "not a site photo" on records, rows or images; the screen's SIMULATION label already says it.
 
 ## See also
 

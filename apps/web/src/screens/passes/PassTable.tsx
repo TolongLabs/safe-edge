@@ -73,19 +73,7 @@ function overdueText(r: Row) {
   return `${r.overdue.length} work order${r.overdue.length > 1 ? 's' : ''}, ${days} day${days > 1 ? 's' : ''}`
 }
 
-/**
- * `allSimulated`: the board labels the whole table once, so a row says "simulated" only when its pass is simulated
- * and the rest of the table is not.
- */
-export function PassTable({
-  rows,
-  titles,
-  allSimulated
-}: {
-  rows: Row[]
-  titles: Record<string, string>
-  allSimulated: boolean
-}) {
+export function PassTable({ rows, titles }: { rows: Row[]; titles: Record<string, string> }) {
   return (
     <div className="edge-table">
       <table aria-labelledby="edges-h">
@@ -113,7 +101,6 @@ export function PassTable({
               </th>
               <td>
                 <PassBadge pass={r.pass} />
-                {!allSimulated && r.pass?.simulated && <small className="reason-line">simulated</small>}
                 {r.pass?.stateReason && (r.pass.state === 'suspended' || r.pass.state === 'expired') && (
                   <small className="reason-line">{plainReason(r.pass.stateReason, titles)}</small>
                 )}

@@ -97,7 +97,7 @@ test('AC81-1 a confirmed finding links to its own photo, and the list shows open
   await expect(page.getByText('This does not mean the lake edge is safe')).toBeVisible()
   await openLens(page)
   await expect(page.getByRole('img', { name: 'Sample illustration of the finding' })).toBeVisible()
-  await expect(page.getByText('Sample illustration, not a site photo')).toBeVisible()
+  await expect(page.getByText('Sample illustration, not a site photo')).toHaveCount(0)
   await expect(page.getByRole('banner').getByText(/Fence panel 4 missing/)).toBeVisible()
   await page.goto('demo/#/fix-lens')
   await page.getByRole('link', { name: /Fence panel 4 missing/ }).click()

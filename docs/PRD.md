@@ -92,7 +92,7 @@ Priority: **P0** must exist for the demo, **P1** should exist, **P2** is a stret
 - **SIM-5 (P0) Scenario player.** Play, pause, scrub, change speed and reset a deterministic timeline. Scenarios are JSON. Done when S1 to S6 play twice in a row with identical results.
 - **SIM-6 (P0) Visible events.** Show candidate flags as pins on the segment, discarded frames as "frame dropped: person" ticks, and unknown stretches as grey hatching. Done when each appears in S1.
 - **SIM-7 (P1) Weather and light.** Drive rain and day or night lighting from the scenario, and show the real rainfall reading with its timestamp.
-- **SIM-8 (P0) Simulation label.** Show a permanent "SIMULATION" badge and mark every simulated event. Done when no simulated state appears without a label in a full S1 to S6 run.
+- **SIM-8 (P0) Simulation label.** Show a permanent "SIMULATION" badge on every screen; it covers every simulated event on that screen, so records, rows and images carry no label of their own. Done when no screen in a full S1 to S6 run lacks the badge.
 - **SIM-9 (P0) Performance.** At least 30 fps at 1080p on a 2020 or newer laptop with integrated graphics, and at least 24 fps on a mid-range phone.
 - **SIM-10 (P2) Photoreal hero shot.** A fly-in over Google Photorealistic 3D Tiles for the video, at most 30 seconds, with Google's attribution and "for promotional purposes only". Never cached and never analysed.
 - **SIM-11 (P1) Recording mode.** A fixed camera path and steady frame rate for recording the video.

@@ -81,7 +81,7 @@ These are roles to confirm by name, not commitments already obtained.
 4.  **Unknown stays unknown.** Canopy, glare, water and occlusion produce "unknown", which creates a field task. Unknown never becomes a pass.
 5.  **Two people per fix.** The person who records a repair cannot accept it.
 6.  **Decisions in three taps.** People make the calls. The system does the walking, routing, drafting and chasing.
-7.  **Simulated means labelled.** Every simulated flight, detection and repair in a demo carries a visible label. False or misleading claims would disqualify the team ([brief](/docs/BRIEF.md#rules)).
+7.  **Simulated means labelled.** Every screen of a demo carries a visible SIMULATION label that covers the flights, detections and repairs on it. False or misleading claims would disqualify the team ([brief](/docs/BRIEF.md#rules)).
 8.  **Fly when the park is empty.** Patrols run at first light or another agreed window, hold for lightning and wet surfaces, and keep CAAM's 50 m separation from people with zoom lenses and stand-off distance ([CAAM rules][caam]).
 9.  **The drone is optional.** The protocol, not the aircraft, is the product. A phone patrol feeds the same Inbox, Fix Lens and proof.
 

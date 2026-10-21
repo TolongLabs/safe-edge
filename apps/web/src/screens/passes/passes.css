@@ -31,16 +31,6 @@
   align-items: flex-start;
   gap: var(--space-4);
 }
-.board .sample-line {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-1);
-}
-.board .sample-line .chip {
-  height: 24px;
-  font-size: var(--fs-small);
-}
 .banner-icon {
   flex: none;
   width: 20px;

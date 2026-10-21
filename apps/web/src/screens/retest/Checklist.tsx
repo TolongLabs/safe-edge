@@ -52,7 +52,6 @@ export function Checklist({
       items={items}
       intro={`Fixed by ${installerName} ${fixedAt}. You did not install it, so you can check it.`}
       scene={meta.scene}
-      simulated={finding.simulated}
       acceptance={remedy?.acceptanceTest}
       signLabel="Sign and issue the pass"
       failLabel="Fail this repair"

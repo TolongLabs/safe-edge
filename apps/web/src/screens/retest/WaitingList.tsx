@@ -97,7 +97,6 @@ export function WaitingList() {
                         <span className="rt-row-title">{title}</span>
                         <span className="rt-help">
                           {w.status.replace('_', ' ').replace(/^./, (c) => c.toUpperCase())}
-                          {w.simulated && ' · simulated'}
                           {action ? '' : ` · ${next}`}
                         </span>
                         {action && <span className="rt-action">{action}</span>}

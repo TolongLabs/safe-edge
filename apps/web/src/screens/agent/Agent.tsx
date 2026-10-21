@@ -103,7 +103,7 @@ export function Agent() {
             <h3 id="ag-check">Guardrail check</h3>
             <p className="agent-note">
               Asks the demo core, as the Safe Edge agent ({AGENT}), to confirm the first open candidate. No model runs:
-              this is the same call a model would make through a tool. <span className="chip sample">Simulation</span>
+              this is the same call a model would make through a tool.
             </p>
             <div className="agent-actions">
               <button className="btn primary" disabled={busy} onClick={() => void runCheck()}>
