@@ -1,4 +1,15 @@
-import { CaretRight, CheckCircle, Circle, LockSimple, Prohibit, Trash, Wrench, XCircle } from '@phosphor-icons/react'
+import {
+  CaretRight,
+  CheckCircle,
+  Circle,
+  Info,
+  LockSimple,
+  Prohibit,
+  Trash,
+  WarningCircle,
+  Wrench,
+  XCircle
+} from '@phosphor-icons/react'
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
@@ -161,12 +172,18 @@ export function Compare({
       <p className="fl-muted">Fix Lens follows each way a child could walk from the play area to the lake.</p>
       {failed && (
         <p className="banner info" role="status">
-          {failedIndex < 0 ? 'The last fix' : `Fix ${letter(failedIndex)}`} failed its re-test. Choose a fix again.
+          <Info size={20} weight="bold" aria-hidden="true" />
+          <span>
+            {failedIndex < 0 ? 'The last fix' : `Fix ${letter(failedIndex)}`} failed its re-test. Choose a fix again.
+          </span>
         </p>
       )}
       {refusal && (
-        <p className="state bad fl-refusal" role="alert">
-          {refusal.text} <small>(rule: {refusal.rule})</small>
+        <p className="banner error fl-refusal" role="alert">
+          <WarningCircle size={20} weight="bold" aria-hidden="true" />
+          <span>
+            {refusal.text} <small>(rule: {refusal.rule})</small>
+          </span>
         </p>
       )}
       {remedies.length === 0 && (

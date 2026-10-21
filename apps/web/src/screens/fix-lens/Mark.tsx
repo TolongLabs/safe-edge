@@ -1,5 +1,5 @@
 import { OpeningType, type Finding } from '@safe-edge/contracts'
-import { CheckCircle, Trash, Warning } from '@phosphor-icons/react'
+import { CheckCircle, Trash, Warning, WarningCircle } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { can, client, useStore } from '../../store'
 import type { Scene } from '../../scenes'
@@ -144,8 +144,11 @@ export function Mark({
       </div>
       <div className="fl-right">
         {refusal && (
-          <p className="state bad fl-refusal" role="alert">
-            {refusal.text} <small>(rule: {refusal.rule})</small>
+          <p className="banner error fl-refusal" role="alert">
+            <WarningCircle size={20} weight="bold" aria-hidden="true" />
+            <span>
+              {refusal.text} <small>(rule: {refusal.rule})</small>
+            </span>
           </p>
         )}
         <section className="fl-card" aria-label="Openings">
