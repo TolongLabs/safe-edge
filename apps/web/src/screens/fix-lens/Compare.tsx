@@ -1,4 +1,4 @@
-import { CheckCircle, Circle, LockSimple, XCircle } from '@phosphor-icons/react'
+import { CheckCircle, Circle, LockSimple, Prohibit, XCircle } from '@phosphor-icons/react'
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
@@ -130,9 +130,16 @@ export function Compare({
                   checked={r.id === chosen}
                   disabled={sent && r.id !== chosen}
                   onChange={() => setChosen(r.id)}
+                  aria-describedby={failed?.remedyId === r.id ? `failed-${r.id}` : undefined}
                 />
                 {L} · {r.label}
               </label>
+              {failed?.remedyId === r.id && (
+                <p className="fl-failed" id={`failed-${r.id}`}>
+                  <Prohibit size={18} weight="bold" aria-hidden="true" />
+                  Failed its re-test
+                </p>
+              )}
               <PlanDrawing openings={openings} routes={c.routes} remedy={r} name={`fix ${L}`} />
               {/* On phones the drawing's own words are hidden, so the same facts are written out here. */}
               <p className="fl-legend">

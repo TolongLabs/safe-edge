@@ -547,3 +547,12 @@
 .fl-error svg {
   flex: none;
 }
+
+.fl-failed {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
