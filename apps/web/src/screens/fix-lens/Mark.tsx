@@ -46,61 +46,25 @@ export function Mark({
       ]
     }`
 
-  const addOpening = async (type: OpeningType, x: number, y: number, measuredMm: number | null) => {
-    // The sample photo has no stored evidence, so its marks point at evd_sample_<observationId> (the image id when it has one).
-    const observation = (await client().getCandidate({ params: { id: finding.candidateId } })).observations[0]!
-    return client().createOpening({
-      body: {
-        segmentId: finding.segmentId,
-        type,
-        photoMarks: [{ evidenceId: observation.image?.id ?? `evd_sample_${observation.id}`, x, y }],
-        measuredMm
-      }
+  const place = (x: number, y: number) =>
+    run(async () => {
+      // The sample photo has no stored evidence, so its marks point at evd_sample_<observationId> (the image id when it has one).
+      const observation = (await client().getCandidate({ params: { id: finding.candidateId } })).observations[0]!
+      await client().createOpening({
+        body: {
+          segmentId: finding.segmentId,
+          type,
+          photoMarks: [{ evidenceId: observation.image?.id ?? `evd_sample_${observation.id}`, x, y }],
+          measuredMm: cm.trim() === '' ? null : Number(cm) * 10
+        }
+      })
     })
-  }
-
-  const place = (x: number, y: number) => run(() => addOpening(type, x, y, cm.trim() === '' ? null : Number(cm) * 10))
   const percent = (v: string) => v.trim() !== '' && Number(v) >= 0 && Number(v) <= 100
   const acrossOk = percent(across)
   const downOk = percent(down)
   const sizeOk = cm.trim() === '' || (Number.isFinite(Number(cm)) && Number(cm) >= 0)
   const formOk = acrossOk && downOk && sizeOk
   const routeOk = label.trim() !== '' && (through.length > 0 || unsure)
-  const [sampling, setSampling] = useState(false)
-  const [sampleError, setSampleError] = useState<string | null>(null)
-  const sample = () => {
-    setSampling(true)
-    setSampleError(null)
-    void run(async () => {
-      const gap = await addOpening('fence_gap', 0.45, 0.6, 1200)
-      const end = await addOpening('fence_end', 0.9, 0.6, 450)
-      await client().createRoute({
-        body: {
-          segmentId: finding.segmentId,
-          fromFeature: { kind: 'play_area', label: 'Playground path, through the panel gap' },
-          openingIds: [gap.id],
-          status: 'open'
-        }
-      })
-      await client().createRoute({
-        body: {
-          segmentId: finding.segmentId,
-          fromFeature: { kind: 'play_area', label: 'Playground path, around the fence end' },
-          openingIds: [end.id],
-          status: 'open'
-        }
-      })
-    })
-      .then(
-        () => undefined,
-        (e: unknown) => setSampleError(e instanceof Error ? e.message : String(e))
-      )
-      // Re-read core even after a failure halfway, so the screen shows what was recorded and the button cannot repeat it.
-      .finally(() => {
-        setSampling(false)
-        reload()
-      })
-  }
 
   return (
     <div className="fl-mark">
@@ -141,19 +105,6 @@ export function Mark({
         <section className="fl-card" aria-label="Openings">
           <h2>Openings</h2>
           {openings.length === 0 && <p className="fl-muted">No openings marked yet.</p>}
-          {mayMark && openings.length === 0 && (
-            <div className="fl-sample">
-              <button className="btn" type="button" disabled={sampling} onClick={sample}>
-                Use the S2 sample markings
-              </button>
-              <p className="fl-muted">Sample markings for the playground fence, not measured on site.</p>
-              {sampleError !== null && (
-                <p className="state bad" role="alert">
-                  {sampleError}
-                </p>
-              )}
-            </div>
-          )}
           <ul className="fl-list">
             {openings.map((o, i) => (
               <li key={o.id}>

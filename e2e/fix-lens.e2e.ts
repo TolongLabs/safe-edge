@@ -276,37 +276,3 @@ test('AC81-7 works in dark mode', async ({ page }) => {
   expect(bg).not.toBe('rgb(231, 235, 232)')
   await expect(page.getByText('Closes all 2 ways to the water')).toBeVisible()
 })
-
-test('AC81-8 the sample markings and fixes fill Fix Lens in one click each', async ({ page }) => {
-  await openLens(page)
-  await page.getByRole('button', { name: 'Use the S2 sample markings' }).click()
-  await expect(page.getByText('2 openings and 2 ways recorded.')).toBeVisible()
-  await page.getByRole('button', { name: 'Next: compare fixes' }).click()
-  await page.getByRole('button', { name: 'Use the two sample fixes' }).click()
-  await expect(page.getByText('Leaves 1 way to the water open, Playground path, around the fence end')).toBeVisible()
-  await expect(page.getByText('Closes all 2 ways to the water')).toBeVisible()
-})
-
-test('AC81-8 a walk crew member sees no sample buttons on either step', async ({ page }) => {
-  await openLens(page)
-  await signInAs(page, 'Siti Aminah')
-  await expect(page.getByRole('button', { name: 'Use the S2 sample markings' })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Compare fixes', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Use the two sample fixes' })).toHaveCount(0)
-})
-
-test('AC81-8 the sample fixes are offered only when the panel gap and the fence end are marked', async ({ page }) => {
-  await openLens(page)
-  await page.getByLabel('Add an opening: type').selectOption({ label: 'Gate' })
-  await page.getByLabel('Across the photo').fill('30')
-  await page.getByLabel('Down the photo').fill('60')
-  await page.getByRole('button', { name: 'Add opening' }).click()
-  await expect(page.getByRole('img', { name: /^Opening 1, Gate/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Use the S2 sample markings' })).toHaveCount(0)
-  await page.getByLabel('Name of the way').fill('Path through the gate')
-  await page.getByRole('checkbox', { name: /^Opening 1, Gate/ }).check()
-  await page.getByRole('button', { name: 'Add way to the water' }).click()
-  await page.getByRole('button', { name: 'Next: compare fixes' }).click()
-  await expect(page.getByRole('heading', { name: 'No fixes proposed yet' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Use the two sample fixes' })).toHaveCount(0)
-})
