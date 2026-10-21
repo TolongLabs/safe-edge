@@ -73,6 +73,33 @@
   color: var(--text-secondary);
   font-size: var(--fs-dense);
 }
+.fl-confirm-line {
+  margin: 0 0 var(--space-2);
+}
+.fl-row-text {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.fl-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+.fl-row-actions:empty {
+  display: none;
+}
+.fl-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--state-valid-fg);
+  font-size: var(--fs-dense);
+  font-weight: 600;
+}
+.fl-tag svg {
+  flex: none;
+}
 .fl-sample {
   display: grid;
   justify-items: start;
@@ -488,6 +515,15 @@
     flex-wrap: nowrap;
     gap: var(--space-2);
   }
+  /* On a phone the text keeps the first line and the buttons take a second line of their own. */
+  .fl-list li {
+    flex-wrap: wrap;
+  }
+  .fl-row-actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
+  }
   .fl-steps button:not([aria-current='step']) .fl-step-name {
     position: absolute;
     width: 1px;
@@ -561,4 +597,12 @@
   color: var(--text-secondary);
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
+}
+
+/* The refusal's rule note sits on its own line under the sentence. */
+.fl-refusal {
+  flex-wrap: wrap;
+}
+.fl-refusal small {
+  flex-basis: 100%;
 }

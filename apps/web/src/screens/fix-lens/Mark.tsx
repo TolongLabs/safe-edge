@@ -1,10 +1,10 @@
 import { OpeningType, type Finding } from '@safe-edge/contracts'
-import { Warning } from '@phosphor-icons/react'
+import { CheckCircle, Trash, Warning } from '@phosphor-icons/react'
 import { useState } from 'react'
-import { can, client } from '../../store'
+import { can, client, useStore } from '../../store'
 import type { Scene } from '../../scenes'
 import { Photo } from './Photo'
-import { FROM_LABEL, OPENING_LABEL, must, useRun, type Lens } from './lens'
+import { FROM_LABEL, OPENING_LABEL, must, plain, recordNames, useRun, type Lens } from './lens'
 
 type Kind = keyof typeof FROM_LABEL
 
@@ -25,7 +25,18 @@ export function Mark({
   onNext: () => void
 }) {
   const { openings, routes } = lens.base
-  const { run, denied } = useRun(reload)
+  const users = useStore().snapshot!.users
+  const names = recordNames(lens, users)
+  const { run, refusal } = useRun(reload, names)
+  const engineerName = (id: string) =>
+    plain(
+      must(
+        users.find((u) => u.id === id),
+        `user ${id}`
+      ).name
+    )
+  const confirmedOpenings = openings.filter((o) => o.engineerConfirmedBy !== null).length
+  const confirmedWays = routes.filter((r) => r.engineerConfirmedBy !== null).length
   const mayMark = can('createOpening') && can('createRoute')
   const [type, setType] = useState<OpeningType>('fence_gap')
   const [across, setAcross] = useState('')
@@ -132,13 +143,20 @@ export function Mark({
         </p>
       </div>
       <div className="fl-right">
-        {denied && (
-          <p className="state bad" role="alert">
-            {denied}
+        {refusal && (
+          <p className="state bad fl-refusal" role="alert">
+            {refusal.text} <small>(rule: {refusal.rule})</small>
           </p>
         )}
         <section className="fl-card" aria-label="Openings">
           <h2>Openings</h2>
+          <p className="fl-muted fl-confirm-line">
+            {confirmedOpenings} of {openings.length} {openings.length === 1 ? 'opening' : 'openings'} and{' '}
+            {confirmedWays} of {routes.length} {routes.length === 1 ? 'way' : 'ways'} confirmed by an engineer
+          </p>
+          {(confirmedOpenings < openings.length || confirmedWays < routes.length) && (
+            <p className="fl-muted">An engineer confirms the markings; it is not yet required to approve a fix.</p>
+          )}
           {openings.length === 0 && <p className="fl-muted">No openings marked yet.</p>}
           {mayMark && openings.length === 0 && (
             <div className="fl-sample">
@@ -159,7 +177,7 @@ export function Mark({
                 <span className="fl-num" aria-hidden="true">
                   {i + 1}
                 </span>
-                <span>
+                <span className="fl-row-text">
                   <b>{OPENING_LABEL[o.type]}</b>
                   <br />
                   <span className="fl-muted">
@@ -169,6 +187,36 @@ export function Mark({
                     {' · '}
                     {o.measuredMm === null ? 'size not measured' : `${o.measuredMm / 10} cm`}
                   </span>
+                  {o.engineerConfirmedBy !== null && (
+                    <span className="fl-tag">
+                      <CheckCircle size={18} weight="bold" aria-hidden="true" />
+                      Confirmed by {engineerName(o.engineerConfirmedBy)}
+                    </span>
+                  )}
+                </span>
+                <span className="fl-row-actions">
+                  {can('confirmOpening') && o.engineerConfirmedBy === null && (
+                    <button
+                      className="btn small"
+                      type="button"
+                      aria-label={`Confirm ${openingName(o.id)}`}
+                      onClick={() => void run(() => client().confirmOpening({ params: { id: o.id } }))}
+                    >
+                      <CheckCircle size={18} weight="bold" aria-hidden="true" />
+                      Confirm
+                    </button>
+                  )}
+                  {can('deleteOpening') && (
+                    <button
+                      className="btn small"
+                      type="button"
+                      aria-label={`Remove ${openingName(o.id)}`}
+                      onClick={() => void run(() => client().deleteOpening({ params: { id: o.id } }))}
+                    >
+                      <Trash size={18} weight="bold" aria-hidden="true" />
+                      Remove
+                    </button>
+                  )}
                 </span>
               </li>
             ))}
@@ -246,7 +294,7 @@ export function Mark({
           <ul className="fl-list">
             {routes.map((r) => (
               <li key={r.id} className="fl-route-row">
-                <span>
+                <span className="fl-row-text">
                   <b>{r.fromFeature.label}</b>
                   <br />
                   <span className="fl-muted">
@@ -256,6 +304,36 @@ export function Mark({
                       : 'opening not known'}
                     {r.status === 'unknown' && ' · unknown'}
                   </span>
+                  {r.engineerConfirmedBy !== null && (
+                    <span className="fl-tag">
+                      <CheckCircle size={18} weight="bold" aria-hidden="true" />
+                      Confirmed by {engineerName(r.engineerConfirmedBy)}
+                    </span>
+                  )}
+                </span>
+                <span className="fl-row-actions">
+                  {can('confirmRoute') && r.engineerConfirmedBy === null && (
+                    <button
+                      className="btn small"
+                      type="button"
+                      aria-label={`Confirm ${r.fromFeature.label}`}
+                      onClick={() => void run(() => client().confirmRoute({ params: { id: r.id } }))}
+                    >
+                      <CheckCircle size={18} weight="bold" aria-hidden="true" />
+                      Confirm
+                    </button>
+                  )}
+                  {can('deleteRoute') && (
+                    <button
+                      className="btn small"
+                      type="button"
+                      aria-label={`Remove ${r.fromFeature.label}`}
+                      onClick={() => void run(() => client().deleteRoute({ params: { id: r.id } }))}
+                    >
+                      <Trash size={18} weight="bold" aria-hidden="true" />
+                      Remove
+                    </button>
+                  )}
                 </span>
               </li>
             ))}

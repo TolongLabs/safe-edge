@@ -1,8 +1,20 @@
-import { CheckCircle, Circle, LockSimple, Prohibit, XCircle } from '@phosphor-icons/react'
+import { CheckCircle, Circle, LockSimple, Prohibit, Trash, XCircle } from '@phosphor-icons/react'
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
-import { OPENING_LABEL, REMEDY_LABEL, addProposed, letter, must, plain, quoteWords, useRun, type Lens } from './lens'
+import {
+  OPENING_LABEL,
+  REMEDY_LABEL,
+  addProposed,
+  letter,
+  must,
+  plain,
+  quoteWords,
+  recordNames,
+  removeProposed,
+  useRun,
+  type Lens
+} from './lens'
 import { PlanDrawing } from './PlanDrawing'
 
 type Closure = Lens['per'][string]
@@ -58,7 +70,8 @@ export function Compare({
   const { snapshot } = useStore()
   const { user } = useSignedIn()
   const s = snapshot!
-  const { run, denied } = useRun(reload)
+  const names = recordNames(lens, s.users)
+  const { run, refusal } = useRun(reload, names)
   const { openings, remedies } = lens.base
   const name = (id: string) =>
     plain(
@@ -151,9 +164,9 @@ export function Compare({
           {failedIndex < 0 ? 'The last fix' : `Fix ${letter(failedIndex)}`} failed its re-test. Choose a fix again.
         </p>
       )}
-      {denied && (
-        <p className="state bad" role="alert">
-          {denied}
+      {refusal && (
+        <p className="state bad fl-refusal" role="alert">
+          {refusal.text} <small>(rule: {refusal.rule})</small>
         </p>
       )}
       {remedies.length === 0 && (
@@ -240,6 +253,21 @@ export function Compare({
                   <LockSimple size={20} weight="bold" aria-hidden="true" />
                   <span>An engineer approves this fix. Not approved yet.</span>
                 </p>
+              )}
+              {can('deleteRemedy') && (
+                <button
+                  className="btn small"
+                  type="button"
+                  onClick={() =>
+                    void run(async () => {
+                      await client().deleteRemedy({ params: { id: r.id } })
+                      removeProposed(finding.segmentId, r.id)
+                    })
+                  }
+                >
+                  <Trash size={18} weight="bold" aria-hidden="true" />
+                  Remove fix {L}
+                </button>
               )}
             </div>
           )
