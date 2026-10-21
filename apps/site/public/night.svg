@@ -1,0 +1,123 @@
+<!-- The night footer: the lake after dark, the fence holding, the new panel and fence lit in green. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 440">
+  <defs>
+        <pattern id="pickets-night" width="9" height="52" patternUnits="userSpaceOnUse">
+          <rect x="3" width="3" height="52" fill="#4b5d57" />
+        </pattern>
+        <pattern id="pickets-new" width="9" height="52" patternUnits="userSpaceOnUse">
+          <rect x="3" width="3" height="52" fill="#6cc495" />
+        </pattern>
+        <rect id="post-night" y="758" width="6" height="76" rx="1" fill="#6f7b76" />
+        <g id="panel-night">
+          <rect y="768" width="78" height="4" fill="#4b5d57" />
+          <rect y="812" width="78" height="4" fill="#4b5d57" />
+          <rect y="768" width="78" height="52" fill="url(#pickets-night)" />
+        </g>
+  </defs>
+          <rect width="1600" height="440" fill="#0d1d19" />
+          <g fill="#7fa596">
+            <circle cx="785" cy="127" r="1.4" />
+            <circle cx="390" cy="164" r="1.9" />
+            <circle cx="126" cy="187" r="2.0" />
+            <circle cx="657" cy="74" r="2.3" />
+            <circle cx="1052" cy="35" r="1.9" />
+            <circle cx="897" cy="113" r="1.4" />
+            <circle cx="80" cy="198" r="2.6" />
+            <circle cx="193" cy="104" r="2.5" />
+            <circle cx="1075" cy="73" r="1.4" />
+            <circle cx="1577" cy="105" r="1.5" />
+            <circle cx="875" cy="83" r="1.4" />
+            <circle cx="1237" cy="87" r="1.7" />
+            <circle cx="1415" cy="109" r="1.5" />
+            <circle cx="965" cy="96" r="2.3" />
+            <circle cx="721" cy="37" r="1.3" />
+            <circle cx="660" cy="149" r="2.1" />
+            <circle cx="1528" cy="82" r="1.8" />
+            <circle cx="793" cy="103" r="2.4" />
+            <circle cx="433" cy="186" r="2.4" />
+            <circle cx="1549" cy="196" r="2.4" />
+            <circle cx="1196" cy="142" r="2.0" />
+            <circle cx="39" cy="81" r="1.7" />
+            <circle cx="1180" cy="71" r="2.5" />
+            <circle cx="11" cy="88" r="2.0" />
+            <circle cx="706" cy="37" r="2.6" />
+            <circle cx="730" cy="186" r="2.0" />
+            <circle cx="560" cy="44" r="2.3" />
+          </g>
+          <circle cx="380" cy="96" r="34" fill="#e6eeea" />
+          <circle cx="396" cy="86" r="30" fill="#0d1d19" />
+          <path
+            d="M0 316v-14l26-12 26 12v-6l26-12 26 12 26-12 26 12v4l26-12 26 12v-8l26-12 26 12 26-12 26 12v6l26-12 26 12v-4l26-12 26 12V316h106v-40h80v-12h56v12h80v40h80V182h64v134h16V222h52v94h198V164h76v152h14V214h56v102h24V250h92v66Z"
+            fill="#17302a"
+          />
+          <g fill="#f0b06a">
+            <rect x="976" y="200" width="8" height="10" />
+            <rect x="996" y="228" width="8" height="10" />
+            <rect x="976" y="262" width="8" height="10" />
+            <rect x="1016" y="282" width="8" height="10" />
+            <rect x="1062" y="236" width="8" height="10" />
+            <rect x="1078" y="276" width="8" height="10" />
+            <rect x="1306" y="184" width="8" height="10" />
+            <rect x="1330" y="214" width="8" height="10" />
+            <rect x="1306" y="250" width="8" height="10" />
+            <rect x="1346" y="276" width="8" height="10" />
+            <rect x="1396" y="236" width="8" height="10" />
+            <rect x="1480" y="270" width="8" height="10" />
+            <rect x="700" y="292" width="40" height="6" />
+          </g>
+          <path
+            d="M0 326c18-12 40-16 62-8 18-14 46-16 66-4 22-10 48-8 64 4 20-12 52-12 70 2 20-10 44-8 60 4 24-14 56-12 74 4 18-8 40-6 54 4 22-12 50-10 66 2 20-10 46-8 62 4 22-14 54-12 72 4 18-10 42-8 58 4 22-10 48-8 64 4 20-12 50-10 66 2 24-12 54-10 70 4 18-10 40-8 56 4 22-10 48-8 62 4 20-12 50-10 68 4 16-8 38-6 52 4 22-12 50-10 64 4 18-10 42-8 58 4 20-10 44-8 58 4V340H0Z"
+            fill="#112620"
+          />
+          <rect y="336" width="1600" height="80" fill="#1c2925" />
+
+          <g transform="translate(0 -404)">
+            <path d="M0 816c420-10 1180 6 1600-6v34H0Z" fill="#17302a" />
+            <use href="#post-night" x="40" />
+            <use href="#post-night" x="124" />
+            <use href="#post-night" x="208" />
+            <use href="#post-night" x="292" />
+            <use href="#post-night" x="376" />
+            <use href="#post-night" x="460" />
+            <use href="#post-night" x="544" />
+            <use href="#post-night" x="628" />
+            <use href="#post-night" x="712" />
+            <use href="#post-night" x="796" />
+            <use href="#post-night" x="880" />
+            <use href="#post-night" x="964" />
+            <use href="#post-night" x="1048" />
+            <use href="#post-night" x="1132" />
+            <use href="#post-night" x="1216" />
+            <use href="#post-night" x="1300" />
+            <use href="#post-night" x="1384" />
+            <use href="#post-night" x="1450" />
+            <use href="#panel-night" x="43" />
+            <use href="#panel-night" x="127" />
+            <use href="#panel-night" x="211" />
+            <use href="#panel-night" x="295" />
+            <use href="#panel-night" x="379" />
+            <use href="#panel-night" x="463" />
+            <use href="#panel-night" x="547" />
+            <use href="#panel-night" x="631" />
+            <use href="#panel-night" x="715" />
+            <use href="#panel-night" x="883" />
+            <use href="#panel-night" x="967" />
+            <use href="#panel-night" x="1051" />
+            <use href="#panel-night" x="1135" />
+            <use href="#panel-night" x="1219" />
+            <use href="#panel-night" x="1303" />
+            <g class="new-work">
+              <rect x="799" y="768" width="78" height="52" fill="url(#pickets-new)" />
+              <rect x="799" y="768" width="78" height="4" fill="#6cc495" />
+              <rect x="799" y="812" width="78" height="4" fill="#6cc495" />
+              <rect x="1387" y="768" width="66" height="52" fill="url(#pickets-new)" />
+              <rect x="1387" y="768" width="66" height="4" fill="#6cc495" />
+              <rect x="1387" y="812" width="66" height="4" fill="#6cc495" />
+            </g>
+          </g>
+          <g>
+            <rect x="1160" y="300" width="5" height="116" fill="#33594d" />
+            <rect x="1150" y="296" width="25" height="8" rx="3" fill="#e6eeea" />
+          </g>
+          <rect y="414" width="1600" height="26" fill="#17302a" />
+</svg>

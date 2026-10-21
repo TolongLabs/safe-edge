@@ -1,0 +1,190 @@
+/* Agent screen. */
+.agent-list-head h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: 600;
+}
+.agent-list-head p,
+.agent-note,
+.agent-head p {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+  max-width: 75ch;
+}
+.agent-tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.agent-tools li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.agent-tool-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.agent-tool-head b {
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+.agent-tools .chip {
+  height: 24px;
+  font-size: var(--fs-small);
+}
+.agent-tools .chip.drafts {
+  border-color: var(--border-strong);
+}
+.agent-scope {
+  color: var(--text-secondary);
+}
+.agent-work code,
+.agent-detail code {
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.agent-detail {
+  gap: var(--space-6);
+}
+.agent-detail section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.agent-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.agent-head h2 {
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+.agent-head p {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.agent-detail h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: 600;
+}
+.agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.agent-result {
+  align-items: flex-start;
+}
+.agent-result > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.agent-log {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.agent-log li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.agent-time {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.agent-subject {
+  color: var(--text-secondary);
+}
+.agent-log .chip {
+  margin-left: auto;
+}
+.agent-log .chip.denied {
+  border-color: var(--state-valid-fg);
+  background: var(--state-valid-bg);
+}
+.agent-skeleton i {
+  height: 44px;
+}
+.agent-table-wrap {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+.agent-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.agent-table th,
+.agent-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  text-align: left;
+  vertical-align: top;
+}
+.agent-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.agent-table tbody th {
+  white-space: nowrap;
+}
+.agent-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.agent-quote {
+  margin: 0;
+  max-width: 75ch;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+}
+
+@media (max-width: 600px) {
+  /* The screen's question and its check come before the tool list on a phone. */
+  .agent-work .list {
+    order: 2;
+  }
+  .agent-head h2 {
+    font-size: var(--fs-h1);
+    line-height: var(--lh-h1);
+  }
+  .agent-table tbody th {
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+/* Long refusals must not squeeze the state icon. */
+.agent-work :is(.state, .banner) > svg {
+  flex: none;
+}

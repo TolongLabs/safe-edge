@@ -11,9 +11,15 @@ export function getTheme(): Theme {
   }
 }
 
+// The browser's own bar takes the canvas colour (--bg-canvas in app.css). index.html holds one theme-color tag per
+// colour scheme; a chosen theme sets both, System gives each its own scheme's colour back.
+const CANVAS = { light: '#e7ebe8', dark: '#111a17' } as const
+
 export function setTheme(theme: Theme) {
   if (theme === 'system') document.documentElement.removeAttribute('data-theme')
   else document.documentElement.dataset.theme = theme
+  for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'))
+    meta.content = CANVAS[theme === 'system' ? (meta.media.includes('dark') ? 'dark' : 'light') : theme]
   try {
     sessionStorage.setItem(KEY, theme)
   } catch {

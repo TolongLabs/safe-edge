@@ -197,14 +197,14 @@ export function Mark({
                 <label>
                   Across the photo
                   <span className="fl-unit">
-                    <input inputMode="decimal" value={across} onChange={(e) => setAcross(e.target.value)} />
+                    <input type="text" inputMode="decimal" value={across} onChange={(e) => setAcross(e.target.value)} />
                     <span aria-hidden="true">%</span>
                   </span>
                 </label>
                 <label>
                   Down the photo
                   <span className="fl-unit">
-                    <input inputMode="decimal" value={down} onChange={(e) => setDown(e.target.value)} />
+                    <input type="text" inputMode="decimal" value={down} onChange={(e) => setDown(e.target.value)} />
                     <span aria-hidden="true">%</span>
                   </span>
                 </label>
@@ -213,6 +213,7 @@ export function Mark({
                 Size
                 <span className="fl-unit">
                   <input
+                    type="text"
                     inputMode="decimal"
                     aria-invalid={!sizeOk}
                     value={cm}
@@ -290,7 +291,7 @@ export function Mark({
                 </label>
                 <label>
                   Name of the way
-                  <input value={label} onChange={(e) => setLabel(e.target.value)} />
+                  <input type="text" value={label} onChange={(e) => setLabel(e.target.value)} />
                 </label>
               </div>
               <fieldset>
