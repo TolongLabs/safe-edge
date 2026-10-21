@@ -1,16 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
 
-// The landing site's product pages: /drone, /agents, /sdk and /privacy. Each has its own clean URL, and the header
+// The landing site's product pages: /drone, /agent, /sdk and /privacy. Each has its own clean URL, and the header
 // on every page reaches every other page, marks the one you are on, and opens the demo.
 
 const pages = [
   { path: 'drone', link: 'Drone', title: 'Drone patrols · Safe Edge', h1: 'Automated patrols. Never autonomous.' },
-  {
-    path: 'agents',
-    link: 'Agents',
-    title: 'The agent and MCP · Safe Edge',
-    h1: 'One agent. It drafts. People decide.'
-  },
+  { path: 'agent', link: 'Agent', title: 'The agent and MCP · Safe Edge', h1: 'One agent. It drafts. People decide.' },
   { path: 'sdk', link: 'SDK', title: 'SDK and API · Safe Edge', h1: 'One typed client, in the browser or on the API.' },
   { path: 'privacy', link: 'Privacy', title: 'Privacy by design · Safe Edge', h1: 'We watch edges, not people.' }
 ] as const
@@ -61,6 +56,19 @@ test('the sign-in page links to every page', async ({ page }) => {
   for (const { path, link } of pages)
     await expect(nav.getByRole('link', { name: link, exact: true })).toHaveAttribute('href', `/${path}`)
 })
+
+for (const path of ['', ...pages.map((p) => p.path), 'sign-in'])
+  test(`every picture on /${path} loads`, async ({ page }) => {
+    await page.goto(path)
+    const broken = await page.evaluate(async () => {
+      const images = [...document.images]
+      for (const image of images) image.loading = 'eager'
+      // decode() rejects for a file the browser cannot draw; the list below names those.
+      await Promise.allSettled(images.map((image) => image.decode()))
+      return images.filter((image) => image.naturalWidth === 0).map((image) => image.getAttribute('src'))
+    })
+    expect(broken).toEqual([])
+  })
 
 test('a Copy button copies its code', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])

@@ -25,7 +25,6 @@ Contents:
     1.  [SDK and MCP server](#sdk-and-mcp-server)
 1.  [AI layer at a glance](#ai-layer-at-a-glance)
 1.  [Drone integration phases](#drone-integration-phases)
-1.  [Register](#register)
 1.  [Platform](#platform)
 1.  [Success measures](#success-measures)
 1.  [Constraints](#constraints)
@@ -53,15 +52,15 @@ Hackathon frame: "Township of Tomorrow", People track, safety and security ([bri
 
 ## Users and jobs
 
-| User                                           | Job                                                                      | Where they touch Safe Edge                |
-| ---------------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------- |
-| SDP park maintenance manager, Elmina (primary) | Keep every retained water edge closed, and know which ones are not       | Edge Inbox each day; Fix Lens per repair  |
-| Responsible drainage or project engineer       | Approve remedies that keep hydraulics, maintenance access and park paths | Remedy review and acceptance tests        |
-| Independent reviewer                           | Prove a repair they did not install                                      | Proof re-test on a phone                  |
-| Township general manager                       | Fund repairs and see overdue risk                                        | Governance board and monthly report       |
-| Licensed remote pilot (SDP or drone service)   | Fly approved patrols and take control at any time                        | Patrol console                            |
-| Later: councils and residents' associations    | Receive accepted records at handover; report damage                      | Handover pack; damage report link         |
-| Developers inside SDP and partners             | Connect Procore, dashboards and AI assistants                            | TypeScript SDK, events and the MCP server |
+| User                                           | Job                                                                      | Where they touch Safe Edge                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| SDP park maintenance manager, Elmina (primary) | Keep every retained water edge closed, and know which ones are not       | Edge Inbox each day; Fix Lens per repair                       |
+| Responsible drainage or project engineer       | Approve remedies that keep hydraulics, maintenance access and park paths | Remedy review and acceptance tests                             |
+| Independent reviewer                           | Prove a repair they did not install                                      | Proof re-test on a phone                                       |
+| Township general manager                       | Fund repairs and see overdue risk                                        | Governance board and monthly report                            |
+| Licensed remote pilot (SDP or drone service)   | Fly approved patrols and take control at any time                        | Patrol screen                                                  |
+| Later: councils and residents' associations    | Receive accepted records at handover; report damage                      | Handover pack; damage report link                              |
+| Developers inside SDP and partners             | Connect Procore, dashboards and AI assistants                            | TypeScript SDK, events, the MCP server and the Developers page |
 
 These are roles to confirm by name, not commitments already obtained.
 
@@ -203,15 +202,12 @@ Published evidence decides what the AI may claim ([detection research][detection
 [hardware]: /docs/research/drone-integration/hardware-cost.md
 [nst-crash]: https://www.nst.com.my/amp/news/nation/2023/08/944279/elmina-air-crash-what-we-know-so-far
 
-## Register
-
-product
-
 ## Platform
 
 web
 
-- A web app, desktop-first for the manager and engineer, with phone screens for field capture and re-test.
+- A web app, desktop-first for the manager and engineer, with phone screens for field capture and re-test. Its rail holds Inbox, Patrol, Map and Passes, then the Agent and Developers pages.
+- A public site: the landing page, a page each for the drone, the agent, the SDK and privacy, and a guest sign-in into the demo.
 - A 3D simulation of Elmina in the browser, built on Three.js, for the demo and for planning views.
 - A REST API, a TypeScript SDK and an MCP server.
 - English first. Bahasa Malaysia for public notices and field screens later.

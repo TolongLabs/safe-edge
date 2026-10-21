@@ -86,6 +86,26 @@ test.describe('on a touch screen', () => {
     await expect(page.locator('canvas')).toBeVisible({ timeout: 90_000 })
     await expect(page.getByText(TOUCH)).toBeVisible()
   })
+
+  for (const width of [390, 320])
+    test(`at ${width} px the OpenStreetMap credit, the strip and the story card never overlap`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 700 })
+      await page.goto('demo/scene.html')
+      await expect(page.locator('canvas')).toBeVisible({ timeout: 90_000 })
+      const boxes = await Promise.all(
+        [
+          page.getByRole('link', { name: '© OpenStreetMap contributors' }),
+          page.getByText(TOUCH),
+          page.getByRole('region', { name: 'Story' })
+        ].map(async (l) => (await l.boundingBox())!)
+      )
+      for (const [i, a] of boxes.entries())
+        for (const b of boxes.slice(i + 1)) {
+          const apart = a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y
+          expect(apart, JSON.stringify({ a, b })).toBe(true)
+        }
+      await expect(page.getByRole('link', { name: '© OpenStreetMap contributors' })).toBeInViewport({ ratio: 1 })
+    })
 })
 
 test('recording mode hides the strip', async ({ page }) => {

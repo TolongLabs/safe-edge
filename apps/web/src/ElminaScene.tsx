@@ -31,6 +31,9 @@ const sceneCss = `
 @media (max-width: 640px) { .sim-long { display: none } .sim-short { display: inline } }
 [data-testid="elmina-scene"] { --tap: 32px }
 @media (pointer: coarse) { [data-testid="elmina-scene"] { --tap: 44px } }
+/* A phone has no room for the controls strip and the OpenStreetMap credit side by side: the credit sits on the
+   strip, and the story card clears both. */
+@media (max-width: 640px) { [data-testid="elmina-scene"] { --osm-credit-bottom: 40px; --strip-room: 68px } }
 [data-testid="elmina-scene"] :focus-visible { outline: none; box-shadow: 0 0 0 2px #fbfcfb, 0 0 0 4px #24443b }
 .scene-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-sizing: border-box;
