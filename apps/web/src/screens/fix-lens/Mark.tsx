@@ -211,7 +211,7 @@ export function Mark({
                   )}
                   {can('deleteOpening') && (
                     <button
-                      className="btn small"
+                      className="btn small danger"
                       type="button"
                       aria-label={`Remove ${openingName(o.id)}`}
                       onClick={() => void run(() => client().deleteOpening({ params: { id: o.id } }))}
@@ -329,7 +329,7 @@ export function Mark({
                   )}
                   {can('deleteRoute') && (
                     <button
-                      className="btn small"
+                      className="btn small danger"
                       type="button"
                       aria-label={`Remove ${r.fromFeature.label}`}
                       onClick={() => void run(() => client().deleteRoute({ params: { id: r.id } }))}

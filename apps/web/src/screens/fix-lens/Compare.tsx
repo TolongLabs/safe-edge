@@ -276,7 +276,7 @@ export function Compare({
               )}
               {can('deleteRemedy') && (
                 <button
-                  className="btn small"
+                  className="btn small danger"
                   type="button"
                   onClick={() =>
                     void run(async () => {

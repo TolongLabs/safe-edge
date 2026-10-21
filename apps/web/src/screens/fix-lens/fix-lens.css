@@ -76,8 +76,9 @@
 .fl-confirm-line {
   margin: 0 0 var(--space-2);
 }
+/* The text keeps at least 12 rem; when the buttons do not fit beside it, they take a line of their own. */
 .fl-row-text {
-  flex: 1 1 0;
+  flex: 1 1 12rem;
   min-width: 0;
 }
 .fl-row-actions {
@@ -145,6 +146,7 @@
 .fl-list li {
   display: flex;
   gap: var(--space-3);
+  flex-wrap: wrap;
   align-items: center;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
@@ -546,10 +548,12 @@
     flex-wrap: nowrap;
     gap: var(--space-2);
   }
-  /* On a phone the text keeps the first line and the buttons take a second line of their own. */
-  .fl-list li {
-    flex-wrap: wrap;
+  /* Phone targets are 44 px, the small row buttons included. */
+  .fl-list .btn.small,
+  .fl-option .btn.small {
+    min-height: 44px;
   }
+  /* On a phone the text keeps the first line and the buttons take a second line of their own. */
   .fl-row-actions {
     flex-basis: 100%;
     justify-content: flex-start;
@@ -634,9 +638,12 @@
 }
 
 /* The refusal's rule note sits on its own line under the sentence. */
-.fl-refusal {
-  flex-wrap: wrap;
-}
 .fl-refusal small {
-  flex-basis: 100%;
+  display: block;
+}
+/* Removing a fix is destructive: on a wide card, a danger button set apart at its right edge. */
+@media (min-width: 601px) {
+  .fl-option > .btn.danger {
+    align-self: flex-end;
+  }
 }
