@@ -1,0 +1,29 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  demo-site:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      VERCEL_ORG_ID: team_CwktsdBSB9TLrdwdCV3dZRbg
+      VERCEL_PROJECT_ID: prj_xgFCOHHTF7zfO8GWoyiRfA20h8dD
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun install --frozen-lockfile
+      - run: bun run build:demo-site ${{ runner.temp }}/demo-site
+      - run: bunx vercel@54.12.0 deploy --prebuilt --prod --cwd ${{ runner.temp }}/demo-site --token=${{ secrets.VERCEL_TOKEN }}
