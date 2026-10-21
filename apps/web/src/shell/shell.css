@@ -88,6 +88,11 @@
   flex-direction: column;
   gap: var(--space-1);
 }
+/* The quiet divider before Agent and Developers. */
+.rail ul + ul {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--bg-rail-hover);
+}
 .rail .logo,
 .rail-item {
   display: flex;
@@ -392,12 +397,22 @@
   .frame {
     flex: none;
   }
+  /* Row one: the title. Row two, in reading and tab order: the screen's actions, SIMULATION, the profile button. */
   .topbar.island {
+    position: relative;
     flex-wrap: wrap;
+    row-gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
   }
   .topbar.island .titles {
-    flex: 1 1 0;
+    flex: 1 1 100%;
     min-width: 0;
+  }
+  .topbar.island .profile-wrap {
+    position: static;
+  }
+  .topbar.island .simulation {
+    margin-left: auto;
   }
   .profile .name,
   .profile .role {
@@ -410,31 +425,34 @@
     padding: 0;
     border: 0;
   }
-  /* The profile button sits left of the title on a phone, so the menu spans the screen instead of hanging off it. */
+  /* The menu hangs from the whole top bar, spanning the screen instead of running off its right edge. */
   .topbar.island .menu {
-    position: fixed;
-    top: 64px;
-    right: var(--space-2);
-    left: var(--space-2);
+    top: calc(100% + var(--space-2));
+    right: 0;
+    left: 0;
     width: auto;
-    max-height: calc(100dvh - 72px);
+    max-height: 70dvh;
     overflow-y: auto;
   }
+  /* Seven 44 px targets across 390 px: icons only, and the current item adds its name under its icon. */
   .rail {
     flex: none;
     flex-direction: row;
     align-items: center;
+    gap: var(--space-1);
     width: 100%;
-    padding: var(--space-2);
+    padding: var(--space-1);
     overflow-x: auto;
   }
   .rail.collapsed {
     width: 100%;
   }
   .rail .logo {
+    justify-content: center;
+    min-width: 44px;
     min-height: 44px;
     margin: 0;
-    padding: 0 var(--space-1);
+    padding: 0;
   }
   .rail .logo .label {
     display: none;
@@ -443,8 +461,47 @@
     flex-direction: row;
     gap: 0;
   }
+  .rail ul + ul {
+    padding: 0 0 0 var(--space-1);
+    border-top: 0;
+    border-left: 1px solid var(--bg-rail-hover);
+  }
   .rail-item {
-    gap: var(--space-1);
+    position: relative;
+    justify-content: center;
+    min-width: 44px;
+    padding: 0;
+  }
+  .rail-item:not([aria-current='page']) .label {
+    /* hidden to the eye, still read as the link's name */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .rail-item[aria-current='page'] {
+    flex-direction: column;
+    gap: 0;
     padding: 0 var(--space-1);
+  }
+  .rail-item[aria-current='page'] .tile {
+    height: 22px;
+    background: none;
+    color: inherit;
+  }
+  .rail-item[aria-current='page'] .label {
+    font-size: var(--fs-small);
+    line-height: var(--lh-small);
+  }
+  /* The open count rides on the icon instead of taking width. */
+  .rail .count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 18px;
+    padding: 0 var(--space-1);
+    line-height: var(--lh-small);
+    text-align: center;
   }
 }
