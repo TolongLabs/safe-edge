@@ -564,6 +564,66 @@ export const operations = {
     status: 200,
     events: []
   },
+  deleteOpening: {
+    method: 'post',
+    path: '/openings/{id}/delete',
+    summary: 'Remove a mis-marked opening; refused while a route or remedy uses it, or once confirmed or blocked',
+    handledBy: 'core',
+    roles: ['manager', 'engineer'],
+    agentScope: null,
+    params: IdParam.opening,
+    response: Opening,
+    status: 200,
+    events: []
+  },
+  deleteRoute: {
+    method: 'post',
+    path: '/routes/{id}/delete',
+    summary: 'Remove a mis-linked route; refused once confirmed or named by a pass or re-test',
+    handledBy: 'core',
+    roles: ['manager', 'engineer'],
+    agentScope: null,
+    params: IdParam.route,
+    response: Route,
+    status: 200,
+    events: []
+  },
+  deleteRemedy: {
+    method: 'post',
+    path: '/remedies/{id}/delete',
+    summary: 'Remove a remedy; refused once approved or used by a work order',
+    handledBy: 'core',
+    roles: ['manager', 'engineer'],
+    agentScope: null,
+    params: IdParam.remedy,
+    response: Remedy,
+    status: 200,
+    events: []
+  },
+  confirmOpening: {
+    method: 'post',
+    path: '/openings/{id}/confirm',
+    summary: 'Engineer confirms an opening marking; recorded, not yet required for approval',
+    handledBy: 'core',
+    roles: ['engineer'],
+    agentScope: null,
+    params: IdParam.opening,
+    response: Opening,
+    status: 200,
+    events: []
+  },
+  confirmRoute: {
+    method: 'post',
+    path: '/routes/{id}/confirm',
+    summary: 'Engineer confirms a route link; recorded, not yet required for approval',
+    handledBy: 'core',
+    roles: ['engineer'],
+    agentScope: null,
+    params: IdParam.route,
+    response: Route,
+    status: 200,
+    events: []
+  },
 
   // Work orders and proof
   listWorkOrders: {
