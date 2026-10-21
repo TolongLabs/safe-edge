@@ -116,10 +116,6 @@
   gap: var(--space-3);
   flex: none;
 }
-.board .slot {
-  background: transparent;
-  border: 1.5px dashed var(--border-strong);
-}
 .notice {
   display: flex;
   flex-direction: column;
@@ -147,7 +143,8 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
-.compose label {
+.compose label,
+.board .asset-field {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
