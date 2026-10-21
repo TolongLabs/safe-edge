@@ -62,15 +62,23 @@ function NoticeCard({ d, n, act }: { d: Data; n: Notice; act: (run: () => Promis
   )
 }
 
+/**
+ * Which composer was opened last, shared by the escalation and report panels so only that one's Save draft is
+ * the screen's primary button. `null` when the last-opened one has closed: any composer left open leads.
+ */
+export type Lead = { last: string | null; set: (key: string | null) => void }
+
 /** Text people edit before saving: core keeps a saved draft as written. */
 function Compose({
   initial,
   label,
+  primary,
   save,
   cancel
 }: {
   initial: string
   label: string
+  primary: boolean
   save: (text: string) => void
   cancel: () => void
 }) {
@@ -93,7 +101,7 @@ function Compose({
           : 'Write some text before saving.'}
       </p>
       <div className="row-actions">
-        <button className="btn primary" type="submit" disabled={!text.trim()}>
+        <button className={primary ? 'btn primary' : 'btn'} type="submit" disabled={!text.trim()}>
           Save draft
         </button>
         <button className="btn" type="button" onClick={cancel}>
@@ -104,13 +112,18 @@ function Compose({
   )
 }
 
-export function Escalation({ d, rows, reload }: { d: Data; rows: Row[]; reload: () => void }) {
+export function Escalation({ d, rows, lead, reload }: { d: Data; rows: Row[]; lead: Lead; reload: () => void }) {
   const { client } = useSignedIn()
   const { error, act } = useAct(() => {
-    setComposing(null)
+    close()
     reload()
   })
   const [composing, setComposing] = useState<string | null>(null)
+  const key = (id: string) => `escalation:${id}`
+  const close = () => {
+    if (composing && lead.last === key(composing)) lead.set(null)
+    setComposing(null)
+  }
   const escalations = (d.notices ?? []).filter((n) => n.kind === 'escalation')
   const overdue = rows.flatMap((r) => r.overdue.map((o) => ({ r, o })))
   const open = overdue.filter(({ o }) => !escalations.some((n) => n.subjectId === o.workOrder.id))
@@ -141,9 +154,10 @@ export function Escalation({ d, rows, reload }: { d: Data; rows: Row[]; reload: 
             <p className="hint">The park manager or the township general manager drafts the escalation.</p>
           ) : composing === o.workOrder.id ? (
             <Compose
+              primary={lead.last === null || lead.last === key(o.workOrder.id)}
               label={`Escalation for ${o.workOrder.id}`}
               initial={`To: ${gm ? personName(d, gm.id) : 'the township general manager'}. ${o.workOrder.id} at ${r.name} (${r.plate}) is ${o.days} day${o.days > 1 ? 's' : ''} overdue, due ${dayTime(o.workOrder.dueAt!)}.`}
-              cancel={() => setComposing(null)}
+              cancel={close}
               save={(body) =>
                 act(() =>
                   client.draftNotice({
@@ -158,7 +172,13 @@ export function Escalation({ d, rows, reload }: { d: Data; rows: Row[]; reload: 
               }
             />
           ) : (
-            <button className="btn" onClick={() => setComposing(o.workOrder.id)}>
+            <button
+              className="btn"
+              onClick={() => {
+                setComposing(o.workOrder.id)
+                lead.set(key(o.workOrder.id))
+              }}
+            >
               Draft escalation
             </button>
           )}
@@ -175,13 +195,29 @@ export function Escalation({ d, rows, reload }: { d: Data; rows: Row[]; reload: 
   )
 }
 
-export function Report({ d, rows, now, reload }: { d: Data; rows: Row[]; now: number; reload: () => void }) {
+export function Report({
+  d,
+  rows,
+  now,
+  lead,
+  reload
+}: {
+  d: Data
+  rows: Row[]
+  now: number
+  lead: Lead
+  reload: () => void
+}) {
   const { client } = useSignedIn()
   const { error, act } = useAct(() => {
-    setComposing(false)
+    close()
     reload()
   })
   const [composing, setComposing] = useState(false)
+  const close = () => {
+    if (lead.last === 'report') lead.set(null)
+    setComposing(false)
+  }
   const reports = (d.notices ?? []).filter((n) => n.kind === 'monthly_report')
   const latest = reports[reports.length - 1]
   return (
@@ -196,9 +232,10 @@ export function Report({ d, rows, now, reload }: { d: Data; rows: Row[]; now: nu
       </p>
       {composing ? (
         <Compose
+          primary={lead.last === null || lead.last === 'report'}
           label="Monthly report"
           initial={reportBody(rows, now)}
-          cancel={() => setComposing(false)}
+          cancel={close}
           save={(body) =>
             act(() =>
               client.draftNotice({
@@ -209,7 +246,13 @@ export function Report({ d, rows, now, reload }: { d: Data; rows: Row[]; now: nu
         />
       ) : (
         can('draftNotice') && (
-          <button className="btn" onClick={() => setComposing(true)}>
+          <button
+            className="btn"
+            onClick={() => {
+              setComposing(true)
+              lead.set('report')
+            }}
+          >
             Draft the report
           </button>
         )

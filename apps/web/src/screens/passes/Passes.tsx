@@ -15,6 +15,8 @@ export function Passes() {
   const { snapshot } = useStore()
   const [load, setLoad] = useState<Load>(null)
   const [tick, setTick] = useState(0)
+  const [lastComposer, setLastComposer] = useState<string | null>(null)
+  const lead = { last: lastComposer, set: setLastComposer }
   const reload = () => setTick((t) => t + 1)
   useEffect(() => onReset(reload), [])
   // Reads again after any change in core (the store's snapshot) and after this screen's own writes.
@@ -108,8 +110,8 @@ export function Passes() {
               </p>
             </section>
             <div className="lower">
-              <Escalation d={ok.data} rows={rows} reload={reload} />
-              <Report d={ok.data} rows={rows} now={ok.now} reload={reload} />
+              <Escalation d={ok.data} rows={rows} lead={lead} reload={reload} />
+              <Report d={ok.data} rows={rows} now={ok.now} lead={lead} reload={reload} />
               <HandoverSlot />
             </div>
           </>
