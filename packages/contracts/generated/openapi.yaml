@@ -1134,6 +1134,164 @@ paths:
       x-safe-edge-roles: any
       x-safe-edge-agent-scope: edge.read
       x-safe-edge-events: []
+  /openings/{id}/delete:
+    post:
+      operationId: deleteOpening
+      summary: Remove a mis-marked opening; refused while a route or remedy uses it, or once confirmed or blocked
+      description: "Roles: manager, engineer. Agents are refused."
+      tags:
+        - openings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^opn_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Remove a mis-marked opening; refused while a route or remedy uses it, or once confirmed or blocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opening"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - manager
+        - engineer
+      x-safe-edge-events: []
+  /routes/{id}/delete:
+    post:
+      operationId: deleteRoute
+      summary: Remove a mis-linked route; refused once confirmed or named by a pass or re-test
+      description: "Roles: manager, engineer. Agents are refused."
+      tags:
+        - routes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^rte_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Remove a mis-linked route; refused once confirmed or named by a pass or re-test
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - manager
+        - engineer
+      x-safe-edge-events: []
+  /remedies/{id}/delete:
+    post:
+      operationId: deleteRemedy
+      summary: Remove a remedy; refused once approved or used by a work order
+      description: "Roles: manager, engineer. Agents are refused."
+      tags:
+        - remedies
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^rem_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Remove a remedy; refused once approved or used by a work order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Remedy"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - manager
+        - engineer
+      x-safe-edge-events: []
+  /openings/{id}/confirm:
+    post:
+      operationId: confirmOpening
+      summary: Engineer confirms an opening marking; recorded, not yet required for approval
+      description: "Roles: engineer. Agents are refused."
+      tags:
+        - openings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^opn_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Engineer confirms an opening marking; recorded, not yet required for approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Opening"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - engineer
+      x-safe-edge-events: []
+  /routes/{id}/confirm:
+    post:
+      operationId: confirmRoute
+      summary: Engineer confirms a route link; recorded, not yet required for approval
+      description: "Roles: engineer. Agents are refused."
+      tags:
+        - routes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^rte_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      responses:
+        "200":
+          description: Engineer confirms a route link; recorded, not yet required for approval
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - engineer
+      x-safe-edge-events: []
   /work-orders:
     get:
       operationId: listWorkOrders
@@ -2624,6 +2782,11 @@ components:
           enum:
             - open
             - blocked
+        engineerConfirmedBy:
+          anyOf:
+            - type: string
+              pattern: ^usr_
+            - type: "null"
         simulated:
           type: boolean
         source:
@@ -2635,6 +2798,7 @@ components:
         - photoMarks
         - measuredMm
         - status
+        - engineerConfirmedBy
         - simulated
         - source
       additionalProperties: false
@@ -2675,6 +2839,11 @@ components:
             pattern: ^opn_
         status:
           $ref: "#/components/schemas/RouteStatus"
+        engineerConfirmedBy:
+          anyOf:
+            - type: string
+              pattern: ^usr_
+            - type: "null"
         simulated:
           type: boolean
         source:
@@ -2685,6 +2854,7 @@ components:
         - fromFeature
         - openingIds
         - status
+        - engineerConfirmedBy
         - simulated
         - source
       additionalProperties: false
@@ -5434,6 +5604,11 @@ components:
                   pattern: ^opn_
               status:
                 $ref: "#/components/schemas/RouteStatus"
+              engineerConfirmedBy:
+                anyOf:
+                  - type: string
+                    pattern: ^usr_
+                  - type: "null"
               simulated:
                 type: boolean
               source:
@@ -5446,6 +5621,7 @@ components:
               - fromFeature
               - openingIds
               - status
+              - engineerConfirmedBy
               - simulated
               - source
               - projectedStatus

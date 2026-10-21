@@ -5,6 +5,7 @@ import {
   Info,
   LockSimple,
   Prohibit,
+  Trash,
   WarningCircle,
   Wrench,
   XCircle
@@ -12,7 +13,19 @@ import {
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
-import { OPENING_LABEL, REMEDY_LABEL, addProposed, letter, must, plain, quoteWords, useRun, type Lens } from './lens'
+import {
+  OPENING_LABEL,
+  REMEDY_LABEL,
+  addProposed,
+  letter,
+  must,
+  plain,
+  quoteWords,
+  recordNames,
+  removeProposed,
+  useRun,
+  type Lens
+} from './lens'
 import { PlanDrawing } from './PlanDrawing'
 
 type Closure = Lens['per'][string]
@@ -68,7 +81,8 @@ export function Compare({
   const { snapshot } = useStore()
   const { user } = useSignedIn()
   const s = snapshot!
-  const { run, denied } = useRun(reload)
+  const names = recordNames(lens, s.users)
+  const { run, refusal } = useRun(reload, names)
   const { openings, remedies } = lens.base
   const name = (id: string) =>
     plain(
@@ -100,6 +114,57 @@ export function Compare({
               ? 'Choose a due date from today on.'
               : null
   const failedIndex = failed ? remedies.findIndex((r) => r.id === failed.remedyId) : -1
+  const [sampling, setSampling] = useState(false)
+  const [sampleError, setSampleError] = useState<string | null>(null)
+  const sampleFixes = () => {
+    setSampling(true)
+    setSampleError(null)
+    void run(async () => {
+      const gap = must(
+        openings.find((o) => o.type === 'fence_gap'),
+        'the panel gap opening'
+      )
+      const end = must(
+        openings.find((o) => o.type === 'fence_end'),
+        'the fence end opening'
+      )
+      const a = await client().createRemedy({
+        body: {
+          segmentId: finding.segmentId,
+          type: 'panel_replacement',
+          label: 'Replace panel 4',
+          blocksOpeningIds: [gap.id],
+          quantities: [{ item: 'Fence panel 2.4 m', amount: 1, unit: 'panel' }],
+          acceptanceTest: 'No gap over 100 mm at panel 4',
+          quote: 'quote_needed'
+        }
+      })
+      addProposed(finding.segmentId, a.id)
+      const b = await client().createRemedy({
+        body: {
+          segmentId: finding.segmentId,
+          type: 'barrier_extension',
+          label: 'Replace panel 4 and extend the fence end to the headwall',
+          blocksOpeningIds: [gap.id, end.id],
+          quantities: [{ item: 'Fence panel 2.4 m', amount: 1, unit: 'panel' }],
+          acceptanceTest: 'No gap over 100 mm along the run and around both fence ends',
+          quote: 'quote_needed'
+        }
+      })
+      addProposed(finding.segmentId, b.id)
+    })
+      .then(
+        () => undefined,
+        (e: unknown) => setSampleError(e instanceof Error ? e.message : String(e))
+      )
+      // Re-read core even after a failure halfway, so the screen shows what was recorded and the button cannot repeat it.
+      .finally(() => {
+        setSampling(false)
+        reload()
+      })
+  }
+  // The sample fixes block the S2 panel gap and fence end, so they are offered only when both are marked.
+  const sampleFits = openings.some((o) => o.type === 'fence_gap') && openings.some((o) => o.type === 'fence_end')
 
   return (
     <div className="fl-compare">
@@ -113,10 +178,12 @@ export function Compare({
           </span>
         </p>
       )}
-      {denied && (
-        <p className="banner error" role="alert">
+      {refusal && (
+        <p className="banner error fl-refusal" role="alert">
           <WarningCircle size={20} weight="bold" aria-hidden="true" />
-          <span>{denied}</span>
+          <span>
+            {refusal.text} <small>(rule: {refusal.rule})</small>
+          </span>
         </p>
       )}
       {remedies.length === 0 && (
@@ -130,6 +197,19 @@ export function Compare({
               ? 'Propose a fix below. Each fix is checked against every recorded way to the water.'
               : 'A park manager or engineer proposes the fixes to compare.'}
           </p>
+          {can('createRemedy') && sampleFits && (
+            <div className="fl-sample">
+              <button className="btn" type="button" disabled={sampling} onClick={sampleFixes}>
+                Use the two sample fixes
+              </button>
+              <p className="fl-muted">Sample fixes for the playground fence; prices are not quoted.</p>
+              {sampleError !== null && (
+                <p className="state bad" role="alert">
+                  {sampleError}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
       <div className="fl-options" role="radiogroup" aria-label="Fixes to compare">
@@ -193,6 +273,21 @@ export function Compare({
                   <LockSimple size={20} weight="bold" aria-hidden="true" />
                   <span>An engineer approves this fix. Not approved yet.</span>
                 </p>
+              )}
+              {can('deleteRemedy') && (
+                <button
+                  className="btn small danger"
+                  type="button"
+                  onClick={() =>
+                    void run(async () => {
+                      await client().deleteRemedy({ params: { id: r.id } })
+                      removeProposed(finding.segmentId, r.id)
+                    })
+                  }
+                >
+                  <Trash size={18} weight="bold" aria-hidden="true" />
+                  Remove fix {L}
+                </button>
               )}
             </div>
           )

@@ -123,6 +123,7 @@ export const Opening = named(
     photoMarks: z.array(PhotoMark),
     measuredMm: z.number().nonnegative().nullable(),
     status: z.enum(['open', 'blocked']),
+    engineerConfirmedBy: UserId.nullable(),
     ...provenance
   })
 )
@@ -140,6 +141,7 @@ export const Route = named(
     fromFeature: z.object({ kind: z.enum(['path', 'gate', 'play_area']), label: z.string() }),
     openingIds: z.array(OpeningId),
     status: RouteStatus,
+    engineerConfirmedBy: UserId.nullable(),
     ...provenance
   })
 )
