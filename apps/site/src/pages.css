@@ -1,24 +1,22 @@
 /* The product pages (drone, agents, SDK, privacy): a claim on the morning sky over the lake, then calm, dense
    chapters on an island with a sticky contents list, and one way into the demo at the end. */
 
-/* The hero: the landing page's dawn, still and whole. The claim sits on the picture's own sky, which is the hero's
-   colour, so there is no edge between them; the picture sits at the foot and the hero grows upward in plain sky when
-   the words need more room. */
+/* The hero: the landing page's dawn, still, framed the way the landing hero frames its scene (style.css `.hero`).
+   It fills the screen. On a phone the claim sits above the lake and the picture fills the foot; on a wide landscape
+   screen the picture covers the whole hero from the bottom up and the claim sits on its sky, the hero's own colour. */
 .page-hero {
-  display: grid;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  overflow: hidden;
   background: var(--sky);
 }
 
-.page-hero > * {
-  grid-area: 1 / 1;
-}
-
-/* The bottom padding keeps the words in clear sky: the sun's top, the highest thing in the picture, is 40.8% down,
-   so the bottom 59.2% of its height, 37% of the width (1000/1600 × 59.2%; a percentage padding reads the width), is
-   kept free. */
 .page-hero-words {
   position: relative;
-  padding: calc(12px + var(--bar-h) + clamp(32px, 9svh, 112px)) var(--margin) calc(37% + clamp(16px, 3svh, 32px));
+  z-index: var(--z-raised);
+  padding: calc(12px + var(--bar-h) + clamp(24px, 6svh, 80px)) var(--margin) 32px;
 }
 
 .page-title {
@@ -44,15 +42,38 @@
   }
 }
 
-/* Whole at every width up to a screen's height; past that only plain sky is cut from the top. */
+/* Phone and portrait: the landing hero's strip of the scene at the foot, as wide as two screens and cropped to the
+   middle. It gives up sky from its top before the hero outgrows the screen, down to the lake, fence and playground. */
 .page-art {
-  align-self: end;
-  width: 100%;
-  height: auto;
-  max-height: 100svh;
-  aspect-ratio: 1600 / 1000;
+  --art-w: clamp(900px, 200vw, 1700px);
+  flex: 1 1 0px;
+  align-self: flex-start;
+  width: var(--art-w);
+  max-width: none;
+  min-height: calc(var(--art-w) * 0.22);
+  max-height: calc(var(--art-w) * 0.36);
+  margin: auto 0 0 calc(50% - var(--art-w) * 0.524);
   object-fit: cover;
   object-position: 50% 100%;
+}
+
+@media (min-width: 960px) and (orientation: landscape) {
+  .page-hero-words {
+    max-width: min(880px, 62vw);
+  }
+
+  /* Wide and landscape: the whole picture covers the hero from the bottom up, cut only at its sky or its sides. */
+  .page-art {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: max(100%, calc(100svh * 1.6));
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    transform: translateX(-50%);
+  }
 }
 
 /* The chapters, with the contents list beside them on wide screens. */
