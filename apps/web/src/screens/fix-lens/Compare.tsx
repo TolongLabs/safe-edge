@@ -1,4 +1,4 @@
-import { CaretRight, CheckCircle, Circle, LockSimple, Prohibit, XCircle } from '@phosphor-icons/react'
+import { CaretRight, CheckCircle, Circle, LockSimple, Prohibit, Wrench, XCircle } from '@phosphor-icons/react'
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
 import { useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
@@ -107,6 +107,9 @@ export function Compare({
       )}
       {remedies.length === 0 && (
         <div className="empty-state left">
+          <span className="icon-tile">
+            <Wrench size={24} weight="bold" aria-hidden="true" />
+          </span>
           <h3>No fixes proposed yet</h3>
           <p>
             {can('createRemedy')
