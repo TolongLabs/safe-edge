@@ -5,6 +5,7 @@ import {
   Code,
   DotsThree,
   Drone,
+  GearSix,
   Info,
   MapTrifold,
   Robot,
@@ -114,6 +115,10 @@ function ProfileMenu({ compact = false }: { compact?: boolean }) {
             <b>{plain(user.name)}</b>
             <span>{roleLabel(user.role)}</span>
           </p>
+          <a className="menu-item" href="#/settings" onClick={() => setOpen(false)}>
+            <GearSix size={18} weight="bold" aria-hidden="true" />
+            Settings
+          </a>
           <h2>Sign in as</h2>
           <ul>
             {people.map((u) => (
@@ -385,7 +390,9 @@ function NotFound({ heading, line, icon }: { heading: string; line: string; icon
           <a className="btn primary" href="#/inbox">
             Back to Inbox
           </a>
-          <p className="address">Address: {useHash()}</p>
+          <p className="address">
+            Address: <span translate="no">{useHash()}</span>
+          </p>
         </div>
       </main>
     </Screen>
@@ -403,7 +410,7 @@ export const NotInSession = () => (
 export const PageNotFound = () => (
   <NotFound
     heading="Page not found"
-    line="There is no page at this address. The menu on the left lists the pages that exist."
+    line="There is no page at this address. The main menu lists the pages that exist."
     icon={<WarningCircle size={24} weight="bold" aria-hidden="true" />}
   />
 )

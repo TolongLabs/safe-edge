@@ -11,8 +11,15 @@ export function reportBody(rs: Row[], now: number) {
   ].join('\n')
 }
 
-export const reportMarkdown = (n: Notice, author: string) =>
-  `# ${n.title}\n\nDrafted by ${author} on ${day(n.createdAt)}${n.status === 'sent' ? ' (sent)' : ' (not sent)'}\n\n${n.body}\n\nSample data: ${n.simulated ? 'yes (simulated)' : 'no'}\n`
+/** The model and sources of a report the agent drafted: shown and exported with it, never stored on the notice. */
+export type Byline = { model: string; citations: string[] }
+
+export function reportMarkdown(n: Notice, author: string, byline: Byline | undefined) {
+  const ai = byline
+    ? `\n\nAI suggestion, unvalidated: written by the agent with ${byline.model}; ${byline.citations.length > 0 ? `sources ${byline.citations.join(', ')}` : 'uncited: it names no record it read'}.`
+    : ''
+  return `# ${n.title}\n\nDrafted by ${author} on ${day(n.createdAt)}${n.status === 'sent' ? ' (sent)' : ' (not sent)'}${ai}\n\n${n.body}\n\nSample data: ${n.simulated ? 'yes (simulated)' : 'no'}\n`
+}
 
 export function download(name: string, type: string, text: string) {
   const a = document.createElement('a')

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { can, client, useStore } from '../../store'
 import type { Scene } from '../../scenes'
 import { Photo } from './Photo'
-import { FROM_LABEL, OPENING_LABEL, must, plain, recordNames, useRun, type Lens } from './lens'
+import { FEATURE_BOX, FROM_LABEL, OPENING_LABEL, must, plain, recordNames, useRun, type Lens } from './lens'
 
 type Kind = keyof typeof FROM_LABEL
 
@@ -138,7 +138,7 @@ export function Mark({
         />
         <p className="fl-help">
           {mayMark
-            ? 'Click the photo to place an opening, or fill in the form on the right. Each opening has a name a screen reader can read.'
+            ? 'Click the photo to place an opening, or fill in the Openings form. Each opening has a name a screen reader can read.'
             : 'A park manager or engineer marks the openings on this photo.'}
         </p>
       </div>
@@ -164,7 +164,7 @@ export function Mark({
           {mayMark && openings.length === 0 && (
             <div className="fl-sample">
               <button className="btn" type="button" disabled={sampling} onClick={sample}>
-                Use the S2 sample markings
+                {sampling ? 'Use the S2 sample markings…' : 'Use the S2 sample markings'}
               </button>
               <p className="fl-muted">Sample markings for the playground fence, not measured on site.</p>
               {sampleError !== null && (
@@ -365,7 +365,7 @@ export function Mark({
                   <select value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
                     {(Object.keys(FROM_LABEL) as Kind[]).map((k) => (
                       <option key={k} value={k}>
-                        {FROM_LABEL[k]}
+                        {FEATURE_BOX[k]}
                       </option>
                     ))}
                   </select>

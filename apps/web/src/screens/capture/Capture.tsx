@@ -2,6 +2,7 @@ import { CheckCircle, Info, Tray, WarningCircle, WifiSlash } from '@phosphor-ico
 import type { Segment } from '@safe-edge/contracts'
 import { elminaSeed } from '@safe-edge/sdk'
 import { useCallback, useEffect, useState } from 'react'
+import { ROLE_WORDS } from '../fix-lens/lens'
 import type { Scene } from '../../scenes'
 import { Screen } from '../../shell/Shell'
 import { can, client, useSignedIn } from '../../store'
@@ -140,7 +141,7 @@ function SegmentList() {
   const { sent } = useCapture()
   const { state, retry } = useSegments()
   const { online, error: drainError } = useDrain()
-  const context = `${person(user.name)} · ${user.role}`
+  const context = `${person(user.name)} · ${ROLE_WORDS[user.role]}`
   return (
     <Screen title="Capture" context={context}>
       <main className="detail island capture" aria-label="Segments">
@@ -155,7 +156,7 @@ function SegmentList() {
         {state === null && (
           <div className="skeleton-rows" role="status">
             <i /> <i /> <i />
-            <p className="hint">Loading the segments</p>
+            <p className="hint">Loading the segments…</p>
           </div>
         )}
         {state && 'error' in state && (
@@ -268,7 +269,7 @@ function SegmentView({ segmentId }: { segmentId: string }) {
           ) : (
             <div className="skeleton-rows" role="status">
               <i /> <i /> <i />
-              <p className="hint">Loading the viewpoints</p>
+              <p className="hint">Loading the viewpoints…</p>
             </div>
           )}
         </main>
@@ -278,11 +279,16 @@ function SegmentView({ segmentId }: { segmentId: string }) {
   if (segment.viewpoints.length === 0)
     return (
       <Screen title="Capture" context={context} back={toSegments}>
-        <main className="detail island center capture" aria-label="Viewpoints">
-          <div className="empty-state">
-            <Tray size={24} weight="bold" aria-hidden="true" />
+        <main className="detail island capture" aria-label="Viewpoints">
+          <div className="empty-state left">
+            <span className="icon-tile">
+              <Tray size={24} weight="bold" aria-hidden="true" />
+            </span>
             <h2>No viewpoints for this edge</h2>
             <p>Ask the park manager to set them. An edge nobody photographed stays unknown, not safe.</p>
+            <a className="btn primary" href="#/capture">
+              Back to all segments
+            </a>
           </div>
         </main>
       </Screen>
@@ -382,7 +388,7 @@ function SegmentView({ segmentId }: { segmentId: string }) {
           <>
             <Banner kind="ok" icon={<CheckCircle size={22} weight="bold" aria-hidden="true" />}>
               <b>Sent to Edge Watch</b> at {time(last.sent.at)} by {last.sent.by}. Recorded in core as a{' '}
-              {last.sent.captureSource} observation <code>{last.sent.observationId}</code>
+              {last.sent.captureSource} observation <code translate="no">{last.sent.observationId}</code>
               {last.sent.simulated ? ', simulated' : ''}.
               {last.sent.local && ' The photo is kept on this phone, not stored in core.'}
               {sendsToApi && ' The photo was stored by the API.'}

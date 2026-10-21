@@ -50,7 +50,7 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
     return frame(
       'Loading the repair',
       <div className="rt-skel" role="status">
-        <p className="rt-help">Loading the repair</p>
+        <p className="rt-help">Loading the repair…</p>
         <i />
         <i />
         <i />

@@ -56,7 +56,7 @@ export function HandoverSlot() {
     <section className="island panel" aria-labelledby="ho-h">
       <h2 id="ho-h">Handover pack</h2>
       <p className="hint">
-        The asset, its edges' passes, accepted re-tests, open findings and upkeep owner, for a receiving authority.
+        The asset, its edges’ passes, accepted re-tests, open findings and upkeep owner, for a receiving authority.
         Records that are sample data say so.
       </p>
       <label className="asset-field">
@@ -81,28 +81,41 @@ export function HandoverSlot() {
           className="btn"
           type="button"
           disabled={!assetId || busy}
+          aria-describedby="ho-why"
           onClick={() =>
             build((p) => download(`handover-${assetId}.json`, 'application/json', JSON.stringify(p, null, 2)))
           }
         >
           <DownloadSimple size={20} weight="bold" aria-hidden="true" /> Download JSON
         </button>
-        <button className="btn" type="button" disabled={!assetId || busy} onClick={() => build(setPack)}>
+        <button
+          className="btn"
+          type="button"
+          disabled={!assetId || busy}
+          aria-describedby="ho-why"
+          onClick={() => build(setPack)}
+        >
           <Printer size={20} weight="bold" aria-hidden="true" /> Printable page
         </button>
       </div>
-      {!assetId && <p className="hint">Choose an asset first.</p>}
-      {busy && (
-        <p className="hint" role="status">
-          Building the handover pack
-        </p>
-      )}
-      {error && (
-        <p className="banner error" role="alert">
-          <WarningCircle className="banner-icon" size={20} weight="bold" aria-hidden="true" />
-          <span>{error}</span>
-        </p>
-      )}
+      <div className="card-foot">
+        {!assetId && (
+          <p className="hint" id="ho-why">
+            Choose an asset first.
+          </p>
+        )}
+        {busy && (
+          <p className="hint" id="ho-why" role="status">
+            Building the handover pack…
+          </p>
+        )}
+        {error && (
+          <p className="banner error" role="alert">
+            <WarningCircle className="banner-icon" size={20} weight="bold" aria-hidden="true" />
+            <span>{error}</span>
+          </p>
+        )}
+      </div>
       {pack !== null && createPortal(<Handover pack={pack} onClose={() => setPack(null)} />, document.body)}
     </section>
   )

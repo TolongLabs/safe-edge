@@ -1,10 +1,11 @@
 /* Fix Lens (colours come from the tokens in app.css only). */
+/* The negative margin lines the first step's number up with the blocks under it; the buttons keep their padding. */
 .fl-steps {
   display: flex;
   gap: var(--space-4);
   flex-wrap: wrap;
   list-style: none;
-  margin: 0;
+  margin: 0 calc(-1 * var(--space-2));
   padding: 0;
 }
 .fl-steps button {
@@ -14,10 +15,14 @@
   min-height: 44px;
   padding: 0 var(--space-2);
   border: 0;
+  border-radius: var(--radius-md);
   background: none;
   color: var(--text-secondary);
   font: 500 var(--fs-body) / var(--lh-body) var(--font-sans);
   cursor: pointer;
+}
+.fl-steps button:hover {
+  color: var(--text-primary);
 }
 .fl-steps button[aria-current='step'] {
   color: var(--text-primary);
@@ -143,6 +148,11 @@
   flex-direction: column;
   gap: var(--space-2);
 }
+/* An empty list or option grid would still take a gap in the column. */
+.fl-list:empty,
+.fl-options:empty {
+  display: none;
+}
 .fl-list li {
   display: flex;
   gap: var(--space-3);
@@ -172,6 +182,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+}
+.fl-form legend {
+  padding: 0;
 }
 .fl-form label.fl-check {
   flex-direction: row;
@@ -225,10 +238,11 @@
 }
 
 /* The photo and the boxes laid on it */
+/* An evidence photo takes 8 px corners (DESIGN.md Shapes), also inside a 12 px card. */
 .fl-photo {
   margin: 0;
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--bg-surface);
 }
@@ -243,20 +257,19 @@
   width: 100%;
   height: auto;
 }
+/* The sample drawing stays light in Dark too, so the boxes and plates take its own ink, not the theme's accent. */
 .fl-box {
   position: absolute;
-  border: 2px solid var(--accent-default);
-  outline: 2px solid var(--bg-raised);
+  border: 2px solid var(--art-post);
+  outline: 2px solid var(--art-sky);
   border-radius: var(--radius-sm);
 }
 .fl-box.right .fl-plate {
   left: auto;
   right: -2px;
 }
-/* The sample drawing stays light in Dark too, so proposed-work marks take its own ink, not the theme's text colour. */
 .fl-box.dashed {
   border-style: dashed;
-  border-color: var(--art-post);
   outline: 0;
 }
 .fl-plate {
@@ -266,15 +279,11 @@
   white-space: nowrap;
   padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
-  background: var(--accent-default);
-  color: var(--text-on-accent);
+  background: var(--art-post);
+  color: var(--art-sky);
   font-size: var(--fs-small);
   line-height: var(--lh-small);
   font-weight: 600;
-}
-.fl-box.dashed .fl-plate {
-  background: var(--art-post);
-  color: var(--art-sky);
 }
 .fl-photo figcaption {
   display: flex;
@@ -313,8 +322,10 @@
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
 }
+/* The 2 px selected border is drawn inside the 1 px one, so choosing a fix does not shift the card. */
 .fl-option.chosen {
-  border: 2px solid var(--accent-default);
+  border-color: var(--accent-default);
+  box-shadow: inset 0 0 0 1px var(--accent-default);
 }
 .fl-option-head {
   display: flex;

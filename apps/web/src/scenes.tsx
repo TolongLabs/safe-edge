@@ -13,6 +13,14 @@ const names: Record<Scene, string> = {
 
 const f = (name: string) => ({ style: { fill: `var(--art-${name})` } })
 
+// Shapes the after image changes, shared by the drawing and by a close-up's outline of the baseline.
+const bay = (i: number) => ({
+  panel: { x: 40 + i * 40 + 4, y: 100, width: 32, height: 55 },
+  post: { x: 40 + i * 40 + 18, y: 90, width: 5, height: 75 }
+})
+const MISSING_BAY = 3
+const RING = { cx: 200, cy: 125, r: 28, width: 12 }
+
 function Art({ scene, variant }: { scene: Scene; variant: 'before' | 'after' }) {
   const after = variant === 'after'
   switch (scene) {
@@ -26,10 +34,10 @@ function Art({ scene, variant }: { scene: Scene; variant: 'before' | 'after' }) 
           <rect x="40" y="110" width="320" height="6" {...f('post')} />
           <rect x="40" y="145" width="320" height="6" {...f('post')} />
           {Array.from({ length: 8 }, (_, i) =>
-            after && i === 3 ? null : (
+            after && i === MISSING_BAY ? null : (
               <g key={i}>
-                <rect x={40 + i * 40 + 4} y="100" width="32" height="55" {...f('panel')} />
-                <rect x={40 + i * 40 + 18} y="90" width="5" height="75" {...f('post')} />
+                <rect {...bay(i).panel} {...f('panel')} />
+                <rect {...bay(i).post} {...f('post')} />
               </g>
             )
           )}
@@ -55,7 +63,7 @@ function Art({ scene, variant }: { scene: Scene; variant: 'before' | 'after' }) 
               style={{ stroke: 'var(--art-buoy)' }}
             />
           ) : (
-            <circle cx="200" cy="125" r="28" fill="none" strokeWidth="12" style={{ stroke: 'var(--art-buoy)' }} />
+            <circle {...RING} fill="none" strokeWidth={RING.width} style={{ stroke: 'var(--art-buoy)' }} />
           )}
         </>
       )
@@ -81,7 +89,7 @@ function Art({ scene, variant }: { scene: Scene; variant: 'before' | 'after' }) 
   }
 }
 
-/** A drawn illustration with the permanent "not a site photo" label. `focus` zooms to a region (the crop). */
+/** A drawn illustration with the permanent "not a site photo" label. `focus` zooms to a region, filling the frame. */
 export function SampleImage({
   scene,
   variant,
@@ -119,5 +127,75 @@ export function SampleImage({
       </svg>
       {tag && <span className="sample-tag">Sample illustration, not a site photo</span>}
     </div>
+  )
+}
+
+/** Whether the baseline has an item at the flagged spot for a close-up to outline (a path that appeared has none). */
+export const outlinesBaseline = (scene: Scene) => scene === 'fence' || scene === 'buoy'
+
+/** The baseline's item at the flagged spot, faint with a dotted outline, over the after image. */
+function BaselineOutline({ scene }: { scene: Scene }) {
+  // A screen-sized line however far the close-up zooms; art-post stays dark in both themes, as the drawing does.
+  const line = {
+    fill: 'none',
+    strokeWidth: 2,
+    strokeDasharray: '2 3',
+    vectorEffect: 'non-scaling-stroke',
+    style: { stroke: 'var(--art-post)' }
+  } as const
+  switch (scene) {
+    case 'fence': {
+      const { panel, post } = bay(MISSING_BAY)
+      return (
+        <>
+          <g opacity={0.35}>
+            <rect {...panel} {...f('panel')} />
+            <rect {...post} {...f('post')} />
+          </g>
+          <rect {...panel} {...line} />
+        </>
+      )
+    }
+    case 'buoy':
+      return (
+        <>
+          <circle {...RING} fill="none" strokeWidth={RING.width} opacity={0.35} style={{ stroke: 'var(--art-buoy)' }} />
+          <circle cx={RING.cx} cy={RING.cy} r={RING.r - RING.width / 2} {...line} />
+          <circle cx={RING.cx} cy={RING.cy} r={RING.r + RING.width / 2} {...line} />
+        </>
+      )
+    case 'path':
+    case 'canopy':
+      return null
+  }
+}
+
+const CLOSE_UP = 4 / 3
+
+/**
+ * Where a close-up of a flagged region looks: 4:3, half as large again as the region, so the items beside it and the
+ * ground under it stay in view, moved inwards (never cut) at the drawing's edges. `region` is the flagged box in percent
+ * of the close-up, for its outline.
+ */
+export function closeUp(box: Box) {
+  const [bx, by, bw, bh] = [(box.x / 100) * W, (box.y / 100) * H, (box.w / 100) * W, (box.h / 100) * H]
+  const w = Math.min(Math.max(bw * 1.5, bh * 1.5 * CLOSE_UP), H * CLOSE_UP)
+  const h = w / CLOSE_UP
+  const within = (start: number, size: number, max: number) => Math.min(Math.max(start, 0), max - size)
+  const x = within(bx + bw / 2 - w / 2, w, W)
+  const y = within(by + bh / 2 - h / 2, h, H)
+  return {
+    viewBox: `${x} ${y} ${w} ${h}`,
+    region: { x: ((bx - x) / w) * 100, y: ((by - y) / h) * 100, w: (bw / w) * 100, h: (bh / h) * 100 }
+  }
+}
+
+/** The after image close up on a flagged region, with the baseline's item outlined where `baseline` is set. */
+export function CloseUp({ scene, box, baseline, name }: { scene: Scene; box: Box; baseline: boolean; name: string }) {
+  return (
+    <svg className="close-up" viewBox={closeUp(box).viewBox} role="img" aria-label={name}>
+      <Art scene={scene} variant="after" />
+      {baseline && <BaselineOutline scene={scene} />}
+    </svg>
   )
 }

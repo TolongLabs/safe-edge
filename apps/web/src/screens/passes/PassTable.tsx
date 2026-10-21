@@ -66,16 +66,37 @@ const plainReason = (reason: string, titles: Record<string, string>) =>
     .replace('validTo reached', 'Past its valid-to date')
     .replace(/\bcand_\w+/g, (id) => (titles[id] ? `"${titles[id]}"` : 'another flag'))
 
-export function PassTable({ rows, titles }: { rows: Row[]; titles: Record<string, string> }) {
+/** Overdue work orders on the edge and the longest overdue, in days. */
+function overdueText(r: Row) {
+  if (r.overdue.length === 0) return 'None'
+  const days = Math.max(...r.overdue.map((o) => o.days))
+  return `${r.overdue.length} work order${r.overdue.length > 1 ? 's' : ''}, ${days} day${days > 1 ? 's' : ''}`
+}
+
+/**
+ * `allSimulated`: the board labels the whole table once, so a row says "simulated" only when its pass is simulated
+ * and the rest of the table is not.
+ */
+export function PassTable({
+  rows,
+  titles,
+  allSimulated
+}: {
+  rows: Row[]
+  titles: Record<string, string>
+  allSimulated: boolean
+}) {
   return (
-    <div className="table-scroll" tabIndex={0} role="region" aria-label="Every edge, worst first">
-      <table>
+    <div className="edge-table">
+      <table aria-labelledby="edges-h">
         <thead>
           <tr>
             <th scope="col">Edge</th>
             <th scope="col">Pass</th>
             <th scope="col">Owner</th>
-            <th scope="col">Open flags</th>
+            <th scope="col" className="num">
+              Open flags
+            </th>
             <th scope="col">Overdue work</th>
             <th scope="col">Not seen on last patrol</th>
           </tr>
@@ -84,30 +105,33 @@ export function PassTable({ rows, titles }: { rows: Row[]; titles: Record<string
           {rows.map((r) => (
             <tr key={r.segment.id}>
               <th scope="row">
-                {r.name} <span className="plate">{r.plate}</span>
+                {/* A no-break space keeps the plate with the last word of the name. */}
+                {r.name}&nbsp;
+                <span className="plate" translate="no">
+                  {r.plate}
+                </span>
               </th>
               <td>
                 <PassBadge pass={r.pass} />
-                {r.pass?.simulated && <small className="reason-line">simulated</small>}
+                {!allSimulated && r.pass?.simulated && <small className="reason-line">simulated</small>}
                 {r.pass?.stateReason && (r.pass.state === 'suspended' || r.pass.state === 'expired') && (
                   <small className="reason-line">{plainReason(r.pass.stateReason, titles)}</small>
                 )}
               </td>
-              <td data-label="Owner">{r.owner}</td>
-              <td data-label="Open flags">{r.openFlags}</td>
-              <td data-label="Overdue work">
-                {r.overdue.length === 0
-                  ? 'None'
-                  : `${r.overdue.length} work order${r.overdue.length > 1 ? 's' : ''}, ${Math.max(...r.overdue.map((o) => o.days))} day${Math.max(...r.overdue.map((o) => o.days)) > 1 ? 's' : ''}`}
+              <td data-label="Owner" className="owner">
+                {r.owner}
+              </td>
+              <td data-label="Open flags" className="num">
+                {r.openFlags}
+              </td>
+              <td data-label="Overdue work" className="overdue">
+                {overdueText(r)}
               </td>
               <td data-label="Not seen on last patrol">{unknownText(r)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="hint">
-        Showing {rows.length} edge{rows.length === 1 ? '' : 's'}.
-      </p>
     </div>
   )
 }

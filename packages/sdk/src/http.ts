@@ -18,7 +18,7 @@ import {
   type RawInput,
   type SafeEdgeClient
 } from './client.ts'
-import { errorFor } from './errors.ts'
+import { errorFor, SafeEdgeHttpError } from './errors.ts'
 import { readServerSentEvents, type ServerSentEvent } from './sse.ts'
 
 export interface HttpOptions {
@@ -73,8 +73,14 @@ export function createHttpClient({ baseUrl, token, fetch = globalThis.fetch }: H
       headers,
       body: op.body ? JSON.stringify(input.body) : undefined
     })
-    if (response.ok) return op.response.parse(await response.json())
-    throw await failure(response, `${op.method.toUpperCase()} ${path}`)
+    const request = `${op.method.toUpperCase()} ${path}`
+    if (!response.ok) throw await failure(response, request)
+    if (!isJson(response))
+      throw new SafeEdgeHttpError(
+        response.status,
+        `${request} answered ${response.status} with ${response.headers.get('content-type') ?? 'no content type'}, not JSON`
+      )
+    return op.response.parse(await response.json())
   }
   const ids = [...idsHandledBy('core'), ...idsHandledBy('api')] as (CoreOperationId | ApiOperationId)[]
 
@@ -126,11 +132,12 @@ export function createHttpClient({ baseUrl, token, fetch = globalThis.fetch }: H
   }
 }
 
+const isJson = (response: Response) => response.headers.get('content-type')?.includes('application/json') ?? false
+
 /** A 403 carries a Denial, any other error an ApiError (both from the contracts). Anything else fails loudly as is. */
 async function failure(response: Response, request: string): Promise<Error> {
   const text = await response.text()
-  if (!response.headers.get('content-type')?.includes('application/json')) {
-    return new Error(`${request} returned ${response.status}: ${text}`)
-  }
+  if (!isJson(response))
+    return new SafeEdgeHttpError(response.status, `${request} returned ${response.status}: ${text}`)
   return errorFor(response.status, JSON.parse(text))
 }

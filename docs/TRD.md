@@ -70,6 +70,7 @@ flowchart LR
 ```
 
 - The public link runs in **demo mode**: seeded, labelled fixtures in memory, a "Reset demo" control, and recorded AI outputs for the real photo pair, labelled with model and date.
+- **Bring your own key.** In demo mode, a person can paste their own Anthropic key in Settings. The agent then runs in the page (the same module as the API's, `packages/agent-tools/src/claude.ts`) and calls Claude straight from the browser with that key, acting on the in-page core as the agent. It summarises Inbox flags, drafts the monthly report and answers on the Agent page. The key stays in the tab's `sessionStorage` and goes only to `api.anthropic.com`. Settings can also hold a live API's address and a person's token; the Developers page's Try it then calls that API (CORS from `SAFE_EDGE_CORS_ORIGINS`).
 - The local stack runs live Claude calls, the MCP server and the provider adapters. S5 and the real-photo triage are recorded from it.
 
 ### Pilot target
@@ -325,7 +326,7 @@ The core, not the model, assigns tiers: a `missing` or `changed` safety item bec
 
 Design from the [agent research][agent]:
 
-- **Shape.** A deterministic workflow with one Claude agent. The agent runs through the SDK's tool runner (`betaZodTool`) with the same tool functions the MCP server exposes.
+- **Shape.** A deterministic workflow with one Claude agent. The agent runs through the SDK's tool runner (`betaZodTool`) with the same tool functions the MCP server exposes. Its module, `packages/agent-tools/src/claude.ts`, runs in the API with the server's key and in the web demo with the person's own key; either way it acts through a Safe Edge client that holds the agent's identity, so the same scope and state checks refuse it.
 - **Identity.** The agent has its own token with scopes `edge.read`, `inspection.read`, `finding.propose`, `workorder.draft`, `notice.draft` and `patrol.propose`. No token issued to an agent carries `edge.pass.accept`, `repair.verify`, `workorder.submit` or `notice.send`.
 - **MCP server.** `@modelcontextprotocol/server` 2.3.1: an `McpServer`, tools registered with `registerTool(name, config, handler)` and Zod input schemas, served with `serveStdio` for local clients. Logs go to stderr. Configure and verify the 2026-07-28 protocol revision, because the SDK can still speak the 2025 handshake unless told otherwise.
 
@@ -402,6 +403,7 @@ P2 only: 3DTilesRendererJS 0.5.3 with `GoogleCloudAuthPlugin`, a key restricted 
 - The API keeps its state in `$SAFE_EDGE_DATA_DIR/api.sqlite`, unencrypted: the command journal holds every webhook's signing secret and uploaded evidence, and the idempotency table keeps each answer replayed by key, a webhook registration's secret included. The API sets the directory to 0700 on every start, one that already existed included, so only its OS user can read them.
 - Idempotency keys expire: an answer is kept for 24 hours of wall-clock time after it was given (`SAFE_EDGE_IDEMPOTENCY_RETENTION_SECONDS`, default `86400`), then pruned, and a request with that key runs as a new one. A write's answer commits in the same SQLite transaction as the journal entries it made, so a crash cannot keep the write without the answer that stops a retry repeating it.
 - Webhooks reach only the origins in `SAFE_EDGE_WEBHOOK_ORIGINS` (loopback too in development and test). The API checks the list at registration and again before every delivery attempt, retries included: a webhook whose origin has left the list gets nothing more, and each refused delivery is recorded as its final failure. A failed delivery's retry waits in the store with its due time, so it outlives a restart; a first attempt in flight at a crash is lost.
+- Browsers may call the API only from the exact origins in `SAFE_EDGE_CORS_ORIGINS` (comma-separated, such as `http://localhost:5173`): those get CORS headers for the methods and headers the SDK sends (Authorization, Content-Type, Idempotency-Key), without credentials, since tokens travel in Authorization. Unset, the API sends no CORS headers. `bun run dev` allows the web app's dev server, `http://localhost:$WEB_PORT` (5173 by default), so the Developers page's Try it can call it with a dev token.
 - A journal moved to another operating system may refuse to start: replay re-runs the planner, whose trigonometry comes from the platform's maths library and differs in the last bit between macOS and Linux, and a replayed result that differs from the recorded one stops the start.
 - Dependencies: no AGPL or GPL models; record every model and asset licence in `docs/licences.md`.
 
@@ -420,7 +422,7 @@ The [project conventions](/docs/references/project-conventions.md) rule out unit
 
 ## Deployment
 
-- **Public demo link:** a static build of `apps/web` in demo mode on Vercel. It works without the API. It is live at <https://safe-edge-two.vercel.app>: the landing page at `/`, a guest sign-in at `/sign-in`, the Edge Inbox at `/demo/` and the 3D scene at `/demo/scene.html`. `bun run build:demo-site <dir>` builds it, and the script's header gives the deploy commands.
+- **Public demo link:** a static build of `apps/web` in demo mode on Vercel. It works without the API. It is live at <https://safe-edge-two.vercel.app>: the landing page at `/`, a guest sign-in at `/sign-in`, the Edge Inbox at `/demo/` and the 3D scene at `/demo/scene.html`; any other path gets the not-found page with status 404. `bun run build:demo-site <dir>` builds it, and the script's header gives the deploy commands.
 - **Local stack:** `bun run dev` starts the API, the MCP server and the web app against the same core, for the recorded S5 and real-photo segments. The API runs on the scenario clock and prints so: it starts at the seed's date (20 October) and moves only when the system user sets it, which also runs the automation (drone-sim, tick, missed patrols). So the stack opens in the seed's state on any day. `SAFE_EDGE_CLOCK=wall` runs it on the wall clock, with the automation on timers, as real fieldwork needs for its records' times. On the wall clock, from 23 October the seed's weekly patrols are missed, so the first scheduled pass suspends every valid or expiring pass, S1's included.
 - **Later:** the API on a serverless host and the MCP server over protected HTTP. The 2026-07-28 revision is stateless, which suits that model.
 

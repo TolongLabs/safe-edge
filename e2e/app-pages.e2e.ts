@@ -67,7 +67,7 @@ test('S5 Agent: the guardrail check is refused with its rule and lands in the au
   const never = page.getByRole('region', { name: 'What the agent can never do' })
   for (const id of ['decideCandidate', 'submitWorkOrder', 'recordRetest', 'sendNotice', 'approvePatrolPlan'])
     await expect(never.getByRole('rowheader', { name: id, exact: true })).toBeVisible()
-  await expect(page.getByText(/Nothing yet\. The agent has not read/)).toBeVisible()
+  await expect(page.getByText(/Nothing on the audit chain yet\. The agent has not proposed or drafted/)).toBeVisible()
 
   await page.getByRole('button', { name: 'Ask core as the agent' }).click()
   await expect(page.getByText('Refused, as it must be.')).toBeVisible()

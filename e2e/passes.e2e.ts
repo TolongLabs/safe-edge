@@ -78,7 +78,9 @@ test('AC83-1 the township view lists every edge, worst first, with S1 suspended'
   await expect(s1.getByRole('cell', { name: '1', exact: true })).toBeVisible() // one open flag
   await expect(s1.getByRole('cell', { name: 'None', exact: true })).toBeVisible() // no overdue work
   await expect(s1.getByRole('cell', { name: 'Part, length not recorded' })).toBeVisible() // open field check, no length
-  await expect(s1.getByText('simulated')).toBeVisible()
+  // every pass is sample data: labelled once for the table, not under each badge
+  await expect(page.getByText('Every pass in this table is simulated.')).toBeVisible()
+  await expect(s1).not.toContainText('simulated')
   await expect(s1).not.toContainText('cand_') // flags are named in words, never by id
   // expired and expiring passes show their date
   await expect(page.getByText(/^Expired \d+ \w+ \d{4}$/)).toBeVisible()
@@ -123,7 +125,10 @@ test('AC83-2 overdue work is escalated by the manager and read by the general ma
 
 test('AC83-3 the monthly report is drafted by a person and exported', async ({ page }) => {
   await openBoard(page)
-  await expect(page.getByText("The agent's draft needs the live API.")).toBeVisible()
+  // the agent's draft needs the person's own Anthropic key, and says where to add it
+  const agentDraft = page.getByRole('button', { name: 'Draft with the agent' })
+  await expect(agentDraft).toBeDisabled()
+  await expect(agentDraft).toHaveAccessibleDescription(/your own Anthropic key/)
   await page.getByRole('button', { name: 'Draft the report' }).click()
   await expect(page.getByRole('textbox', { name: 'Monthly report' })).toHaveValue(/47 edges/)
   await page.getByRole('textbox', { name: 'Monthly report' }).fill('   ')

@@ -1,19 +1,21 @@
 /* Phone capture (390 px). Colours and sizes come from the tokens in app.css only. */
+/* The canvas comes from the shell's phone frame, shared with the repair check. */
 .frame.phone > .detail.capture {
   gap: var(--space-3);
   /* 16 px sides on a phone; on a wide screen the phone column stays readable in the middle */
   padding: var(--space-4) max(var(--space-4), (100% - 640px) / 2) 0;
-  background-color: var(--bg-canvas);
 }
 .capture h2 {
   font-size: var(--fs-h2);
   line-height: var(--lh-h2);
-  font-weight: 700;
+  font-weight: 600;
 }
+/* Helper and status lines are Body Dense, as on the other screens; 12 px is for photo captions. */
 .capture .hint,
 .capture .note {
   color: var(--text-secondary);
-  font-size: var(--fs-small);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
 }
 .capture .note {
   padding: var(--space-4);
@@ -21,10 +23,10 @@
   background: var(--bg-surface);
   color: var(--text-primary);
   font-size: var(--fs-body);
+  line-height: var(--lh-body);
 }
 .capture .banner {
   align-items: flex-start;
-  border-radius: var(--radius-lg);
 }
 .capture .banner svg {
   flex: none;
@@ -53,7 +55,7 @@
   min-height: 56px;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: var(--bg-surface);
   color: var(--text-primary);
   font: inherit;
@@ -68,7 +70,8 @@ div.capture .row,
 .capture .row .sub {
   display: block;
   color: var(--text-secondary);
-  font-size: var(--fs-small);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
 }
 .capture .row .num {
   display: grid;
@@ -109,8 +112,9 @@ div.capture .row,
 .skeleton-rows i {
   display: block;
   height: 56px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-sunken);
+  border-radius: var(--radius-md);
+  /* Sunken Grey would barely show on the canvas (in Dark not at all); the blocks take the rows' Island White. */
+  background: var(--bg-surface);
 }
 
 /* Camera */
@@ -190,36 +194,39 @@ div.capture .row,
   width: 100%;
   max-height: 96px;
   object-fit: cover;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
 }
 .taken {
   margin: 0;
 }
 
-/* Pinned action bar */
+/* Pinned action bar: the same sheet as the repair check's, with its status line under the button. */
 .capture .pinned {
   position: sticky;
   bottom: 0;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   margin: auto calc(-1 * var(--space-4)) 0;
-  padding: var(--space-4);
+  padding: var(--space-3) var(--space-4) var(--space-4);
   border-radius: var(--radius-island) var(--radius-island) 0 0;
   background: var(--bg-surface);
-  text-align: center;
 }
-.capture .btn:not(.primary):not([disabled]) {
+.capture .btn:not(.primary):not([disabled]):not([aria-disabled='true']) {
   color: var(--text-primary); /* the green outline text reads as disabled on dark */
 }
 .capture .pinned .btn {
   width: 100%;
-  min-height: 52px;
 }
 .capture .gallery:focus-within {
   outline: none;
   box-shadow: var(--focus-ring);
 }
+/* The gallery button is a label around the file input, so it takes the disabled button look by hand. */
 .capture .gallery[aria-disabled='true'] {
-  opacity: 0.5;
+  background: var(--bg-sunken);
+  border: 1px solid var(--border-default);
+  color: var(--text-disabled);
+  cursor: not-allowed;
 }

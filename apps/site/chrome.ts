@@ -11,7 +11,8 @@ export const PAGES = [
   { key: 'privacy', short: 'Privacy', long: 'Privacy' }
 ] as const
 
-type PageKey = 'home' | (typeof PAGES)[number]['key']
+// 'not-found' is 404.html, which Vercel and serve-demo-site.ts answer every unknown path with.
+type PageKey = 'home' | 'not-found' | (typeof PAGES)[number]['key']
 
 /** Paths served without .html, on Vercel (scripts/build-demo-site.ts) and in `vite dev`. */
 export const CLEAN_PATHS = ['sign-in', ...PAGES.map((page) => page.key)]
@@ -115,7 +116,8 @@ export const siteChrome = (): Plugin => ({
     order: 'pre',
     handler(html, { filename }) {
       const name = basename(filename, '.html')
-      const page: PageKey | undefined = name === 'index' ? 'home' : PAGES.find((p) => p.key === name)?.key
+      const page: PageKey | undefined =
+        name === 'index' ? 'home' : name === '404' ? 'not-found' : PAGES.find((p) => p.key === name)?.key
       if (!page) return html
       for (const mark of ['<!-- site:header -->', '<!-- site:footer -->'])
         if (!html.includes(mark)) throw new Error(`${filename} has no ${mark}`)

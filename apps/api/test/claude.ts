@@ -7,7 +7,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { VERSION } from '@anthropic-ai/sdk/version'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { AGENT_MODEL } from '../src/agent.ts'
+import { AGENT_MODEL } from '@safe-edge/agent-tools/claude'
 
 const MODES = ['replay', 'record', 'live'] as const
 type Mode = (typeof MODES)[number]

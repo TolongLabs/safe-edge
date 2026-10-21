@@ -24,6 +24,17 @@ export class SafeEdgeApiError extends Error {
   }
 }
 
+/** An answer that is not a Safe Edge one (no JSON body): a wrong address, a proxy, or the server's own failure page. */
+export class SafeEdgeHttpError extends Error {
+  override readonly name = 'SafeEdgeHttpError'
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message)
+  }
+}
+
 /** The typed error for a contract error body and its HTTP status: a 403 carries a Denial, any other an ApiError. */
 export function errorFor(status: number, body: unknown): SafeEdgeDeniedError | SafeEdgeApiError {
   if (status === 403) {

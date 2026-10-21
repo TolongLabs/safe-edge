@@ -11,11 +11,12 @@ export type Route =
   | { name: 'patrol' }
   | { name: 'agent' }
   | { name: 'developers' }
+  | { name: 'settings' }
   | { name: 'notFound' }
 
 /**
  * Hash routes: `#/inbox` (also empty), `#/fix-lens[/id]`, `#/passes[/id]`, `#/retest[/id]`, `#/capture[/id]`,
- * `#/patrol`, `#/agent`, `#/developers`.
+ * `#/patrol`, `#/agent`, `#/developers`, `#/settings`.
  */
 export function parseRoute(hash: string): Route {
   let parts: string[]
@@ -47,6 +48,7 @@ export function parseRoute(hash: string): Route {
     case 'patrol':
     case 'agent':
     case 'developers':
+    case 'settings':
       return id === undefined ? { name: head } : { name: 'notFound' }
     default:
       return { name: 'notFound' }

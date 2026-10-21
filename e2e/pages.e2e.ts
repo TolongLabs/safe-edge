@@ -57,6 +57,17 @@ test('the sign-in page links to every page', async ({ page }) => {
     await expect(nav.getByRole('link', { name: link, exact: true })).toHaveAttribute('href', `/${path}`)
 })
 
+test('an unknown path answers 404 with the not-found page, which leads home', async ({ page }) => {
+  const response = await page.goto('no-such-edge')
+  expect(response?.status()).toBe(404)
+  await expect(page).toHaveTitle('Page not found · Safe Edge')
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex')
+  await expect(page.getByRole('heading', { level: 1, name: 'No edge at this address.' })).toBeVisible()
+  await page.getByRole('main').getByRole('link', { name: 'Go to the home page' }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Every water edge, closed and proven.' })).toBeVisible()
+})
+
 for (const path of ['', ...pages.map((p) => p.path), 'sign-in'])
   test(`every picture on /${path} loads`, async ({ page }) => {
     await page.goto(path)

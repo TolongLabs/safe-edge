@@ -1,0 +1,128 @@
+/* The not-found page (404.html): the product pages' dawn hero, the two ways home with a route that stops at a bar
+   beside them, then every page on the site as a park sign. */
+
+/* The code leads the line as a plate (Plain Name First), a step smaller than the words around it. */
+.page-line .plate-code {
+  font-size: 0.85em;
+}
+
+/* The plan drawings' closed way: a start point, a dashed route, a bar across it before the water. Phones stack the
+   buttons, and the drawing would sit alone under them, so it shows only where it can sit beside them. */
+.lost-route {
+  display: none;
+  flex: none;
+  align-self: center;
+  margin-left: 8px;
+  fill: var(--moss);
+  stroke-width: 3;
+}
+
+@media (min-width: 640px) {
+  .lost-route {
+    display: block;
+  }
+}
+
+.lost-route-dash {
+  stroke: var(--moss);
+  stroke-dasharray: 6 5;
+}
+
+.lost-route-bar {
+  stroke: var(--ink);
+  stroke-linecap: round;
+}
+
+/* Once, on arrival: the dashes walk up to the bar and stop there. */
+@media (prefers-reduced-motion: no-preference) {
+  .lost-route-dash {
+    animation: lost-walk 1.6s var(--ease) 0.3s backwards;
+  }
+
+  @keyframes lost-walk {
+    from {
+      stroke-dashoffset: 33;
+    }
+  }
+}
+
+.lost-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.ways {
+  display: grid;
+  gap: 32px;
+  padding: clamp(56px, 9svh, 112px) var(--margin) var(--chapter);
+  background: var(--island);
+}
+
+.ways-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .ways-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .ways-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* A sign: Rail Green with mist type, the name and its arrow on top, one plain line on what the page says. */
+.way {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 8px 16px;
+  height: 100%;
+  padding: 20px 20px 24px 22px;
+  border-radius: 12px;
+  background: var(--rail);
+  color: var(--sky);
+  text-decoration: none;
+  transition: background-color 180ms var(--ease);
+}
+
+.way:hover {
+  background: var(--rail-hover);
+}
+
+.way-name {
+  font-size: var(--t-step);
+  font-weight: 800;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.way-arrow {
+  grid-area: 1 / 2;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  fill: currentColor;
+  transition: transform 180ms var(--ease);
+}
+
+.way:hover .way-arrow {
+  transform: translateX(4px);
+}
+
+.way-what {
+  grid-column: 1 / -1;
+  max-width: 34ch;
+  font-size: var(--t-small);
+  line-height: 1.45;
+  color: var(--rail-muted);
+  text-wrap: pretty;
+}

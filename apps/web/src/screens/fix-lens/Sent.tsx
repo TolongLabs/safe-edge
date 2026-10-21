@@ -38,7 +38,7 @@ export function Sent({
         Fix {letter(index)} sent to {plain(installer.name)}’s crew
       </h2>
       <p className="fl-muted">
-        {workOrder.id} · submitted by{' '}
+        <span translate="no">{workOrder.id}</span> · submitted by{' '}
         {plain(who(must(workOrder.submittedBy ?? undefined, 'who submitted the work order')).name)}
         {workOrder.dueAt && ` · due ${day(workOrder.dueAt)}`}
         {approver && ` · engineer approved by ${plain(approver.name)}`}

@@ -55,9 +55,11 @@ const WINDOW_REASON = {
   requested: 'the time asked for'
 } as const
 const HOLD_KIND = { weather: 'Weather', lightning: 'Lightning', separation: 'Separation' } as const
-/** Core writes the times inside a reason as ISO strings; show them in MYT like the rest of the screen. */
+/** Core writes the times inside a reason as ISO strings; show them in MYT like the rest of the screen, as a sentence. */
 const readable = (reason: string) =>
-  reason.replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z/g, (iso) => fmt(iso))
+  reason
+    .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z/g, (iso) => fmt(iso))
+    .replace(/^./, (c) => c.toUpperCase())
 const TRIGGER: Record<ReplanTrigger['kind'], string> = {
   heavy_rain: 'heavy rain',
   weather_warning: 'a weather warning',
