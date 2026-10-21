@@ -23,8 +23,9 @@ const clock = new Intl.DateTimeFormat('en-GB', {
 })
 const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
-// Above the controls strip, which takes two lines on the narrowest phones.
-const BOTTOM = 56
+// Above the bottom strips: the controls strip and the OpenStreetMap credit share one row on a wide screen and stack
+// on a phone, where the scene page raises --strip-room (sceneCss in ElminaScene.tsx).
+const BOTTOM = 'var(--strip-room, 56px)'
 
 const card: CSSProperties = {
   position: 'absolute',
