@@ -4,7 +4,7 @@ import { SafeEdgeDeniedError } from '@safe-edge/sdk'
 import type { Asset } from '@safe-edge/contracts'
 import { useSignedIn } from '../../store'
 import { download } from './report'
-import { buildPack, type HandoverPack } from './handover/handover'
+import { buildPack, type HandoverPack } from './handover/pack'
 import { Handover } from './handover/Handover'
 import { DownloadSimple, Printer, WarningCircle } from '@phosphor-icons/react'
 
@@ -53,13 +53,13 @@ export function HandoverSlot() {
   }
 
   return (
-    <section className="island panel slot" aria-labelledby="ho-h">
+    <section className="island panel" aria-labelledby="ho-h">
       <h2 id="ho-h">Handover pack</h2>
       <p className="hint">
         The asset, its edges' passes, accepted re-tests, open findings and upkeep owner, for a receiving authority.
         Records that are sample data say so.
       </p>
-      <label>
+      <label className="asset-field">
         Asset
         <select
           value={assetId}

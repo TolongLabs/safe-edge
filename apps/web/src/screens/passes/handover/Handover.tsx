@@ -1,4 +1,5 @@
-import type { HandoverPack } from './handover'
+import { Printer, X } from '@phosphor-icons/react'
+import type { HandoverPack } from './pack'
 import { dayTime, day } from '../board'
 import './handover.css'
 
@@ -10,9 +11,11 @@ export function Handover({ pack, onClose }: { pack: HandoverPack; onClose: () =>
       <article className="handover-sheet">
         <footer className="handover-actions no-print">
           <button type="button" className="btn" onClick={onClose}>
+            <X size={20} weight="bold" aria-hidden="true" />
             Close
           </button>
           <button type="button" className="btn primary" onClick={() => window.print()}>
+            <Printer size={20} weight="bold" aria-hidden="true" />
             Print this page
           </button>
         </footer>
