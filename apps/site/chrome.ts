@@ -6,7 +6,7 @@ import type { Connect, Plugin } from 'vite'
 /** The product pages, in header order. Each is served at /<key> as well as /<key>.html. */
 export const PAGES = [
   { key: 'drone', short: 'Drone', long: 'Drone patrols' },
-  { key: 'agents', short: 'Agents', long: 'Agents' },
+  { key: 'agent', short: 'Agent', long: 'The agent and MCP' },
   { key: 'sdk', short: 'SDK', long: 'SDK and API' },
   { key: 'privacy', short: 'Privacy', long: 'Privacy' }
 ] as const
