@@ -431,7 +431,7 @@ Status: **External** is a published source, **Team** is our own statement, resea
 
 **Settled:**
 
-- **The team** is Team T010NG, said "Team Tolong": three computer science students, Hee Zi Jie and Lim Yuh Kang (Asia Pacific University) and Yow Li Hao (University of Sheffield), and a lawyer, Liau Jin Siang (University of Reading). Deck 1 shows all four.
+- **The team** is Team T010NG, said "Team Tolong": three computer science students, Hee Zi Jie, Lim Yuh Kang and Yow Li Hao (all Asia Pacific University), and a lawyer, Liau Jin Siang (University of Reading). Deck 1 shows all four.
 - **The stories in V3** open the problem: the girl in Bandar Mahkota Cheras, then the brothers in Kajang. Nobody is named in any cut.
 - **The team lines in V13** are the team's own account, as worded.
 - **Voices:** one narrator outside the demo; an ElevenLabs voice for the demo video.
