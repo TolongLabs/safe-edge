@@ -20,9 +20,9 @@ const NEVER = (Object.entries(operations) as [OperationId, (typeof operations)[O
 const readActivity = async (): Promise<AuditEvent[] | null> =>
   can('listAudit') ? (await client().listAudit({})).filter((a) => a.actor.type === 'agent') : null
 
-/** Questions the eight tools can answer exactly (list_expiring_passes counts days, not calendar months). */
+/** Questions the eight tools can answer, in the words people use (PRODUCT.md). */
 const SUGGESTED = [
-  'Which passes expire in the next 30 days?',
+  'Which passes expire this month?',
   'Who looks after the edge whose pass ends next?',
   'Which findings are still open, and for how long?'
 ]

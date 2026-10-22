@@ -212,7 +212,9 @@ const listExpiringPasses = tool({
   scope: 'edge.read',
   readOnly: true,
   input: z.object({ days: z.number().int().min(1).max(366).describe('Window in days from now, e.g. 30') }),
+  // asOf, the tool context's clock, lets the model answer a calendar question ("this month") from each validTo.
   output: z.object({
+    asOf: Timestamp,
     days: z.number(),
     passes: z.array(
       EdgePass.pick({
@@ -226,8 +228,8 @@ const listExpiringPasses = tool({
       })
     )
   }),
-  async run({ client }, { days }) {
-    return { days, passes: await client.listPasses({ query: { expiresWithinDays: days } }) }
+  async run({ client, now }, { days }) {
+    return { asOf: now(), days, passes: await client.listPasses({ query: { expiresWithinDays: days } }) }
   }
 })
 
