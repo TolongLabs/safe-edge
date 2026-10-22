@@ -109,7 +109,8 @@ test('the profile menu opens Settings', async ({ page }) => {
   await expect(page).toHaveTitle('Settings · Safe Edge')
 })
 
-// The recordings were made against the seed on 20 Oct 2026; the tools count days from the page's clock.
+// The recordings were made against the seed on 20 Oct 2026; the tools count days from the demo core's clock, which is
+// the page's.
 const RECORDED_DAY = new Date('2026-10-20T08:00:00+08:00')
 const withKey = (page: Page) =>
   page.addInitScript(() => sessionStorage.setItem('safeEdge.anthropicKey', 'test-key-0000'))

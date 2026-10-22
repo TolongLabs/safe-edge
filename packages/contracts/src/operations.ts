@@ -60,6 +60,7 @@ import {
   RouteClosureRequest,
   ScenarioClock,
   SegmentList,
+  ServerTime,
   SetScenarioClockRequest,
   SetWorkOrderExternalRefRequest,
   StartPatrolRequest,
@@ -175,6 +176,18 @@ export const operations = {
     roles: 'any',
     agentScope: 'edge.read',
     response: Actor,
+    status: 200,
+    events: []
+  },
+  getClock: {
+    method: 'get',
+    path: '/clock',
+    summary:
+      'The time the server stamps on records and counts windows from: the wall clock, or the scenario clock where one runs',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'edge.read',
+    response: ServerTime,
     status: 200,
     events: []
   },

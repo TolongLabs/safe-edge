@@ -193,6 +193,7 @@ Base path `/v1`, JSON, described in `packages/contracts/openapi.yaml`. Bearer to
 | `GET /passes?state=expiring`        | any                    | Pass states for the board                                             |
 | `GET /false-flags`                  | any                    | False flags per patrol and class against the budget, for the board    |
 | `GET /audit?subject={id}`           | manager, gm            | The audit trail                                                       |
+| `GET /clock`                        | any                    | The time the API stamps and counts windows from (scenario or wall)    |
 | `POST /triage/images`               | manager                | Claude vision triage on a real photo pair                             |
 | `POST /agent/ask`                   | manager, gm            | Ask the agent; streams the answer                                     |
 | `GET /events`                       | any                    | Server-sent events                                                    |
@@ -326,7 +327,7 @@ The core, not the model, assigns tiers: a `missing` or `changed` safety item bec
 
 Design from the [agent research][agent]:
 
-- **Shape.** A deterministic workflow with one Claude agent. The agent runs through the SDK's tool runner (`betaZodTool`) with the same tool functions the MCP server exposes. Its module, `packages/agent-tools/src/claude.ts`, runs in the API with the server's key and in the web demo with the person's own key; either way it acts through a Safe Edge client that holds the agent's identity, so the same scope and state checks refuse it.
+- **Shape.** A deterministic workflow with one Claude agent. The agent runs through the SDK's tool runner (`betaZodTool`) with the same tool functions the MCP server exposes. Its module, `packages/agent-tools/src/claude.ts`, runs in the API with the server's key and in the web demo with the person's own key; either way it acts through a Safe Edge client that holds the agent's identity, so the same scope and state checks refuse it. The tools take every time (as-of dates, finding ages, the default patrol start) from the API they call (`GET /clock`), never from their host's clock, which differs from a scenario clock.
 - **Identity.** The agent has its own token with scopes `edge.read`, `inspection.read`, `finding.propose`, `workorder.draft`, `notice.draft` and `patrol.propose`. No token issued to an agent carries `edge.pass.accept`, `repair.verify`, `workorder.submit` or `notice.send`.
 - **MCP server.** `@modelcontextprotocol/server` 2.3.1: an `McpServer`, tools registered with `registerTool(name, config, handler)` and Zod input schemas, served with `serveStdio` for local clients. Logs go to stderr. Configure and verify the 2026-07-28 protocol revision, because the SDK can still speak the 2025 handshake unless told otherwise.
 

@@ -26,13 +26,12 @@ import * as z from 'zod'
 
 // The eight agent tools of the TRD "Agent layer and MCP server", free of any transport. The MCP server (apps/mcp)
 // and the in-API agent (#75) both wrap them. Each tool calls the API through a SafeEdgeClient that holds the agent's
-// token, so the API, not this module, enforces scope and state: a refusal surfaces as SafeEdgeDeniedError.
+// token, so the API, not this module, enforces scope and state: a refusal surfaces as SafeEdgeDeniedError. Times come
+// from the same API (`getClock`), never the caller's clock, which can differ from a scenario clock.
 
 export interface AgentToolContext {
   /** A client holding the agent's token. */
   client: SafeEdgeClient
-  /** The current time as an ISO string, for finding ages and the default patrol start. */
-  now: () => string
   /**
    * The model that served the turn calling the tool, as the model API reported it; proposals carry it, never the
    * model's own words. Null when the caller cannot see it: an MCP client runs a model the server never learns.
@@ -190,9 +189,11 @@ const listOpenFindings = tool({
   readOnly: true,
   input: z.object({ segmentId: SegmentId.optional().describe('Only findings on this segment') }),
   output: z.object({ asOf: Timestamp, findings: z.array(Finding.extend({ ageDays: z.number() })) }),
-  async run({ client, now }, { segmentId }) {
-    const asOf = now()
-    const findings = await client.listFindings({ query: { segmentId } })
+  async run({ client }, { segmentId }) {
+    const [{ now: asOf }, findings] = await Promise.all([
+      client.getClock(),
+      client.listFindings({ query: { segmentId } })
+    ])
     return {
       asOf,
       findings: findings
@@ -212,7 +213,7 @@ const listExpiringPasses = tool({
   scope: 'edge.read',
   readOnly: true,
   input: z.object({ days: z.number().int().min(1).max(366).describe('Window in days from now, e.g. 30') }),
-  // asOf, the tool context's clock, lets the model answer a calendar question ("this month") from each validTo.
+  // asOf, the API's clock the window counts from, lets the model answer a calendar question ("this month").
   output: z.object({
     asOf: Timestamp,
     days: z.number(),
@@ -228,8 +229,12 @@ const listExpiringPasses = tool({
       })
     )
   }),
-  async run({ client, now }, { days }) {
-    return { asOf: now(), days, passes: await client.listPasses({ query: { expiresWithinDays: days } }) }
+  async run({ client }, { days }) {
+    const [{ now: asOf }, passes] = await Promise.all([
+      client.getClock(),
+      client.listPasses({ query: { expiresWithinDays: days } })
+    ])
+    return { asOf, days, passes }
   }
 })
 
@@ -325,7 +330,7 @@ const proposePatrol = tool({
       )
     })
   }),
-  async run({ client, now }, input) {
+  async run({ client }, input) {
     const docks = await client.listDocks()
     const dock = input.dockId === undefined ? only(docks, 'dock') : docks.find((d) => d.id === input.dockId)
     if (dock === undefined) throw new Error(`No dock ${input.dockId}`)
@@ -336,7 +341,7 @@ const proposePatrol = tool({
         droneProfileId,
         segmentIds: input.segmentIds,
         context: [],
-        notBefore: input.notBefore ?? now(),
+        notBefore: input.notBefore ?? (await client.getClock()).now,
         altitudeCapM: input.altitudeCapM
       }
     })

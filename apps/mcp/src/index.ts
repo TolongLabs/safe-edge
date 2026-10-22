@@ -16,8 +16,6 @@ const client = createSafeEdgeClient({
   baseUrl: env.SAFE_EDGE_API_URL,
   token: env.SAFE_EDGE_AGENT_TOKEN
 })
-const now = () => new Date().toISOString()
-
 // The tools act as whoever the token names, so it must name the agent: a person's token would record the model's
 // drafts as that person's work, and a provider's would raise its candidates as the drone.
 const me = await client.getMe()
@@ -27,7 +25,7 @@ if (me.type !== 'agent') {
 
 // Only protocol revision 2026-07-28: a 2025-era `initialize` gets the unsupported-version error.
 // The server never learns which model its client runs, so proposals carry model null rather than the model's own claim.
-serveStdio(() => createServer({ client, now, model: () => null }), {
+serveStdio(() => createServer({ client, model: () => null }), {
   legacy: 'reject',
   onerror: (error) => console.error('safe-edge mcp:', error)
 })

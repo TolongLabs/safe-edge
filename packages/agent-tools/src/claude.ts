@@ -49,7 +49,7 @@ type Finished = { ok: true; text: string; calls: ToolCall[]; model: string; fall
 
 export interface AgentOptions {
   claude: Anthropic
-  /** Tool context: a client holding the agent's token, and the API clock. The served model comes from each run. */
+  /** Tool context: a client holding the agent's token. The served model comes from each run. */
   context: Omit<AgentToolContext, 'model'>
 }
 

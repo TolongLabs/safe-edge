@@ -559,6 +559,13 @@ export type SetScenarioClockRequest = z.infer<typeof SetScenarioClockRequest>
 export const ScenarioClock = named('ScenarioClock', z.object({ id: z.literal('clock'), now: Timestamp }))
 export type ScenarioClock = z.infer<typeof ScenarioClock>
 
+/**
+ * The time the server stamps on records and counts windows from (such as `expiresWithinDays`): the wall clock, or the
+ * scenario clock where one runs. A client that reckons with server times (ages, as-of dates) reads it, not its own.
+ */
+export const ServerTime = named('ServerTime', z.object({ now: Timestamp }))
+export type ServerTime = z.infer<typeof ServerTime>
+
 export const DemoResetResult = z.object({ reset: z.literal(true) })
 export type DemoResetResult = z.infer<typeof DemoResetResult>
 

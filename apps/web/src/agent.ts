@@ -25,7 +25,7 @@ export async function demoAgent(apiKey: string): Promise<SafeEdgeAgent> {
   const s = await sdk()
   return s.createAgent({
     claude: new s.Anthropic({ apiKey, dangerouslyAllowBrowser: true }),
-    context: { client: demo.as('usr_agent'), now: () => new Date().toISOString() }
+    context: { client: demo.as('usr_agent') }
   })
 }
 
