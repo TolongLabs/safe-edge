@@ -2,7 +2,7 @@ import type { Finding, Remedy, RouteClosure, WorkOrder } from '@safe-edge/contra
 import { useState } from 'react'
 import type { Scene } from '../../scenes'
 import { Photo } from '../fix-lens/Photo'
-import { OPENING_LABEL, useRun } from '../fix-lens/lens'
+import { OPENING_LABEL, quantityWords, useRun } from '../fix-lens/lens'
 import { client } from '../../store'
 import { sampleEvidence } from './useRepair'
 
@@ -36,9 +36,7 @@ export function Installer({
             </p>
             <ul className="rt-quantities">
               {remedy.quantities.map((q) => (
-                <li key={q.item}>
-                  {q.amount} {q.unit} · {q.item}
-                </li>
+                <li key={q.item}>{quantityWords(q)}</li>
               ))}
             </ul>
             <Photo

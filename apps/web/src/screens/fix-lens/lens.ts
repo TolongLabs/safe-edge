@@ -48,6 +48,9 @@ export const day = (iso: string) =>
 export const quoteWords = (q: Remedy['quote']) =>
   q === 'quote_needed' ? 'quote needed' : `${q.currency} ${q.amount} quoted ${q.date}`
 
+/** A work-order quantity as a bill of quantities reads it: the item, then how much ("Fence panel 2.4 m: 1 panel"). */
+export const quantityWords = (q: Remedy['quantities'][number]) => `${q.item}: ${q.amount} ${q.unit}`
+
 /** The remedy IDs proposed in this session, per segment. Core has no list of remedies, so the screen keeps the IDs only. */
 const proposed: Record<string, string[]> = {}
 onReset(() => {

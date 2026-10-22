@@ -20,6 +20,7 @@ import {
   letter,
   must,
   plain,
+  quantityWords,
   quoteWords,
   recordNames,
   removeProposed,
@@ -55,7 +56,7 @@ function result(c: Closure) {
 }
 
 const summary = (r: Remedy) =>
-  `${r.quantities.map((q) => `${q.amount} ${q.unit} ${q.item}`).join(' and ') || 'no quantities'} · ${quoteWords(r.quote)}`
+  `${r.quantities.map(quantityWords).join('; ') || 'no quantities'} · ${quoteWords(r.quote)}`
 
 /** Step 2: one option card per proposed fix, with the engineer's approval and the send action. */
 export function Compare({
