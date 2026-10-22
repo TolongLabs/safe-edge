@@ -54,13 +54,6 @@
       </ul>
     </li>
     <li>
-      <a href="#hackathon">Hackathon</a>
-      <ul>
-        <li><a href="#real-and-simulated">Real and Simulated</a></li>
-        <li><a href="#judging-criteria">Judging Criteria</a></li>
-      </ul>
-    </li>
-    <li>
       <a href="#getting-started">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
@@ -200,51 +193,6 @@ Made with [Archify](https://github.com/tt-a1i/archify) from [`architecture.json`
 - **AI:** [Claude](https://www.anthropic.com/claude) (`claude-opus-5-5`) through the Anthropic TypeScript SDK.
 - **Infrastructure:** [Vercel](https://vercel.com/) for the static demo, deployed from `main` by GitHub Actions.
 - **Tooling:** [Playwright](https://playwright.dev/) end to end, `bun test` integration tests over HTTP and MCP, [Prettier](https://prettier.io/), Husky and commitlint.
-
-<p align="right"><a href="#readme-top">&uarr;</a></p>
-
-<!-- HACKATHON -->
-
-## Hackathon
-
-Safe Edge is our team's entry to the [Sime Darby Property University Hackathon 2026](https://simedarbyproperty.com/universityhackathon/), "Township of Tomorrow", in the People track (safety and security). The [brief](/docs/BRIEF.md) has the rules, dates and judging; [`IDEA.md`](/docs/IDEA.md) maps each part of the pitch to the document that owns it.
-
-| Submission | Where                                                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Prototype  | The [live demo](https://safe-edge-two.vercel.app) and this repository                                                      |
-| Pitch deck | A draft in [`pitch-deck.html`](/docs/demo/deck/pitch-deck.html), on the organisers' template ([how](/docs/demo/README.md)) |
-| Video      | Planned in [`video.md`](/docs/demo/video.md), to be recorded from the prototype                                            |
-| Evidence   | [`docs/evidence/`](/docs/evidence/) and the [research](/docs/research/)                                                    |
-
-<p align="right"><a href="#readme-top">&uarr;</a></p>
-
-### Real and Simulated
-
-False or misleading claims disqualify a team, so the prototype labels every simulated state on screen.
-
-| Part                   | Real                                                                                                                                                                                               | Simulated                                                         |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Map and scene          | OpenStreetMap water, parks, paths, barriers and buildings for the Elmina window                                                                                                                    | Fences, covers, buoys, signs and the roof dock                    |
-| Weather                | Dated data.gov.my and JPS rainfall snapshots from 19 October 2026                                                                                                                                  | The storm that starts S1                                          |
-| Patrol                 | Routes, scores and mission files from real edge geometry, opened in [QGroundControl and DJI's validator](/docs/evidence/mission-exports.md)                                                        | Flight, telemetry, battery and camera                             |
-| Inbox, Fix Lens, proof | The workflow, state machines, permissions and audit trail                                                                                                                                          | The flags, the photos (illustrations) and the repairs             |
-| Agent, MCP and Procore | Claude calls with a real key, [S5](/docs/evidence/s5-mcp-claude-code.md) and [S6](/docs/evidence/s6-text-in-image.md) over MCP, a [Procore sandbox](/docs/evidence/procore-sandbox.md) Observation | DJI Cloud API and MAVLink adapters, which are typed stubs         |
-| People                 | None                                                                                                                                                                                               | Every user is a seeded persona, such as Farah Hashim, the manager |
-
-The [PRD](/docs/PRD.md#real-and-simulated-by-submission) holds the full plan, including the real phone patrol and photo triage still to come.
-
-<p align="right"><a href="#readme-top">&uarr;</a></p>
-
-### Judging Criteria
-
-| Weight | Criterion                           | Where to look                                                                                                                                                |
-| ------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 25%    | Impact and sustainability value     | [How we measure impact](/docs/research/shortlist/safe-edge.md#impact-and-how-we-measure-it) and the [success measures](/docs/PRODUCT.md#success-measures)    |
-| 20%    | Innovation and differentiation      | [What makes it different](/docs/PRODUCT.md#what-makes-it-different) and [why it's new](/docs/research/shortlist/safe-edge.md#why-its-new)                    |
-| 20%    | Feasibility and deliverability      | [Drone integration phases](/docs/PRODUCT.md#drone-integration-phases), the [pilot](/docs/research/shortlist/safe-edge.md#pilot) and this prototype           |
-| 15%    | Strategic fit and theme relevance   | [Fit with Sime Darby Property](/docs/research/shortlist/safe-edge.md#fit-with-sime-darby-property)                                                           |
-| 10%    | Commercial and value multiplication | [Cost and buying decision](/docs/research/shortlist/safe-edge.md#cost-and-buying-decision) and the [SDK and MCP server](/docs/PRODUCT.md#sdk-and-mcp-server) |
-| 10%    | Team, evidence and pitch quality    | [Evidence due by 23 October](/docs/research/shortlist/safe-edge.md#evidence-due-by-23-october-2026) and [`docs/evidence/`](/docs/evidence/)                  |
 
 <p align="right"><a href="#readme-top">&uarr;</a></p>
 
