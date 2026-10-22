@@ -46,7 +46,8 @@ test('the licence notices ship with the code (#245)', async ({ request }) => {
   // Each app's licences.md carries the licence text its dependencies ship, not only their names.
   for (const [path, names] of [
     ['licences.md', ['lenis', '@fontsource/atkinson-hyperlegible-next']],
-    ['demo/licences.md', ['react', 'three', 'zod']]
+    // standardwebhooks ships no licence file; patches/standardwebhooks@1.1.1.patch adds its MIT licence (#247).
+    ['demo/licences.md', ['react', 'three', 'zod', 'standardwebhooks']]
   ] as const) {
     const response = await request.get(path)
     expect(response.ok()).toBe(true)

@@ -58,3 +58,16 @@ for (const file of files) {
     throw new Error(`${path} contains something shaped like a key`)
 }
 console.log(`${files.length} files in ${staticDir}, checked against ${secrets.length} secrets from the environment`)
+
+// Every bundled dependency's licence text ships with the build (docs/licences.md). Vite's licences.md leaves a bare
+// heading for a package that ships no licence file: gsap's notice stays in its code instead; any other needs one, for
+// example as a bun patch.
+for (const licences of ['licences.md', 'demo/licences.md']) {
+  const bare = (await Bun.file(join(staticDir, licences)).text())
+    .split('\n## ')
+    .slice(1)
+    .filter((section) => section.split('\n').slice(1).join('\n').trim() === '')
+    .map((section) => section.split(' - ')[0]!)
+    .filter((name) => name !== 'gsap')
+  if (bare.length > 0) throw new Error(`${licences} has no licence text for ${bare.join(', ')}`)
+}
