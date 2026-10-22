@@ -1,6 +1,6 @@
 # Demo
 
-Templates for the submission media. The pitch deck template is an HTML copy of the organisers' presentation template, so the deck can be built as code and printed to PDF. [`video.md`](/docs/demo/video.md) says how two agent sessions record the prototype and assemble the video.
+Templates for the submission media. The pitch deck template is an HTML copy of the organisers' presentation template, so the deck can be built as code and printed to PDF. [`director-script.md`](/docs/demo/director-script.md) holds the video's narration and what each segment shows, and [`video.md`](/docs/demo/video.md) says how two agent sessions record the prototype and assemble the video.
 
 Contents:
 
@@ -17,14 +17,21 @@ The organisers asked teams to use every template slide and keep its flow. The [s
 
 ## Build the deck
 
-1.  Open [`deck/pitch-deck.html`](/docs/demo/deck/pitch-deck.html), the draft. It already holds our content from `PRODUCT.md`, the PRD and the [Safe Edge pitch](/docs/research/shortlist/safe-edge.md). Search it for "TO FILL" to find the team details and screenshots still missing.
-1.  Keep every template slide and its order.
+1.  Open [`deck/pitch-deck.html`](/docs/demo/deck/pitch-deck.html), the deck.
+1.  Keep what the template fixes: the cover, the event slide, the orange title and Thank You backgrounds, the white content background with the Sime Darby Property logo top right, every template slide in its order, and each slide's heading as written ("7. Feasibility", "7. Implementation" and "7. Visual Concept" all keep the template's number 7).
+1.  Change the rest freely, in the style of the [example deck](#example-deck): the layouts, the text and the pictures under each heading. Keep it short: one headline per slide, a few cards, and big numbers with a source line in monospace. Slide 3 carries the title and one-line claim beside the cover render; the Thank You slide carries the tagline and QR codes for the live demo and the code.
+1.  Mark each item the video pushes in on with `data-focus="<id>"`; the [video's slide export](/docs/demo/video.md#slides) reads them, and the director script names them.
 1.  Put supporting detail on appendix slides after "Thank You". Copy a content slide to make one.
+1.  Pictures live in `deck/assets/`:
+    - `screens/`: screenshots of the demo build, captured with Playwright at 2× scale and saved as WebP. Every app screenshot keeps the app's own Simulation label.
+    - `art/`: white-clay 3D renders with one orange accent, in the example deck's style, made with Codex's image tool and saved as WebP. Slides with a full-height art panel lay `sdp-logo.webp` over it, at the logo's place on the template background, so the logo stays visible.
+    - `team/`: the four team portraits.
+    - `mark.svg`: the Safe Edge mark, copied from the web app.
 1.  Open the file in Chrome or Edge. Move between slides with the arrow keys, the controls that show when you move the mouse, or a tap on either side of the screen on a phone. Press 1 to 9 to jump to slides 1 to 9 (0 is slide 10), and R to go back to the first slide. The deck reopens on the last slide shown.
 1.  Write presenter notes in the `speaker-notes` block at the end of the file, one string per slide. Press N to show them.
 1.  Print to PDF with margins set to "None". Each slide prints as one 1920 × 1080 page.
 
-The template uses Metropolis and Century Gothic. Install both for an exact match. Without them, the page uses Montserrat and Questrial from Google Fonts.
+The template's own slides use Metropolis; without it, the page uses Montserrat from Google Fonts. Our slides use Geist and Geist Mono, as the example deck does.
 
 ## Example deck
 
