@@ -104,17 +104,9 @@ div.capture .row,
   background: var(--state-expiring-bg);
   color: var(--state-expiring-fg);
 }
-.skeleton-rows {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-.skeleton-rows i {
-  display: block;
+/* Loading rows match the segment and viewpoint rows they stand for. */
+.capture .skeleton-rows i {
   height: 56px;
-  border-radius: var(--radius-md);
-  /* Sunken Grey would barely show on the canvas (in Dark not at all); the blocks take the rows' Island White. */
-  background: var(--bg-surface);
 }
 
 /* Camera */
@@ -212,9 +204,6 @@ div.capture .row,
   padding: var(--space-3) var(--space-4) var(--space-4);
   border-radius: var(--radius-island) var(--radius-island) 0 0;
   background: var(--bg-surface);
-}
-.capture .btn:not(.primary):not([disabled]):not([aria-disabled='true']) {
-  color: var(--text-primary); /* the green outline text reads as disabled on dark */
 }
 .capture .pinned .btn {
   width: 100%;
