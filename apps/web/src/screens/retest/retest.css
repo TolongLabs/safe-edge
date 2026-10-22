@@ -258,14 +258,3 @@
   flex: none;
   margin-top: 2px;
 }
-.rt-skel i {
-  display: block;
-  height: 64px;
-  margin-top: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--bg-sunken);
-}
-/* On the phone canvas Sunken Grey barely shows (in Dark not at all), so the blocks take the cards' Island White. */
-.frame.phone .rt-skel i {
-  background: var(--bg-surface);
-}

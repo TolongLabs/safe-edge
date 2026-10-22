@@ -84,6 +84,12 @@
 .pi-ways {
   color: var(--text-secondary);
 }
+/* Helper lines (DESIGN.md Body Dense), this screen's own rather than the repair check's. */
+.pi-help {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
 .pi-routes {
   display: flex;
   flex-direction: column;

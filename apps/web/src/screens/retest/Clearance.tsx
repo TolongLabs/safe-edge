@@ -72,8 +72,8 @@ export function Clearance({ candidateId }: { candidateId: string }) {
   if (!evidence)
     return frame(
       'Loading the flag',
-      <div className="rt-skel" role="status">
-        <p className="rt-help">Loading the flag</p>
+      <div className="skeleton-rows" role="status">
+        <p className="rt-help">Loading the flag…</p>
         <i />
         <i />
       </div>

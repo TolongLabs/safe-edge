@@ -91,8 +91,8 @@ export function PassIssued({ passId }: { passId: string }) {
   if (!data)
     return frame(
       'Loading the pass',
-      <div className="rt-skel" role="status">
-        <p className="rt-help">Loading the pass</p>
+      <div className="skeleton-rows" role="status">
+        <p className="pi-help">Loading the pass…</p>
         <i />
         <i />
       </div>
@@ -138,17 +138,17 @@ export function PassIssued({ passId }: { passId: string }) {
           <StateMark state={pass.state} />
           {badge}
         </p>
-        {pass.stateReason && names && <p className="rt-help">{plainReason(pass.stateReason, s, names)}</p>}
+        {pass.stateReason && names && <p className="pi-help">{plainReason(pass.stateReason, s, names)}</p>}
         <p className="pi-ways">
           {ways}
           {/* core sets issuedBy to whoever recorded the accepting re-test (policy.ts movePass: issuedBy = tx.actor.id) */}
           {pass.issuedBy && ` Issued by ${name(pass.issuedBy)}, who signed the check.`}
         </p>
-        {pass.simulated && <p className="rt-help">Simulated record</p>}
+        {pass.simulated && <p className="pi-help">Simulated record</p>}
         <section aria-label="Routes covered">
           <h3>Routes this pass covers</h3>
           {covered.length === 0 ? (
-            <p className="rt-help">No route is named by this pass.</p>
+            <p className="pi-help">No route is named by this pass.</p>
           ) : (
             <ul className="pi-routes">
               {covered.map((r) => (
@@ -175,7 +175,7 @@ export function PassIssued({ passId }: { passId: string }) {
         <h3>How it got here</h3>
         {timeline ? (
           timeline.length === 0 ? (
-            <p className="rt-help">The audit trail has no steps for this pass in this session.</p>
+            <p className="pi-help">The audit trail has no steps for this pass in this session.</p>
           ) : (
             <ol className="pi-timeline">
               {timeline.map((e, i) => (
@@ -191,7 +191,7 @@ export function PassIssued({ passId }: { passId: string }) {
             </ol>
           )
         ) : (
-          <p className="rt-help">
+          <p className="pi-help">
             Only the{' '}
             {(operations.listAudit.roles as readonly string[])
               .map((r) => ROLE_WORDS[r as keyof typeof ROLE_WORDS])

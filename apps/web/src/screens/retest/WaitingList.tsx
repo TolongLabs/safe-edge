@@ -43,7 +43,7 @@ export function WaitingList() {
           </div>
         )}
         {found === null && !error ? (
-          <div className="rt-skel" role="status">
+          <div className="skeleton-rows" role="status">
             <p className="rt-help">Looking for repairs and false alarms…</p>
             <i />
             <i />

@@ -322,8 +322,9 @@ a.menu-item {
   border-radius: 0;
   background: var(--bg-canvas);
 }
-/* Accent Mist would vanish into the canvas, so an empty state's icon tile takes Island White here. */
-.frame.phone > .detail .icon-tile {
+/* Accent Mist and Sunken Grey would vanish into the canvas (in Dark entirely), so an empty state's icon tile and the
+   loading blocks take the cards' Island White here. */
+.frame.phone > .detail :is(.icon-tile, .skeleton i, .skeleton-rows i) {
   background: var(--bg-surface);
 }
 .topbar.phone-bar {
