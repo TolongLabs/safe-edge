@@ -28,7 +28,7 @@ Contents:
     1.  [Open data for the prototype](#open-data-for-the-prototype)
 1.  [Best practices by deliverable](#best-practices-by-deliverable)
     1.  [How judges read a submission](#how-judges-read-a-submission)
-    1.  [Ten-slide deck](#ten-slide-deck)
+    1.  [Eleven-slide submission deck](#eleven-slide-submission-deck)
     1.  [Five-minute video](#five-minute-video)
     1.  [Evidence from users](#evidence-from-users)
     1.  [Impact measurement](#impact-measurement)
@@ -353,32 +353,30 @@ The rules ask for real data ([brief]). These sources are public:
 [dp-5judges]: https://info.devpost.com/blog/hackathon-judging-tips
 [MLH rules]: https://github.com/MLH/mlh-policies/blob/main/standard-hackathon-rules.md
 
-### Ten-slide deck
+### Eleven-slide submission deck
 
 - **One idea per slide, legible and obvious.** Show the slide to a stranger: "If they don't immediately say your idea, you lose" (Kevin Hale, [YC][yc-hale]). Prefer "a bulleted list of steps" to screenshots.
 - **No font smaller than 30 points** ([Guy Kawasaki][kawasaki]).
 - **Plain words:** "eliminate jargon, acronyms, marketing speak, and any ambiguous terms such as 'platform'." Test the two-sentence pitch on a smart friend; if they ask clarifying questions, revise it (Michael Seibel, [YC][yc-seibel]).
 - **Specific numbers and user stories:** "Specific numbers are good" and "Tell stories about users" ([Paul Graham][pg-investors]).
 
-**Our read:** the organisers' [presentation template][sdp-template] fixes the slide order, and they asked teams to use every slide and keep its flow. Its ten numbered slides match the ten-main-slide limit, so we assume the title, team and thank-you slides don't count. Fill it like this, adapted from [Sequoia's template][sequoia] and the sources above. Build it in the [HTML copy of the template](/docs/demo/README.md).
+**User-confirmed organiser flow, 22 October 2026:** submit **11 slides total**: Team Information, then ten numbered sections. This replaces our earlier assumption that five unnumbered template pages could sit outside the ten-main-slide limit. The original [presentation template][sdp-template] remains a reference; the clarification was supplied by the user, not independently verified as a public waiver. Fill the confirmed sections as below, adapted from [Sequoia's template][sequoia] and the sources above. The [deck instructions](/docs/demo/README.md) explain the main deck and separate supporting deck.
 
-| Template slide              | Content                                                                                     | Covers                        |
-| --------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------- |
-| Title                       | One sentence: "We help [group] do [thing] better", and the track                            | Solution, strategic fit       |
-| Team Information            | Team name, leader, university, and each member's email and contact number                   | Team                          |
-| 1. The Problem              | Problem, with field evidence: a count, a quote, a baseline                                  | Problem, evidence             |
-| 2. Target User              | The named user                                                                              | Target user                   |
-| 3. Your Solution            | Solution and the outcome for that user                                                      | Solution                      |
-| 4. Innovation               | Why it's new: today's alternatives and our insight                                          | Innovation                    |
-| 5. How it Works             | How it works, in three steps                                                                | How it works                  |
-| 6. Impact                   | The outcome metric, baseline and target; fit with an SDP pillar; value to SDP and residents | Impact, strategic fit         |
-| 7. Feasibility              | Resources, stakeholders, cost and approvals                                                 | Feasibility, commercial value |
-| 7. Implementation           | Pilot: site, duration, decision gate, then scaling                                          | Implementation                |
-| 7. Visual Concept           | Screenshots, mockups and diagrams of the prototype                                          | How it works                  |
-| 8. Why Your Team Should Win | At most 100 words, ending with the ask: "approve an N-week pilot at X"                      | Team, implementation          |
-| Thank You                   | Nothing to fill                                                                             |                               |
+| Template slide               | Content                                                                                                                                                  | Covers                        |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| Team Information             | Project title, one-sentence claim, track, team members and universities; leader Hee Zi Jie (AlaskanTuna); omit email and phone at the user's instruction | Team, solution, strategic fit |
+| 1. The Problem               | Problem, with field evidence: a count, a quote, a baseline                                                                                               | Problem, evidence             |
+| 2. Target User               | The named user                                                                                                                                           | Target user                   |
+| 3. Your Solution             | Solution and the outcome for that user                                                                                                                   | Solution                      |
+| 4. Innovation                | Why it's new: today's alternatives and our insight                                                                                                       | Innovation                    |
+| 5. How It Works              | How it works, in three steps                                                                                                                             | How it works                  |
+| 6. Impact                    | The outcome metric, baseline and target; fit with an SDP pillar; value to SDP and residents                                                              | Impact, strategic fit         |
+| 7. Feasibility               | Resources, stakeholders, cost and approvals                                                                                                              | Feasibility, commercial value |
+| 8. Implementation            | Pilot: site, duration, decision gate, then scaling                                                                                                       | Implementation                |
+| 9. Visual Concept            | Screenshots, mockups and diagrams of the prototype                                                                                                       | How it works                  |
+| 10. Why Your Team Should Win | At most 100 words, the pilot ask, a short thank-you and QR links to the demo and code                                                                    | Team, implementation          |
 
-Put the interview log, data sources, cost breakdown, risks and backup answers in the appendix.
+Keep the interview log, data sources, cost breakdown, risks and backup answers in the separate six-page [supporting deck](/docs/demo/deck/supporting-deck.html). Export the main deck and written supporting material as separate PDFs. The [organiser reminder supplied by the user on 22 October](/docs/sources/organiser-submission-reminder.md) requires PDF files for slides and written material, YouTube for the presentation video, and online links for digital materials.
 
 [yc-hale]: https://www.ycombinator.com/library/4T-how-to-design-a-better-pitch-deck
 [kawasaki]: https://guykawasaki.com/the_102030_rule/
