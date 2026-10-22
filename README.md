@@ -5,11 +5,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/TolongLabs/safe-edge">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="/docs/readme/banner-dark.png">
-      <source media="(prefers-color-scheme: light)" srcset="/docs/readme/banner-light.png">
-      <img src="/docs/readme/banner-light.png" alt="Safe Edge banner">
-    </picture>
+    <img src="/docs/readme/banner.png" alt="Safe Edge banner">
   </a>
 
   <h3>Safe Edge</h3>
