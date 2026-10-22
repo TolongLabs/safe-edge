@@ -18,7 +18,7 @@ Contents:
 - Add a row here before a library, model, dataset or asset lands in the repo. Check its licence on its live page.
 - Use no AGPL or GPL model, and no code under a non-commercial licence.
 - The app copies each **Credit** cell word for word. To change a credit, change it here first.
-- MIT, ISC, BSD and Apache-2.0 require the licence text to travel with every distributed copy of the code, OFL-1.1 requires it with the font files, and GSAP's licence forbids removing GSAP's notices. Keep the licence notices in the public build; today it drops them (#245).
+- MIT, ISC, BSD and Apache-2.0 require the licence text to travel with every distributed copy of the code, OFL-1.1 requires it with the font files, and GSAP's licence forbids removing GSAP's notices. Keep the licence notices in the public build: both Vite builds keep legal comments in the code, and each app collects the licence file of every bundled dependency that ships one in its own `licences.md` (`/licences.md` and `/demo/licences.md`). `e2e/demo-site.e2e.ts` checks both. `gsap` and `standardwebhooks` ship no licence file: GSAP's notice stays in its code, and the `standardwebhooks` text is still missing (#247).
 
 ## Libraries
 
@@ -31,7 +31,7 @@ Versions are the ones `bun.lock` installs. A "planned" row is in the TRD but not
 | [`@turf/*`][turf] (13 modules)                                     | 7.4.0          | MIT                             | Planner and providers: edge geometry                                                     |
 | [`fflate`][fflate]                                                 | 0.8.3          | MIT                             | Planner: KMZ mission export                                                              |
 | [`hono`][hono]                                                     | 4.13.13        | MIT                             | API: REST server                                                                         |
-| [`@anthropic-ai/sdk`][anthropic-sdk]                               | 0.135.0        | MIT                             | API: Claude calls                                                                        |
+| [`@anthropic-ai/sdk`][anthropic-sdk]                               | 0.135.0        | MIT                             | API and web: Claude calls                                                                |
 | [`@modelcontextprotocol/server`][mcp]                              | 2.3.1          | Apache-2.0                      | MCP server                                                                               |
 | [`react`, `react-dom`][react]                                      | 19.3.1         | MIT                             | Web: 2D screens                                                                          |
 | [`@phosphor-icons/react`][phosphor]                                | 2.1.10         | MIT                             | Web: icons                                                                               |
@@ -48,7 +48,7 @@ Versions are the ones `bun.lock` installs. A "planned" row is in the TRD but not
 | [`@asyncapi/parser`][asyncapi], [`@redocly/openapi-core`][redocly] | 3.6.6, 1.34.21 | Apache-2.0, MIT                 | Tests only: validate the contract files                                                  |
 | [`@modelcontextprotocol/client`][mcp]                              | 2.3.1          | Apache-2.0                      | Tests only: a real MCP client                                                            |
 | [`@xmldom/xmldom`][xmldom]                                         | 0.9.12         | MIT                             | Tests only: reads the exported mission files                                             |
-| [`standardwebhooks`][standardwebhooks]                             | 1.1.1          | MIT                             | Tests only: checks the API's webhook signatures                                          |
+| [`standardwebhooks`][standardwebhooks]                             | 1.1.1          | MIT                             | Tests: checks the API's webhook signatures; `@anthropic-ai/sdk` also bundles it          |
 | [`@playwright/test`][playwright]                                   | 1.64.1         | Apache-2.0                      | Tests only: end to end (#85)                                                             |
 | [`mavsdk`][mavsdk] (Python, through uv)                            | 4.0.6          | BSD-3-Clause                    | Checks only: imports the exported `.plan` (`bun run check:qgc-plan`, which CI also runs) |
 | `@types/*`                                                         | See `bun.lock` | MIT                             | Type definitions only                                                                    |
@@ -56,7 +56,7 @@ Versions are the ones `bun.lock` installs. A "planned" row is in the TRD but not
 
 A scan of the 371 packages installed on macOS arm64 on 22 October 2026 found no GPL or AGPL licence. The only copyleft licence is MPL-2.0 on `lightningcss`, the CSS tool Vite runs at build time; none of its code ships in the build. The font is under OFL-1.1, and `gsap` under its own licence (below). The rest are MIT, Apache-2.0, ISC, BSD-2-Clause, BSD-3-Clause, 0BSD, Unlicense, CC0-1.0 and Python-2.0, plus `type-fest` under MIT or CC0-1.0. Three packages that `osmtogeojson` pulls in declare no licence in their `package.json`: `domutils` and `domhandler` ship BSD-2-Clause text, and `JSONStream` ships MIT and Apache-2.0.
 
-`gsap` is not open source. Webflow's GSAP Standard License, last modified 30 May 2025, lets anyone use it at no charge, commercial use included. It forbids using GSAP in no-code tools that build visual animations and compete with Webflow, and removing GSAP's notices. The licence page was offline on 22 October 2026, so its terms were read from the [Wayback Machine's copy of 17 October 2026][gsap-archive]. The public build drops every licence notice today, GSAP's included (#245).
+`gsap` is not open source. Webflow's GSAP Standard License, last modified 30 May 2025, lets anyone use it at no charge, commercial use included. It forbids using GSAP in no-code tools that build visual animations and compete with Webflow, and removing GSAP's notices. The licence page was offline on 22 October 2026, so its terms were read from the [Wayback Machine's copy of 17 October 2026][gsap-archive]. The build keeps GSAP's notice in the landing page's code.
 
 [zod]: https://github.com/colinhacks/zod
 [noble]: https://github.com/paulmillr/noble-hashes
