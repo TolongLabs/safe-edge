@@ -1,4 +1,4 @@
-// Regenerates the README's images in docs/readme/: the light and dark banners, the screenshots and the How It Works
+// Regenerates the README's images in docs/readme/: the banner, the screenshots and the How It Works
 // steps. It builds the demo site, serves it the way Vercel routes it, and drives it in Google Chrome as each role, so
 // the images show this commit. The architecture diagram comes from Archify instead (docs/readme/architecture.json).
 //
@@ -152,76 +152,31 @@ async function loop(browser: Browser) {
   await page.context().close()
 }
 
-const THEMES = {
-  light: {
-    bg: '#e6eeea',
-    ink: '#1c2925',
-    text: '#3c4a45',
-    rule: '#17302a',
-    frame: '#fbfcfb',
-    edge: '#cfd6d2',
-    logo: 'favicon.svg'
-  },
-  dark: {
-    bg: '#0d1d19',
-    ink: '#fbfcfb',
-    text: '#c9d9d1',
-    rule: '#6cc495',
-    frame: '#17302a',
-    edge: '#24443b',
-    logo: 'mark-rail.svg'
-  }
-} as const
-
-/**
- * 1280 × 640 social banners in the site's tokens (apps/site/src/base.css): the product name and the landing page's hero,
- * its words beside its picture. The site has one theme, so both banners frame the same hero.
- */
-async function banners(browser: Browser) {
-  const landing = await open(browser)
-  await landing.goto('/')
-  const title = await landing.locator('.hero-title').innerText()
-  const line = await landing.locator('.hero-line').innerText()
-  await landing.context().close()
-  // The landing screenshot screenshots() took, hero first.
-  const hero = (await Bun.file(join(out, 'screenshots/landing.png')).bytes()).toBase64()
-
-  const fonts = join(root, 'apps/site/node_modules/@fontsource/atkinson-hyperlegible-next/files')
-  const font = async (weight: number) =>
-    (await Bun.file(join(fonts, `atkinson-hyperlegible-next-latin-${weight}-normal.woff2`)).bytes()).toBase64()
-  const [regular, heavy] = await Promise.all([font(400), font(800)])
-  for (const [name, t] of Object.entries(THEMES)) {
-    const logo = await Bun.file(join(root, 'apps/site/public', t.logo)).text()
-    const page = await open(browser)
-    await page.setViewportSize({ width: 1280, height: 640 })
-    await page.setContent(`<!doctype html>
-<style>
-  @font-face { font-family: 'Atkinson Hyperlegible Next'; font-weight: 400; src: url(data:font/woff2;base64,${regular}) format('woff2') }
-  @font-face { font-family: 'Atkinson Hyperlegible Next'; font-weight: 800; src: url(data:font/woff2;base64,${heavy}) format('woff2') }
-  body { margin: 0; width: 1280px; height: 640px; display: flex; align-items: center; gap: 48px; padding: 0 0 0 72px;
-    box-sizing: border-box; background: ${t.bg}; font-family: 'Atkinson Hyperlegible Next' }
-  .copy { flex: 0 0 450px }
-  .name { display: flex; align-items: center; gap: 18px; color: ${t.ink}; font-size: 56px; font-weight: 800;
-    letter-spacing: -0.02em }
-  .name svg { width: 64px; height: 64px }
-  hr { width: 64px; height: 6px; margin: 28px 0; border: 0; border-radius: 3px; background: ${t.rule} }
-  h1 { margin: 0 0 16px; color: ${t.ink}; font-size: 36px; font-weight: 800; line-height: 1.15; letter-spacing: -0.01em }
-  p { margin: 0; color: ${t.text}; font-size: 22px; line-height: 1.45 }
-  .frame { padding: 14px; border: 1px solid ${t.edge}; border-radius: 20px; background: ${t.frame};
-    box-shadow: 0 24px 60px rgb(13 29 25 / 0.18) }
-  .frame img { display: block; width: 600px; border-radius: 8px }
-</style>
-<div class="copy">
-  <div class="name">${logo}Safe Edge</div>
-  <hr />
-  <h1>${title}</h1>
-  <p>${line}</p>
-</div>
-<div class="frame"><img src="data:image/png;base64,${hero}" alt="" /></div>`)
-    await page.evaluate(() => document.fonts.ready)
-    await shot(page, `banner-${name}`)
-    await page.context().close()
-  }
+/** The 1280 × 640 banner: the landing page's hero picture, with the site's wordmark (logo and name) at its top left. */
+async function banner(browser: Browser) {
+  const page = await open(browser)
+  await page.setViewportSize({ width: 1280, height: 640 })
+  await page.goto('/')
+  await page.waitForLoadState('networkidle')
+  // The picture alone: the site bar and the hero's words go.
+  await page.locator('.topbar').evaluate((el) => el.remove())
+  await page.locator('.hero-words').evaluate((el) => el.remove())
+  await page.addStyleTag({
+    content: `.banner-mark { position: absolute; z-index: 2; top: 40px; left: 48px; display: flex; align-items: center;
+        gap: 14px; color: var(--ink); font-size: 40px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase }
+      .banner-mark svg { width: 52px; height: 52px }`
+  })
+  const logo = await Bun.file(join(root, 'apps/site/public/favicon.svg')).text()
+  await page
+    .locator('.hero')
+    .evaluate(
+      (hero, logo) => hero.insertAdjacentHTML('afterbegin', `<div class="banner-mark">${logo}Safe Edge</div>`),
+      logo
+    )
+  // The drone arrives and raises its flag before the hero settles.
+  await settle(page, 2500)
+  await shot(page, 'banner')
+  await page.context().close()
 }
 
 const site = await mkdtemp(join(tmpdir(), 'safe-edge-readme-'))
@@ -237,7 +192,7 @@ try {
   await screenshots(browser)
   await scene(browser)
   await loop(browser)
-  await banners(browser)
+  await banner(browser)
 } finally {
   await browser.close()
   server.kill()
