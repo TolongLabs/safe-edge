@@ -44,5 +44,8 @@
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
     "typescript": "6.0.3"
+  },
+  "patchedDependencies": {
+    "standardwebhooks@1.1.1": "patches/standardwebhooks@1.1.1.patch"
   }
 }

@@ -18,7 +18,7 @@ Contents:
 - Add a row here before a library, model, dataset or asset lands in the repo. Check its licence on its live page.
 - Use no AGPL or GPL model, and no code under a non-commercial licence.
 - The app copies each **Credit** cell word for word. To change a credit, change it here first.
-- MIT, ISC, BSD and Apache-2.0 require the licence text to travel with every distributed copy of the code, OFL-1.1 requires it with the font files, and GSAP's licence forbids removing GSAP's notices. Keep the licence notices in the public build: both Vite builds keep legal comments in the code, and each app collects the licence file of every bundled dependency that ships one in its own `licences.md` (`/licences.md` and `/demo/licences.md`). `e2e/demo-site.e2e.ts` checks both. `gsap` and `standardwebhooks` ship no licence file: GSAP's notice stays in its code, and the `standardwebhooks` text is still missing (#247).
+- MIT, ISC, BSD and Apache-2.0 require the licence text to travel with every distributed copy of the code, OFL-1.1 requires it with the font files, and GSAP's licence forbids removing GSAP's notices. Keep the licence notices in the public build: both Vite builds keep legal comments in the code, and each app collects the licence file of every bundled dependency that ships one in its own `licences.md` (`/licences.md` and `/demo/licences.md`). `e2e/demo-site.e2e.ts` checks both. `gsap` ships no licence file, so GSAP's notice stays in its code. `standardwebhooks` 1.1.1 ships none either, so `patches/standardwebhooks@1.1.1.patch` adds its upstream MIT licence ([`libraries/LICENSE`][standardwebhooks-licence]) to the installed package. `bun run build:demo-site` fails if any other bundled package's licence text is missing, so a version bump that drops the patch stops the deploy; re-check the upstream text and run `bun patch` again for the new version.
 
 ## Libraries
 
@@ -83,6 +83,7 @@ A scan of the 371 packages installed on macOS arm64 on 22 October 2026 found no 
 [lenis]: https://github.com/darkroomengineering/lenis
 [osmtogeojson]: https://github.com/tyrasd/osmtogeojson
 [standardwebhooks]: https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries/javascript
+[standardwebhooks-licence]: https://github.com/standard-webhooks/standard-webhooks/blob/c7cd8a9eadf9879d6dca345e168dc8d15d19e487/libraries/LICENSE
 [mavsdk]: https://github.com/mavlink/MAVSDK
 [playwright]: https://github.com/microsoft/playwright
 
