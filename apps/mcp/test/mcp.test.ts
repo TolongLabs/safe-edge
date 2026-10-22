@@ -41,6 +41,8 @@ test('list_expiring_passes for 30 days answers with pass and segment IDs', async
 
   expect(result.isError).toBeFalsy()
   expect(result.structuredContent).toEqual({
+    // The MCP server's own wall clock, not yet the API's (#207).
+    asOf: expect.any(String),
     days: 30,
     passes: [
       {

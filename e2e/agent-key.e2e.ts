@@ -134,7 +134,9 @@ test('Ask the agent streams an answer and names the records it read', async ({ p
   await page.getByLabel('Your question').fill('Which passes expire in the next 30 days?')
   await page.getByLabel('Your question').press('Enter')
   const ask = page.getByRole('region', { name: 'Ask the agent' })
-  await expect(ask.getByText(/^One pass expires in the next 30 days:\s+- pass_866518980_5/)).toBeVisible()
+  await expect(
+    ask.getByText(/^One pass expires in the next 30 days, counting from 2026-10-20:\s+- pass_866518980_5/)
+  ).toBeVisible()
   await expect(ask.getByText('AI suggestion, unvalidated')).toBeVisible()
   await expect(ask.getByText(/sources pass_866518980_5/)).toBeVisible()
   await expect(page.getByRole('button', { name: 'Ask', exact: true })).toBeEnabled()

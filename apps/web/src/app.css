@@ -544,12 +544,19 @@ select {
   overflow-y: auto;
   padding: var(--island-padding);
 }
-/* Loading, error and empty states */
-.skeleton i {
+/* Loading, error and empty states. Loading (DESIGN.md): Sunken Grey blocks in the real layout, plus one line naming
+   what is loading. .skeleton marks blocks inside a screen's own layout; .skeleton-rows stacks them as a list. */
+.skeleton i,
+.skeleton-rows i {
   display: block;
   height: 64px;
   border-radius: var(--radius-md);
   background: var(--bg-sunken);
+}
+.skeleton-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 .skeleton .list {
   gap: var(--space-3);

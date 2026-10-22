@@ -120,7 +120,8 @@
   border-color: var(--state-valid-fg);
   background: var(--state-valid-bg);
 }
-.agent-skeleton i {
+/* app.css loads after the screens' CSS, so this needs the extra class to beat the shared .skeleton i. */
+.skeleton.agent-skeleton i {
   height: 44px;
 }
 /* The empty state's own 520 px cap is narrower than this section's other lines. */

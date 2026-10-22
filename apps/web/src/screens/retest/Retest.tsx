@@ -49,7 +49,7 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
   if (!repair)
     return frame(
       'Loading the repair',
-      <div className="rt-skel" role="status">
+      <div className="skeleton-rows" role="status">
         <p className="rt-help">Loading the repair…</p>
         <i />
         <i />

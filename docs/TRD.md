@@ -334,8 +334,8 @@ Design from the [agent research][agent]:
 | ------------------------- | ----------------- | ----------------------------------------------------------- |
 | `get_edge_context`        | `edge.read`       | Owner, asset type, baseline ID, inventory and pass state    |
 | `get_inspection_evidence` | `inspection.read` | Current and baseline image references and candidate details |
-| `list_open_findings`      | `edge.read`       | Open findings with owners and ages                          |
-| `list_expiring_passes`    | `edge.read`       | Passes expiring within N days                               |
+| `list_open_findings`      | `edge.read`       | Open findings with owners and ages, and the as-of time      |
+| `list_expiring_passes`    | `edge.read`       | Passes expiring within N days, and the as-of time           |
 | `propose_finding`         | `finding.propose` | Adds a candidate to the review queue                        |
 | `draft_work_order`        | `workorder.draft` | Creates a draft linked to a confirmed finding               |
 | `draft_escalation`        | `notice.draft`    | Saves an internal notice draft; never sends                 |
@@ -403,7 +403,7 @@ P2 only: 3DTilesRendererJS 0.5.3 with `GoogleCloudAuthPlugin`, a key restricted 
 - The API keeps its state in `$SAFE_EDGE_DATA_DIR/api.sqlite`, unencrypted: the command journal holds every webhook's signing secret and uploaded evidence, and the idempotency table keeps each answer replayed by key, a webhook registration's secret included. The API sets the directory to 0700 on every start, one that already existed included, so only its OS user can read them.
 - Idempotency keys expire: an answer is kept for 24 hours of wall-clock time after it was given (`SAFE_EDGE_IDEMPOTENCY_RETENTION_SECONDS`, default `86400`), then pruned, and a request with that key runs as a new one. A write's answer commits in the same SQLite transaction as the journal entries it made, so a crash cannot keep the write without the answer that stops a retry repeating it.
 - Webhooks reach only the origins in `SAFE_EDGE_WEBHOOK_ORIGINS` (loopback too in development and test). The API checks the list at registration and again before every delivery attempt, retries included: a webhook whose origin has left the list gets nothing more, and each refused delivery is recorded as its final failure. A failed delivery's retry waits in the store with its due time, so it outlives a restart; a first attempt in flight at a crash is lost.
-- Browsers may call the API only from the exact origins in `SAFE_EDGE_CORS_ORIGINS` (comma-separated, such as `http://localhost:5173`): those get CORS headers for the methods and headers the SDK sends (Authorization, Content-Type, Idempotency-Key), without credentials, since tokens travel in Authorization. Unset, the API sends no CORS headers. `bun run dev` allows the web app's dev server, `http://localhost:$WEB_PORT` (5173 by default), so the Developers page's Try it can call it with a dev token.
+- Browsers may call the API only from the exact origins in `SAFE_EDGE_CORS_ORIGINS` (comma-separated, such as `http://localhost:5173`): those get CORS headers for the methods and headers the SDK sends (Authorization, Content-Type, Idempotency-Key), without credentials, since tokens travel in Authorization. Unset, the API sends no CORS headers. `bun run dev` allows the web app's dev server, `http://localhost:$WEB_PORT` and `http://127.0.0.1:$WEB_PORT` (5173 by default), so the Developers page's Try it can call it with a dev token.
 - A journal moved to another operating system may refuse to start: replay re-runs the planner, whose trigonometry comes from the platform's maths library and differs in the last bit between macOS and Linux, and a replayed result that differs from the recorded one stops the start.
 - Dependencies: no AGPL or GPL models; record every model and asset licence in `docs/licences.md`.
 
