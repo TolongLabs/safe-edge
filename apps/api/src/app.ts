@@ -285,7 +285,7 @@ export function createApp({
       token,
       fetch: async (url, init) => app.fetch(new Request(url, init))
     })
-    return createAgent({ claude, context: { client, now: clock.now } })
+    return createAgent({ claude, context: { client } })
   }
   const noAgent = () => fail(501, 'not_implemented', 'This API instance runs without the agent')
 

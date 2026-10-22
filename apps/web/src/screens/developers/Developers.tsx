@@ -39,6 +39,7 @@ const CLAUDE = `SAFE_EDGE_AGENT_TOKEN=$(bun run --silent dev:token usr_agent) cl
 /** Reads that need no input, so Try it can run them with one press. */
 const TRY = [
   'getMe',
+  'getClock',
   'listUsers',
   'listDocks',
   'listDroneProfiles',

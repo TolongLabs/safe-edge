@@ -7,6 +7,7 @@ type ReadOperation =
   | 'getSegment'
   | 'listUsers'
   | 'getMe'
+  | 'getClock'
   | 'listDocks'
   | 'listDroneProfiles'
   | 'listPatrolPlans'
@@ -45,6 +46,8 @@ export const reads: Handlers<ReadOperation> = {
   },
   listUsers: (tx) => ok(tx.all('users')),
   getMe: (tx) => ok(tx.actor),
+  // The time this transaction runs at, the one listPasses' window and every stamp in it use.
+  getClock: (tx) => ok({ now: tx.now }),
   listDocks: (tx) => ok(tx.all('docks')),
   listDroneProfiles: (tx) => ok(tx.all('droneProfiles')),
   listPatrolPlans: (tx) => ok(tx.all('patrolPlans')),

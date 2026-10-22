@@ -11,6 +11,7 @@ const AUDIT_SUBJECT: { readonly [K in OperationId]: SubjectField } = {
   getSegment: 'params.id',
   listUsers: null,
   getMe: null,
+  getClock: null,
   listDocks: null,
   listDroneProfiles: null,
   listPatrolPlans: null,

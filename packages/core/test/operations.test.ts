@@ -198,6 +198,7 @@ describe('the operations table in core', () => {
     h.call('getSegment', reader, { params: { id: S1.segmentId } })
     h.call('listUsers', reader, {})
     h.call('getMe', reader, {})
+    expect(h.call('getClock', reader, {}).data).toEqual({ now: h.now() })
     h.call('listDocks', reader, {})
     h.call('listDroneProfiles', reader, {})
     h.call('listPatrolPlans', reader, {})

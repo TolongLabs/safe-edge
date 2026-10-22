@@ -102,6 +102,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/clock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The time the server stamps on records and counts windows from: the wall clock, or the scenario clock where one runs
+         * @description Roles: any. Agents need scope `edge.read`.
+         */
+        get: operations["getClock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/docks": {
         parameters: {
             query?: never;
@@ -2375,6 +2395,10 @@ export interface components {
             /** Format: date-time */
             now: string;
         };
+        ServerTime: {
+            /** Format: date-time */
+            now: string;
+        };
     };
     responses: {
         /** @description The request failed validation */
@@ -2531,6 +2555,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Actor"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
+    getClock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The time the server stamps on records and counts windows from: the wall clock, or the scenario clock where one runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerTime"];
                 };
             };
             401: components["responses"]["Unauthenticated"];

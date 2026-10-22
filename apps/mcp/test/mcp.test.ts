@@ -41,8 +41,8 @@ test('list_expiring_passes for 30 days answers with pass and segment IDs', async
 
   expect(result.isError).toBeFalsy()
   expect(result.structuredContent).toEqual({
-    // The MCP server's own wall clock, not yet the API's (#207).
-    asOf: expect.any(String),
+    // The API's clock, which counts the window, not the MCP server's own wall clock (#207).
+    asOf: '2026-10-20T00:00:00.000Z',
     days: 30,
     passes: [
       {
@@ -55,6 +55,15 @@ test('list_expiring_passes for 30 days answers with pass and segment IDs', async
         source: 'fixture'
       }
     ]
+  })
+
+  // Read on every call, from the clock that counts the window: moved to 2 November, the as-of time moves and the
+  // window takes in pass_866518980_12 (to 2026-12-01).
+  api.setNow('2026-11-02T00:00:00.000Z')
+  const later = await client.callTool({ name: 'list_expiring_passes', arguments: { days: 30 } })
+  expect(later.structuredContent).toMatchObject({
+    asOf: '2026-11-02T00:00:00.000Z',
+    passes: [{ id: 'pass_866518980_5' }, { id: 'pass_866518980_12' }]
   })
 })
 
@@ -179,12 +188,14 @@ test('the agent reads context, proposes, triages and drafts through every other 
 
   const finding = (await (await raiseConfirmed(api)).json()).finding
   const open = await call('list_open_findings', { segmentId: S1.segmentId })
+  // Aged by the API's clock, which stamped the finding: 0 days, not the time since on the MCP server's own clock.
+  expect(open.asOf).toBe('2026-10-20T00:00:00.000Z')
   expect(open.findings).toContainEqual(
     expect.objectContaining({
       id: finding.id,
       custodianUserId: 'usr_manager',
       status: 'open',
-      ageDays: expect.any(Number)
+      ageDays: 0
     })
   )
 

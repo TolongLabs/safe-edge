@@ -124,6 +124,27 @@ paths:
       x-safe-edge-roles: any
       x-safe-edge-agent-scope: edge.read
       x-safe-edge-events: []
+  /clock:
+    get:
+      operationId: getClock
+      summary: "The time the server stamps on records and counts windows from: the wall clock, or the scenario clock where one runs"
+      description: "Roles: any. Agents need scope `edge.read`."
+      tags:
+        - clock
+      responses:
+        "200":
+          description: "The time the server stamps on records and counts windows from: the wall clock, or the scenario clock where one runs"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerTime"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: edge.read
+      x-safe-edge-events: []
   /docks:
     get:
       operationId: listDocks
@@ -6002,5 +6023,14 @@ components:
           format: date-time
       required:
         - id
+        - now
+      additionalProperties: false
+    ServerTime:
+      type: object
+      properties:
+        now:
+          type: string
+          format: date-time
+      required:
         - now
       additionalProperties: false
