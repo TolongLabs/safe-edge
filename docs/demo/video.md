@@ -1,6 +1,6 @@
 # Demo video
 
-The submission video is the narrated pitch deck with one live-demo segment of the prototype after slide "5. How It Works". [`director-script.md`](/docs/demo/director-script.md) holds the words and what each segment shows. This page holds the timeline, the shots to capture and the steps that make the video. Two Claude Code sessions do the work: a **Director** edits, and a **Recorder** films the real app with Playwright. Remotion assembles everything. The demo is its own short video, voiced by ElevenLabs and built in three labelled parts (problem, solution, outcome); the main video, read by one team member, places it at V8.
+The submission video is the narrated pitch deck with one live-demo segment of the prototype after slide "5. How It Works". [`safe-edge-director-script.md`](/docs/demo/safe-edge-director-script.md) holds the words and what each segment shows. This page holds the timeline, the shots to capture and the steps that make the video. Two Claude Code sessions do the work: a **Director** edits, and a **Recorder** films the real app with Playwright. Remotion assembles everything. The demo is its own short video, voiced by the narrator's own takes and built in three labelled parts (problem, solution, outcome); it covers V7 and V8, and the full video is edited by hand around it.
 
 Issue: [#97](https://github.com/TolongLabs/safe-edge/issues/97).
 
@@ -82,6 +82,17 @@ For a faster visual draft, use `rtk bun run record:demo --draft`. Its scene moti
 
 A failed cue or upload stops the command with an error. Fix the named step and run the check again. A green preflight on the frozen commit is the readiness gate. The capture source is in [`video/record/`](/video/record); the rest of this page explains the shots and the full submission edit.
 
+## Build the demo video
+
+The demo video is a Remotion project in [`video/`](/video), outside the Bun workspaces. It takes the recorded footage and the narrator's takes 6 to 12 (take 6 is V7, takes 7 to 12 are the Problem line and D1 to D5) and needs `OPENAI_API_KEY` in `.env` for the word timings. Run these from `video/`:
+
+1.  Install once: `rtk bun install`.
+1.  Stage the voice: `set -a && . ../.env && set +a && bun scripts/voice.ts <folder with 6.wav … 12.wav> report=<…>.wav ai=<…>.wav engineer=<…>.wav`. The three extra takes are ElevenLabs lines (Darryl Lim, `eleven_multilingual_v2`, seed 20261023, speed 0.85, because at 1.0 he read at about 200 words a minute) for the walk-crew report, the AI guardrail and the engineer's approval, written in the director script. It trims each take to its speech, levels it to −17 LUFS mono (−14 LUFS once it plays on both channels) with a −1.5 dBFS limiter, builds a room-tone loop from the takes' silences, and times every word with Whisper (`whisper-1`, cached in `src/data/whisper/`). It writes `src/data/demo-voice.json`, with each take's words and its quiet stretches, so `src/lib.ts` can hold a beat after a key word without cutting a syllable. The takes are not sped up; they already run at about 185 words a minute.
+1.  Ingest the footage: `bun scripts/ingest.ts <run> [<later run> …]`. Each shot comes from the last run that recorded it successfully, so a partial `--grep @app` re-record overrides the full run. It writes `src/data/footage.json`.
+1.  Preview with `bun run studio`, or render: `bunx remotion render src/index.ts Demo out/safe-edge-demo.mp4 --codec=h264 --crf=16 --audio-bitrate=320k`.
+
+[`src/edit.ts`](/video/src/edit.ts) is the cut as data: each part's voice take, its footage clips, camera framings, rings and callouts. Most times are set on a spoken word with `word()` or on a recorded cue with `sync()`, so a new take or a new recording moves the picture with it. [`src/Demo.tsx`](/video/src/Demo.tsx) draws the window, the phone, the chapter bar, the callouts and the Simulation tag from the [`DESIGN.md`](/docs/DESIGN.md) tokens.
+
 ## Rules for the video
 
 - **At most five minutes.** Target 4:40; the hard cap is 4:50 ([context][video-context]). Issue #15 confirms the limit.
@@ -90,14 +101,14 @@ A failed cue or upload stops the command with an error. Fix the named step and r
 - **The deck carries the pitch.** The slides follow the 11-slide organiser flow confirmed by the user on 22 October 2026 ([deck README](/docs/demo/README.md)). The live demo sits after "5. How It Works".
 - **Simulated means labelled.** Every app and scene shot keeps the app's own **Simulation** label on screen, and the edit adds a "Simulation · sample data" tag. The narration never calls a sample drawing a site photo, a simulated flight real, or a finding confirmed in the field ([`PRODUCT.md`](/docs/PRODUCT.md#product-principles), principle 7). False claims can disqualify the team.
 - **Who, what and why first.** Judges skim, so the team, the track and the problem are named in the first 12 seconds, and the stories and their evidence finish by 0:50 ([context][judges]).
-- **The real stories are told exactly as reported.** V3 opens on two reported drownings. The narration adds nothing to the reports and claims no cause; the [director script's notes](/docs/demo/director-script.md#v3-1-the-problem) set the limits.
+- **The real stories are told exactly as reported.** V3 opens on two reported drownings. The narration adds nothing to the reports and claims no cause; the [director script's notes](/docs/demo/safe-edge-director-script.md#v3-1-the-problem) set the limits.
 - **The demo shows problem, solution and outcome, clearly.** Each part says its name aloud and carries it on the chapter bar. This is where the marks are.
-- **Every number has a source.** The [claims ledger](/docs/demo/director-script.md#claims-ledger) lists each spoken claim and its source.
+- **Every number has a source.** The [claims ledger](/docs/demo/safe-edge-director-script.md#claims-ledger) lists each spoken claim and its source.
 - **The words live in the director script.** Change the narration there, never only in the edit.
 
 ## Video plan
 
-The director script owns the words and the on-screen detail of each segment; this table owns the times. Change both together. "Deck N" is the slide position in [`pitch-deck.html`](/docs/demo/deck/pitch-deck.html); the six evidence pages in [`supporting-deck.html`](/docs/demo/deck/supporting-deck.html) are separate and are not in the video.
+The director script owns the words and the on-screen detail of each segment; this table owns the times. Change both together. "Deck N" is the slide position in [`safe-edge-pitch-deck.html`](/docs/demo/deck/safe-edge-pitch-deck.html); the six evidence pages in [`supporting-deck.html`](/docs/demo/deck/supporting-deck.html) are separate and are not in the video.
 
 | Seg | Time      | Part                         | Source                                      |
 | --- | --------- | ---------------------------- | ------------------------------------------- |
@@ -114,19 +125,19 @@ The director script owns the words and the on-screen detail of each segment; thi
 | V13 | 4:09–4:37 | 10. Why Your Team Should Win | Deck 11                                     |
 | V14 | 4:37–4:47 | Closing hold                 | Deck 11 continues, with demo and repo links |
 
-Inside V8, the demo video (83 seconds): Problem, H1, 1:42–1:54; Solution, D1 find 1:54–2:04, D2 confirm 2:04–2:14, D3 fix 2:14–2:38, D4 prove 2:38–2:50; Outcome, D5, 2:50–3:05. One narrator reads everything outside the demo, and every narrator take plays at 1.2× with its pitch kept; an ElevenLabs voice reads the demo at its own pace. Team Information appears in V1, so there is no separate V2 segment. Not in the default cut: V12 (Deck 10, "9. Visual Concept") and the optional demo shots D3b and D6; adding one means trimming another ([optional segments](/docs/demo/director-script.md#optional-segments)).
+The demo video (77 seconds, [built as below](#build-the-demo-video)) covers V7 and V8 from 1:35: intro (V7) 0:00–0:07; Problem, H1, 0:07–0:17; Solution, D1 find 0:17–0:26, D2 confirm 0:26–0:35, D3 fix 0:35–0:54, D4 prove 0:54–1:04; Outcome, D5, 1:04–1:17. One narrator reads everything; the takes outside the demo play at 1.2× with their pitch kept, and the demo takes play at their own pace. Team Information appears in V1, so there is no separate V2 segment. Not in the default cut: V12 (Deck 10, "9. Visual Concept") and the optional demo shots D3b and D6; adding one means trimming another ([optional segments](/docs/demo/safe-edge-director-script.md#optional-segments)).
 
 ## Roles
 
-| Role        | Who                                                          | Owns                                                                                                        | Hands over                                                    |
-| ----------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Director    | Claude Code session on Opus 5.5                              | `shots.json`, the slide stills, the ingest, the Remotion edit, the mix, the captions and the quality checks | The shot list to the Recorder; stills and cuts to AlaskanTuna |
-| Recorder    | Claude Code session on Opus 5.5                              | The recording harness, the takes, the manifest and the motion components (callouts, push-ins, chips)        | Footage, the manifest and the components to the Director      |
-| Narrator    | One team member picked at G1                                 | The voiceover takes for V1 to V7 and V9 to V14, read from the director script                               | `vo/*.wav` to the Director                                    |
-| Demo voice  | ElevenLabs, generated by the Director with AlaskanTuna's key | The six demo lines, with character timings                                                                  | `video/public/voice/demo/` and `demo-voice.json`              |
-| AlaskanTuna | Person                                                       | The review gates, the upload and the link check                                                             | Approvals                                                     |
-| kymil4      | Person                                                       | The frontend; says when it is frozen for final takes                                                        | The freeze commit                                             |
-| chaosiris   | Person                                                       | The designed deck                                                                                           | The final `pitch-deck.html`                                   |
+| Role        | Who                                                  | Owns                                                                                                        | Hands over                                                    |
+| ----------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Director    | Claude Code session on Opus 5.5                      | `shots.json`, the slide stills, the ingest, the Remotion edit, the mix, the captions and the quality checks | The shot list to the Recorder; stills and cuts to AlaskanTuna |
+| Recorder    | Claude Code session on Opus 5.5                      | The recording harness, the takes, the manifest and the motion components (callouts, push-ins, chips)        | Footage, the manifest and the components to the Director      |
+| Narrator    | One team member picked at G1                         | The voiceover takes for V1 to V7 and V9 to V14, read from the director script                               | `vo/*.wav` to the Director                                    |
+| Demo voice  | The narrator's takes 6 to 12, staged by the Director | The seven demo lines, trimmed, levelled and timed with Whisper                                              | `video/public/voice/demo/` and `demo-voice.json`              |
+| AlaskanTuna | Person                                               | The review gates, the upload and the link check                                                             | Approvals                                                     |
+| kymil4      | Person                                               | The frontend; says when it is frozen for final takes                                                        | The freeze commit                                             |
+| chaosiris   | Person                                               | The designed deck                                                                                           | The final `safe-edge-pitch-deck.html`                         |
 
 Name the sessions `safe-edge-director` and `safe-edge-recorder`. They message each other with SendMessage; files are the contract between them. The Recorder never drives the edit, and the Director never drives the app. Only the Director runs Git.
 
@@ -156,7 +167,7 @@ flowchart LR
 
     Done when the root e2e suite's Chromium starts and `ffmpeg` runs.
 
-1.  **Lock the script (AlaskanTuna, gate G1).** Approve [`director-script.md`](/docs/demo/director-script.md) and the [shot list](#scenes-to-capture), and pick the narrator and the ElevenLabs voice ([open decisions](/docs/demo/director-script.md#decisions-for-the-team)). The Director then writes `video/src/data/shots.json`: one entry per shot with its cue ids, copied from this page, and sends it to the Recorder.
+1.  **Lock the script (AlaskanTuna, gate G1).** Approve [`safe-edge-director-script.md`](/docs/demo/safe-edge-director-script.md) and the [shot list](#scenes-to-capture), and pick the narrator and the ElevenLabs voice ([open decisions](/docs/demo/safe-edge-director-script.md#decisions-for-the-team)). The Director then writes `video/src/data/shots.json`: one entry per shot with its cue ids, copied from this page, and sends it to the Recorder.
 1.  **Check the harness (Recorder).** Run `rtk bun run record:demo --check` on the frozen commit. The [Harness](#harness) is implemented.
 1.  **Record draft takes (Recorder).** Run the whole harness on the current `main`:
 
@@ -167,7 +178,7 @@ flowchart LR
     It takes about 35 minutes; the frame-stepped scene takes are about 25 of them. The output is a unique folder under `video/public/footage/runs/` with raw takes, `manifest.json`, edit windows and the silent demo preview, tied to the commit hash. Send the Director the manifest path and every shot that failed, with the reason.
 
 1.  **Export the slides (Director; full submission tooling).** Build a separate slide export step for `video/public/slides/S01.png` to `S11.png`. Run it again whenever the deck changes.
-1.  **Record the voiceover (narrator; Director for the speed-up and the demo voice).** Follow [Recording the voiceover](/docs/demo/director-script.md#recording-the-voiceover). The narrator records one file per segment outside the demo, plus room tone, into `vo/`. The Director speeds each chosen take up to 1.2× with ffmpeg's pitch-keeping `atempo` filter, writing it to `video/public/voice/` (`ffmpeg -i vo/V09.wav -af atempo=1.2 -ar 48000 video/public/voice/V09.wav`), then runs Whisper with word timestamps on the sped-up file, so the timings match what plays, and writes `video/src/data/voice.json` ([Data files](#data-files)). The Director generates the six demo lines with ElevenLabs' text-to-speech with timestamps and writes their timings to `video/src/data/demo-voice.json`. A take that still runs past its segment is read again from its pickup line, never sped up further.
+1.  **Record the voiceover (narrator; Director for the speed-up and the demo voice).** Follow [Recording the voiceover](/docs/demo/safe-edge-director-script.md#recording-the-voiceover). The narrator records one file per segment outside the demo, plus room tone, into `vo/`. The Director speeds each chosen take up to 1.2× with ffmpeg's pitch-keeping `atempo` filter, writing it to `video/public/voice/` (`ffmpeg -i vo/V09.wav -af atempo=1.2 -ar 48000 video/public/voice/V09.wav`), then runs Whisper with word timestamps on the sped-up file, so the timings match what plays, and writes `video/src/data/voice.json` ([Data files](#data-files)). The Director generates the six demo lines with ElevenLabs' text-to-speech with timestamps and writes their timings to `video/src/data/demo-voice.json`. A take that still runs past its segment is read again from its pickup line, never sped up further.
 1.  **Ingest (Director).** `bun scripts/ingest.ts` reads the manifest, picks the newest take marked `"ok"` for each shot, and converts each screencast take to constant 30 fps H.264. Frame-stepped takes are already 30 fps H.264 and are copied as they are:
 
     ```shell
@@ -317,7 +328,7 @@ Optional; not in the default demo. Record it anyway, for a longer cut and for Q&
 
 ### Slides
 
-- **Setup:** a plain Playwright page, without the offline fixture, because the deck loads its stand-in fonts from Google Fonts. Use a 1920 × 1080 viewport and open `docs/demo/deck/pitch-deck.html` as a `file://` URL. Wait for `document.fonts.ready`.
+- **Setup:** a plain Playwright page, without the offline fixture, because the deck loads its stand-in fonts from Google Fonts. Use a 1920 × 1080 viewport and open `docs/demo/deck/safe-edge-pitch-deck.html` as a `file://` URL. Wait for `document.fonts.ready`.
 - **Capture:** for each slide `i` from 0 to 10, call `document.querySelector('deck-stage').goTo(i)`. Wait until the deck's control overlay hides (its `.overlay` in the shadow root loses `data-visible`), then screenshot `video/public/slides/S01.png` to `S11.png`.
 - **Push-in targets:** on the same pass, read the box of every element with a `data-focus` attribute on the slide, and write them to `video/src/data/slides.json`: `{ "S07": { "main-measure": { "x": 112, "y": 330, "width": 820, "height": 260 } } }`, in CSS pixels of the 1920 × 1080 slide. The director script names push-ins by these ids ("the main-measure card"), so a slide can change its layout without breaking the edit.
 
@@ -355,7 +366,7 @@ await recordTake(page, 'D2', async (cue) => {
 })
 ```
 
-Cues use a monotonic clock aligned to the encoder creation time stored in each raw file. `ffprobe` checks the assembled frame size and duration. The desktop capture is 1920 × 1080. The phone records a native 390 × 844 WebM, then makes a 780 × 1688 MP4 with Lanczos scaling. Both files remain in the run folder. This avoids the screencast canvas padding smaller phone content into a larger frame.
+Cues use the wall clock (`Date.now()`), the clock Playwright stamps frames with, aligned to the encoder creation time stored in each raw file. A monotonic clock drifted about 1 second from the frames on WSL. `ffprobe` checks the assembled frame size and duration. The desktop capture is 1920 × 1080. The phone records a native 390 × 844 WebM, then makes a 780 × 1688 MP4 with Lanczos scaling. Both files remain in the run folder. This avoids the screencast canvas padding smaller phone content into a larger frame.
 
 ### Frame-stepped takes
 
@@ -611,7 +622,7 @@ export function clipWindow(take: Take, w: Window) {
 
 ### Sound and captions
 
-- **One narrator outside the demo,** a team member reading the director script, sped up 1.2× ([Recording the voiceover](/docs/demo/director-script.md#recording-the-voiceover)); **an ElevenLabs voice for the demo video**, generated with AlaskanTuna's key. Both are staged at −16 LUFS, and the finish brings the mix to −14 LUFS.
+- **One narrator outside the demo,** a team member reading the director script, sped up 1.2× ([Recording the voiceover](/docs/demo/safe-edge-director-script.md#recording-the-voiceover)); **an ElevenLabs voice for the demo video**, generated with AlaskanTuna's key. Both are staged at −16 LUFS, and the finish brings the mix to −14 LUFS.
 - **The voices never overlap.** A test checks that no narrator file runs into the demo's first line or past its own segment.
 - **Loudness:** −14 LUFS integrated and at most −1 dBTP true peak, YouTube's reference.
 
@@ -770,8 +781,8 @@ Start each session in the shared worktree from step 1. The Director owns everyth
 
 ```text
 You are safe-edge-director, the Director of the Safe Edge submission video (issue #97).
-Read docs/demo/video.md and docs/demo/director-script.md fully. Then read docs/DESIGN.md,
-docs/CONTEXT.md "Five-minute video", and docs/demo/deck/pitch-deck.html.
+Read docs/demo/video.md and docs/demo/safe-edge-director-script.md fully. Then read docs/DESIGN.md,
+docs/CONTEXT.md "Five-minute video", and docs/demo/deck/safe-edge-pitch-deck.html.
 
 The director script is the approved brief: you do not rewrite its narration. You own
 video/src/data/shots.json, the slide stills, the narrator's voice ingest, the ElevenLabs demo voice, the
@@ -815,7 +826,7 @@ takes, marked failed. Confirm the Simulation label at every app cue.
 
 ## Sources
 
-- [Director script](/docs/demo/director-script.md), with the narration, the on-screen notes and the claims ledger.
+- [Director script](/docs/demo/safe-edge-director-script.md), with the narration, the on-screen notes and the claims ledger.
 - [PRD demo script](/docs/PRD.md#demo-script) and [scenarios](/docs/PRD.md#scenarios).
 - [Five-minute video guidance][video-context] and [how judges read a submission][judges].
 - [Brief: video and prototype][brief-video].

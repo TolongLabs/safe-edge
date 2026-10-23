@@ -10,7 +10,7 @@ Contents:
 
 ## Goal and scope
 
-Produce an 11-page submission deck in `docs/demo/deck/pitch-deck.html`. Keep the existing deck typography, orange template identity, factual claims, images and interactive controller. Preserve the six appendix slides in `docs/demo/deck/supporting-deck.html`. The app's design system applies to product screens; this presentation retains its organiser template and existing presentation style.
+Produce an 11-page submission deck in `docs/demo/deck/safe-edge-pitch-deck.html`. Keep the existing deck typography, orange template identity, factual claims, images and interactive controller. Preserve the six appendix slides in `docs/demo/deck/supporting-deck.html`. The app's design system applies to product screens; this presentation retains its organiser template and existing presentation style.
 
 ## Implementation
 

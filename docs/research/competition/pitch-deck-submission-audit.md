@@ -32,11 +32,11 @@ For this submission, follow the later reminder's YouTube requirement and optiona
 
 The [deck merged in PR #251][merged-deck] had **21 slide sections**, counted from the HTML. It contained ten numbered content slides, five unnumbered template pages, and six appendix slides. The earlier audit correctly identified that the 21-page total alone did not prove a breach; the uncertain assumption was the exemption for all five unnumbered pages.
 
-| Artifact                                                | Pages | Structure                                                                                   |
-| ------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------- |
-| PR #251 deck                                            | 21    | Five unnumbered template pages, ten numbered content pages, six appendix pages              |
-| [Submission deck](/docs/demo/deck/pitch-deck.html)      | 11    | Team Information with project title, then sections 1 to 10; closing links inside section 10 |
-| [Supporting deck](/docs/demo/deck/supporting-deck.html) | 6     | Evidence pages numbered 1 to 6, exported as a separate PDF                                  |
+| Artifact                                                     | Pages | Structure                                                                                   |
+| ------------------------------------------------------------ | ----- | ------------------------------------------------------------------------------------------- |
+| PR #251 deck                                                 | 21    | Five unnumbered template pages, ten numbered content pages, six appendix pages              |
+| [Submission deck](/docs/demo/deck/safe-edge-pitch-deck.html) | 11    | Team Information with project title, then sections 1 to 10; closing links inside section 10 |
+| [Supporting deck](/docs/demo/deck/supporting-deck.html)      | 6     | Evidence pages numbered 1 to 6, exported as a separate PDF                                  |
 
 The corrected submission removes the separate branded cover and event title, merges the project title into Team Information, and merges the closing thanks and QR links into section 10. It does not append the supporting pages to the main PDF. The original source template is retained separately. [Implementation and export instructions](/docs/demo/README.md#build-the-deck).
 

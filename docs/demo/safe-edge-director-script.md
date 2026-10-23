@@ -41,7 +41,7 @@ Contents:
 **The argument, in one breath.** We are Team T010NG, in the People track, working on one problem: keeping the edges of township lakes and drains safe. Here's why: a nine-year-old girl went after her ball in a drain and was swept away; five months earlier, two brothers did the same. Nobody can say what those edges looked like, because after a storm nobody walks every edge and nobody clearly owns the fix. So accountability has to start with one person, the park maintenance manager. Safe Edge gives them one loop, and Fix Lens tests every repair against every way to the water before anyone pays. The demo then shows the problem, the solution and the outcome on one fence panel. After it: how we'd know it works, why it can start now, the pilot, why us, and the ask.
 
 - **Runtime:** 4:47 in the default cut, under the 4:50 cap. The team, the track and the problem are named in the first 12 seconds; the stories and the evidence finish by 0:50.
-- **Two voices.** One narrator, a team member, reads V1 to V7 and V9 to V14. The demo (V8) is its own video, voiced by an ElevenLabs voice and rendered separately, then edited in at 1:42. V7 hands into the demo ("Let's see it work"); V9 picks up after it with a question ("So how would we know it works?").
+- **Two voices.** One narrator, a team member, reads V1 to V7 and V9 to V14. The demo is its own video, voiced by the narrator's takes 6 to 12 and rendered separately; it opens with V7. V7 hands into the demo ("Let's see it work"); V9 picks up after it with a question ("So how would we know it works?").
 - **The demo is the crux.** It is built in three labelled parts, **Problem**, **Solution** and **Outcome**, and each part says its name aloud. The Outcome line answers the Problem line word for word ("The record still says this edge is safe" becomes "now the record tells the truth").
 - **Every segment links to the one before.** Each first sentence picks up the last thought ("Accountability, then", "That's where Safe Edge comes in", "Let's see it work", "Here's how Safe Edge solves it", "Now the hidden problem", "The outcome", "So how would we know", "Better still", "Therefore", "So why us?", "Ultimately"). Keep the links when you trim.
 - **Pace:** the narrator reads at about 150 words a minute, including the marked pauses and numbers as spoken. It will feel slow; it is right. The Director then speeds every narrator take up to 1.2× without changing its pitch, so it plays at about 180 words a minute; the demo voice is not sped up. A take that still runs long is read again from its pickup line, never sped up further.
@@ -179,7 +179,7 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 ### V8: Live demo
 
-**TIME:** `1:42–3:05` · **VOICE:** Demo (ElevenLabs)
+**TIME:** `1:42–3:05` · **VOICE:** Narrator (takes 7 to 12)
 
 **ON SCREEN:** a separate demo video, 83 seconds, rendered on its own and placed here. The app window sits inset on a calm background at about 0.86 scale, with room for one callout. Across the top, a three-part chapter bar, large enough to read on a phone: **1 Problem · 2 Solution · 3 Outcome**, lighting the current part. Under **Solution**, a step label: Find, Confirm, Fix, Prove. The overlay tag stays on throughout. Cut on the narration and on the cue windows in [`video.md`](/docs/demo/video.md#scenes-to-capture).
 
@@ -207,6 +207,30 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 > Here's how Safe Edge solves it. After the storm, the drone patrols the edge, finds panel four missing, and suspends the pass at once.
 
+#### Solution: report (R1)
+
+**TIME:** about 7 s, after D1 · **PART:** 2 Solution · Find · **VOICE:** ElevenLabs, Darryl Lim (Malaysian English); the narrator could not record it
+
+**ON SCREEN:** the phone, as Siti Aminah, the sample walk crew, in four short moments that tick off a checklist beside it ("Photo", "What they saw", "How urgent", "Sent to the manager"): the photo sent from the viewpoint, "Fence or barrier missing", "High", then "Report sent to the manager". Cut to the manager's Inbox, whole screen with the sidebar, on the new "Playground path, fence line" damage report, ringed with its "Source: user" tag.
+
+**VOICEOVER:**
+
+> And if you don't have a drone, that's fine. The patrol crew reports it from a phone, and it lands in the same Inbox.
+
+**NOTES:** Deck 6 step 1 is "Patrol: a drone or the walk crew … DRONE OR PHONE", and V10 says the walk crew's phone can run the loop now. This beat shows that path is built ([`PRD.md`][prd] PHONE-3). The report is simulated sample data, like the rest of the demo. "Patrol crew", not "walk crew": in this voice "walk" and "foot" were heard as "work" and "food".
+
+#### Solution: the AI can't decide (D6)
+
+**TIME:** about 8.5 s, after R1 · **PART:** 2 Solution · Confirm · **VOICE:** ElevenLabs, Darryl Lim
+
+**ON SCREEN:** the Agent screen, whole, then its eight tools ("Read only", "Drafts"), then "Can the agent decide anything?". "Ask core as the agent" is pressed and "Refused, as it must be … decideCandidate needs a person" appears, ringed. Callout: "Only people decide".
+
+**VOICEOVER:**
+
+> What about the AI? It reads records and drafts work, but it can't decide. Ask it to confirm a flag, and the server refuses.
+
+**NOTES:** No model runs: the button makes the same call an agent's tool would, with the agent token, and core refuses it under `agents_draft_only`. D2's "A machine can lower trust, never raise it" follows directly.
+
 #### Solution: confirm (D2)
 
 **TIME:** `2:04–2:14` · **PART:** 2 Solution · Confirm
@@ -225,9 +249,21 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 **VOICEOVER:**
 
-> Now the hidden problem. The obvious fix is a new panel. Fix Lens records both ways a child could reach the water: through the gap, and around the fence end. [pause 0.4s] A new panel closes one. The other stays open. [pause 0.6s] Extending the fence would close both, so that's the fix the manager chooses, before anyone pays.
+> Now the hidden problem. The obvious fix is a new panel. Fix Lens maps both ways a child could reach the water: through the gap, and around the fence end. [pause 0.4s] A new panel closes one. The other stays open. [pause 0.6s] Extending the fence would close both, so that's the fix the manager chooses, before anyone pays.
 
 **NOTES:** This is the moment the video exists for. "Would close": the drawing is a proposal, and the screen says so; no frame may suggest the repair is built.
+
+#### Solution: approve and send (D3b)
+
+**TIME:** about 6.5 s, after D3 · **PART:** 2 Solution · Fix · **VOICE:** ElevenLabs, Darryl Lim
+
+**ON SCREEN:** Fix Lens as Lim Wei Jie, the sample engineer: whole, then **Approve fix B as Lim Wei Jie** and "Approved by Lim Wei Jie", ringed. Farah Hashim sends it: **Send fix B to Hafiz Rahman's crew**, then the page "Fix B sent to Hafiz Rahman's crew", whole, then its acceptance test and owner ringed: owner Farah Hashim, installer Hafiz Rahman's crew, re-test by someone who did not install it.
+
+**VOICEOVER:**
+
+> Next, an engineer approves fix B, and it goes to the installer's crew, with a named owner.
+
+**NOTES:** This was the optional D3b. The approval is a person's, in a sample persona; nothing is built or paid for at this point.
 
 #### Solution: prove (D4)
 
@@ -342,11 +378,7 @@ Use these only when a take runs short, or for a longer cut. V12 adds 2 seconds (
 
 ### The demo voice
 
-1.  **One ElevenLabs voice for all six demo lines,** chosen at gate G1: calm and clear, different from the narrator. Use AlaskanTuna's key from the `ELEVENLABS_API_KEY` environment variable; never commit it.
-1.  **One request per line** to `POST /v1/text-to-speech/{voice_id}/with-timestamps`, with the same `voice_id`, `model_id` (`eleven_multilingual_v2`) and `seed` for all six. Pass the neighbouring demo lines as `previous_text` and `next_text`, so the six clips sound like one read ([text to speech with timestamps][el-timestamps], [request stitching][el-stitching]).
-1.  **Pauses:** write each `[pause 0.6s]` as `<break time="0.6s" />`. Multilingual v2 supports break tags of up to 3 seconds ([pauses][el-pauses]).
-1.  **Files:** save each `audio_base64` as `video/public/voice/demo/problem.mp3`, `d1.mp3` to `d5.mp3`, and each response's `alignment` (character start and end times) into `video/src/data/demo-voice.json` for the demo's captions.
-1.  **Check every clip by ear** against its slot. Regenerate a clip that runs long or misreads a word, passing the neighbouring clips' request ids as `previous_request_ids` and `next_request_ids`.
+The narrator recorded the demo lines too, on 22 October: take 6 is V7 and takes 7 to 12 are Problem and D1 to D5. The words differ slightly from this script ("Alright, let's see it work", "So here's the problem", "and it suspends", "on the phone"); every claim is the same. [Build the demo video](/docs/demo/video.md#build-the-demo-video) stages them. The ElevenLabs plan is retired.
 
 ### Pickup lines
 
@@ -384,7 +416,7 @@ Say the first; never the second.
 
 ## Claims ledger
 
-Status: **External** is a published source, **Team** is our own statement, research, consultation or design, **Code** is behaviour of the built software, **Simulated** is labelled sample data. "Deck N" is the slide position in the 11-page [`pitch-deck.html`](/docs/demo/deck/pitch-deck.html); "Supporting N" is the page in the separate six-page [`supporting-deck.html`](/docs/demo/deck/supporting-deck.html). Moral lines state a purpose, not a measured result.
+Status: **External** is a published source, **Team** is our own statement, research, consultation or design, **Code** is behaviour of the built software, **Simulated** is labelled sample data. "Deck N" is the slide position in the 11-page [`safe-edge-pitch-deck.html`](/docs/demo/deck/safe-edge-pitch-deck.html); "Supporting N" is the page in the separate six-page [`supporting-deck.html`](/docs/demo/deck/supporting-deck.html). Moral lines state a purpose, not a measured result.
 
 | Claim as narrated                                                                                                         | Seg     | Status          | Source and limit                                                                                                                          |
 | ------------------------------------------------------------------------------------------------------------------------- | ------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
@@ -434,7 +466,7 @@ Status: **External** is a published source, **Team** is our own statement, resea
 - **The team** is Team T010NG, said "Team Tolong": three computer science students, Hee Zi Jie, Lim Yuh Kang and Yow Li Hao (all Asia Pacific University), and a law graduate, Liau Jin Siang (University of Reading). Deck 1 shows all four.
 - **The stories in V3** open the problem: the girl in Bandar Mahkota Cheras, then the brothers in Kajang. Nobody is named in any cut.
 - **The team lines in V13** are the team's own account, as worded.
-- **Voices:** one narrator outside the demo; an ElevenLabs voice for the demo video.
+- **Voices:** one narrator for everything, including the demo video.
 
 Left to do before recording:
 
@@ -448,7 +480,7 @@ Tick each when the footage is in and checked.
 - [ ] Story card 1 (V3): near-black, "Bandar Mahkota Cheras · 1 May 2026", source "Free Malaysia Today, 3 May 2026". Made in the edit.
 - [ ] Story card 2 (V3): the same design, "Kajang · 4 December 2025", source "Malay Mail, 5 December 2025". Made in the edit.
 - [ ] H2 (V5, optional): the landing page hero.
-- [ ] The demo video (V8), 83 seconds, with its chapter bar and the ElevenLabs voice:
+- [ ] The demo video (V7 and V8), 77 seconds, with its chapter bar and the narrator's takes 6 to 12:
   - [ ] H1, Problem: the Elmina lake at night with the story card headline.
   - [ ] D1, Find: take-off, then the flag and the red segment.
   - [ ] D2, Confirm: the Inbox; **Confirm: needs a fix**.
@@ -462,7 +494,7 @@ Tick each when the footage is in and checked.
 ## Sources
 
 - [Video plan and capture](/docs/demo/video.md), with the shot list and the timeline.
-- [Pitch deck](/docs/demo/deck/pitch-deck.html): 11 submission slides and their speaker notes; [supporting deck](/docs/demo/deck/supporting-deck.html): six evidence pages, exported separately.
+- [Pitch deck](/docs/demo/deck/safe-edge-pitch-deck.html): 11 submission slides and their speaker notes; [supporting deck](/docs/demo/deck/supporting-deck.html): six evidence pages, exported separately.
 - [`PRODUCT.md`][product-principles], [`BRIEF.md`][brief], [`CONTEXT.md`](/docs/CONTEXT.md#five-minute-video) and the [PRD demo script](/docs/PRD.md#demo-script).
 - [Incident table][incidents], [practitioner consultation][consult] and [prior art][prior-art].
 - [Mission export evidence][mission-exports], the reason the narration never mentions a vendor's flight app.
