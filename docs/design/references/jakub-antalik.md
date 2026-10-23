@@ -219,6 +219,6 @@ read-only.
 
 ## See also
 
-- [Design research](README.md)
+- [Design research](../README.md)
 - [Canvas UI](canvas-ui.md#peel), for a WebGL alternative to a drawer
 - [Transitions.dev](https://transitions.dev/)

@@ -222,6 +222,6 @@ zoom and turntable, and `onLoad` and `onError` callbacks.
 
 ## See also
 
-- [Design research](README.md)
+- [Design research](../README.md)
 - [MotionSites](motionsites.md), for video-based scroll effects
 - [Canvas UI documentation](https://canvasui.dev/docs)

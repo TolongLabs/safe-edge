@@ -177,6 +177,6 @@ an Icon Font Generator and a migration tool.
 
 ## See also
 
-- [Design research](README.md#iconography)
+- [Design research](../README.md#iconography)
 - [Isocons](isocons.md), for large illustrative icons
 - [Hugeicons Stroke Rounded](https://hugeicons.com/icons/stroke-rounded)

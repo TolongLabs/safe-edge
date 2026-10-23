@@ -1,0 +1,3519 @@
+<!doctype html>
+<!--
+  Safe Edge design system album. Supporting material for the Sime Darby Property
+  University Hackathon 2026 submission.
+
+  Print: A4 landscape, 297 x 210 mm, no margins. Each .page is one plate.
+  Render: bun scripts/render-design-album.ts
+  Assets: ../../demo/deck/assets/screens/*.webp (the built product, 2x).
+  Fonts: fonts/ holds static Atkinson Hyperlegible Next instances (OFL, see
+  fonts/OFL.txt). Static files keep the PDF text as embedded TrueType, not
+  Type 3, so small labels stay crisp on screen.
+  To add Figma frame exports, place 2x PNGs beside this file and swap the
+  matching <img src>. Keep one export per plate, never a whole canvas.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Safe Edge Design System — Volume 01</title>
+    <style>
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('fonts/AtkinsonHyperlegibleNext-400.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('fonts/AtkinsonHyperlegibleNext-500.ttf') format('truetype');
+        font-weight: 500;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('fonts/AtkinsonHyperlegibleNext-600.ttf') format('truetype');
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('fonts/AtkinsonHyperlegibleNext-700.ttf') format('truetype');
+        font-weight: 700;
+        font-style: normal;
+        font-display: block;
+      }
+      :root {
+        --canvas: #e7ebe8;
+        --island: #fbfcfb;
+        --raised: #ffffff;
+        --sunken: #eef2ef;
+        --ink: #1c2925;
+        --moss: #5d6b66;
+        --hair: #cfd6d2;
+        --field: #8e9994;
+        --park: #17302a;
+        --park-2: #0f231e;
+        --mist: #e6eeea;
+        --valid: #237446;
+        --valid-bg: #e3f1e8;
+        --amber: #94500e;
+        --amber-bg: #fbeedd;
+        --red: #b02e28;
+        --red-bg: #fbe9e7;
+        --slate: #5b6763;
+        --slate-bg: #eceeed;
+        --unknown: #5d6b66;
+        --unknown-bg: #eef2ef;
+        --f: 'Atkinson Hyperlegible Next', ui-sans-serif, system-ui, -apple-system, sans-serif;
+        --btn-bg: #17302a;
+        --btn-fg: #ffffff;
+        --btn-line: #17302a;
+        --danger: #b02e28;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #7d8782;
+        font-family: var(--f);
+        -webkit-font-smoothing: antialiased;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+
+      .page {
+        position: relative;
+        width: 1122px;
+        height: 793px;
+        padding: 36px 56px 30px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        background: var(--canvas);
+        color: var(--ink);
+        break-after: page;
+        page-break-after: always;
+        break-inside: avoid;
+        font: 400 13.5px/1.55 var(--f);
+      }
+
+      .page:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
+
+      @media screen {
+        body {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 28px;
+          padding: 36px 20px 60px;
+        }
+        .page {
+          box-shadow:
+            0 1px 2px rgba(10, 20, 16, 0.16),
+            0 18px 50px -12px rgba(10, 20, 16, 0.4);
+        }
+      }
+
+      @media print {
+        body {
+          background: none;
+        }
+        .page {
+          box-shadow: none;
+          margin: 0;
+        }
+      }
+
+      @page {
+        size: 297mm 210mm;
+        margin: 0;
+      }
+
+      /* ---------- page chrome ---------- */
+      .head,
+      .foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font: 500 9px/1 var(--f);
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: var(--moss);
+        flex: none;
+      }
+      .head {
+        border-bottom: 1px solid var(--hair);
+        padding-bottom: 9px;
+      }
+      .foot {
+        border-top: 1px solid var(--hair);
+        padding-top: 8px;
+      }
+      .body {
+        flex: 1;
+        min-height: 0;
+        padding-top: 22px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---------- type ---------- */
+      .kicker {
+        margin: 0;
+        font: 600 9.5px/1.2 var(--f);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      p {
+        margin: 0;
+      }
+      .h1 {
+        font: 600 46px/1.02 var(--f);
+        letter-spacing: -0.03em;
+      }
+      .h2 {
+        font: 600 30px/1.1 var(--f);
+        letter-spacing: -0.02em;
+      }
+      .h3 {
+        font: 600 17px/1.25 var(--f);
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        font: 400 14.5px/1.55 var(--f);
+        color: var(--moss);
+        max-width: 58ch;
+      }
+      .small {
+        font-size: 11.5px;
+        line-height: 1.5;
+      }
+      .caption {
+        font: 400 9.5px/1.45 var(--f);
+        letter-spacing: 0.02em;
+        color: var(--moss);
+      }
+      .rule {
+        height: 1px;
+        background: var(--hair);
+        flex: none;
+      }
+      .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--park);
+        color: #fff;
+        font: 600 8.5px/1 var(--f);
+        flex: none;
+      }
+
+      /* ---------- covers and openers ---------- */
+      .park-page {
+        background: #17302a;
+        color: var(--mist);
+        --moss: #9dbbb0;
+        --hair: rgba(230, 238, 234, 0.22);
+        --ink: #e6eeea;
+        --island: #1c2925;
+        --raised: #24443b;
+        --sunken: #111a17;
+        --park: #7fa596;
+        --btn-bg: #7fa596;
+        --btn-fg: #111a17;
+        --btn-line: #7fa596;
+        --danger: #ef8a80;
+      }
+
+      .dark-page {
+        background: #111a17;
+        color: #fbfcfb;
+        --canvas: #111a17;
+        --island: #1c2925;
+        --raised: #24302c;
+        --sunken: #111a17;
+        --ink: #fbfcfb;
+        --moss: #b4bdb8;
+        --hair: #3a4743;
+        --field: #6f7b76;
+        --park: #7fa596;
+        --park-2: #9dbbb0;
+        --btn-bg: #7fa596;
+        --btn-fg: #111a17;
+        --btn-line: #7fa596;
+        --danger: #ef8a80;
+      }
+
+      .cover {
+        padding: 40px 56px 34px;
+        justify-content: space-between;
+      }
+      .cover-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .brandline {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font: 600 13px/1 var(--f);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .brandline svg {
+        width: 26px;
+        height: 26px;
+        display: block;
+      }
+      .cover-meta {
+        text-align: right;
+        font: 500 9px/1.7 var(--f);
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      .cover-main {
+        display: grid;
+        grid-template-columns: 1fr 292px;
+        gap: 56px;
+        align-items: end;
+        padding-top: 8px;
+      }
+      .cover h1 {
+        font: 600 128px/0.9 var(--f);
+        letter-spacing: -0.055em;
+        margin: 18px 0 0;
+      }
+      .cover h1 .ind {
+        display: block;
+        padding-left: 96px;
+      }
+      .cover h1 .out {
+        color: transparent;
+        -webkit-text-stroke: 1.4px #bfd3c9;
+      }
+      .cover-sub {
+        margin-top: 24px;
+        max-width: 46ch;
+        font: 400 14px/1.55 var(--f);
+        color: #b9ccc2;
+      }
+      .cover-tags {
+        display: flex;
+        gap: 8px;
+        margin-top: 20px;
+      }
+      .cover-tag {
+        border: 1px solid rgba(230, 238, 234, 0.3);
+        border-radius: 4px;
+        padding: 5px 9px 4px;
+        font: 600 9px/1 var(--f);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: #cfe0d7;
+      }
+      .state-stack {
+        border-top: 1px solid rgba(230, 238, 234, 0.22);
+      }
+      .state-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 58px;
+        border-bottom: 1px solid rgba(230, 238, 234, 0.22);
+      }
+      .state-row .mark {
+        width: 26px;
+        height: 26px;
+        flex: none;
+      }
+      .state-row .nm {
+        font: 600 12px/1.2 var(--f);
+      }
+      .state-row .ds {
+        margin-top: 2px;
+        font: 400 9.5px/1.35 var(--f);
+        color: #9dbbb0;
+      }
+      .state-row .num2 {
+        margin-left: auto;
+        font: 500 8.5px/1 var(--f);
+        letter-spacing: 0.1em;
+        color: #6f8f82;
+      }
+      .cover-foot {
+        display: flex;
+        justify-content: space-between;
+        border-top: 1px solid rgba(230, 238, 234, 0.22);
+        padding-top: 12px;
+        font: 500 9px/1 var(--f);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #9dbbb0;
+      }
+
+      .opener {
+        padding: 36px 56px 30px;
+      }
+      .opener .plate {
+        display: flex;
+        justify-content: space-between;
+        font: 500 9px/1 var(--f);
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      .opener-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-bottom: 24px;
+      }
+      .opener-num {
+        font: 700 210px/0.8 var(--f);
+        letter-spacing: -0.06em;
+        color: transparent;
+        -webkit-text-stroke: 1.4px var(--park);
+        opacity: 0.38;
+      }
+      .opener h2 {
+        font: 600 66px/1 var(--f);
+        letter-spacing: -0.04em;
+        margin-top: 18px;
+      }
+      .opener-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 48px;
+        align-items: start;
+        margin-top: 30px;
+        max-width: 900px;
+      }
+      .opener-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        font-size: 12px;
+      }
+      .opener-list span {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--hair);
+        padding-bottom: 8px;
+        color: var(--moss);
+      }
+      .opener-foot {
+        display: flex;
+        justify-content: space-between;
+        border-top: 1px solid var(--hair);
+        padding-top: 10px;
+        font: 500 9px/1 var(--f);
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+
+      /* ---------- contents ---------- */
+      .statement-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 56px;
+        padding-top: 8px;
+      }
+      .statement h1 {
+        margin-top: 12px;
+        font: 600 40px/1.06 var(--f);
+        letter-spacing: -0.035em;
+        max-width: 15ch;
+      }
+      .statement p + p {
+        margin-top: 12px;
+      }
+      .statement .lede {
+        margin-top: 18px;
+        font-size: 13px;
+      }
+      .pull {
+        margin-top: 24px;
+        border-top: 1px solid var(--hair);
+        padding-top: 12px;
+        font: 500 15px/1.45 var(--f);
+        max-width: 40ch;
+      }
+      .contents h3 {
+        margin-bottom: 14px;
+      }
+      .toc-row {
+        display: flex;
+        align-items: baseline;
+        padding: 10px 0 8px;
+        border-bottom: 1px solid var(--hair);
+      }
+      .toc-row .n {
+        width: 24px;
+        font: 600 9px/1 var(--f);
+        color: var(--moss);
+        letter-spacing: 0.08em;
+      }
+      .toc-row .t {
+        font: 600 12.5px/1.2 var(--f);
+      }
+      .toc-row .d {
+        flex: 1;
+        margin: 0 10px;
+        border-bottom: 1px dotted var(--hair);
+        transform: translateY(-3px);
+      }
+      .toc-row .p {
+        font: 500 10px/1 var(--f);
+        color: var(--moss);
+        letter-spacing: 0.05em;
+      }
+      .meta-block {
+        margin-top: 28px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 20px;
+        font-size: 10px;
+      }
+      .meta-block dt {
+        color: var(--moss);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 8.5px;
+        font-weight: 600;
+      }
+      .meta-block dd {
+        margin: 2px 0 0;
+        font-weight: 500;
+      }
+
+      /* ---------- colour ---------- */
+      .hero-swatch {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        height: 132px;
+        border-radius: 10px;
+        padding: 18px 22px;
+        margin-top: 16px;
+      }
+      .hero-swatch .hn {
+        font: 600 30px/1 var(--f);
+        letter-spacing: -0.02em;
+        margin-top: 6px;
+      }
+      .hero-swatch .hm {
+        text-align: right;
+        font: 500 11px/1.5 var(--f);
+        letter-spacing: 0.06em;
+        color: #bfd3c9;
+      }
+      .swatches {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px 16px;
+        margin-top: 22px;
+      }
+      .sw .chip {
+        height: 66px;
+        border-radius: 7px;
+        border: 1px solid rgba(28, 41, 37, 0.08);
+      }
+      .sw .nm {
+        margin-top: 7px;
+        font: 600 10.5px/1.25 var(--f);
+      }
+      .sw .hx {
+        font: 500 9px/1.3 var(--f);
+        letter-spacing: 0.05em;
+        color: var(--moss);
+      }
+      .colour-notes {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 24px;
+        margin-top: auto;
+        padding-top: 18px;
+        border-top: 1px solid var(--hair);
+      }
+      .colour-notes p {
+        font-size: 10.5px;
+        line-height: 1.5;
+        color: var(--moss);
+      }
+      .colour-notes b {
+        display: block;
+        color: var(--ink);
+        font-size: 10.5px;
+        margin-bottom: 3px;
+      }
+
+      .state-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .state-card {
+        border-radius: 10px;
+        padding: 16px 14px 14px;
+        min-height: 326px;
+        display: flex;
+        flex-direction: column;
+      }
+      .state-card .mark {
+        width: 32px;
+        height: 32px;
+      }
+      .state-card .sn {
+        margin-top: 12px;
+        font: 600 18px/1.1 var(--f);
+        letter-spacing: -0.01em;
+      }
+      .state-card .sp {
+        margin-top: 5px;
+        font: 600 9px/1.4 var(--f);
+        letter-spacing: 0.06em;
+        opacity: 0.85;
+      }
+      .state-card .sd {
+        margin-top: auto;
+        padding-top: 12px;
+        font: 400 10px/1.45 var(--f);
+      }
+      .rules-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        margin-top: auto;
+        border-top: 1px solid var(--hair);
+        padding-top: 16px;
+      }
+      .rules-2 b {
+        display: block;
+        font: 600 11px/1.3 var(--f);
+        margin-bottom: 4px;
+      }
+      .rules-2 p {
+        font-size: 10px;
+        line-height: 1.5;
+        color: var(--moss);
+      }
+
+      .darkboard {
+        display: grid;
+        grid-template-columns: 0.85fr 1.15fr;
+        gap: 48px;
+        padding-top: 8px;
+      }
+      .dark-palette {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 18px;
+      }
+      .dark-sw {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--hair);
+        padding-bottom: 8px;
+      }
+      .dark-sw .c {
+        width: 38px;
+        height: 38px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        flex: none;
+      }
+      .dark-sw .nm {
+        font: 600 11px/1.2 var(--f);
+      }
+      .dark-sw .hx {
+        font: 500 9px/1.2 var(--f);
+        color: var(--moss);
+        letter-spacing: 0.05em;
+      }
+      .dark-sw .role {
+        margin-left: auto;
+        font-size: 9.5px;
+        color: var(--moss);
+      }
+      .sample {
+        background: var(--canvas);
+        border: 1px solid var(--hair);
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .sample-top {
+        background: var(--island);
+        border-radius: 10px;
+        padding: 11px 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sample-top .t {
+        font: 600 13px/1.2 var(--f);
+      }
+      .sample-top .s {
+        font-size: 9px;
+        color: var(--moss);
+        margin-top: 2px;
+      }
+      .sample-top .sim {
+        margin-left: auto;
+      }
+      .sample-island {
+        background: var(--island);
+        border-radius: 12px;
+        padding: 18px;
+        flex: 1;
+      }
+      .sample-island .h {
+        font: 600 21px/1.1 var(--f);
+        letter-spacing: -0.01em;
+        margin-top: 10px;
+      }
+      .sample-island .p {
+        font-size: 10.5px;
+        color: var(--moss);
+        margin-top: 6px;
+        max-width: 38ch;
+      }
+      .sample-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 18px;
+        align-items: center;
+      }
+      .sample-field {
+        margin-top: 16px;
+      }
+
+      /* ---------- typography ---------- */
+      .type-grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.35fr;
+        gap: 56px;
+        padding-top: 6px;
+      }
+      .type-hero {
+        border-right: 1px solid var(--hair);
+        padding-right: 44px;
+        display: flex;
+        flex-direction: column;
+      }
+      .type-hero .aa {
+        font: 600 300px/0.78 var(--f);
+        letter-spacing: -0.06em;
+        color: var(--park);
+        margin-left: -14px;
+      }
+      .type-hero .tn {
+        margin-top: 16px;
+        font: 600 17px/1.2 var(--f);
+      }
+      .type-hero .td {
+        margin-top: 7px;
+        font-size: 10.5px;
+        line-height: 1.5;
+        color: var(--moss);
+        max-width: 30ch;
+      }
+      .weights {
+        display: flex;
+        gap: 18px;
+        margin-top: 18px;
+        border-top: 1px solid var(--hair);
+        padding-top: 12px;
+      }
+      .weights span {
+        font-size: 19px;
+        line-height: 1;
+      }
+      .scale {
+        display: flex;
+        flex-direction: column;
+      }
+      .scale-row {
+        display: grid;
+        grid-template-columns: 116px 1fr;
+        gap: 18px;
+        align-items: baseline;
+        border-bottom: 1px solid var(--hair);
+        padding: 9px 0 7px;
+      }
+      .scale-row:last-child {
+        border-bottom: 0;
+      }
+      .scale-meta {
+        font: 600 8.5px/1.35 var(--f);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      .scale-meta em {
+        display: block;
+        font-style: normal;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        text-transform: none;
+        margin-top: 2px;
+      }
+      .type-note {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-top: 1px solid var(--hair);
+        padding-top: 16px;
+      }
+      .type-note b {
+        font: 600 12px/1.3 var(--f);
+      }
+      .type-note p {
+        font-size: 10px;
+        color: var(--moss);
+        max-width: 38ch;
+        text-align: right;
+      }
+
+      /* ---------- layout ---------- */
+      .layout-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 46px;
+        padding-top: 4px;
+      }
+      .diagram-wrap {
+        position: relative;
+      }
+      .dash {
+        height: 430px;
+        background: #e7ebe8;
+        border: 1px solid #cfd6d2;
+        border-radius: 12px;
+        padding: 9px;
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 9px;
+      }
+      .dash-rail {
+        background: #17302a;
+        border-radius: 8px;
+        padding: 10px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .dash-rail .lg {
+        width: 20px;
+        height: 20px;
+        margin-bottom: 6px;
+      }
+      .dash-rail .it {
+        height: 17px;
+        border-radius: 4px;
+        background: rgba(230, 238, 234, 0.14);
+      }
+      .dash-rail .it.on {
+        background: #e6eeea;
+      }
+      .dash-main {
+        display: grid;
+        grid-template-rows: 30px 1fr;
+        gap: 9px;
+      }
+      .dash-top {
+        background: #fbfcfb;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 12px;
+      }
+      .dash-top .tt {
+        width: 84px;
+        height: 7px;
+        border-radius: 3px;
+        background: #1c2925;
+        opacity: 0.85;
+      }
+      .dash-top .ss {
+        width: 116px;
+        height: 5px;
+        border-radius: 3px;
+        background: #8e9994;
+      }
+      .dash-top .sim {
+        margin-left: auto;
+        width: 52px;
+        height: 14px;
+        border: 1.2px solid #1c2925;
+        border-radius: 3px;
+      }
+      .dash-top .av {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #cfd6d2;
+      }
+      .dash-islands {
+        display: grid;
+        grid-template-columns: 148px 1fr;
+        gap: 9px;
+      }
+      .dash-list,
+      .dash-detail {
+        background: #fbfcfb;
+        border-radius: 8px;
+        padding: 11px;
+      }
+      .dash-list .row {
+        height: 28px;
+        border-radius: 5px;
+        border: 1px solid #cfd6d2;
+        margin-bottom: 6px;
+      }
+      .dash-list .row.on {
+        background: #e3f1e8;
+        border-color: #237446;
+      }
+      .dash-detail .ttl {
+        width: 62%;
+        height: 9px;
+        border-radius: 3px;
+        background: #1c2925;
+        margin-bottom: 8px;
+      }
+      .dash-detail .sub {
+        width: 84%;
+        height: 5px;
+        border-radius: 3px;
+        background: #8e9994;
+        margin-bottom: 14px;
+      }
+      .dash-detail .photo {
+        height: 92px;
+        border-radius: 6px;
+        background: #dfe6e1;
+        border: 1px solid #cfd6d2;
+        margin-bottom: 12px;
+      }
+      .dash-detail .btnb {
+        width: 92px;
+        height: 24px;
+        border-radius: 5px;
+        background: #17302a;
+      }
+      .callout {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #17302a;
+        color: #fff;
+        font: 600 8.5px/16px var(--f);
+        text-align: center;
+      }
+      .legend {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px 18px;
+        margin-top: 12px;
+        font-size: 9.5px;
+        color: var(--moss);
+      }
+      .legend span {
+        display: flex;
+        gap: 7px;
+        align-items: center;
+      }
+      .legend .dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #17302a;
+        color: #fff;
+        font: 600 8px/14px var(--f);
+        text-align: center;
+        flex: none;
+      }
+      .spec-block + .spec-block {
+        margin-top: 18px;
+      }
+      .spec-block h4 {
+        font: 600 8.5px/1 var(--f);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--moss);
+        margin-bottom: 9px;
+      }
+      .space-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 15px;
+      }
+      .space-row .v {
+        width: 22px;
+        font: 600 8.5px/1 var(--f);
+        color: var(--moss);
+        text-align: right;
+      }
+      .space-row .bar {
+        height: 5px;
+        border-radius: 2px;
+        background: #17302a;
+      }
+      .radius-row {
+        display: flex;
+        gap: 14px;
+      }
+      .radius {
+        width: 54px;
+        text-align: center;
+      }
+      .radius .box {
+        width: 54px;
+        height: 54px;
+        background: #fbfcfb;
+        border: 1px solid #8e9994;
+      }
+      .radius .lb {
+        margin-top: 5px;
+        font: 600 8.5px/1 var(--f);
+        color: var(--moss);
+      }
+      .elev-row {
+        display: flex;
+        gap: 12px;
+      }
+      .elev {
+        flex: 1;
+        height: 44px;
+        border-radius: 7px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 600 8.5px/1 var(--f);
+        color: #5d6b66;
+      }
+      .rules-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 28px;
+        margin-top: auto;
+        border-top: 1px solid var(--hair);
+        padding-top: 14px;
+      }
+      .rules-3 b {
+        display: block;
+        font: 600 10.5px/1.3 var(--f);
+        margin-bottom: 3px;
+      }
+      .rules-3 p {
+        font-size: 9.5px;
+        line-height: 1.45;
+        color: var(--moss);
+      }
+
+      /* ---------- components ---------- */
+      .comp-title {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+      .btn-row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .btn-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .btn-cell .lb {
+        font: 500 8.5px/1 var(--f);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        padding: 0 18px;
+        border-radius: 8px;
+        font: 600 13px/1 var(--f);
+        border: 1.5px solid transparent;
+        white-space: nowrap;
+      }
+      .btn-primary {
+        background: var(--btn-bg);
+        color: var(--btn-fg);
+      }
+      .btn-secondary {
+        background: var(--island);
+        border-color: var(--btn-line);
+        color: var(--btn-line);
+      }
+      .btn-quiet {
+        background: transparent;
+        color: var(--btn-line);
+        padding: 0 8px;
+      }
+      .btn-danger {
+        background: var(--island);
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+      .btn-disabled {
+        background: var(--sunken);
+        border-color: var(--hair);
+        color: var(--field);
+      }
+      .btn-focus {
+        box-shadow:
+          0 0 0 2px var(--island),
+          0 0 0 4px var(--btn-line);
+      }
+      .note-line {
+        margin-top: 8px;
+        font-size: 9.5px;
+        color: var(--moss);
+      }
+      .comp-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 1fr 0.9fr;
+        gap: 34px;
+        margin-top: 22px;
+      }
+      .field-cell + .field-cell {
+        margin-top: 12px;
+      }
+      .field-label {
+        font: 600 10px/1 var(--f);
+        margin-bottom: 5px;
+      }
+      .field {
+        height: 40px;
+        background: var(--island);
+        border: 1px solid var(--field);
+        border-radius: 8px;
+        padding: 0 11px;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+      }
+      .field.focus {
+        border: 2px solid var(--park);
+      }
+      .field.error {
+        border: 2px solid var(--red);
+      }
+      .field .unit {
+        margin-left: auto;
+        border-left: 1px solid var(--hair);
+        padding-left: 9px;
+        color: var(--moss);
+        font-size: 11px;
+      }
+      .field-help {
+        margin-top: 4px;
+        font-size: 9px;
+        line-height: 1.4;
+        color: var(--moss);
+      }
+      .field-help.err {
+        color: var(--red);
+      }
+      .seg {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        background: var(--sunken);
+        border-radius: 8px;
+        padding: 4px;
+        height: 40px;
+      }
+      .seg span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        border-radius: 5px;
+        font: 600 11px/1 var(--f);
+      }
+      .seg svg {
+        flex: none;
+      }
+      .seg .yes {
+        background: var(--valid-bg);
+        color: var(--valid);
+      }
+      .seg .no {
+        color: var(--moss);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 26px;
+        padding: 0 9px;
+        background: var(--raised);
+        border: 1px solid var(--hair);
+        border-radius: 4px;
+        font: 500 10.5px/1 var(--f);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 26px;
+        padding: 0 8px;
+        border-radius: 4px;
+        font: 600 10.5px/1 var(--f);
+      }
+      .badge .mark {
+        width: 12px;
+        height: 12px;
+      }
+      .simlabel {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 7px;
+        border: 1.5px solid var(--ink);
+        border-radius: 4px;
+        font: 700 9px/1 var(--f);
+        letter-spacing: 0.12em;
+      }
+      .codeplate {
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        padding: 0 7px;
+        background: var(--park);
+        color: #e6eeea;
+        border-radius: 4px;
+        font: 700 10px/1 var(--f);
+        letter-spacing: 0.02em;
+      }
+      .token-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      .token-group + .token-group {
+        margin-top: 14px;
+      }
+      .token-group .gl {
+        font: 600 8.5px/1 var(--f);
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        color: var(--moss);
+        margin-bottom: 7px;
+      }
+
+      /* ---------- signature ---------- */
+      .sig-head {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 48px;
+        align-items: end;
+      }
+      .sig-head .lede {
+        max-width: 44ch;
+      }
+      .sig-marks {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        margin-top: 22px;
+      }
+      .sig-mark {
+        background: var(--island);
+        border: 1px solid var(--hair);
+        border-radius: 9px;
+        padding: 16px 14px;
+      }
+      .sig-mark .mark {
+        width: 40px;
+        height: 40px;
+      }
+      .sig-mark .sn {
+        margin-top: 14px;
+        font: 600 12px/1.2 var(--f);
+      }
+      .sig-mark .ss {
+        margin-top: 3px;
+        font-size: 9.5px;
+        color: var(--moss);
+      }
+      .sig-mark .rulecode {
+        margin-top: 10px;
+        font: 600 8.5px/1 var(--f);
+        letter-spacing: 0.08em;
+        color: var(--park);
+      }
+      .sig-lower {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 34px;
+        margin-top: auto;
+      }
+      .sig-box {
+        background: var(--island);
+        border: 1px solid var(--hair);
+        border-radius: 10px;
+        padding: 16px;
+      }
+      .flagrow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--park);
+        color: #e6eeea;
+        border-radius: 7px;
+        padding: 11px 12px;
+      }
+      .flagrow .sev {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #e6eeea;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+      }
+      .flagrow .sev i {
+        display: block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #17302a;
+      }
+      .flagrow .ft {
+        font: 600 11.5px/1.2 var(--f);
+      }
+      .flagrow .fp {
+        font-size: 9px;
+        color: #9dbbb0;
+        margin-top: 2px;
+      }
+      .flagrow .tm {
+        margin-left: auto;
+        font: 500 8.5px/1 var(--f);
+        color: #9dbbb0;
+      }
+      .sevrow {
+        display: flex;
+        gap: 18px;
+        align-items: flex-end;
+        margin-top: 12px;
+      }
+      .sevrow .s {
+        text-align: center;
+        font-size: 8.5px;
+        color: var(--moss);
+      }
+      .sevrow .box {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed var(--hair);
+        border-radius: 5px;
+        margin-bottom: 4px;
+      }
+      .sevrow .box i {
+        display: block;
+        border-radius: 50%;
+        background: var(--ink);
+      }
+      .sig-note {
+        margin-top: 12px;
+        font-size: 9.5px;
+        line-height: 1.45;
+        color: var(--moss);
+      }
+
+      /* ---------- screens ---------- */
+      .screens-grid {
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+        gap: 24px;
+        padding-top: 6px;
+      }
+      .shot {
+        background: var(--raised);
+        border: 1px solid var(--hair);
+        border-radius: 12px;
+        padding: 6px;
+      }
+      .shot img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 7px;
+      }
+      .shot-cap {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        margin-top: 7px;
+      }
+      .shot-cap .n {
+        font: 600 8.5px/1 var(--f);
+        letter-spacing: 0.1em;
+        color: var(--park);
+      }
+      .shot-cap p {
+        font-size: 9.5px;
+        line-height: 1.4;
+        color: var(--moss);
+      }
+      .shot-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .screen-notes {
+        margin-top: 16px;
+        border-top: 1px solid var(--hair);
+        padding-top: 12px;
+        display: grid;
+        gap: 7px;
+      }
+      .screen-notes p {
+        display: flex;
+        gap: 8px;
+        font-size: 10px;
+        line-height: 1.45;
+        color: var(--moss);
+      }
+      .screen-notes b {
+        color: var(--ink);
+      }
+      .phone-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .phone-wrap img {
+        width: 176px;
+        height: auto;
+        display: block;
+        border-radius: 12px;
+        border: 1px solid var(--hair);
+      }
+
+      .map-grid {
+        display: grid;
+        grid-template-columns: 1fr 258px;
+        gap: 28px;
+        padding-top: 6px;
+      }
+      .map-shot img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        border: 1px solid var(--hair);
+      }
+      .map-notes {
+        display: grid;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .map-notes p {
+        border-top: 1px solid var(--hair);
+        padding-top: 9px;
+        font-size: 10px;
+        line-height: 1.45;
+        color: var(--moss);
+      }
+      .map-notes b {
+        display: block;
+        color: var(--ink);
+        font-size: 10.5px;
+        margin-bottom: 2px;
+      }
+
+      /* ---------- states + access ---------- */
+      .state-mocks {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .mock {
+        background: var(--island);
+        border: 1px solid var(--hair);
+        border-radius: 9px;
+        overflow: hidden;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+      }
+      .mock-top {
+        height: 28px;
+        background: var(--park);
+        color: #e6eeea;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        font: 600 8.5px/1 var(--f);
+        letter-spacing: 0.08em;
+      }
+      .mock-body {
+        padding: 14px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .mock-body .ic {
+        width: 26px;
+        height: 26px;
+        border: 1.5px solid var(--moss);
+        border-radius: 50%;
+        margin-bottom: 8px;
+      }
+      .mock-body .tt {
+        font: 600 12px/1.2 var(--f);
+      }
+      .mock-body .pp {
+        margin-top: 4px;
+        font-size: 9px;
+        line-height: 1.4;
+        color: var(--moss);
+      }
+      .skel {
+        height: 8px;
+        border-radius: 3px;
+        background: var(--sunken);
+        margin-bottom: 7px;
+      }
+      .banner {
+        background: var(--red-bg);
+        border: 1px solid var(--red);
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 9px;
+        line-height: 1.4;
+        color: var(--red);
+      }
+      .access-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 40px;
+        margin-top: auto;
+        border-top: 1px solid var(--hair);
+        padding-top: 14px;
+      }
+      .ctable {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9.5px;
+      }
+      .ctable th {
+        text-align: left;
+        font: 600 8px/1 var(--f);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--moss);
+        padding: 0 0 6px;
+      }
+      .ctable td {
+        padding: 4px 0;
+        border-top: 1px solid var(--hair);
+      }
+      .ctable td:nth-child(2),
+      .ctable td:nth-child(3),
+      .ctable th:nth-child(2),
+      .ctable th:nth-child(3) {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .ctable .pass {
+        color: var(--valid);
+        font-weight: 600;
+      }
+      .grey-strip {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        margin-top: 10px;
+      }
+      .grey-strip .g {
+        text-align: center;
+        font-size: 8px;
+        color: var(--moss);
+      }
+      .grey-strip .g .mark {
+        width: 23px;
+        height: 23px;
+        display: block;
+        margin: 0 auto 5px;
+        filter: grayscale(1);
+        color: #1c2925;
+      }
+
+      /* ---------- closing ---------- */
+      .close-main {
+        display: grid;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 64px;
+        padding-top: 10px;
+      }
+      .close h2 {
+        font: 600 54px/0.98 var(--f);
+        letter-spacing: -0.04em;
+        margin-top: 14px;
+      }
+      .links {
+        margin-top: 28px;
+        border-top: 1px solid var(--hair);
+      }
+      .link-row {
+        display: grid;
+        grid-template-columns: 118px 1fr;
+        gap: 16px;
+        align-items: baseline;
+        padding: 12px 0 10px;
+        border-bottom: 1px solid var(--hair);
+      }
+      .link-row .lk {
+        font: 600 8.5px/1.2 var(--f);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      .link-row .lv {
+        font: 500 11.5px/1.35 var(--f);
+        word-break: break-all;
+        color: inherit;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        text-decoration-color: rgba(231, 235, 232, 0.35);
+      }
+      .colophon {
+        display: grid;
+        gap: 14px;
+        align-content: start;
+        padding-top: 4px;
+      }
+      .col-block {
+        border-top: 1px solid var(--hair);
+        padding-top: 8px;
+      }
+      .col-block dt {
+        font: 600 8px/1 var(--f);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      .col-block dd {
+        margin: 5px 0 0;
+        font-size: 10.5px;
+        line-height: 1.45;
+      }
+      .close-foot {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-top: auto;
+        border-top: 1px solid var(--hair);
+        padding-top: 12px;
+      }
+      .close-foot .fm {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .close-foot .fm svg {
+        width: 34px;
+        height: 34px;
+      }
+      .close-foot .fm .t {
+        font: 600 12px/1.3 var(--f);
+      }
+      .close-foot .fm .s {
+        font-size: 9px;
+        color: var(--moss);
+      }
+      .close-foot .r {
+        text-align: right;
+        font: 500 8.5px/1.6 var(--f);
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--moss);
+      }
+      .outline-mist {
+        color: transparent;
+        -webkit-text-stroke: 1.4px #bfd3c9;
+        opacity: 0.75;
+      }
+
+      /* ---------- album additions ---------- */
+      .state-strip {
+        margin-top: 40px;
+        border-top: 1px solid var(--hair);
+        padding-top: 14px;
+      }
+      .ss-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 12px;
+      }
+      .ss-row {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+      }
+      .ss-item {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .ss-item .mark {
+        width: 26px;
+        height: 26px;
+        flex: none;
+      }
+      .ss-item .nm {
+        font: 600 10.5px/1.2 var(--f);
+      }
+      .ss-item .ds {
+        font-size: 9px;
+        line-height: 1.35;
+        color: var(--moss);
+        margin-top: 2px;
+      }
+
+      .signal-strip {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-top: 20px;
+        border-top: 1px solid var(--hair);
+        padding-top: 12px;
+      }
+      .signal-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        flex: 1;
+      }
+      .sig-pair {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .sig-pair .pp {
+        width: 34px;
+        height: 18px;
+        border-radius: 4px;
+        display: flex;
+        overflow: hidden;
+        border: 1px solid rgba(28, 41, 37, 0.12);
+        flex: none;
+      }
+      .sig-pair .pp i {
+        display: block;
+        width: 14px;
+      }
+      .sig-pair .pp b {
+        display: block;
+        flex: 1;
+      }
+      .sig-pair .lb {
+        font: 600 9.5px/1.2 var(--f);
+      }
+      .sig-pair .rt {
+        font: 500 8.5px/1.2 var(--f);
+        color: var(--moss);
+      }
+
+      .sx {
+        margin-top: auto;
+        padding-top: 20px;
+      }
+
+      .dark-notes {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 28px;
+        margin-top: auto;
+        border-top: 1px solid var(--hair);
+        padding-top: 14px;
+      }
+      .dark-notes b {
+        display: block;
+        font: 600 10.5px/1.3 var(--f);
+        margin-bottom: 3px;
+      }
+      .dark-notes p {
+        font-size: 9.5px;
+        line-height: 1.45;
+        color: var(--moss);
+      }
+      .sample-island {
+        display: flex;
+        flex-direction: column;
+      }
+      .sample-note {
+        margin-top: auto;
+        padding-top: 14px;
+        font-size: 9px;
+        line-height: 1.4;
+        color: var(--moss);
+      }
+
+      .read-sample {
+        margin-top: 16px;
+        border-top: 1px solid var(--hair);
+        padding-top: 10px;
+      }
+      .read-sample p {
+        font-size: 11px;
+        line-height: 1.55;
+        color: var(--moss);
+      }
+
+      .gridbars {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 4px;
+      }
+      .gridbars i {
+        display: block;
+        height: 30px;
+        border-radius: 2px;
+        background: #17302a;
+      }
+      .gridbars i:nth-child(n + 7) {
+        opacity: 0.55;
+      }
+
+      .action-band {
+        margin-top: 18px;
+        border-top: 1px solid var(--hair);
+        padding-top: 11px;
+      }
+      .ab-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 9px;
+      }
+      .ab-island {
+        background: var(--island);
+        border: 1px solid var(--hair);
+        border-radius: 10px;
+        padding: 13px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .ab-disabled {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .ab-reason {
+        font-size: 8px;
+        line-height: 1.3;
+        color: var(--moss);
+        max-width: 190px;
+      }
+
+      .state-examples {
+        margin-top: 26px;
+        border-top: 1px solid var(--hair);
+        padding-top: 11px;
+      }
+      .se-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 9px;
+      }
+      .se-row {
+        display: flex;
+        gap: 42px;
+      }
+      .se-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .se-txt {
+        font-size: 10px;
+        color: var(--moss);
+      }
+
+      .state-rules {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 28px;
+        margin-top: 16px;
+        border-top: 1px solid var(--hair);
+        padding-top: 12px;
+      }
+      .state-rules b {
+        display: block;
+        font: 600 10px/1.3 var(--f);
+        margin-bottom: 2px;
+      }
+      .state-rules p {
+        font-size: 9px;
+        line-height: 1.45;
+        color: var(--moss);
+      }
+
+      .close-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 40px;
+        margin-top: auto;
+        border-top: 1px solid var(--hair);
+        padding-top: 22px;
+      }
+      .close-line p {
+        font: 600 30px/1.14 var(--f);
+        letter-spacing: -0.025em;
+        max-width: 22ch;
+      }
+      .close-line .bigmark {
+        width: 108px;
+        height: 108px;
+        flex: none;
+        opacity: 0.9;
+      }
+      .close .close-foot {
+        margin-top: 24px;
+      }
+
+      .phone-wrap .shot-cap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 4px;
+        font-size: 9px;
+      }
+      .phone-wrap .shot-cap p {
+        font-size: 9px;
+      }
+      .phone-wrap .shot-cap .n {
+        display: block;
+      }
+
+      .simlabel {
+        text-transform: uppercase;
+      }
+      .sig-lower {
+        margin-top: 28px;
+      }
+      .mock {
+        height: 246px;
+      }
+      .mock-action {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mock-action .reason {
+        font-size: 8px;
+        color: var(--moss);
+      }
+      .mock .btn-xs {
+        height: 28px;
+        padding: 0 12px;
+        font-size: 9px;
+        border-radius: 6px;
+      }
+      .access-grid {
+        margin-top: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol id="m-valid" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="7" fill="currentColor" />
+        </symbol>
+        <symbol id="m-expiring" viewBox="0 0 24 24">
+          <circle
+            cx="12"
+            cy="12"
+            r="8"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-dasharray="25.13 25.13"
+            transform="rotate(-90 12 12)"
+          />
+        </symbol>
+        <symbol id="m-suspended" viewBox="0 0 24 24">
+          <rect x="6" y="6" width="12" height="12" fill="currentColor" />
+        </symbol>
+        <symbol id="m-expired" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.4" />
+          <path d="M6.8 17.2 17.2 6.8" stroke="currentColor" stroke-width="2.4" />
+        </symbol>
+        <symbol id="m-unknown" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.4" />
+        </symbol>
+        <symbol id="logo-light" viewBox="0 0 96 96">
+          <path d="M73.4 48L86.1 55.3L73.4 62.7L60.7 55.3Z" fill="#C9D9D1" />
+          <path d="M60.7 26L73.4 33.3L60.7 40.7L48 33.3Z" fill="#C9D9D1" />
+          <path d="M48 4L60.7 11.3L48 18.7L35.3 11.3Z" fill="#C9D9D1" />
+          <path d="M60.7 55.3L73.4 62.7L60.7 70L48 62.7Z" fill="#C9D9D1" />
+          <path d="M48 33.3L60.7 40.7L48 48L35.3 40.7Z" fill="#C9D9D1" />
+          <path d="M35.3 11.3L48 18.7L35.3 26L22.6 18.7Z" fill="#C9D9D1" />
+          <path d="M48 62.7L60.7 70L48 77.3L35.3 70Z" fill="#C9D9D1" />
+          <path d="M35.3 40.7L48 48L35.3 55.3L22.6 48Z" fill="#C9D9D1" />
+          <path d="M22.6 18.7L35.3 26L22.6 33.3L9.9 26Z" fill="#C9D9D1" />
+          <path d="M9.9 70L22.6 77.3V62.7L9.9 55.3Z" fill="#33594D" />
+          <path d="M22.6 77.3L35.3 84.7V70L22.6 62.7Z" fill="#33594D" />
+          <path d="M9.9 55.3L22.6 62.7V48L9.9 40.7Z" fill="#33594D" />
+          <path d="M35.3 84.7L48 92V77.3L35.3 70Z" fill="#33594D" />
+          <path d="M22.6 62.7L35.3 70V55.3L22.6 48Z" fill="#33594D" />
+          <path d="M9.9 40.7L22.6 48V33.3L9.9 26Z" fill="#33594D" />
+          <path d="M86.1 70L73.4 77.3V62.7L86.1 55.3Z" fill="#17302A" />
+          <path d="M73.4 48L60.7 55.3V40.7L73.4 33.3Z" fill="#17302A" />
+          <path d="M60.7 26L48 33.3V18.7L60.7 11.3Z" fill="#17302A" />
+          <path d="M73.4 77.3L60.7 84.7V70L73.4 62.7Z" fill="#17302A" />
+          <path d="M60.7 55.3L48 62.7V48L60.7 40.7Z" fill="#17302A" />
+          <path d="M48 33.3L35.3 40.7V26L48 18.7Z" fill="#17302A" />
+          <path d="M60.7 84.7L48 92V77.3L60.7 70Z" fill="#17302A" />
+          <path d="M48 62.7L35.3 70V55.3L48 48Z" fill="#17302A" />
+          <path d="M35.3 40.7L22.6 48V33.3L35.3 26Z" fill="#17302A" />
+        </symbol>
+        <symbol id="logo-dark" viewBox="0 0 96 96">
+          <path d="M73.4 48L86.1 55.3L73.4 62.7L60.7 55.3Z" fill="#3D6153" />
+          <path d="M60.7 26L73.4 33.3L60.7 40.7L48 33.3Z" fill="#3D6153" />
+          <path d="M48 4L60.7 11.3L48 18.7L35.3 11.3Z" fill="#3D6153" />
+          <path d="M60.7 55.3L73.4 62.7L60.7 70L48 62.7Z" fill="#3D6153" />
+          <path d="M48 33.3L60.7 40.7L48 48L35.3 40.7Z" fill="#3D6153" />
+          <path d="M35.3 11.3L48 18.7L35.3 26L22.6 18.7Z" fill="#3D6153" />
+          <path d="M48 62.7L60.7 70L48 77.3L35.3 70Z" fill="#3D6153" />
+          <path d="M35.3 40.7L48 48L35.3 55.3L22.6 48Z" fill="#3D6153" />
+          <path d="M22.6 18.7L35.3 26L22.6 33.3L9.9 26Z" fill="#3D6153" />
+          <path d="M9.9 70L22.6 77.3V62.7L9.9 55.3Z" fill="#7FA596" />
+          <path d="M22.6 77.3L35.3 84.7V70L22.6 62.7Z" fill="#7FA596" />
+          <path d="M9.9 55.3L22.6 62.7V48L9.9 40.7Z" fill="#7FA596" />
+          <path d="M35.3 84.7L48 92V77.3L35.3 70Z" fill="#7FA596" />
+          <path d="M22.6 62.7L35.3 70V55.3L22.6 48Z" fill="#7FA596" />
+          <path d="M9.9 40.7L22.6 48V33.3L9.9 26Z" fill="#7FA596" />
+          <path d="M86.1 70L73.4 77.3V62.7L86.1 55.3Z" fill="#E6EEEA" />
+          <path d="M73.4 48L60.7 55.3V40.7L73.4 33.3Z" fill="#E6EEEA" />
+          <path d="M60.7 26L48 33.3V18.7L60.7 11.3Z" fill="#E6EEEA" />
+          <path d="M73.4 77.3L60.7 84.7V70L73.4 62.7Z" fill="#E6EEEA" />
+          <path d="M60.7 55.3L48 62.7V48L60.7 40.7Z" fill="#E6EEEA" />
+          <path d="M48 33.3L35.3 40.7V26L48 18.7Z" fill="#E6EEEA" />
+          <path d="M60.7 84.7L48 92V77.3L60.7 70Z" fill="#E6EEEA" />
+          <path d="M48 62.7L35.3 70V55.3L48 48Z" fill="#E6EEEA" />
+          <path d="M35.3 40.7L22.6 48V33.3L35.3 26Z" fill="#E6EEEA" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <!-- 01 · COVER -->
+    <section class="page cover park-page">
+      <div class="cover-top">
+        <div class="brandline">
+          <svg aria-hidden="true"><use href="#logo-dark" /></svg>
+          <span>Safe Edge</span>
+        </div>
+        <div class="cover-meta">
+          Design System<br />
+          Volume 01 · 2026
+        </div>
+      </div>
+
+      <div class="cover-main">
+        <div>
+          <p class="kicker">Sime Darby Property University Hackathon 2026 · People track</p>
+          <h1>
+            Safe <span class="ind"><span class="out">Edge</span>.</span>
+          </h1>
+          <p class="cover-sub">
+            The product language for a township water-edge safety service: five pass states, one typeface, and a screen
+            that answers one question at a time.
+          </p>
+          <div class="cover-tags">
+            <span class="cover-tag">Supporting material</span>
+            <span class="cover-tag">Design documentation</span>
+            <span class="cover-tag">A4 · 15 plates</span>
+          </div>
+        </div>
+
+        <div class="state-stack" aria-label="The five pass states">
+          <div class="state-row">
+            <svg class="mark" style="color: #7fb99b"><use href="#m-valid" /></svg>
+            <div>
+              <div class="nm">Valid</div>
+              <div class="ds">A pass is in force</div>
+            </div>
+            <div class="num2">01</div>
+          </div>
+          <div class="state-row">
+            <svg class="mark" style="color: #d5a06a"><use href="#m-expiring" /></svg>
+            <div>
+              <div class="nm">Expiring</div>
+              <div class="ds">Ends within 30 days</div>
+            </div>
+            <div class="num2">02</div>
+          </div>
+          <div class="state-row">
+            <svg class="mark" style="color: #e08a80"><use href="#m-suspended" /></svg>
+            <div>
+              <div class="nm">Suspended</div>
+              <div class="ds">A safety item is missing</div>
+            </div>
+            <div class="num2">03</div>
+          </div>
+          <div class="state-row">
+            <svg class="mark" style="color: #a9b6b1"><use href="#m-expired" /></svg>
+            <div>
+              <div class="nm">Expired</div>
+              <div class="ds">The pass ran out</div>
+            </div>
+            <div class="num2">04</div>
+          </div>
+          <div class="state-row">
+            <svg class="mark" style="color: #c2d0ca"><use href="#m-unknown" /></svg>
+            <div>
+              <div class="nm">Unknown</div>
+              <div class="ds">No pass, or not seen</div>
+            </div>
+            <div class="num2">05</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cover-foot">
+        <span>Safe Edge · Team Tolong</span>
+        <span>Plate 01 — Cover</span>
+      </div>
+    </section>
+
+    <!-- 02 · STATEMENT + CONTENTS -->
+    <section class="page">
+      <div class="head"><span>Safe Edge — Design System</span><span>Volume 01</span></div>
+      <div class="body" style="justify-content: center">
+        <div class="statement-grid">
+          <div class="statement">
+            <p class="kicker">Statement</p>
+            <h1>A calm system for a serious safety question.</h1>
+            <p class="lede">
+              Safe Edge helps a park team find a gap at the water edge, choose the fix that closes every way to the
+              water, and prove the repair passes. The interface is built for a non-technical reader in a hurry.
+            </p>
+            <p class="lede">
+              The design system exists so that urgency never becomes noise. One question per screen. One primary action.
+              State carried by shape as well as colour, so it survives glare, colour blindness and greyscale print.
+            </p>
+            <div class="pull">
+              “A missing fence is serious. The screen states the fact, the consequence and the next step, and never
+              shouts.”
+            </div>
+          </div>
+
+          <div class="contents">
+            <h3 class="h3">Contents</h3>
+            <div class="toc-row">
+              <span class="n">01</span><span class="t">Foundations</span><span class="d"></span
+              ><span class="p">04</span>
+            </div>
+            <div class="toc-row">
+              <span class="n">02</span><span class="t">Components</span><span class="d"></span><span class="p">10</span>
+            </div>
+            <div class="toc-row">
+              <span class="n">03</span><span class="t">Product</span><span class="d"></span><span class="p">12</span>
+            </div>
+            <div class="toc-row">
+              <span class="n">04</span><span class="t">Proof</span><span class="d"></span><span class="p">14</span>
+            </div>
+
+            <dl class="meta-block">
+              <div>
+                <dt>Version</dt>
+                <dd>1.0 · 22 October 2026</dd>
+              </div>
+              <div>
+                <dt>Format</dt>
+                <dd>A4 landscape · 15 plates</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>Figma, Safe Edge design system</dd>
+              </div>
+              <div>
+                <dt>Team</dt>
+                <dd>Tolong · People track</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="state-strip">
+          <div class="ss-head">
+            <span class="kicker">The system in five marks</span>
+            <span class="caption">Shape first. Colour second. Words always.</span>
+          </div>
+          <div class="ss-row">
+            <div class="ss-item">
+              <svg class="mark" style="color: #237446"><use href="#m-valid" /></svg>
+              <div>
+                <div class="nm">Valid</div>
+                <div class="ds">A pass is in force</div>
+              </div>
+            </div>
+            <div class="ss-item">
+              <svg class="mark" style="color: #94500e"><use href="#m-expiring" /></svg>
+              <div>
+                <div class="nm">Expiring</div>
+                <div class="ds">Ends within 30 days</div>
+              </div>
+            </div>
+            <div class="ss-item">
+              <svg class="mark" style="color: #b02e28"><use href="#m-suspended" /></svg>
+              <div>
+                <div class="nm">Suspended</div>
+                <div class="ds">A safety item is missing</div>
+              </div>
+            </div>
+            <div class="ss-item">
+              <svg class="mark" style="color: #5b6763"><use href="#m-expired" /></svg>
+              <div>
+                <div class="nm">Expired</div>
+                <div class="ds">The pass ran out</div>
+              </div>
+            </div>
+            <div class="ss-item">
+              <svg class="mark" style="color: #5d6b66"><use href="#m-unknown" /></svg>
+              <div>
+                <div class="nm">Unknown</div>
+                <div class="ds">No pass, or not seen</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>Statement</span><span>02 / 15</span></div>
+    </section>
+
+    <!-- 03 · OPENER 01 -->
+    <section class="page opener">
+      <div class="plate"><span>Section 01</span><span>Foundations</span></div>
+      <div class="opener-main">
+        <div class="opener-num">01</div>
+        <h2>Foundations</h2>
+        <div class="opener-grid">
+          <p class="lede">
+            A mineral-grey ground, solid off-white islands, and one dark park green that carries every action. The
+            palette is restrained so that a pass state is the loudest thing on the screen.
+          </p>
+          <div class="opener-list">
+            <span><b>Colour</b><i>04</i></span>
+            <span><b>Colour in state</b><i>05</i></span>
+            <span><b>After dark</b><i>06</i></span>
+            <span><b>Typography</b><i>07</i></span>
+            <span><b>Layout, shape, depth</b><i>08</i></span>
+          </div>
+        </div>
+      </div>
+      <div class="opener-foot"><span>Foundations · 04 – 08</span><span>Plate 03</span></div>
+    </section>
+
+    <!-- 04 · COLOUR -->
+    <section class="page">
+      <div class="head"><span>01 · Foundations</span><span>Colour</span></div>
+      <div class="body">
+        <div class="comp-title">
+          <div>
+            <p class="kicker">01.1 · Palette</p>
+            <h2 class="h2">Three signal hues. One working green.</h2>
+          </div>
+          <p class="lede" style="max-width: 42ch; font-size: 11.5px">
+            Pass states keep their own hues. Everything structural stays in the green-grey family, so red never has to
+            compete for attention.
+          </p>
+        </div>
+
+        <div class="hero-swatch" style="background: #17302a; color: #ffffff">
+          <div>
+            <span class="kicker" style="color: #9dbbb0">Primary · action</span>
+            <div class="hn">Park Plate Green</div>
+          </div>
+          <div class="hm">#17302A<br />White text · 14.07:1</div>
+        </div>
+
+        <div class="swatches">
+          <div class="sw">
+            <div class="chip" style="background: #e7ebe8"></div>
+            <div class="nm">Mineral Canvas</div>
+            <div class="hx">#E7EBE8</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #fbfcfb"></div>
+            <div class="nm">Island White</div>
+            <div class="hx">#FBFCFB</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #ffffff"></div>
+            <div class="nm">Raised White</div>
+            <div class="hx">#FFFFFF</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #eef2ef"></div>
+            <div class="nm">Sunken Grey</div>
+            <div class="hx">#EEF2EF</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #1c2925"></div>
+            <div class="nm">Ink</div>
+            <div class="hx">#1C2925</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #5d6b66"></div>
+            <div class="nm">Moss Grey</div>
+            <div class="hx">#5D6B66</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #cfd6d2"></div>
+            <div class="nm">Hairline</div>
+            <div class="hx">#CFD6D2</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #8e9994"></div>
+            <div class="nm">Field Edge</div>
+            <div class="hx">#8E9994</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #aab3af"></div>
+            <div class="nm">Lake Slate</div>
+            <div class="hx">#AAB3AF</div>
+          </div>
+          <div class="sw">
+            <div class="chip" style="background: #24443b"></div>
+            <div class="nm">Rail Green</div>
+            <div class="hx">#24443B</div>
+          </div>
+        </div>
+
+        <div class="signal-strip">
+          <span class="kicker">Signal pairs</span>
+          <div class="signal-row">
+            <div class="sig-pair">
+              <span class="pp"><i style="background: #237446"></i><b style="background: #e3f1e8"></b></span>
+              <span><span class="lb">Valid</span><br /><span class="rt">4.92:1</span></span>
+            </div>
+            <div class="sig-pair">
+              <span class="pp"><i style="background: #94500e"></i><b style="background: #fbeedd"></b></span>
+              <span><span class="lb">Expiring</span><br /><span class="rt">5.38:1</span></span>
+            </div>
+            <div class="sig-pair">
+              <span class="pp"><i style="background: #b02e28"></i><b style="background: #fbe9e7"></b></span>
+              <span><span class="lb">Suspended</span><br /><span class="rt">5.48:1</span></span>
+            </div>
+            <div class="sig-pair">
+              <span class="pp"><i style="background: #5b6763"></i><b style="background: #eceeed"></b></span>
+              <span><span class="lb">Expired</span><br /><span class="rt">5.05:1</span></span>
+            </div>
+            <div class="sig-pair">
+              <span class="pp"><i style="background: #5d6b66"></i><b style="background: #eef2ef"></b></span>
+              <span><span class="lb">Unknown</span><br /><span class="rt">4.94:1</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="colour-notes">
+          <p>
+            <b>The Solid Surface Rule.</b> Cards, buttons, menus, bars and dialogs have solid fills. Nothing that holds
+            text is transparent.
+          </p>
+          <p>
+            <b>One action green.</b> Park Plate Green marks the one action that moves the case forward. It is dark
+            enough for white text.
+          </p>
+          <p>
+            <b>Grey does the rest.</b> Borders, captions and secondary text stay quiet, so the eye lands on state and
+            action.
+          </p>
+        </div>
+      </div>
+      <div class="foot"><span>01 · Foundations</span><span>04 / 15</span></div>
+    </section>
+
+    <!-- 05 · COLOUR IN STATE -->
+    <section class="page">
+      <div class="head"><span>01 · Foundations</span><span>Colour in state</span></div>
+      <div class="body">
+        <div class="comp-title">
+          <div>
+            <p class="kicker">01.2 · Pass states</p>
+            <h2 class="h2">Five states, five shapes.</h2>
+          </div>
+          <p class="lede" style="max-width: 42ch; font-size: 11.5px">
+            Every state pairs a foreground and a tinted background, and always travels with its own shape mark. The
+            words travel with it too.
+          </p>
+        </div>
+
+        <div class="state-grid">
+          <div class="state-card" style="background: #e3f1e8; color: #237446">
+            <svg class="mark"><use href="#m-valid" /></svg>
+            <div class="sn">Valid</div>
+            <div class="sp">Filled dot<br />#237446 on #E3F1E8</div>
+            <div class="sx">
+              <span class="badge" style="background: #fbfcfb"
+                ><svg class="mark"><use href="#m-valid" /></svg>Valid to 20 Oct 2027</span
+              >
+            </div>
+            <div class="sd">A pass is in force. The badge carries the date, so the colour does not have to.</div>
+          </div>
+          <div class="state-card" style="background: #fbeedd; color: #94500e">
+            <svg class="mark"><use href="#m-expiring" /></svg>
+            <div class="sn">Expiring</div>
+            <div class="sp">Half ring<br />#94500E on #FBEEDD</div>
+            <div class="sx">
+              <span class="badge" style="background: #fbfcfb"
+                ><svg class="mark"><use href="#m-expiring" /></svg>Expires in 12 days</span
+              >
+            </div>
+            <div class="sd">Ends within 30 days, or a warning with a plan already in motion.</div>
+          </div>
+          <div class="state-card" style="background: #fbe9e7; color: #b02e28">
+            <svg class="mark"><use href="#m-suspended" /></svg>
+            <div class="sn">Suspended</div>
+            <div class="sp">Square<br />#B02E28 on #FBE9E7</div>
+            <div class="sx">
+              <span class="badge" style="background: #fbfcfb"
+                ><svg class="mark"><use href="#m-suspended" /></svg>Paused since 06:42</span
+              >
+            </div>
+            <div class="sd">A safety item is missing, or a route to the water is open.</div>
+          </div>
+          <div class="state-card" style="background: #eceeed; color: #5b6763">
+            <svg class="mark"><use href="#m-expired" /></svg>
+            <div class="sn">Expired</div>
+            <div class="sp">Slashed ring<br />#5B6763 on #ECEEED</div>
+            <div class="sx">
+              <span class="badge" style="background: #fbfcfb"
+                ><svg class="mark"><use href="#m-expired" /></svg>Expired 04 Sep 2026</span
+              >
+            </div>
+            <div class="sd">The pass ran out. The record stays visible.</div>
+          </div>
+          <div class="state-card" style="background: #eef2ef; color: #5d6b66">
+            <svg class="mark"><use href="#m-unknown" /></svg>
+            <div class="sn">Unknown</div>
+            <div class="sp">Hollow ring<br />#5D6B66 on #EEF2EF</div>
+            <div class="sx">
+              <span class="badge" style="background: #fbfcfb"
+                ><svg class="mark"><use href="#m-unknown" /></svg>Not seen since 12 Oct</span
+              >
+            </div>
+            <div class="sd">No pass yet, or the drone could not see. Never read as safe.</div>
+          </div>
+        </div>
+
+        <div class="state-examples">
+          <div class="se-head">
+            <span class="kicker">In a record</span>
+            <span class="caption">The mark, the words and the date travel together.</span>
+          </div>
+          <div class="se-row">
+            <div class="se-item">
+              <span class="badge" style="background: #e3f1e8; color: #237446"
+                ><svg class="mark"><use href="#m-valid" /></svg>Valid to 20 Oct 2027</span
+              >
+              <span class="se-txt">Fence panel replaced and retested.</span>
+            </div>
+            <div class="se-item">
+              <span class="badge" style="background: #fbe9e7; color: #b02e28"
+                ><svg class="mark"><use href="#m-suspended" /></svg>Paused since 06:42</span
+              >
+              <span class="se-txt">Panel 4 missing; the pass is paused.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rules-2">
+          <div>
+            <b>The Shape-Carries-State Rule.</b>
+            <p>
+              A pass state is never shown by colour alone. Every mark has its own shape, and every badge also carries
+              words. The system survives glare, colour blindness and a greyscale photocopy.
+            </p>
+          </div>
+          <div>
+            <b>The Calm Alarm Rule.</b>
+            <p>
+              Red appears only where a safety item is missing, a route is open, or an action is destructive. Warnings
+              with a plan already in motion use Expiring Amber.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>01 · Foundations</span><span>05 / 15</span></div>
+    </section>
+
+    <!-- 06 · AFTER DARK -->
+    <section class="page dark-page">
+      <div class="head"><span>01 · Foundations</span><span>After dark</span></div>
+      <div class="body">
+        <div class="darkboard">
+          <div>
+            <p class="kicker">01.3 · Dark mode</p>
+            <h2 class="h2">The same system, after dark.</h2>
+            <p class="lede" style="margin-top: 12px; font-size: 11.5px; max-width: 40ch">
+              Dark mode is a second rendering of the same tokens, not a second design. The canvas falls to near-black,
+              islands lift one step, and the accent becomes pale sage so it can carry dark text.
+            </p>
+
+            <div class="dark-palette">
+              <div class="dark-sw">
+                <div class="c" style="background: #111a17"></div>
+                <div>
+                  <div class="nm">Mineral Canvas</div>
+                  <div class="hx">#111A17</div>
+                </div>
+                <div class="role">page ground</div>
+              </div>
+              <div class="dark-sw">
+                <div class="c" style="background: #1c2925"></div>
+                <div>
+                  <div class="nm">Island White</div>
+                  <div class="hx">#1C2925</div>
+                </div>
+                <div class="role">surfaces</div>
+              </div>
+              <div class="dark-sw">
+                <div class="c" style="background: #24302c"></div>
+                <div>
+                  <div class="nm">Raised White</div>
+                  <div class="hx">#24302C</div>
+                </div>
+                <div class="role">inputs, chips</div>
+              </div>
+              <div class="dark-sw">
+                <div class="c" style="background: #fbfcfb"></div>
+                <div>
+                  <div class="nm">Ink</div>
+                  <div class="hx">#FBFCFB</div>
+                </div>
+                <div class="role">primary text</div>
+              </div>
+              <div class="dark-sw">
+                <div class="c" style="background: #7fa596"></div>
+                <div>
+                  <div class="nm">Park Plate Green</div>
+                  <div class="hx">#7FA596</div>
+                </div>
+                <div class="role">accent, action</div>
+              </div>
+              <div class="dark-sw">
+                <div class="c" style="background: #b4bdb8"></div>
+                <div>
+                  <div class="nm">Moss Grey</div>
+                  <div class="hx">#B4BDB8</div>
+                </div>
+                <div class="role">secondary text</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sample">
+            <div class="sample-top">
+              <div>
+                <div class="t">Inbox</div>
+                <div class="s">Elmina · 4 edges need attention</div>
+              </div>
+              <div class="sim simlabel">Simulation</div>
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: #3a4743"></div>
+            </div>
+
+            <div class="sample-island">
+              <div class="token-row">
+                <span class="codeplate">LK·S12</span>
+                <span class="badge" style="background: #e3f1e8; color: #237446">
+                  <svg class="mark"><use href="#m-valid" /></svg>
+                  Valid to 20 Oct 2027
+                </span>
+              </div>
+              <div class="h">Fence panel missing</div>
+              <p class="p">
+                Central Park Lake, by the playground. The safety pass is paused until the panel is replaced.
+              </p>
+              <div class="sample-actions">
+                <span class="btn btn-primary">Send to work order</span>
+                <span class="btn btn-secondary">Look again</span>
+              </div>
+              <div class="sample-field">
+                <div class="field-label">Severity</div>
+                <div class="field">High <span class="unit">4 / 5</span></div>
+              </div>
+              <p class="sample-note">
+                The safety pass for this fence is paused until it is fixed. The one action moves the case forward.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dark-notes">
+          <div>
+            <b>One accent, re-valued.</b>
+            <p>Pale sage carries dark text at 6.52:1 on the dark canvas. The action stays the only filled button.</p>
+          </div>
+          <div>
+            <b>Shadows stay rare.</b>
+            <p>
+              Islands still tile flat. Elevation appears only when a card floats over moving content such as the map.
+            </p>
+          </div>
+          <div>
+            <b>Same marks, same words.</b>
+            <p>Every state mark and badge is unchanged. Only the token values move.</p>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>01 · Foundations</span><span>06 / 15</span></div>
+    </section>
+
+    <!-- 07 · TYPE -->
+    <section class="page">
+      <div class="head"><span>01 · Foundations</span><span>Typography</span></div>
+      <div class="body">
+        <div class="type-grid">
+          <div class="type-hero">
+            <p class="kicker">01.4 · Typeface</p>
+            <div class="aa">Aa</div>
+            <div class="tn">Atkinson Hyperlegible Next</div>
+            <p class="td">
+              One humanist face, designed for low-vision readers. Similar characters (Il1, O0) stay distinct, and the
+              letterforms hold up on a phone in sunlight.
+            </p>
+            <div class="weights">
+              <span style="font-weight: 400">400</span>
+              <span style="font-weight: 500">500</span>
+              <span style="font-weight: 600">600</span>
+              <span style="font-weight: 700">700</span>
+            </div>
+            <div class="read-sample">
+              <p class="kicker" style="margin-bottom: 6px">Reading sample</p>
+              <p>
+                The dashboard never sets a paragraph wider than about 75 characters. On the phone, body text stays at 15
+                px and the pinned action bar keeps the one action in reach.
+              </p>
+            </div>
+          </div>
+
+          <div class="scale">
+            <div class="scale-row">
+              <div class="scale-meta">Display<em>600 · 30 / 36</em></div>
+              <div style="font-size: 30px; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em">
+                Fence panel missing
+              </div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">H1<em>600 · 26 / 32</em></div>
+              <div style="font-size: 26px; line-height: 1.2; font-weight: 600; letter-spacing: -0.015em">
+                Which fix closes every way?
+              </div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">H2<em>600 · 20 / 26</em></div>
+              <div style="font-size: 20px; line-height: 1.25; font-weight: 600">3 changes found</div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">H3<em>600 · 16 / 22</em></div>
+              <div style="font-size: 16px; line-height: 1.35; font-weight: 600">Why it matters</div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">Body<em>400 · 15 / 22</em></div>
+              <div style="font-size: 15px; line-height: 1.45">A gap at the water edge, found on the last patrol.</div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">Body Dense<em>400 · 14 / 20</em></div>
+              <div style="font-size: 14px; line-height: 1.4">Checked 06:42 · Retention pond 3</div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">Label<em>500 · 14 / 20</em></div>
+              <div style="font-size: 14px; line-height: 1.3; font-weight: 500">Send to work order</div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">Label Small<em>500 · 12 / 16</em></div>
+              <div style="font-size: 12px; line-height: 1.3; font-weight: 500">Photo: patrol, 12 Oct</div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">Overline<em>700 · 12 / 16 · 0.06em</em></div>
+              <div
+                style="
+                  font-size: 12px;
+                  line-height: 1.3;
+                  font-weight: 700;
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                "
+              >
+                Simulation
+              </div>
+            </div>
+            <div class="scale-row">
+              <div class="scale-meta">Code Plate<em>700 · 14 / 0.02em</em></div>
+              <div style="font-size: 14px; line-height: 1.3; font-weight: 700; letter-spacing: 0.04em">LK·S12</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="type-note">
+          <b>The 12 Pixel Floor Rule.</b>
+          <p>
+            No text is smaller than 12 px. Body lines stay under about 75 characters. Codes appear as small plates,
+            never as page titles.
+          </p>
+        </div>
+      </div>
+      <div class="foot"><span>01 · Foundations</span><span>07 / 15</span></div>
+    </section>
+
+    <!-- 08 · LAYOUT, SHAPE, DEPTH -->
+    <section class="page">
+      <div class="head"><span>01 · Foundations</span><span>Layout, shape, depth</span></div>
+      <div class="body">
+        <div class="layout-grid">
+          <div>
+            <p class="kicker">01.5 · Surface</p>
+            <h3 class="h3" style="margin-bottom: 10px">Islands on a mineral canvas.</h3>
+            <div class="diagram-wrap">
+              <div class="dash">
+                <div class="dash-rail">
+                  <svg class="lg" aria-hidden="true"><use href="#logo-dark" /></svg>
+                  <div class="it on"></div>
+                  <div class="it"></div>
+                  <div class="it"></div>
+                  <div class="it"></div>
+                  <div class="it" style="margin-top: auto"></div>
+                </div>
+                <div class="dash-main">
+                  <div class="dash-top">
+                    <div class="tt"></div>
+                    <div class="ss"></div>
+                    <div class="sim"></div>
+                    <div class="av"></div>
+                  </div>
+                  <div class="dash-islands">
+                    <div class="dash-list">
+                      <div class="row on"></div>
+                      <div class="row"></div>
+                      <div class="row"></div>
+                      <div class="row"></div>
+                    </div>
+                    <div class="dash-detail">
+                      <div class="ttl"></div>
+                      <div class="sub"></div>
+                      <div class="photo"></div>
+                      <div class="btnb"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="callout" style="left: 58px; top: 20px">1</div>
+              <div class="callout" style="left: 178px; top: 18px">2</div>
+              <div class="callout" style="right: 22px; bottom: 22px">3</div>
+              <div class="callout" style="left: 108px; bottom: 22px">4</div>
+            </div>
+            <div class="legend">
+              <span><i class="dot">1</i>232 px rail, 72 px collapsed</span>
+              <span><i class="dot">2</i>64 px top bar, SIMULATION</span>
+              <span><i class="dot">3</i>28 px island padding</span>
+              <span><i class="dot">4</i>12 px canvas and gutters</span>
+              <span><i class="dot">5</i>Phone 390 × 844, 16 px sides</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="spec-block">
+              <h4>Spacing · 4 px steps</h4>
+              <div class="space-row"><span class="v">4</span><span class="bar" style="width: 9px"></span></div>
+              <div class="space-row"><span class="v">8</span><span class="bar" style="width: 18px"></span></div>
+              <div class="space-row"><span class="v">12</span><span class="bar" style="width: 26px"></span></div>
+              <div class="space-row"><span class="v">16</span><span class="bar" style="width: 35px"></span></div>
+              <div class="space-row"><span class="v">20</span><span class="bar" style="width: 44px"></span></div>
+              <div class="space-row"><span class="v">24</span><span class="bar" style="width: 53px"></span></div>
+              <div class="space-row"><span class="v">32</span><span class="bar" style="width: 70px"></span></div>
+              <div class="space-row"><span class="v">40</span><span class="bar" style="width: 88px"></span></div>
+              <div class="space-row"><span class="v">48</span><span class="bar" style="width: 106px"></span></div>
+              <div class="space-row"><span class="v">64</span><span class="bar" style="width: 141px"></span></div>
+            </div>
+
+            <div class="spec-block">
+              <h4>Radius</h4>
+              <div class="radius-row">
+                <div class="radius">
+                  <div class="box" style="border-radius: 4px"></div>
+                  <div class="lb">4</div>
+                </div>
+                <div class="radius">
+                  <div class="box" style="border-radius: 8px"></div>
+                  <div class="lb">8</div>
+                </div>
+                <div class="radius">
+                  <div class="box" style="border-radius: 12px"></div>
+                  <div class="lb">12</div>
+                </div>
+                <div class="radius">
+                  <div class="box" style="border-radius: 16px"></div>
+                  <div class="lb">16</div>
+                </div>
+                <div class="radius">
+                  <div class="box" style="border-radius: 50%"></div>
+                  <div class="lb">full</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="spec-block">
+              <h4>Elevation</h4>
+              <div class="elev-row">
+                <div class="elev" style="box-shadow: 0 1px 2px rgba(22, 27, 26, 0.08)">E1</div>
+                <div
+                  class="elev"
+                  style="
+                    box-shadow:
+                      0 4px 12px rgba(22, 27, 26, 0.1),
+                      0 1px 2px rgba(22, 27, 26, 0.06);
+                  "
+                >
+                  E2
+                </div>
+                <div
+                  class="elev"
+                  style="
+                    box-shadow:
+                      0 16px 40px rgba(22, 27, 26, 0.18),
+                      0 2px 6px rgba(22, 27, 26, 0.08);
+                  "
+                >
+                  E3
+                </div>
+              </div>
+            </div>
+
+            <div class="spec-block">
+              <h4>Grid · 12 columns</h4>
+              <div class="gridbars">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <p class="caption" style="margin-top: 5px">12 px gutters. The work area fills the remaining width.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rules-3">
+          <div>
+            <b>The Flat Island Rule.</b>
+            <p>
+              Islands that tile the layout never carry a shadow. Depth comes from the canvas showing through the
+              gutters.
+            </p>
+          </div>
+          <div>
+            <b>Targets.</b>
+            <p>At least 44 px on phone, at least 32 px on desktop, and a 2 px focus ring on every focusable element.</p>
+          </div>
+          <div>
+            <b>Borders.</b>
+            <p>1 px hairlines. 1.5 px on outline buttons and the SIMULATION label. 2 px on focus and error only.</p>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>01 · Foundations</span><span>08 / 15</span></div>
+    </section>
+
+    <!-- 09 · OPENER 02 -->
+    <section class="page opener park-page">
+      <div class="plate"><span>Section 02</span><span>Components</span></div>
+      <div class="opener-main">
+        <div class="opener-num outline-mist">02</div>
+        <h2>Components</h2>
+        <div class="opener-grid">
+          <p class="lede">
+            One action per screen, one shape per state, one set of parts that behave the same everywhere. The components
+            below are rendered live, not drawn.
+          </p>
+          <div class="opener-list">
+            <span><b>Actions and fields</b><i>10</i></span>
+            <span><b>Signature language</b><i>11</i></span>
+            <span><b>Product screens</b><i>12</i></span>
+            <span><b>Map and phone</b><i>13</i></span>
+          </div>
+        </div>
+      </div>
+      <div class="opener-foot"><span>Components · 10 – 11</span><span>Plate 09</span></div>
+    </section>
+
+    <!-- 10 · COMPONENTS -->
+    <section class="page">
+      <div class="head"><span>02 · Components</span><span>Actions and fields</span></div>
+      <div class="body">
+        <div class="comp-title">
+          <div>
+            <p class="kicker">02.1 · Controls</p>
+            <h2 class="h2">Parts that behave the same everywhere.</h2>
+          </div>
+          <p class="lede" style="max-width: 40ch; font-size: 11px">
+            One primary button per screen. The negative action sits apart, in outline. A disabled control always says
+            why it is disabled.
+          </p>
+        </div>
+
+        <div class="btn-row" style="margin-top: 18px">
+          <div class="btn-cell">
+            <span class="lb">Primary</span><span class="btn btn-primary">Send to work order</span>
+          </div>
+          <div class="btn-cell"><span class="lb">Secondary</span><span class="btn btn-secondary">Look again</span></div>
+          <div class="btn-cell"><span class="lb">Quiet</span><span class="btn btn-quiet">Back to Inbox</span></div>
+          <div class="btn-cell"><span class="lb">Danger</span><span class="btn btn-danger">Not a problem</span></div>
+          <div class="btn-cell"><span class="lb">Disabled</span><span class="btn btn-disabled">Send</span></div>
+          <div class="btn-cell">
+            <span class="lb">Focus</span><span class="btn btn-secondary btn-focus">Look again</span>
+          </div>
+        </div>
+        <p class="note-line">
+          Sending unlocks once Fix Lens has checked the fix. The disabled button keeps that reason beside it.
+        </p>
+
+        <div class="comp-grid">
+          <div>
+            <div class="field-cell">
+              <div class="field-label">Place name</div>
+              <div class="field">Central Park Lake</div>
+              <div class="field-help">Plain names lead. Codes follow as small plates.</div>
+            </div>
+            <div class="field-cell">
+              <div class="field-label">Measurement</div>
+              <div class="field">1.2 <span class="unit">cm</span></div>
+              <div class="field-help">The unit sits in its own segment inside the box.</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="field-cell">
+              <div class="field-label">Focused</div>
+              <div class="field focus">Central Park Lake</div>
+              <div class="field-help">2 px focus border, accent caret.</div>
+            </div>
+            <div class="field-cell">
+              <div class="field-label">Error</div>
+              <div class="field error">0.0 <span class="unit">cm</span></div>
+              <div class="field-help err">Measure the gap again. It must be above 0 cm.</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="field-cell">
+              <div class="field-label">Pass / fail</div>
+              <div class="seg">
+                <span class="yes">
+                  <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+                    <path
+                      d="M2.5 6.4 4.9 8.8 9.5 3.4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  Pass
+                </span>
+                <span class="no">
+                  <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true">
+                    <path
+                      d="M3 3l6 6M9 3l-6 6"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  Fail
+                </span>
+              </div>
+              <div class="field-help">The chosen side fills with its state tint.</div>
+            </div>
+            <div class="field-cell">
+              <div class="field-label">Chip</div>
+              <div class="token-row">
+                <span class="chip">How sure: high</span>
+                <span class="chip">Photo attached</span>
+              </div>
+              <div class="field-help">28 px tall, 4 px corners, hairline border.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-band">
+          <div class="ab-head">
+            <span class="kicker">Anatomy · the action row</span>
+            <span class="caption">Primary first. Destructive last. The reason sits beside anything disabled.</span>
+          </div>
+          <div class="ab-island">
+            <span class="btn btn-primary">Send to work order</span>
+            <span class="btn btn-secondary">Look again</span>
+            <span class="btn btn-quiet">Back to Inbox</span>
+            <div class="ab-disabled">
+              <span class="btn btn-disabled">Send</span>
+              <span class="ab-reason">Sending unlocks once Fix Lens has checked the fix.</span>
+            </div>
+            <span class="btn btn-danger" style="margin-left: auto">Not a problem</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 18px; border-top: 1px solid var(--hair); padding-top: 12px">
+          <div class="token-row">
+            <span class="badge" style="background: #e3f1e8; color: #237446"
+              ><svg class="mark"><use href="#m-valid" /></svg>Valid to 20 Oct 2027</span
+            >
+            <span class="badge" style="background: #fbeedd; color: #94500e"
+              ><svg class="mark"><use href="#m-expiring" /></svg>Expires in 12 days</span
+            >
+            <span class="badge" style="background: #fbe9e7; color: #b02e28"
+              ><svg class="mark"><use href="#m-suspended" /></svg>Paused since 06:42</span
+            >
+            <span class="simlabel">Simulation</span>
+            <span class="codeplate">LK·S12</span>
+          </div>
+          <p class="note-line" style="margin-top: 10px">
+            A badge always carries its shape and its words. The SIMULATION label appears once per screen, in the top
+            bar, and covers everything on that screen.
+          </p>
+        </div>
+      </div>
+      <div class="foot"><span>02 · Components</span><span>10 / 15</span></div>
+    </section>
+
+    <!-- 11 · SIGNATURE -->
+    <section class="page">
+      <div class="head"><span>02 · Components</span><span>Signature language</span></div>
+      <div class="body">
+        <div class="sig-head">
+          <div>
+            <p class="kicker">02.2 · The marks</p>
+            <h2 class="h2">State before colour.</h2>
+          </div>
+          <p class="lede">
+            Five pass states, each a different shape. The mark is the part that survives a greyscale print, a cracked
+            screen and a glance from a moving vehicle.
+          </p>
+        </div>
+
+        <div class="sig-marks">
+          <div class="sig-mark">
+            <svg class="mark" style="color: #237446"><use href="#m-valid" /></svg>
+            <div class="sn">Valid</div>
+            <div class="ss">Filled dot</div>
+            <div class="rulecode">12 / 18 px</div>
+          </div>
+          <div class="sig-mark">
+            <svg class="mark" style="color: #94500e"><use href="#m-expiring" /></svg>
+            <div class="sn">Expiring</div>
+            <div class="ss">Half ring</div>
+            <div class="rulecode">12 / 18 px</div>
+          </div>
+          <div class="sig-mark">
+            <svg class="mark" style="color: #b02e28"><use href="#m-suspended" /></svg>
+            <div class="sn">Suspended</div>
+            <div class="ss">Square</div>
+            <div class="rulecode">12 / 18 px</div>
+          </div>
+          <div class="sig-mark">
+            <svg class="mark" style="color: #5b6763"><use href="#m-expired" /></svg>
+            <div class="sn">Expired</div>
+            <div class="ss">Slashed ring</div>
+            <div class="rulecode">12 / 18 px</div>
+          </div>
+          <div class="sig-mark">
+            <svg class="mark" style="color: #5d6b66"><use href="#m-unknown" /></svg>
+            <div class="sn">Unknown</div>
+            <div class="ss">Hollow ring</div>
+            <div class="rulecode">12 / 18 px</div>
+          </div>
+        </div>
+
+        <div class="sig-lower">
+          <div class="sig-box">
+            <p class="kicker" style="margin-bottom: 10px">A row, at work</p>
+            <div class="flagrow">
+              <span class="sev"><i style="width: 9px; height: 9px"></i></span>
+              <div>
+                <div class="ft">Fence panel missing</div>
+                <div class="fp">Central Park Lake · by the playground</div>
+              </div>
+              <span class="tm">06:42</span>
+            </div>
+            <div class="sevrow">
+              <div class="s">
+                <div class="box"><i style="width: 3px; height: 3px"></i></div>
+                Low
+              </div>
+              <div class="s">
+                <div class="box"><i style="width: 6px; height: 6px"></i></div>
+                Medium
+              </div>
+              <div class="s">
+                <div class="box"><i style="width: 10px; height: 10px"></i></div>
+                High
+              </div>
+              <div style="margin-left: auto; text-align: right">
+                <span class="codeplate">WO-0087</span>
+              </div>
+            </div>
+            <p class="sig-note">Severity is a single ink dot. Size alone shows low, medium or high. Never colour.</p>
+          </div>
+
+          <div class="sig-box">
+            <p class="kicker" style="margin-bottom: 10px">The two plates</p>
+            <div class="token-row" style="gap: 10px">
+              <span class="codeplate">LK·S12</span>
+              <span class="simlabel">Simulation</span>
+            </div>
+            <p class="sig-note" style="margin-top: 10px">
+              A code plate names a segment. It is never a page title. The SIMULATION label is the only place the word
+              appears on a screen.
+            </p>
+            <div class="rule" style="margin: 14px 0"></div>
+            <p class="kicker" style="margin-bottom: 8px">Evidence frame</p>
+            <div style="display: flex; gap: 10px; align-items: center">
+              <div
+                style="
+                  width: 92px;
+                  height: 58px;
+                  border-radius: 6px;
+                  background: #dfe6e1;
+                  border: 1px solid var(--hair);
+                  position: relative;
+                "
+              >
+                <div
+                  style="position: absolute; inset: 12px 16px; border: 1.5px dashed #b02e28; border-radius: 3px"
+                ></div>
+              </div>
+              <div>
+                <div style="font: 600 10px/1.3 var(--f)">Panel 4 missing</div>
+                <div class="sig-note" style="margin-top: 2px">
+                  Dashed red outline, red tag.<br />Photo: patrol, 12 Oct.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="state-rules">
+          <div>
+            <b>One mark, one meaning.</b>
+            <p>A shape is never reused for a different state, and a state is never drawn with a second shape.</p>
+          </div>
+          <div>
+            <b>Words travel with it.</b>
+            <p>Every badge names the state and its date or reason. Colour is the fastest cue, not the only one.</p>
+          </div>
+          <div>
+            <b>Never decorative.</b>
+            <p>The marks are functional. They appear only where a pass state is being reported.</p>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>02 · Components</span><span>11 / 15</span></div>
+    </section>
+
+    <!-- 12 · SCREENS -->
+    <section class="page">
+      <div class="head"><span>03 · Product</span><span>Desktop</span></div>
+      <div class="body">
+        <div class="comp-title">
+          <div>
+            <p class="kicker">03.1 · The built product</p>
+            <h2 class="h2">One question, one action, one proof.</h2>
+          </div>
+          <p class="lede" style="max-width: 40ch; font-size: 11px">
+            Screens from the working build at 1440 × 900. Every screen carries the SIMULATION label once, in the top
+            bar.
+          </p>
+        </div>
+
+        <div class="screens-grid" style="margin-top: 18px">
+          <div>
+            <div class="shot">
+              <img src="../../demo/deck/assets/screens/inbox.webp" alt="Safe Edge Inbox, desktop, light mode" />
+            </div>
+            <div class="shot-cap">
+              <span class="n">PLATE A</span>
+              <p>
+                Inbox. The list holds the decision; the detail island holds the evidence and the one primary action.
+              </p>
+            </div>
+            <div class="screen-notes">
+              <p><b>Place first.</b> “Central Park Lake, by the playground” leads. LK·S12 follows as a plate.</p>
+              <p><b>Facts, not alarm.</b> The state, the consequence and the next step sit in that order.</p>
+              <p><b>One action.</b> “Send to work order” is the only filled button on the screen.</p>
+            </div>
+          </div>
+
+          <div class="shot-stack">
+            <div>
+              <div class="shot">
+                <img src="../../demo/deck/assets/screens/fix-lens.webp" alt="Safe Edge Fix Lens plan view" />
+              </div>
+              <div class="shot-cap">
+                <span class="n">PLATE B</span>
+                <p>Fix Lens. Each option is drawn to scale; blocked routes and open routes are labelled.</p>
+              </div>
+            </div>
+            <div>
+              <div class="shot">
+                <img src="../../demo/deck/assets/screens/pass.webp" alt="Safe Edge Pass issued screen" />
+              </div>
+              <div class="shot-cap">
+                <span class="n">PLATE C</span>
+                <p>Pass issued. The repair has been retested and the pass is in force.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>03 · Product</span><span>12 / 15</span></div>
+    </section>
+
+    <!-- 13 · MAP AND PHONE -->
+    <section class="page dark-page">
+      <div class="head"><span>03 · Product</span><span>Map and phone</span></div>
+      <div class="body">
+        <div class="comp-title">
+          <div>
+            <p class="kicker">03.2 · Across surfaces</p>
+            <h2 class="h2">From the map to the phone.</h2>
+          </div>
+          <p class="lede" style="max-width: 38ch; font-size: 11px">
+            The same tokens, the same state marks, one reading order. The phone is 390 × 844 with a pinned action bar.
+          </p>
+        </div>
+
+        <div class="map-grid" style="margin-top: 16px">
+          <div>
+            <div class="map-shot">
+              <img
+                src="../../demo/deck/assets/screens/scene-flag.webp"
+                alt="Safe Edge 3D map with a flagged water edge"
+              />
+            </div>
+            <div class="shot-cap">
+              <span class="n">PLATE D</span>
+              <p>
+                Map. The 3D scene is its own page. Its cards stay light in both modes because the scene draws its own
+                day and night.
+              </p>
+            </div>
+            <div class="map-notes">
+              <p>
+                <b>Route, not decoration.</b> The flag sits on the edge, the route follows the water, and the card names
+                the place.
+              </p>
+              <p><b>One label.</b> The SIMULATION mark stays on the map too. Records and images do not repeat it.</p>
+            </div>
+          </div>
+
+          <div class="phone-wrap">
+            <img src="../../demo/deck/assets/screens/retest-phone.webp" alt="Safe Edge retest screen on a phone" />
+            <div class="shot-cap" style="margin-top: 8px">
+              <span class="n">PLATE E</span>
+              <p>Retest on the phone. One full-width primary button, 44 px targets, a status line under it.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>03 · Product</span><span>13 / 15</span></div>
+    </section>
+
+    <!-- 14 · STATES + ACCESS -->
+    <section class="page">
+      <div class="head"><span>04 · Proof</span><span>States and access</span></div>
+      <div class="body">
+        <div class="comp-title">
+          <div>
+            <p class="kicker">04.1 · Honesty in every state</p>
+            <h2 class="h2">Nothing is “all clear” unless it was seen.</h2>
+          </div>
+          <p class="lede" style="max-width: 38ch; font-size: 11px">
+            Every screen ships empty, loading and error states, in Light and Dark. An empty screen never implies safe.
+          </p>
+        </div>
+
+        <div class="state-mocks">
+          <div class="mock">
+            <div class="mock-top">INBOX · EMPTY</div>
+            <div class="mock-body">
+              <div class="ic"></div>
+              <div class="tt">3 spots were not visible</div>
+              <div class="pp">Retention pond 3 stayed unknown on the last patrol. Nothing is cleared.</div>
+              <div class="mock-action">
+                <span class="btn btn-disabled btn-xs">Send</span>
+                <span class="reason">No evidence to send.</span>
+              </div>
+            </div>
+          </div>
+          <div class="mock">
+            <div class="mock-top">INBOX · LOADING</div>
+            <div class="mock-body">
+              <div class="skel" style="width: 64%"></div>
+              <div class="skel" style="width: 88%"></div>
+              <div class="skel" style="width: 76%"></div>
+              <div class="skel" style="width: 52%"></div>
+              <div class="skel" style="width: 70%; margin-top: 10px"></div>
+              <div class="skel" style="width: 44%"></div>
+              <div class="pp" style="margin-top: auto">Loading the last patrol for Elmina.</div>
+            </div>
+          </div>
+          <div class="mock">
+            <div class="mock-top">INBOX · ERROR</div>
+            <div class="mock-body">
+              <div class="banner">
+                The drone feed is offline. Existing evidence stays visible. A walk crew checks at 10:00.
+              </div>
+              <div class="pp" style="margin-top: 8px">
+                Actions that cannot work stay disabled, with the reason beside them.
+              </div>
+              <div class="mock-action">
+                <span class="btn btn-secondary btn-xs">Try again</span>
+                <span class="reason">Last attempt 09:41.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="state-rules">
+          <div>
+            <b>Empty names the unknown.</b>
+            <p>“3 spots were not visible” is honest. “All clear” would not be.</p>
+          </div>
+          <div>
+            <b>Loading keeps the layout.</b>
+            <p>Skeletons sit in the real rows, with one line that says what is loading.</p>
+          </div>
+          <div>
+            <b>Error keeps the evidence.</b>
+            <p>The banner says what failed, what still works and what happens next.</p>
+          </div>
+        </div>
+
+        <div class="access-grid">
+          <div>
+            <p class="kicker" style="margin-bottom: 8px">Contrast · WCAG 2.2 AA</p>
+            <table class="ctable">
+              <thead>
+                <tr>
+                  <th>Pair</th>
+                  <th>Ratio</th>
+                  <th>AA</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Ink on Island White</td>
+                  <td>14.66</td>
+                  <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                  <td>Moss Grey on Island White</td>
+                  <td>5.43</td>
+                  <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                  <td>Valid text on tint</td>
+                  <td>4.92</td>
+                  <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                  <td>Expiring text on tint</td>
+                  <td>5.38</td>
+                  <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                  <td>Suspended text on tint</td>
+                  <td>5.48</td>
+                  <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                  <td>Unknown text on tint</td>
+                  <td>4.94</td>
+                  <td class="pass">Pass</td>
+                </tr>
+                <tr>
+                  <td>White on Park Plate Green</td>
+                  <td>14.07</td>
+                  <td class="pass">Pass</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="caption" style="margin-top: 6px">Ratios computed from the token hex values in sRGB.</p>
+          </div>
+
+          <div>
+            <p class="kicker" style="margin-bottom: 8px">Shape survives greyscale</p>
+            <div class="grey-strip">
+              <div class="g">
+                <svg class="mark" style="color: #237446"><use href="#m-valid" /></svg>Valid
+              </div>
+              <div class="g">
+                <svg class="mark" style="color: #94500e"><use href="#m-expiring" /></svg>Expiring
+              </div>
+              <div class="g">
+                <svg class="mark" style="color: #b02e28"><use href="#m-suspended" /></svg>Suspended
+              </div>
+              <div class="g">
+                <svg class="mark" style="color: #5b6763"><use href="#m-expired" /></svg>Expired
+              </div>
+              <div class="g">
+                <svg class="mark" style="color: #5d6b66"><use href="#m-unknown" /></svg>Unknown
+              </div>
+            </div>
+            <p class="small" style="margin-top: 12px; color: var(--moss)">
+              The five marks stay distinct without hue. The words stay attached. That is the test every state must pass.
+            </p>
+            <div class="rule" style="margin: 12px 0"></div>
+            <p class="small" style="color: var(--moss)">
+              Body text stays at 12 px or larger. Targets are at least 44 px on phone. Motion respects
+              <b>prefers-reduced-motion</b>.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="foot"><span>04 · Proof</span><span>14 / 15</span></div>
+    </section>
+
+    <!-- 15 · CLOSING -->
+    <section class="page park-page close">
+      <div class="head"><span>Safe Edge — Design System</span><span>Plate 15 — Colophon</span></div>
+      <div class="body">
+        <div class="close-main">
+          <div>
+            <p class="kicker">Read, open, test</p>
+            <h2>Everything here is live.</h2>
+            <p class="lede" style="margin-top: 12px; max-width: 42ch; font-size: 11.5px">
+              The album documents the system. The links below open the source file and the working prototype. Both were
+              checked on 22 October 2026.
+            </p>
+
+            <div class="links">
+              <div class="link-row">
+                <span class="lk">Figma source</span>
+                <a class="lv" href="https://www.figma.com/design/6KoP9X4g8nIYJXtTce7Bov/Safe-Edge-design-system"
+                  >figma.com/design/6KoP9X4g8nIYJXtTce7Bov/Safe-Edge-design-system</a
+                >
+              </div>
+              <div class="link-row">
+                <span class="lk">Live demo</span>
+                <a class="lv" href="https://safe-edge-two.vercel.app">safe-edge-two.vercel.app</a>
+              </div>
+              <div class="link-row">
+                <span class="lk">Repository</span>
+                <a class="lv" href="https://github.com/TolongLabs/safe-edge">github.com/TolongLabs/safe-edge</a>
+              </div>
+            </div>
+          </div>
+
+          <dl class="colophon">
+            <div class="col-block">
+              <dt>Typeface</dt>
+              <dd>Atkinson Hyperlegible Next, by the Braille Institute</dd>
+            </div>
+            <div class="col-block">
+              <dt>Palette</dt>
+              <dd>Mineral grey, park green, five signal states</dd>
+            </div>
+            <div class="col-block">
+              <dt>Documentation</dt>
+              <dd>Built from the approved Figma file and DESIGN.md</dd>
+            </div>
+            <div class="col-block">
+              <dt>Team</dt>
+              <dd>Team Tolong · People track · Sime Darby Property University Hackathon 2026</dd>
+            </div>
+            <div class="col-block">
+              <dt>Format</dt>
+              <dd>A4 landscape · 15 plates · PDF</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="close-line">
+          <p>Every edge has a state. Every state has a next step.</p>
+          <svg class="bigmark" aria-hidden="true"><use href="#logo-dark" /></svg>
+        </div>
+
+        <div class="close-foot">
+          <div class="fm">
+            <svg aria-hidden="true"><use href="#logo-dark" /></svg>
+            <div>
+              <div class="t">Safe Edge</div>
+              <div class="s">Find the gap. Close every way to the water. Prove the fix.</div>
+            </div>
+          </div>
+          <div class="r">Volume 01<br />End of album</div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>

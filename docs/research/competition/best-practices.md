@@ -18,7 +18,7 @@ Contents:
 ## The deck
 
 - **Readers skim.** DocSend's 2025 data shows investors spend "less than 3 minutes reviewing pitch decks", and that companies "can no longer get by with a 'Minimum Viable PowerPoint'" ([DocSend, April 2025][docsend]). Judges reading 200 or more submissions likely behave the same; that is our read.
-- **Ten slides is a known ceiling.** Guy Kawasaki's 10/20/30 rule: "ten slides, last no more than twenty minutes, and contain no font smaller than thirty points", because a person "cannot comprehend more than ten concepts in a meeting" ([Kawasaki, 2005][kawasaki]). Our cap is the same: 10 main slides, with an appendix allowed.
+- **Ten slides is a known ceiling.** Guy Kawasaki's 10/20/30 rule: "ten slides, last no more than twenty minutes, and contain no font smaller than thirty points", because a person "cannot comprehend more than ten concepts in a meeting" ([Kawasaki, 2005][kawasaki]). The briefing uses the same ten-main-slide ceiling. The later organiser flow confirmed by the user has Team Information plus ten pitch sections, 11 pages total; keep supporting evidence in a separate PDF ([current flow](/docs/CONTEXT.md#eleven-slide-submission-deck)).
 - **One problem through every slide.** The organisers' slide 25 walks one parking example through all eight areas ([BRIEF, pitch deck](/docs/BRIEF.md#pitch-deck)).
 - **Say what it is first.** One judge writes that teams who "opened with context", including "a problem statement that took forty seconds to arrive at the product", lost ground, while those who scored well "opened with a plain declarative: this is a tool that does X for Y" ([judge's notes, 2026][devto]). Practitioner advice.
 
