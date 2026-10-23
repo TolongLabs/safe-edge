@@ -398,6 +398,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/candidates/{id}/journey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Repair journey for a candidate
+         * @description Roles: any. Agents need scope `inspection.read`.
+         */
+        get: operations["getRepairJourney"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/damage-reports": {
         parameters: {
             query?: never;
@@ -964,6 +984,46 @@ export interface paths {
          * @description Roles: installer. Agents are refused.
          */
         post: operations["startWorkOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/{id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update work order progress
+         * @description Roles: installer. Agents are refused.
+         */
+        post: operations["updateWorkOrderProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/{id}/due-date": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change work order due date
+         * @description Roles: installer. Agents are refused.
+         */
+        post: operations["changeWorkOrderDueDate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1911,6 +1971,17 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
+        /** @enum {string} */
+        WorkOrderProgress: "buying_materials" | "waiting_for_delivery" | "fixing";
+        WorkOrderDueDateChange: {
+            from: string | null;
+            /** Format: date-time */
+            to: string;
+            reason: string;
+            byUserId: string;
+            /** Format: date-time */
+            at: string;
+        };
         WorkOrder: {
             id: string;
             findingId: string;
@@ -1927,6 +1998,14 @@ export interface components {
             externalRef: string | null;
             /** @description Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it */
             externalError: components["schemas"]["WorkOrderExternalError"] | null;
+            progress?: components["schemas"]["WorkOrderProgress"] | null;
+            expectedDeliveryAt?: string | null;
+            trackingNumber?: string | null;
+            noTracking?: boolean;
+            progressUpdatedAt?: string | null;
+            dueAtChanges?: components["schemas"]["WorkOrderDueDateChange"][];
+            spent?: components["schemas"]["Quote"] | null;
+            overspendReason?: string | null;
             /** Format: date-time */
             createdAt: string;
             simulated: boolean;
@@ -2300,6 +2379,30 @@ export interface components {
         CompleteWorkOrderRequest: {
             evidence: components["schemas"]["EvidenceRef"][];
             note: string;
+            spent?: components["schemas"]["Quote"] | null;
+            overspendReason?: string | null;
+        };
+        UpdateWorkOrderProgressRequest: {
+            progress: components["schemas"]["WorkOrderProgress"];
+            expectedDeliveryAt?: string | null;
+            trackingNumber?: string | null;
+            noTracking?: boolean;
+        };
+        ChangeWorkOrderDueDateRequest: {
+            /** Format: date-time */
+            dueAt: string;
+            reason: string;
+        };
+        RepairJourney: {
+            candidate: components["schemas"]["Candidate"];
+            report: components["schemas"]["DamageReport"] | null;
+            finding: components["schemas"]["Finding"] | null;
+            workOrder: components["schemas"]["WorkOrder"] | null;
+            remedy: components["schemas"]["Remedy"] | null;
+            retest: components["schemas"]["Retest"] | null;
+            planApprovedAt: string | null;
+            assignedAt: string | null;
+            startedAt: string | null;
         };
         RecordRetestRequest: {
             workOrderId: string;
@@ -3145,6 +3248,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CandidateEvidence"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getRepairJourney: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Repair journey for a candidate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepairJourney"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
@@ -4052,6 +4180,72 @@ export interface operations {
                     "application/json": components["schemas"]["WorkOrder"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateWorkOrderProgress: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWorkOrderProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description Update work order progress */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    changeWorkOrderDueDate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeWorkOrderDueDateRequest"];
+            };
+        };
+        responses: {
+            /** @description Change work order due date */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrder"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
             404: components["responses"]["NotFound"];

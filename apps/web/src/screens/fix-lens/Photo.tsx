@@ -1,3 +1,5 @@
+import type { EvidenceRef } from '@safe-edge/contracts'
+import { EvidencePhoto } from '../shared/EvidencePhoto'
 import type { Scene } from '../../scenes'
 import { SampleImage } from '../../scenes'
 
@@ -8,11 +10,13 @@ const H = 0.32
 /** The finding's sample photo with opening boxes laid over it in 0 to 1 photo coordinates (the same as PhotoMark). */
 export function Photo({
   scene,
+  image,
   plates,
   onPlace,
   when
 }: {
-  scene: Scene
+  scene: Scene | null
+  image?: EvidenceRef | null
   plates: Plate[]
   /** Click on the photo, as 0 to 1 photo coordinates; omitted where the role may not mark. */
   onPlace?: (x: number, y: number) => void
@@ -29,7 +33,13 @@ export function Photo({
           onPlace((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height)
         }}
       >
-        <SampleImage scene={scene} variant="after" name="Sample illustration of the finding" />
+        {scene ? (
+          <SampleImage scene={scene} variant="after" name="Sample illustration of the finding" />
+        ) : image ? (
+          <EvidencePhoto image={image} alt="Reported finding" />
+        ) : (
+          <p role="status">The reported photo is unavailable.</p>
+        )}
         {plates.map((p) => (
           <div
             key={p.key}

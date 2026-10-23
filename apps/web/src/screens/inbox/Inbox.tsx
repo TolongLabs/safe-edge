@@ -1,14 +1,24 @@
-import type { Candidate, CandidateEvidence, EdgePass, ItemStatus, Severity } from '@safe-edge/contracts'
+import type { Candidate, CandidateEvidence, EdgePass, ItemStatus, RepairJourney, Severity } from '@safe-edge/contracts'
 import { SafeEdgeDeniedError } from '@safe-edge/sdk'
 import { CheckCircle, Info, LockSimple, Robot, Tray, Warning, XCircle } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
 import { CloseUp, closeUp, outlinesBaseline, SampleImage, type Box, type Scene } from '../../scenes'
 import { AgentByline, AgentProblemLine, NeedsKey, useAgentRun } from '../shared/AgentRun'
 import { Screen } from '../../shell/Shell'
-import { onReset, refresh, rememberDone, useSignedIn, useStore, can, type Snapshot } from '../../store'
+import {
+  onReset,
+  refresh,
+  rememberDone,
+  useSignedIn,
+  useStore,
+  can,
+  client as signedClient,
+  type Snapshot
+} from '../../store'
 import { ReportPanel } from './ReportPanel'
 import { candidateMeta } from '../shared/reports'
 import { EvidencePhoto } from '../shared/EvidencePhoto'
+import { StageTracker } from '../shared/StageTracker'
 import './inbox.css'
 
 const LABELS: ItemStatus[] = ['present', 'missing', 'changed', 'not_visible']
@@ -399,6 +409,49 @@ function Zoom({
   )
 }
 
+/** Read the same linked repair facts for decided cards that the other roles see. */
+function CandidateStages({ candidateId, s }: { candidateId: string; s: Snapshot }) {
+  const [state, setState] = useState<{ journey: RepairJourney; journeys: RepairJourney[] } | { error: Error } | null>(
+    null
+  )
+  useEffect(() => {
+    let live = true
+    setState(null)
+    const historyIds = [
+      ...new Set(
+        s.workOrders
+          .filter((work) => work.status === 'accepted')
+          .flatMap((work) =>
+            s.findings.filter((finding) => finding.id === work.findingId).map((finding) => finding.candidateId)
+          )
+      )
+    ]
+    Promise.all([
+      signedClient().getRepairJourney({ params: { id: candidateId } }),
+      Promise.all(historyIds.map((id) => signedClient().getRepairJourney({ params: { id } })))
+    ]).then(
+      ([journey, journeys]) => live && setState({ journey, journeys }),
+      (error: unknown) => live && setState({ error: error instanceof Error ? error : new Error(String(error)) })
+    )
+    return () => {
+      live = false
+    }
+  }, [candidateId, s])
+  if (!state)
+    return (
+      <p className="hint" role="status">
+        Loading the repair stages…
+      </p>
+    )
+  if ('error' in state)
+    return (
+      <p className="banner error" role="alert">
+        Could not load the repair stages: {state.error.message}
+      </p>
+    )
+  return <StageTracker journey={state.journey} journeys={state.journeys} users={s.users} />
+}
+
 function CardDetail({
   e,
   s,
@@ -715,6 +768,7 @@ function CardDetail({
         {!hidden && wo && finding && (
           <WorkOrderPanel key={`${wo.id}-${wo.status}-${wo.notes}`} wo={wo} finding={finding} s={s} run={run} />
         )}
+        {!open && <CandidateStages candidateId={c.id} s={s} />}
       </div>
 
       {open && rejecting && (!hidden || !!label) && (

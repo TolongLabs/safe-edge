@@ -1,4 +1,4 @@
-import { OpeningType, type Finding } from '@safe-edge/contracts'
+import { OpeningType, type EvidenceRef, type Finding } from '@safe-edge/contracts'
 import { CheckCircle, Trash, Warning, WarningCircle } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { can, client, useStore } from '../../store'
@@ -12,13 +12,15 @@ type Kind = keyof typeof FROM_LABEL
 export function Mark({
   finding,
   scene,
+  image,
   lens,
   reload,
   when,
   onNext
 }: {
   finding: Finding
-  scene: Scene
+  scene: Scene | null
+  image?: EvidenceRef | null
   lens: Lens
   reload: () => void
   when: string
@@ -118,6 +120,7 @@ export function Mark({
       <div className="fl-left">
         <Photo
           scene={scene}
+          image={image}
           when={when}
           onPlace={mayMark && sizeOk ? (x, y) => void place(x, y) : undefined}
           plates={openings.flatMap((o, i) => {

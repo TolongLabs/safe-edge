@@ -1,4 +1,4 @@
-import type { Finding, WorkOrder } from '@safe-edge/contracts'
+import type { EvidenceRef, Finding, WorkOrder } from '@safe-edge/contracts'
 import { useStore } from '../../store'
 import type { Scene } from '../../scenes'
 import { Photo } from './Photo'
@@ -9,12 +9,14 @@ export function Sent({
   finding,
   workOrder,
   scene,
+  image,
   lens,
   when
 }: {
   finding: Finding
   workOrder: WorkOrder
-  scene: Scene
+  scene: Scene | null
+  image?: EvidenceRef | null
   lens: Lens
   when: string
 }) {
@@ -48,6 +50,7 @@ export function Sent({
           <h3>Marked photo</h3>
           <Photo
             scene={scene}
+            image={image}
             when={when}
             plates={closure.openings.flatMap((o) => {
               const mark = o.photoMarks[0]

@@ -599,6 +599,8 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   // Every row of the operations table is accounted for: exercised above as an allowed write, a read (GET writes
   // nothing; refused reads are with the refusals), or listed here with the reason it is not. A new row fails here.
   const notExercised: Partial<Record<OperationId, string>> = {
+    updateWorkOrderProgress: 'tracker paths in apps/api/test/tracker.test.ts',
+    changeWorkOrderDueDate: 'tracker paths in apps/api/test/tracker.test.ts',
     triageImages: 'answers 501 until #74',
     resetDemo: 'the in-browser demo only; the HTTP API has no such route'
   }

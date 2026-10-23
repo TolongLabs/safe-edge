@@ -747,6 +747,24 @@ export const WorkOrderExternalError = named(
 )
 export type WorkOrderExternalError = z.infer<typeof WorkOrderExternalError>
 
+export const WorkOrderProgress = named(
+  'WorkOrderProgress',
+  z.enum(['buying_materials', 'waiting_for_delivery', 'fixing'])
+)
+export type WorkOrderProgress = z.infer<typeof WorkOrderProgress>
+
+export const WorkOrderDueDateChange = named(
+  'WorkOrderDueDateChange',
+  z.object({
+    from: Timestamp.nullable(),
+    to: Timestamp,
+    reason: z.string().trim().min(1),
+    byUserId: UserId,
+    at: Timestamp
+  })
+)
+export type WorkOrderDueDateChange = z.infer<typeof WorkOrderDueDateChange>
+
 export const WorkOrder = named(
   'WorkOrder',
   z.object({
@@ -765,6 +783,14 @@ export const WorkOrder = named(
     externalError: WorkOrderExternalError.nullable().describe(
       'Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it'
     ),
+    progress: WorkOrderProgress.nullable().optional(),
+    expectedDeliveryAt: Timestamp.nullable().optional(),
+    trackingNumber: z.string().nullable().optional(),
+    noTracking: z.boolean().optional(),
+    progressUpdatedAt: Timestamp.nullable().optional(),
+    dueAtChanges: z.array(WorkOrderDueDateChange).optional(),
+    spent: Quote.nullable().optional(),
+    overspendReason: z.string().nullable().optional(),
     createdAt: Timestamp,
     ...provenance
   })

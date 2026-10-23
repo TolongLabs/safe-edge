@@ -1,10 +1,10 @@
 import { Info, PaperPlaneTilt, WarningCircle } from '@phosphor-icons/react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NotInSession, Screen } from '../../shell/Shell'
-import type { WorkOrder } from '@safe-edge/contracts'
-import { useStore, type Snapshot } from '../../store'
+import type { CandidateEvidence, WorkOrder } from '@safe-edge/contracts'
+import { client, useSignedIn, useStore, type Snapshot } from '../../store'
 import { Compare } from './Compare'
-import { must, useLens } from './lens'
+import { useLens } from './lens'
 import { Mark } from './Mark'
 import { Sent } from './Sent'
 import './fix-lens.css'
@@ -40,7 +40,9 @@ function List() {
               {open.map((f) => (
                 <li key={f.id}>
                   <a href={`#/fix-lens/${f.id}`}>
-                    {must(s.metas[f.candidateId], `sample details for ${f.candidateId}`).title}
+                    {s.metas[f.candidateId]?.title ??
+                      s.damageReports.find((r) => r.candidateId === f.candidateId)?.description ??
+                      'Reported repair'}
                   </a>
                   <span className="fl-muted"> · {f.status.replace('_', ' ')}</span>
                 </li>
@@ -55,7 +57,47 @@ function List() {
 
 function Lens({ finding }: { finding: Finding }) {
   const s = useStore().snapshot!
-  const meta = must(s.metas[finding.candidateId], `sample details for ${finding.candidateId}`)
+  const meta = s.metas[finding.candidateId]
+  const report = s.damageReports.find((r) => r.candidateId === finding.candidateId)
+  const { user } = useSignedIn()
+  const cachedEvidence = s.evidence.find((e) => e.candidate.id === finding.candidateId)
+  const [fetched, setFetched] = useState<{
+    candidateId: string
+    userId: string
+    evidence: CandidateEvidence | null
+    error: string | null
+  } | null>(null)
+  useEffect(() => {
+    let live = true
+    setFetched(null)
+    if (cachedEvidence || meta) return
+    client()
+      .getCandidate({ params: { id: finding.candidateId } })
+      .then(
+        (evidence) => {
+          if (live) setFetched({ candidateId: finding.candidateId, userId: user.id, evidence, error: null })
+        },
+        (error: unknown) => {
+          if (live)
+            setFetched({
+              candidateId: finding.candidateId,
+              userId: user.id,
+              evidence: null,
+              error: error instanceof Error ? error.message : String(error)
+            })
+        }
+      )
+    return () => {
+      live = false
+    }
+  }, [cachedEvidence, finding.candidateId, user.id, meta])
+  const loaded = fetched?.candidateId === finding.candidateId && fetched.userId === user.id ? fetched : null
+  const evidence = cachedEvidence ?? loaded?.evidence
+  const evidenceLoading = !meta && !cachedEvidence && !loaded
+  const evidenceError = loaded?.error
+  const image = evidence?.observations.find((o) => o.image)?.image ?? null
+  const title = meta?.title ?? report?.description ?? 'Reported repair'
+  const viewpoint = meta?.viewpointName ?? report?.where?.note ?? evidence?.segment.name ?? 'Reported place'
   // The current order is the newest one a re-test has not rejected; a rejected one stays in the list as history.
   const newest = (orders: Snapshot['workOrders']) =>
     orders.reduce<WorkOrder | null>((a, w) => (a && a.createdAt > w.createdAt ? a : w), null)
@@ -75,7 +117,15 @@ function Lens({ finding }: { finding: Finding }) {
   const [chosen, setChosen] = useState<string | null>(workOrder?.remedyId ?? null)
   // Nothing is chosen for the manager: sending waits until a fix is picked.
   const when = `Finding ${new Date(finding.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`
-  const body = error ? (
+  const body = evidenceError ? (
+    <p className="banner error" role="alert">
+      Could not load the reported photo: {evidenceError}
+    </p>
+  ) : evidenceLoading ? (
+    <p className="fl-muted" role="status">
+      Loading the reported photo…
+    </p>
+  ) : error ? (
     <div className="banner error" role="alert">
       <WarningCircle size={20} weight="bold" aria-hidden="true" />
       <span>
@@ -94,7 +144,15 @@ function Lens({ finding }: { finding: Finding }) {
       <i />
     </div>
   ) : step === 1 ? (
-    <Mark finding={finding} scene={meta.scene} lens={lens} reload={reload} when={when} onNext={() => go(2)} />
+    <Mark
+      finding={finding}
+      scene={meta?.scene ?? null}
+      image={image}
+      lens={lens}
+      reload={reload}
+      when={when}
+      onNext={() => go(2)}
+    />
   ) : step === 2 ? (
     <Compare
       finding={finding}
@@ -107,7 +165,7 @@ function Lens({ finding }: { finding: Finding }) {
       onSent={() => go(3)}
     />
   ) : sent ? (
-    <Sent finding={finding} workOrder={workOrder} scene={meta.scene} lens={lens} when={when} />
+    <Sent finding={finding} workOrder={workOrder} scene={meta?.scene ?? null} image={image} lens={lens} when={when} />
   ) : (
     <div className="empty-state left">
       <span className="icon-tile">
@@ -121,7 +179,7 @@ function Lens({ finding }: { finding: Finding }) {
     </div>
   )
   return (
-    <Screen title="Fix Lens" context={`${meta.title} · ${meta.viewpointName}`}>
+    <Screen title="Fix Lens" context={`${title} · ${viewpoint}`}>
       <main className="detail island" ref={main}>
         <ol className="fl-steps" aria-label="Steps">
           {STEPS.map((name, i) => (

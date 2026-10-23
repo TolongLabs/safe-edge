@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
+import { uploadRetestPhoto } from './repair-photo'
 
 // Every screen here is a phone screen.
 test.use({ viewport: { width: 390, height: 844 } })
@@ -212,7 +213,7 @@ test('AC82-2 and AC82-4 the reviewer checks, signs, and the pass shows where it 
     )
   ).toBeVisible()
   await expect(page.getByText('Sample reading, not measured on site')).toHaveCount(0)
-  await expect(page.getByRole('img', { name: 'Sample illustration of the finding' })).toBeVisible()
+  await expect(page.getByText('Before photo unavailable', { exact: true })).toBeVisible()
   // Phone screens sit on the canvas with white cards, in both themes.
   const main = page.getByRole('main')
   await expect(main).toHaveCSS('background-color', 'rgb(231, 235, 232)')
@@ -222,6 +223,7 @@ test('AC82-2 and AC82-4 the reviewer checks, signs, and the pass shows where it 
   await expect(sign).toBeDisabled()
   const total = REPAIR_CHECKS.length
   await expect(page.getByText(`0 of ${total} checks passed`)).toBeVisible()
+  await uploadRetestPhoto(page)
   for (const name of REPAIR_CHECKS)
     await page
       .getByRole('radiogroup', { name: `${name} result` })
@@ -278,6 +280,7 @@ test('AC82-4 a pass held by another open flag is cleared by the false-alarm chec
       'A pass is issued only if no other flag on this edge is still open. A manager decides open flags in the Inbox.'
     )
   ).toBeVisible()
+  await uploadRetestPhoto(page)
   await answer(page, REPAIR_CHECKS)
   await page.getByRole('button', { name: 'Sign and issue the pass' }).click()
   await expect(page.getByRole('heading', { name: 'Repair checked and accepted' })).toBeVisible()
@@ -308,7 +311,8 @@ test('AC82-4 a pass held by another open flag is cleared by the false-alarm chec
   await expect(page.getByRole('heading', { level: 1, name: 'Check a false alarm' })).toBeVisible()
   await expect(page.locator('body')).not.toContainText(/\b(cand|rt|seg|wo|fnd)_\w+/)
   await expect(page.getByRole('button', { name: 'Sign and clear this flag' })).toBeDisabled()
-  await expect(page.getByRole('img', { name: 'Sample illustration of the finding' })).toBeVisible()
+  await expect(page.getByText('Before photo unavailable', { exact: true })).toBeVisible()
+  await uploadRetestPhoto(page)
   await answer(page, CLEARANCE_CHECKS)
   await page.getByRole('button', { name: 'Sign and clear this flag' }).click()
   await expect(page.getByRole('heading', { name: 'Safety pass issued' })).toBeVisible()
@@ -337,6 +341,7 @@ test('AC82-7 a cleared flag is not offered again while another flag still holds 
   await expect(page.getByRole('link', { name: /Check a false alarm: Fence panel 4 missing/ })).toBeVisible()
   await expect(page.getByRole('link', { name: /Check a false alarm: Ring buoy moved/ })).toBeVisible()
   await page.getByRole('link', { name: /Check a false alarm: Fence panel 4 missing/ }).click()
+  await uploadRetestPhoto(page)
   await answer(page, CLEARANCE_CHECKS)
   await page.getByRole('button', { name: 'Sign and clear this flag' }).click()
   await expect(page.getByRole('heading', { name: 'False alarm checked' })).toBeVisible()
@@ -349,6 +354,7 @@ test('AC82-7 a cleared flag is not offered again while another flag still holds 
 test('AC82-2 a failed re-test reopens the finding and a new fix can be sent', async ({ page }) => {
   await toCompleted(page)
   await signInAs(page, 'Priya Nair')
+  await uploadRetestPhoto(page)
   await answer(page, REPAIR_CHECKS, 'Saved view 1')
   await page.getByRole('button', { name: 'Fail this repair' }).click()
   await expect(

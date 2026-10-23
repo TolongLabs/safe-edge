@@ -4,10 +4,8 @@ import { NotInSession, Screen } from '../../shell/Shell'
 import { SafeEdgeApiError } from '@safe-edge/sdk'
 import type { CandidateEvidence, RetestOutcome } from '@safe-edge/contracts'
 import { can, client, useStore } from '../../store'
-import { must } from '../fix-lens/lens'
 import { CheckForm, type Item } from './CheckForm'
 import { Held } from './Held'
-import { sampleEvidence } from './useRepair'
 import { isClearable, markCleared } from './useClearable'
 import './retest.css'
 
@@ -79,10 +77,11 @@ export function Clearance({ candidateId }: { candidateId: string }) {
       </div>
     )
   const { candidate, segment } = evidence
-  const meta = must(s.metas[candidate.id], `sample details for ${candidate.id}`)
+  const meta = s.metas[candidate.id]
+  const title = meta?.title ?? candidate.rationale
   const pass = s.passes.find((p) => p.segmentId === candidate.segmentId)
   const clearable = isClearable(candidate, s.passes)
-  const context = `${meta.title} · ${segment.name}`
+  const context = `${title} · ${segment.name}`
   if (done) {
     return frame(
       context,
@@ -121,8 +120,8 @@ export function Clearance({ candidateId }: { candidateId: string }) {
       <div className="rt-card">
         <h2>A reviewer checks this false alarm</h2>
         <p>
-          The park manager called {meta.title} not a problem, or asked to look again. The safety pass for this edge
-          stays paused until a reviewer checks it. You can read it here; you cannot sign it.
+          The park manager called {title} not a problem, or asked to look again. The safety pass for this edge stays
+          paused until a reviewer checks it. You can read it here; you cannot sign it.
         </p>
       </div>
     )
@@ -143,15 +142,21 @@ export function Clearance({ candidateId }: { candidateId: string }) {
       </p>
       <CheckForm
         items={items}
-        intro={`The park manager called ${meta.title} a false alarm. You did not decide it, so you can check it.`}
-        scene={meta.scene}
+        intro={`The park manager called ${title} a false alarm. You did not decide it, so you can check it.`}
+        scene={meta?.scene ?? null}
+        beforeImage={evidence.observations.find((o) => o.image)?.image ?? evidence.observations[0]?.image ?? null}
         signLabel="Sign and clear this flag"
         failLabel="Keep the pass held"
         rule="Signing clears this flag. A held pass is issued once no other flag on this edge is open."
-        record={(result, checklist, reason) =>
+        record={(result, checklist, reason, retestEvidence) =>
           client().recordClearance({
             params: { id: candidate.id },
-            body: { checklist, evidence: [sampleEvidence(`evd_sample_${candidate.id}_clearance`)], result, reason }
+            body: {
+              checklist,
+              evidence: retestEvidence,
+              result,
+              reason
+            }
           })
         }
         onDone={(out) => {

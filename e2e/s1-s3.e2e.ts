@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './fixtures'
+import { uploadRetestPhoto } from './repair-photo'
 
 // Every screen here is a phone screen.
 test.use({ viewport: { width: 390, height: 844 } })
@@ -134,6 +135,7 @@ test('S1 to S3 the core loop, played through the screens as each role', async ({
 
   // S6: the reviewer passes every check and signs the pass.
   await signInAs(page, 'Priya Nair')
+  await uploadRetestPhoto(page)
   for (const name of REPAIR_CHECKS) {
     await page
       .getByRole('radiogroup', { name: `${name} result` })

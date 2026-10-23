@@ -19,6 +19,7 @@ import {
 } from './queue'
 import { describeViewpoint } from '../../viewpoints'
 import { ReportForm } from './ReportForm'
+import { MyReports } from './MyReports'
 import './capture.css'
 
 /** The segment number from its name ("... segment 12"), for the code plate; nothing is made up when there is none. */
@@ -213,6 +214,7 @@ function SegmentList() {
             })()}
           </>
         )}
+        {user.role === 'crew' && <MyReports />}
       </main>
     </Screen>
   )
