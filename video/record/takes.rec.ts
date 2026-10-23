@@ -158,7 +158,17 @@ test('@app D2 to D5 confirm, fix, prove and record', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
 
   await recordTake(page, 'D4', async (cue) => {
-    await cue('d4-heading', page.getByRole('heading', { name: 'A different person checks this repair' }))
+    // Open on the Simulation label, then scroll on camera to the heading below the fold.
+    const heading = page.getByRole('heading', { name: 'A different person checks this repair' })
+    await hold(page, 1000)
+    const box = await heading.boundingBox()
+    if (!box) throw new Error('D4 heading has no box')
+    await page.mouse.move(195, 600)
+    for (let step = 0; step < 6; step++) {
+      await page.mouse.wheel(0, (box.y - 24) / 6)
+      await hold(page, 150)
+    }
+    await cue('d4-heading', heading)
     await cue('d4-count', page.getByRole('heading', { name: '7 checks at the fence' }))
     await hold(page, 1000)
 
@@ -287,6 +297,101 @@ test('@app D7 developers quickstart', async ({ page }) => {
     await hold(page, 500)
     await quickstart.scrollIntoViewIfNeeded()
     await cue('d7-quickstart', quickstart)
+    await hold(page, 4000)
+  })
+})
+
+// The walk crew's own report: the same simulated photo as the re-test, with panel 4 removed.
+const REPORT_PHOTO = join(import.meta.dirname, 'fixtures', 'report.png')
+const PLAYGROUND = 'Playground path, fence line'
+const REPORT_TEXT = 'Fence panel by the swings is gone after the storm. Open to the water.'
+
+/** Brings the target to the middle of the screen with the browser's own smooth scroll. */
+async function glideTo(page: Page, target: Locator) {
+  await target.evaluate((el) => el.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  await hold(page, 900)
+}
+
+test('@report R1 the walk crew reports a missing panel from the phone', async ({ page }) => {
+  await page.goto('demo/#/capture')
+  await expect(page.getByRole('heading', { level: 1, name: 'Capture' })).toBeVisible()
+  await signInAs(page, 'Siti Aminah')
+  await page.evaluate(() => {
+    window.location.hash = '#/capture/seg_866518980_11'
+  })
+  await expect(page.getByRole('heading', { name: /viewpoints ·/ })).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+
+  await recordTake(page, 'R1-phone', async (cue) => {
+    // These cues must be on screen, not only in the page.
+    const onScreen = async (id: string, locator: Locator) => {
+      await expect(locator).toBeInViewport()
+      await cue(id, locator)
+    }
+    await hold(page, 1500)
+    await page.getByRole('button', { name: new RegExp(`^Viewpoint \\d+: ${PLAYGROUND}`) }).click()
+    const upload = page.getByLabel('Upload from gallery', { exact: true })
+    await expect(upload).toBeAttached()
+    await hold(page, 1200)
+    await upload.setInputFiles(REPORT_PHOTO)
+    await onScreen('r1-photo', page.getByRole('img', { name: `The photo you took at ${PLAYGROUND}` }))
+    await hold(page, 1500)
+
+    await page.getByRole('button', { name: 'Report a problem' }).click()
+    await onScreen('r1-form', page.getByRole('heading', { name: /Report a problem/ }).first())
+    await hold(page, 1000)
+    // A photo without EXIF has no time, so the crew types it, in the page's local time.
+    const now = await page.evaluate(() => {
+      const d = new Date()
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+    })
+    const when = page.getByLabel(/^When/)
+    await when.click()
+    await when.pressSequentially(now, { delay: 40 })
+    await hold(page, 800)
+
+    const missing = page.getByRole('radio', { name: /^Fence or barrier missing$/ })
+    await glideTo(page, missing)
+    await missing.check()
+    await onScreen('r1-type', missing)
+    await hold(page, 1000)
+    const description = page.getByRole('textbox', { name: /What did you see/i })
+    await description.click()
+    await description.pressSequentially(REPORT_TEXT, { delay: 35 })
+    await hold(page, 1000)
+
+    const high = page.getByRole('radio', { name: /^High\b/ })
+    await glideTo(page, high)
+    await high.check()
+    await onScreen('r1-urgency', high)
+    await hold(page, 1500)
+
+    const send = page.getByRole('button', { name: 'Send report' })
+    await expect(send).toBeEnabled()
+    await send.click()
+    const sent = page.getByRole('status').filter({ hasText: /Report sent to the manager/i })
+    await expect(sent).toBeVisible()
+    await glideTo(page, sent)
+    await onScreen('r1-sent', sent)
+    await hold(page, 2500)
+  })
+
+  await page.setViewportSize({ width: 1920, height: 1080 })
+  await signInAs(page, 'Farah Hashim')
+  // The capture screens have no rail, so open the Inbox by address; the page keeps its data.
+  await page.evaluate(() => {
+    window.location.hash = '#/inbox'
+  })
+  const inbox = page.getByRole('navigation', { name: 'Inbox list' })
+  await expect(inbox).toBeVisible()
+
+  await recordTake(page, 'R1-inbox', async (cue) => {
+    // The crew's report is the newest row for this viewpoint; the drone's flag shares the title.
+    const report = inbox.getByRole('button', { name: new RegExp(PLAYGROUND) }).last()
+    await cue('r1-inbox-report', report)
+    await hold(page, 1500)
+    await report.click()
+    await cue('r1-inbox-detail', page.getByRole('main').getByText(REPORT_TEXT))
     await hold(page, 4000)
   })
 })

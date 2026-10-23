@@ -107,4 +107,9 @@ playwright-report/
 
 # Generated recording footage; capture source lives in video/record.
 video/public/footage/
+# Generated edit media: staged voice, copied fonts and renders. Scripts in video/scripts rebuild them.
+video/public/voice/
+video/public/fonts/
+video/public/slides/
+video/out/
 output/recording-tests/

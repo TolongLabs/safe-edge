@@ -1,0 +1,22 @@
+{
+  "name": "safe-edge-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.530",
+    "@remotion/fonts": "4.0.530",
+    "@remotion/media": "4.0.530",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.530"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.3",
+    "@types/react": "19.3.0",
+    "typescript": "6.0.3"
+  }
+}

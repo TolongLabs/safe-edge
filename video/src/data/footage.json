@@ -1,0 +1,568 @@
+{
+  "shots": {
+    "H1": {
+      "run": "e9cd85d-20261023071424-UkDi0M",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023071424-UkDi0M/edit/H1.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 22,
+      "cues": {
+        "h1-card": {
+          "t": 0,
+          "box": {
+            "x": 28,
+            "y": 834,
+            "width": 368,
+            "height": 78
+          }
+        }
+      }
+    },
+    "D1": {
+      "run": "e9cd85d-20261023071424-UkDi0M",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023071424-UkDi0M/edit/D1.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 90.933,
+      "cues": {
+        "d1-rain": {
+          "t": 0,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "d1-takeoff": {
+          "t": 10.8,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "d1-jogger": {
+          "t": 30.066666666666666,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "d1-glare": {
+          "t": 50.6,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "d1-flag": {
+          "t": 59.93333333333334,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "story-confirm": {
+          "t": 63.13333333333333,
+          "box": {
+            "x": 696,
+            "y": 942,
+            "width": 528,
+            "height": 22
+          }
+        },
+        "story-barrier": {
+          "t": 66.43333333333332,
+          "box": {
+            "x": 696,
+            "y": 942,
+            "width": 528,
+            "height": 22
+          }
+        },
+        "story-fix-a": {
+          "t": 69.56666666666668,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "story-fix-b": {
+          "t": 72.6,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "story-approve": {
+          "t": 75.7,
+          "box": {
+            "x": 696,
+            "y": 942,
+            "width": 528,
+            "height": 22
+          }
+        },
+        "story-installer": {
+          "t": 82.46666666666667,
+          "box": {
+            "x": 696,
+            "y": 942,
+            "width": 528,
+            "height": 22
+          }
+        },
+        "story-prove": {
+          "t": 85.66666666666667,
+          "box": {
+            "x": 696,
+            "y": 920,
+            "width": 528,
+            "height": 44
+          }
+        },
+        "story-end": {
+          "t": 88.9,
+          "box": {
+            "x": 696,
+            "y": 910,
+            "width": 528,
+            "height": 22
+          }
+        }
+      }
+    },
+    "D2": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D2.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 12.463,
+      "cues": {
+        "d2-card": {
+          "t": 0.114,
+          "box": {
+            "x": 636,
+            "y": 122,
+            "width": 1244,
+            "height": 36
+          }
+        },
+        "d2-consequence": {
+          "t": 3.214,
+          "box": {
+            "x": 636,
+            "y": 162,
+            "width": 1244,
+            "height": 22
+          }
+        },
+        "d2-confirm": {
+          "t": 4.758,
+          "box": {
+            "x": 888,
+            "y": 996,
+            "width": 181,
+            "height": 44
+          }
+        },
+        "d2-finding": {
+          "t": 6.428,
+          "box": {
+            "x": 636,
+            "y": 1273,
+            "width": 404,
+            "height": 220
+          }
+        }
+      }
+    },
+    "D3": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D3.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 27.711,
+      "cues": {
+        "d3-lens": {
+          "t": 0.086,
+          "box": {
+            "x": 276,
+            "y": 24,
+            "width": 328,
+            "height": 26
+          }
+        },
+        "d3-marked": {
+          "t": 2.706,
+          "box": {
+            "x": 481,
+            "y": 1462,
+            "width": 208,
+            "height": 20
+          }
+        },
+        "d3-proposed": {
+          "t": 6.972,
+          "box": {
+            "x": 531.918212890625,
+            "y": 795.7479248046875,
+            "width": 229.04156494140625,
+            "height": 22.034423828125
+          }
+        },
+        "d3-fix-a-open": {
+          "t": 10.549,
+          "box": {
+            "x": 335,
+            "y": 853.453125,
+            "width": 493,
+            "height": 22
+          }
+        },
+        "d3-fix-b-closed": {
+          "t": 15.074,
+          "box": {
+            "x": 1143,
+            "y": 853.453125,
+            "width": 209,
+            "height": 22
+          }
+        },
+        "d3-pick-b": {
+          "t": 21.182,
+          "box": {
+            "x": 1113,
+            "y": 292,
+            "width": 20,
+            "height": 20
+          }
+        }
+      }
+    },
+    "D3b-approve": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D3b-approve.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 2.754,
+      "cues": {
+        "d3b-approved": {
+          "t": 0.732,
+          "box": {
+            "x": 1113,
+            "y": 919.453125,
+            "width": 746,
+            "height": 48
+          }
+        }
+      }
+    },
+    "D3b-send": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D3b-send.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 3.181,
+      "cues": {
+        "d3b-sent": {
+          "t": 1.159,
+          "box": {
+            "x": 284,
+            "y": 186,
+            "width": 1596,
+            "height": 26
+          }
+        }
+      }
+    },
+    "D4": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D4.mp4",
+      "width": 780,
+      "height": 1688,
+      "seconds": 34.003,
+      "cues": {
+        "d4-heading": {
+          "t": 5.644,
+          "box": {
+            "x": 16,
+            "y": 24,
+            "width": 358,
+            "height": 26
+          }
+        },
+        "d4-count": {
+          "t": 5.668,
+          "box": {
+            "x": 37,
+            "y": 147,
+            "width": 316,
+            "height": 26
+          }
+        },
+        "d4-first": {
+          "t": 9.995,
+          "box": {
+            "x": 37,
+            "y": 400,
+            "width": 316,
+            "height": 44
+          }
+        },
+        "d4-photo": {
+          "t": 23.218,
+          "box": {
+            "x": 201,
+            "y": 336,
+            "width": 152,
+            "height": 114
+          }
+        },
+        "d4-sign": {
+          "t": 26.88,
+          "box": {
+            "x": 16,
+            "y": 755.5,
+            "width": 358,
+            "height": 44
+          }
+        },
+        "d4-issued": {
+          "t": 28.987,
+          "box": {
+            "x": 28,
+            "y": 322,
+            "width": 262,
+            "height": 36
+          }
+        }
+      }
+    },
+    "D5-pass": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D5-pass.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 16.476,
+      "cues": {
+        "d5-pass": {
+          "t": 0.072,
+          "box": {
+            "x": 451,
+            "y": 424,
+            "width": 262,
+            "height": 36
+          }
+        },
+        "d5-signed": {
+          "t": 0.112,
+          "box": {
+            "x": 451,
+            "y": 544,
+            "width": 460,
+            "height": 44
+          }
+        },
+        "d5-timeline": {
+          "t": 0.147,
+          "box": {
+            "x": 1205,
+            "y": 835,
+            "width": 144,
+            "height": 20
+          }
+        }
+      }
+    },
+    "D5-board": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D5-board.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 8.412,
+      "cues": {
+        "d5-board": {
+          "t": 1.162,
+          "box": {
+            "x": 281,
+            "y": 119,
+            "width": 522,
+            "height": 26
+          }
+        },
+        "d5-unknown": {
+          "t": 1.195,
+          "box": {
+            "x": 281,
+            "y": 145,
+            "width": 522,
+            "height": 20
+          }
+        }
+      }
+    },
+    "D6": {
+      "run": "e9cd85d-20261023075520-QnWpno",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023075520-QnWpno/edit/D6.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 13.79,
+      "cues": {
+        "d6-question": {
+          "t": 0.111,
+          "box": {
+            "x": 636,
+            "y": 122,
+            "width": 1244,
+            "height": 36
+          }
+        },
+        "d6-refused": {
+          "t": 1.736,
+          "box": {
+            "x": 706,
+            "y": 407,
+            "width": 165,
+            "height": 20
+          }
+        },
+        "d6-rule": {
+          "t": 1.771,
+          "box": {
+            "x": 742,
+            "y": 433,
+            "width": 121.5625,
+            "height": 20
+          }
+        },
+        "d6-audit": {
+          "t": 1.812,
+          "box": {
+            "x": 1672,
+            "y": 823,
+            "width": 195,
+            "height": 28
+          }
+        }
+      }
+    },
+    "R1-phone": {
+      "run": "e9cd85d-20261023093354-dSfdUo",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023093354-dSfdUo/edit/R1-phone.mp4",
+      "width": 780,
+      "height": 1688,
+      "seconds": 24.926,
+      "cues": {
+        "r1-photo": {
+          "t": 4.085,
+          "box": {
+            "x": 16,
+            "y": 198,
+            "width": 358,
+            "height": 96
+          }
+        },
+        "r1-form": {
+          "t": 6.226,
+          "box": {
+            "x": 64,
+            "y": 10,
+            "width": 150.796875,
+            "height": 16
+          }
+        },
+        "r1-type": {
+          "t": 12.029,
+          "box": {
+            "x": 33,
+            "y": 400,
+            "width": 324,
+            "height": 44
+          }
+        },
+        "r1-urgency": {
+          "t": 19.396,
+          "box": {
+            "x": 33,
+            "y": 513,
+            "width": 324,
+            "height": 86
+          }
+        },
+        "r1-sent": {
+          "t": 22.414,
+          "box": {
+            "x": 16,
+            "y": 72,
+            "width": 358,
+            "height": 144
+          }
+        }
+      }
+    },
+    "R1-inbox": {
+      "run": "e9cd85d-20261023093354-dSfdUo",
+      "commit": "e9cd85d401fef6007ad845b0f3c181227675ad44",
+      "take": 1,
+      "src": "footage/runs/e9cd85d-20261023093354-dSfdUo/edit/R1-inbox.mp4",
+      "width": 1920,
+      "height": 1080,
+      "seconds": 6.179,
+      "cues": {
+        "r1-inbox-report": {
+          "t": 0.082,
+          "box": {
+            "x": 284,
+            "y": 544,
+            "width": 284,
+            "height": 70
+          }
+        },
+        "r1-inbox-detail": {
+          "t": 2.159,
+          "box": {
+            "x": 1338.71875,
+            "y": 464,
+            "width": 503.28125,
+            "height": 22
+          }
+        }
+      }
+    }
+  }
+}

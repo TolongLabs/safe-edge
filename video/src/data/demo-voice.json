@@ -1,0 +1,1605 @@
+{
+  "intro": {
+    "silences": [
+      [0, 120],
+      [2719, 2803],
+      [2805, 2928],
+      [2937, 3164],
+      [6287, 6504]
+    ],
+    "src": "voice/demo/intro.wav",
+    "take": "6.wav",
+    "durationMs": 6504,
+    "gainDb": 6.52,
+    "text": "Alright, let's see it work, from problem to outcome. Elmina's map is real, everything on it is simulated and labelled.",
+    "words": [
+      {
+        "word": "Alright",
+        "startMs": 120,
+        "endMs": 460
+      },
+      {
+        "word": "let's",
+        "startMs": 680,
+        "endMs": 800
+      },
+      {
+        "word": "see",
+        "startMs": 800,
+        "endMs": 960
+      },
+      {
+        "word": "it",
+        "startMs": 960,
+        "endMs": 1060
+      },
+      {
+        "word": "work",
+        "startMs": 1060,
+        "endMs": 1380
+      },
+      {
+        "word": "from",
+        "startMs": 1520,
+        "endMs": 1700
+      },
+      {
+        "word": "problem",
+        "startMs": 1700,
+        "endMs": 1980
+      },
+      {
+        "word": "to",
+        "startMs": 1980,
+        "endMs": 2300
+      },
+      {
+        "word": "outcome",
+        "startMs": 2300,
+        "endMs": 2660
+      },
+      {
+        "word": "Elmina's",
+        "startMs": 3280,
+        "endMs": 3760
+      },
+      {
+        "word": "map",
+        "startMs": 3760,
+        "endMs": 3780
+      },
+      {
+        "word": "is",
+        "startMs": 3780,
+        "endMs": 4020
+      },
+      {
+        "word": "real",
+        "startMs": 4020,
+        "endMs": 4200
+      },
+      {
+        "word": "everything",
+        "startMs": 4420,
+        "endMs": 4660
+      },
+      {
+        "word": "on",
+        "startMs": 4660,
+        "endMs": 4900
+      },
+      {
+        "word": "it",
+        "startMs": 4900,
+        "endMs": 5000
+      },
+      {
+        "word": "is",
+        "startMs": 5000,
+        "endMs": 5240
+      },
+      {
+        "word": "simulated",
+        "startMs": 5240,
+        "endMs": 5660
+      },
+      {
+        "word": "and",
+        "startMs": 5660,
+        "endMs": 6000
+      },
+      {
+        "word": "labelled",
+        "startMs": 6000,
+        "endMs": 6300
+      }
+    ]
+  },
+  "problem": {
+    "silences": [
+      [0, 124],
+      [4465, 4579],
+      [6670, 6759],
+      [6901, 6962],
+      [8409, 8617]
+    ],
+    "src": "voice/demo/problem.wav",
+    "take": "7.wav",
+    "durationMs": 8617,
+    "gainDb": 6.92,
+    "text": "So here's the problem. Last night's storm knocked out a fence panel by the playground. The record still says this edge is safe because nobody has checked it yet.",
+    "words": [
+      {
+        "word": "So",
+        "startMs": 120,
+        "endMs": 380
+      },
+      {
+        "word": "here's",
+        "startMs": 380,
+        "endMs": 620
+      },
+      {
+        "word": "the",
+        "startMs": 620,
+        "endMs": 840
+      },
+      {
+        "word": "problem",
+        "startMs": 840,
+        "endMs": 1160
+      },
+      {
+        "word": "Last",
+        "startMs": 1600,
+        "endMs": 1700
+      },
+      {
+        "word": "night's",
+        "startMs": 1700,
+        "endMs": 2080
+      },
+      {
+        "word": "storm",
+        "startMs": 2080,
+        "endMs": 2220
+      },
+      {
+        "word": "knocked",
+        "startMs": 2220,
+        "endMs": 2540
+      },
+      {
+        "word": "out",
+        "startMs": 2540,
+        "endMs": 2700
+      },
+      {
+        "word": "a",
+        "startMs": 2700,
+        "endMs": 2860
+      },
+      {
+        "word": "fence",
+        "startMs": 2860,
+        "endMs": 3100
+      },
+      {
+        "word": "panel",
+        "startMs": 3100,
+        "endMs": 3360
+      },
+      {
+        "word": "by",
+        "startMs": 3360,
+        "endMs": 3540
+      },
+      {
+        "word": "the",
+        "startMs": 3540,
+        "endMs": 3700
+      },
+      {
+        "word": "playground",
+        "startMs": 3700,
+        "endMs": 4040
+      },
+      {
+        "word": "The",
+        "startMs": 4620,
+        "endMs": 4740
+      },
+      {
+        "word": "record",
+        "startMs": 4740,
+        "endMs": 5100
+      },
+      {
+        "word": "still",
+        "startMs": 5100,
+        "endMs": 5400
+      },
+      {
+        "word": "says",
+        "startMs": 5400,
+        "endMs": 5660
+      },
+      {
+        "word": "this",
+        "startMs": 5660,
+        "endMs": 5900
+      },
+      {
+        "word": "edge",
+        "startMs": 5900,
+        "endMs": 6140
+      },
+      {
+        "word": "is",
+        "startMs": 6140,
+        "endMs": 6380
+      },
+      {
+        "word": "safe",
+        "startMs": 6380,
+        "endMs": 6660
+      },
+      {
+        "word": "because",
+        "startMs": 6660,
+        "endMs": 7200
+      },
+      {
+        "word": "nobody",
+        "startMs": 7200,
+        "endMs": 7600
+      },
+      {
+        "word": "has",
+        "startMs": 7600,
+        "endMs": 7900
+      },
+      {
+        "word": "checked",
+        "startMs": 7900,
+        "endMs": 8120
+      },
+      {
+        "word": "it",
+        "startMs": 8120,
+        "endMs": 8300
+      },
+      {
+        "word": "yet",
+        "startMs": 8300,
+        "endMs": 8460
+      }
+    ]
+  },
+  "d1": {
+    "silences": [
+      [1716, 1789],
+      [1789, 1884],
+      [1884, 2239],
+      [3042, 3105],
+      [4378, 4453],
+      [4552, 4734],
+      [6119, 6202],
+      [6202, 6301],
+      [6301, 6643],
+      [8521, 8704]
+    ],
+    "src": "voice/demo/d1.wav",
+    "take": "8.wav",
+    "durationMs": 8728,
+    "gainDb": 7.28,
+    "text": "Here's how Safe Edge solves it. After the storm, the drone patrols the edge, finds panel 4 missing, and it suspends the pass at once.",
+    "words": [
+      {
+        "word": "Here's",
+        "startMs": 120,
+        "endMs": 540
+      },
+      {
+        "word": "how",
+        "startMs": 540,
+        "endMs": 760
+      },
+      {
+        "word": "Safe",
+        "startMs": 760,
+        "endMs": 1020
+      },
+      {
+        "word": "Edge",
+        "startMs": 1020,
+        "endMs": 1240
+      },
+      {
+        "word": "solves",
+        "startMs": 1240,
+        "endMs": 1560
+      },
+      {
+        "word": "it",
+        "startMs": 1560,
+        "endMs": 2120
+      },
+      {
+        "word": "After",
+        "startMs": 2340,
+        "endMs": 2480
+      },
+      {
+        "word": "the",
+        "startMs": 2480,
+        "endMs": 2740
+      },
+      {
+        "word": "storm",
+        "startMs": 2740,
+        "endMs": 2940
+      },
+      {
+        "word": "the",
+        "startMs": 3200,
+        "endMs": 3340
+      },
+      {
+        "word": "drone",
+        "startMs": 3340,
+        "endMs": 3460
+      },
+      {
+        "word": "patrols",
+        "startMs": 3460,
+        "endMs": 4000
+      },
+      {
+        "word": "the",
+        "startMs": 4000,
+        "endMs": 4260
+      },
+      {
+        "word": "edge",
+        "startMs": 4260,
+        "endMs": 4340
+      },
+      {
+        "word": "finds",
+        "startMs": 5020,
+        "endMs": 5080
+      },
+      {
+        "word": "panel",
+        "startMs": 5080,
+        "endMs": 5380
+      },
+      {
+        "word": "4",
+        "startMs": 5380,
+        "endMs": 5700
+      },
+      {
+        "word": "missing",
+        "startMs": 5700,
+        "endMs": 6060
+      },
+      {
+        "word": "and",
+        "startMs": 6740,
+        "endMs": 6800
+      },
+      {
+        "word": "it",
+        "startMs": 6800,
+        "endMs": 7120
+      },
+      {
+        "word": "suspends",
+        "startMs": 7120,
+        "endMs": 7400
+      },
+      {
+        "word": "the",
+        "startMs": 7400,
+        "endMs": 7640
+      },
+      {
+        "word": "pass",
+        "startMs": 7640,
+        "endMs": 7900
+      },
+      {
+        "word": "at",
+        "startMs": 7900,
+        "endMs": 8200
+      },
+      {
+        "word": "once",
+        "startMs": 8200,
+        "endMs": 8480
+      }
+    ]
+  },
+  "d2": {
+    "silences": [
+      [0, 122],
+      [2370, 2767],
+      [4283, 4398],
+      [4501, 4561],
+      [4562, 4635],
+      [7007, 7071],
+      [8061, 8234]
+    ],
+    "src": "voice/demo/d2.wav",
+    "take": "9.wav",
+    "durationMs": 8234,
+    "gainDb": 6.62,
+    "text": "A machine can lower trust, never raise it, so a person decides. The park manager compares before and after and confirms the gap.",
+    "words": [
+      {
+        "word": "A",
+        "startMs": 120,
+        "endMs": 300
+      },
+      {
+        "word": "machine",
+        "startMs": 300,
+        "endMs": 560
+      },
+      {
+        "word": "can",
+        "startMs": 560,
+        "endMs": 820
+      },
+      {
+        "word": "lower",
+        "startMs": 820,
+        "endMs": 1060
+      },
+      {
+        "word": "trust",
+        "startMs": 1060,
+        "endMs": 1460
+      },
+      {
+        "word": "never",
+        "startMs": 1560,
+        "endMs": 1820
+      },
+      {
+        "word": "raise",
+        "startMs": 1820,
+        "endMs": 2220
+      },
+      {
+        "word": "it",
+        "startMs": 2220,
+        "endMs": 2600
+      },
+      {
+        "word": "so",
+        "startMs": 2980,
+        "endMs": 3160
+      },
+      {
+        "word": "a",
+        "startMs": 3160,
+        "endMs": 3440
+      },
+      {
+        "word": "person",
+        "startMs": 3440,
+        "endMs": 3700
+      },
+      {
+        "word": "decides",
+        "startMs": 3700,
+        "endMs": 4260
+      },
+      {
+        "word": "The",
+        "startMs": 4740,
+        "endMs": 4820
+      },
+      {
+        "word": "park",
+        "startMs": 4820,
+        "endMs": 5000
+      },
+      {
+        "word": "manager",
+        "startMs": 5000,
+        "endMs": 5380
+      },
+      {
+        "word": "compares",
+        "startMs": 5380,
+        "endMs": 5920
+      },
+      {
+        "word": "before",
+        "startMs": 5920,
+        "endMs": 6360
+      },
+      {
+        "word": "and",
+        "startMs": 6360,
+        "endMs": 6540
+      },
+      {
+        "word": "after",
+        "startMs": 6540,
+        "endMs": 6860
+      },
+      {
+        "word": "and",
+        "startMs": 6860,
+        "endMs": 7300
+      },
+      {
+        "word": "confirms",
+        "startMs": 7300,
+        "endMs": 7680
+      },
+      {
+        "word": "the",
+        "startMs": 7680,
+        "endMs": 7920
+      },
+      {
+        "word": "gap",
+        "startMs": 7920,
+        "endMs": 8100
+      }
+    ]
+  },
+  "d3": {
+    "silences": [
+      [0, 121],
+      [1432, 1571],
+      [1716, 1838],
+      [3342, 3419],
+      [3539, 3652],
+      [6292, 6523],
+      [8261, 8324],
+      [8328, 8404],
+      [8685, 8748],
+      [8774, 8854],
+      [11493, 11701],
+      [12009, 12158],
+      [14023, 14100],
+      [16997, 17213]
+    ],
+    "src": "voice/demo/d3.wav",
+    "take": "10.wav",
+    "durationMs": 17213,
+    "gainDb": 6.53,
+    "text": "Now the hidden problem. The obvious fix is a new panel. Fixed lens maps both ways a child could reach the water, through the gap and around the fence end. A new panel closes one, the other stays open. Extending the fence would close both, so that's the fix the manager chooses before anyone pays.",
+    "words": [
+      {
+        "word": "Now",
+        "startMs": 120,
+        "endMs": 380
+      },
+      {
+        "word": "the",
+        "startMs": 380,
+        "endMs": 620
+      },
+      {
+        "word": "hidden",
+        "startMs": 620,
+        "endMs": 860
+      },
+      {
+        "word": "problem",
+        "startMs": 860,
+        "endMs": 1260
+      },
+      {
+        "word": "The",
+        "startMs": 1880,
+        "endMs": 1980
+      },
+      {
+        "word": "obvious",
+        "startMs": 1980,
+        "endMs": 2260
+      },
+      {
+        "word": "fix",
+        "startMs": 2260,
+        "endMs": 2500
+      },
+      {
+        "word": "is",
+        "startMs": 2500,
+        "endMs": 2660
+      },
+      {
+        "word": "a",
+        "startMs": 2660,
+        "endMs": 2820
+      },
+      {
+        "word": "new",
+        "startMs": 2820,
+        "endMs": 3160
+      },
+      {
+        "word": "panel",
+        "startMs": 3160,
+        "endMs": 3240
+      },
+      {
+        "word": "Fixed",
+        "startMs": 3920,
+        "endMs": 4180
+      },
+      {
+        "word": "lens",
+        "startMs": 4180,
+        "endMs": 4220
+      },
+      {
+        "word": "maps",
+        "startMs": 4220,
+        "endMs": 4500
+      },
+      {
+        "word": "both",
+        "startMs": 4500,
+        "endMs": 4860
+      },
+      {
+        "word": "ways",
+        "startMs": 4860,
+        "endMs": 5080
+      },
+      {
+        "word": "a",
+        "startMs": 5080,
+        "endMs": 5280
+      },
+      {
+        "word": "child",
+        "startMs": 5280,
+        "endMs": 5420
+      },
+      {
+        "word": "could",
+        "startMs": 5420,
+        "endMs": 5580
+      },
+      {
+        "word": "reach",
+        "startMs": 5580,
+        "endMs": 5740
+      },
+      {
+        "word": "the",
+        "startMs": 5740,
+        "endMs": 5900
+      },
+      {
+        "word": "water",
+        "startMs": 5900,
+        "endMs": 6180
+      },
+      {
+        "word": "through",
+        "startMs": 6640,
+        "endMs": 6740
+      },
+      {
+        "word": "the",
+        "startMs": 6740,
+        "endMs": 6920
+      },
+      {
+        "word": "gap",
+        "startMs": 6920,
+        "endMs": 7120
+      },
+      {
+        "word": "and",
+        "startMs": 7120,
+        "endMs": 7380
+      },
+      {
+        "word": "around",
+        "startMs": 7380,
+        "endMs": 7580
+      },
+      {
+        "word": "the",
+        "startMs": 7580,
+        "endMs": 7880
+      },
+      {
+        "word": "fence",
+        "startMs": 7880,
+        "endMs": 7940
+      },
+      {
+        "word": "end",
+        "startMs": 7940,
+        "endMs": 8260
+      },
+      {
+        "word": "A",
+        "startMs": 8700,
+        "endMs": 9040
+      },
+      {
+        "word": "new",
+        "startMs": 9040,
+        "endMs": 9400
+      },
+      {
+        "word": "panel",
+        "startMs": 9400,
+        "endMs": 9400
+      },
+      {
+        "word": "closes",
+        "startMs": 9400,
+        "endMs": 9760
+      },
+      {
+        "word": "one",
+        "startMs": 9760,
+        "endMs": 10080
+      },
+      {
+        "word": "the",
+        "startMs": 10320,
+        "endMs": 10580
+      },
+      {
+        "word": "other",
+        "startMs": 10580,
+        "endMs": 10760
+      },
+      {
+        "word": "stays",
+        "startMs": 10760,
+        "endMs": 11000
+      },
+      {
+        "word": "open",
+        "startMs": 11000,
+        "endMs": 11460
+      },
+      {
+        "word": "Extending",
+        "startMs": 12360,
+        "endMs": 12600
+      },
+      {
+        "word": "the",
+        "startMs": 12600,
+        "endMs": 13020
+      },
+      {
+        "word": "fence",
+        "startMs": 13020,
+        "endMs": 13020
+      },
+      {
+        "word": "would",
+        "startMs": 13020,
+        "endMs": 13200
+      },
+      {
+        "word": "close",
+        "startMs": 13200,
+        "endMs": 13440
+      },
+      {
+        "word": "both",
+        "startMs": 13440,
+        "endMs": 13800
+      },
+      {
+        "word": "so",
+        "startMs": 14120,
+        "endMs": 14320
+      },
+      {
+        "word": "that's",
+        "startMs": 14320,
+        "endMs": 14520
+      },
+      {
+        "word": "the",
+        "startMs": 14520,
+        "endMs": 14780
+      },
+      {
+        "word": "fix",
+        "startMs": 14780,
+        "endMs": 14920
+      },
+      {
+        "word": "the",
+        "startMs": 14920,
+        "endMs": 15160
+      },
+      {
+        "word": "manager",
+        "startMs": 15160,
+        "endMs": 15420
+      },
+      {
+        "word": "chooses",
+        "startMs": 15420,
+        "endMs": 15820
+      },
+      {
+        "word": "before",
+        "startMs": 15820,
+        "endMs": 16180
+      },
+      {
+        "word": "anyone",
+        "startMs": 16180,
+        "endMs": 16520
+      },
+      {
+        "word": "pays",
+        "startMs": 16520,
+        "endMs": 16900
+      }
+    ]
+  },
+  "d4": {
+    "silences": [
+      [0, 122],
+      [3086, 3220],
+      [3433, 3506],
+      [6297, 6395],
+      [6509, 6754],
+      [8335, 8583]
+    ],
+    "src": "voice/demo/d4.wav",
+    "take": "11.wav",
+    "durationMs": 8583,
+    "gainDb": 6.72,
+    "text": "Once the repair is in, the crew can't sign off their own work. Someone who didn't install it checks both routes on the phone, each with a written reason.",
+    "words": [
+      {
+        "word": "Once",
+        "startMs": 120,
+        "endMs": 400
+      },
+      {
+        "word": "the",
+        "startMs": 400,
+        "endMs": 580
+      },
+      {
+        "word": "repair",
+        "startMs": 580,
+        "endMs": 780
+      },
+      {
+        "word": "is",
+        "startMs": 780,
+        "endMs": 980
+      },
+      {
+        "word": "in",
+        "startMs": 980,
+        "endMs": 1260
+      },
+      {
+        "word": "the",
+        "startMs": 1520,
+        "endMs": 1680
+      },
+      {
+        "word": "crew",
+        "startMs": 1680,
+        "endMs": 1800
+      },
+      {
+        "word": "can't",
+        "startMs": 1800,
+        "endMs": 2160
+      },
+      {
+        "word": "sign",
+        "startMs": 2160,
+        "endMs": 2380
+      },
+      {
+        "word": "off",
+        "startMs": 2380,
+        "endMs": 2520
+      },
+      {
+        "word": "their",
+        "startMs": 2520,
+        "endMs": 2720
+      },
+      {
+        "word": "own",
+        "startMs": 2720,
+        "endMs": 3000
+      },
+      {
+        "word": "work",
+        "startMs": 3000,
+        "endMs": 3240
+      },
+      {
+        "word": "Someone",
+        "startMs": 3780,
+        "endMs": 3860
+      },
+      {
+        "word": "who",
+        "startMs": 3860,
+        "endMs": 4140
+      },
+      {
+        "word": "didn't",
+        "startMs": 4140,
+        "endMs": 4420
+      },
+      {
+        "word": "install",
+        "startMs": 4420,
+        "endMs": 4680
+      },
+      {
+        "word": "it",
+        "startMs": 4680,
+        "endMs": 4920
+      },
+      {
+        "word": "checks",
+        "startMs": 4920,
+        "endMs": 5140
+      },
+      {
+        "word": "both",
+        "startMs": 5140,
+        "endMs": 5480
+      },
+      {
+        "word": "routes",
+        "startMs": 5480,
+        "endMs": 5740
+      },
+      {
+        "word": "on",
+        "startMs": 5740,
+        "endMs": 5860
+      },
+      {
+        "word": "the",
+        "startMs": 5860,
+        "endMs": 6020
+      },
+      {
+        "word": "phone",
+        "startMs": 6020,
+        "endMs": 6220
+      },
+      {
+        "word": "each",
+        "startMs": 6880,
+        "endMs": 6980
+      },
+      {
+        "word": "with",
+        "startMs": 6980,
+        "endMs": 7180
+      },
+      {
+        "word": "a",
+        "startMs": 7180,
+        "endMs": 7360
+      },
+      {
+        "word": "written",
+        "startMs": 7360,
+        "endMs": 7660
+      },
+      {
+        "word": "reason",
+        "startMs": 7660,
+        "endMs": 8080
+      }
+    ]
+  },
+  "d5": {
+    "silences": [
+      [0, 121],
+      [1724, 1785],
+      [2571, 2652],
+      [2762, 2898],
+      [4617, 4719],
+      [4790, 4863],
+      [8031, 8132],
+      [8427, 8638],
+      [11362, 11573]
+    ],
+    "src": "voice/demo/d5.wav",
+    "take": "12.wav",
+    "durationMs": 11573,
+    "gainDb": 6.87,
+    "text": "The outcome. Now the record tells the truth. Both ways to the water are closed, and the edge gets its pass back with the whole history behind it. Edges without a pass state unknown, never safe.",
+    "words": [
+      {
+        "word": "The",
+        "startMs": 120,
+        "endMs": 360
+      },
+      {
+        "word": "outcome",
+        "startMs": 360,
+        "endMs": 760
+      },
+      {
+        "word": "Now",
+        "startMs": 1080,
+        "endMs": 1220
+      },
+      {
+        "word": "the",
+        "startMs": 1220,
+        "endMs": 1380
+      },
+      {
+        "word": "record",
+        "startMs": 1380,
+        "endMs": 1700
+      },
+      {
+        "word": "tells",
+        "startMs": 1700,
+        "endMs": 2040
+      },
+      {
+        "word": "the",
+        "startMs": 2040,
+        "endMs": 2240
+      },
+      {
+        "word": "truth",
+        "startMs": 2240,
+        "endMs": 2520
+      },
+      {
+        "word": "Both",
+        "startMs": 3060,
+        "endMs": 3180
+      },
+      {
+        "word": "ways",
+        "startMs": 3180,
+        "endMs": 3440
+      },
+      {
+        "word": "to",
+        "startMs": 3440,
+        "endMs": 3600
+      },
+      {
+        "word": "the",
+        "startMs": 3600,
+        "endMs": 3720
+      },
+      {
+        "word": "water",
+        "startMs": 3720,
+        "endMs": 3960
+      },
+      {
+        "word": "are",
+        "startMs": 3960,
+        "endMs": 4180
+      },
+      {
+        "word": "closed",
+        "startMs": 4180,
+        "endMs": 4540
+      },
+      {
+        "word": "and",
+        "startMs": 4980,
+        "endMs": 5080
+      },
+      {
+        "word": "the",
+        "startMs": 5080,
+        "endMs": 5260
+      },
+      {
+        "word": "edge",
+        "startMs": 5260,
+        "endMs": 5480
+      },
+      {
+        "word": "gets",
+        "startMs": 5480,
+        "endMs": 5780
+      },
+      {
+        "word": "its",
+        "startMs": 5780,
+        "endMs": 5980
+      },
+      {
+        "word": "pass",
+        "startMs": 5980,
+        "endMs": 6260
+      },
+      {
+        "word": "back",
+        "startMs": 6260,
+        "endMs": 6540
+      },
+      {
+        "word": "with",
+        "startMs": 6540,
+        "endMs": 6820
+      },
+      {
+        "word": "the",
+        "startMs": 6820,
+        "endMs": 7000
+      },
+      {
+        "word": "whole",
+        "startMs": 7000,
+        "endMs": 7200
+      },
+      {
+        "word": "history",
+        "startMs": 7200,
+        "endMs": 7500
+      },
+      {
+        "word": "behind",
+        "startMs": 7500,
+        "endMs": 7920
+      },
+      {
+        "word": "it",
+        "startMs": 7920,
+        "endMs": 8240
+      },
+      {
+        "word": "Edges",
+        "startMs": 8720,
+        "endMs": 8920
+      },
+      {
+        "word": "without",
+        "startMs": 8920,
+        "endMs": 9220
+      },
+      {
+        "word": "a",
+        "startMs": 9220,
+        "endMs": 9400
+      },
+      {
+        "word": "pass",
+        "startMs": 9400,
+        "endMs": 9660
+      },
+      {
+        "word": "state",
+        "startMs": 9660,
+        "endMs": 9860
+      },
+      {
+        "word": "unknown",
+        "startMs": 9860,
+        "endMs": 10340
+      },
+      {
+        "word": "never",
+        "startMs": 10580,
+        "endMs": 10780
+      },
+      {
+        "word": "safe",
+        "startMs": 10780,
+        "endMs": 11240
+      }
+    ]
+  },
+  "report": {
+    "silences": [
+      [0, 89],
+      [291, 400],
+      [1753, 1878],
+      [2420, 2564],
+      [3737, 3816],
+      [5234, 5336],
+      [5422, 5589],
+      [6575, 6664],
+      [7172, 7261]
+    ],
+    "src": "voice/demo/report.wav",
+    "take": "demo-report-darryl-slower.wav",
+    "durationMs": 7381,
+    "gainDb": 6.77,
+    "text": "And if you don't have a drone, that's fine. The patrol crew reports it from a phone and it lands in the same inbox.",
+    "words": [
+      {
+        "word": "And",
+        "startMs": 88,
+        "endMs": 300
+      },
+      {
+        "word": "if",
+        "startMs": 300,
+        "endMs": 660
+      },
+      {
+        "word": "you",
+        "startMs": 660,
+        "endMs": 860
+      },
+      {
+        "word": "don't",
+        "startMs": 860,
+        "endMs": 1140
+      },
+      {
+        "word": "have",
+        "startMs": 1140,
+        "endMs": 1300
+      },
+      {
+        "word": "a",
+        "startMs": 1300,
+        "endMs": 1560
+      },
+      {
+        "word": "drone",
+        "startMs": 1560,
+        "endMs": 1700
+      },
+      {
+        "word": "that's",
+        "startMs": 2040,
+        "endMs": 2240
+      },
+      {
+        "word": "fine",
+        "startMs": 2240,
+        "endMs": 2440
+      },
+      {
+        "word": "The",
+        "startMs": 2700,
+        "endMs": 2800
+      },
+      {
+        "word": "patrol",
+        "startMs": 2800,
+        "endMs": 3200
+      },
+      {
+        "word": "crew",
+        "startMs": 3200,
+        "endMs": 3540
+      },
+      {
+        "word": "reports",
+        "startMs": 3540,
+        "endMs": 4060
+      },
+      {
+        "word": "it",
+        "startMs": 4060,
+        "endMs": 4340
+      },
+      {
+        "word": "from",
+        "startMs": 4340,
+        "endMs": 4520
+      },
+      {
+        "word": "a",
+        "startMs": 4520,
+        "endMs": 4780
+      },
+      {
+        "word": "phone",
+        "startMs": 4780,
+        "endMs": 4940
+      },
+      {
+        "word": "and",
+        "startMs": 4940,
+        "endMs": 5280
+      },
+      {
+        "word": "it",
+        "startMs": 5280,
+        "endMs": 5680
+      },
+      {
+        "word": "lands",
+        "startMs": 5680,
+        "endMs": 5920
+      },
+      {
+        "word": "in",
+        "startMs": 5920,
+        "endMs": 6160
+      },
+      {
+        "word": "the",
+        "startMs": 6160,
+        "endMs": 6320
+      },
+      {
+        "word": "same",
+        "startMs": 6320,
+        "endMs": 6640
+      },
+      {
+        "word": "inbox",
+        "startMs": 6640,
+        "endMs": 7100
+      }
+    ]
+  },
+  "ai": {
+    "silences": [
+      [0, 95],
+      [1125, 1269],
+      [3631, 3731],
+      [3935, 4074],
+      [4956, 5157],
+      [5178, 5284],
+      [5712, 5812],
+      [5908, 5969],
+      [6930, 7006],
+      [8451, 8579],
+      [8581, 8664]
+    ],
+    "src": "voice/demo/ai.wav",
+    "take": "demo-ai-darryl-slower.wav",
+    "durationMs": 8664,
+    "gainDb": 7.44,
+    "text": "What about the AI? It reads records and drafts work, but it can't decide. Ask it to confirm a flag and the server refuses.",
+    "words": [
+      {
+        "word": "What",
+        "startMs": 93,
+        "endMs": 280
+      },
+      {
+        "word": "about",
+        "startMs": 280,
+        "endMs": 600
+      },
+      {
+        "word": "the",
+        "startMs": 600,
+        "endMs": 760
+      },
+      {
+        "word": "AI",
+        "startMs": 760,
+        "endMs": 1060
+      },
+      {
+        "word": "It",
+        "startMs": 1380,
+        "endMs": 1500
+      },
+      {
+        "word": "reads",
+        "startMs": 1500,
+        "endMs": 1780
+      },
+      {
+        "word": "records",
+        "startMs": 1780,
+        "endMs": 2420
+      },
+      {
+        "word": "and",
+        "startMs": 2420,
+        "endMs": 2740
+      },
+      {
+        "word": "drafts",
+        "startMs": 2740,
+        "endMs": 3140
+      },
+      {
+        "word": "work",
+        "startMs": 3140,
+        "endMs": 3440
+      },
+      {
+        "word": "but",
+        "startMs": 3640,
+        "endMs": 3640
+      },
+      {
+        "word": "it",
+        "startMs": 3640,
+        "endMs": 4080
+      },
+      {
+        "word": "can't",
+        "startMs": 4080,
+        "endMs": 4520
+      },
+      {
+        "word": "decide",
+        "startMs": 4520,
+        "endMs": 4980
+      },
+      {
+        "word": "Ask",
+        "startMs": 5560,
+        "endMs": 5560
+      },
+      {
+        "word": "it",
+        "startMs": 5560,
+        "endMs": 5800
+      },
+      {
+        "word": "to",
+        "startMs": 5800,
+        "endMs": 6040
+      },
+      {
+        "word": "confirm",
+        "startMs": 6040,
+        "endMs": 6420
+      },
+      {
+        "word": "a",
+        "startMs": 6420,
+        "endMs": 6700
+      },
+      {
+        "word": "flag",
+        "startMs": 6700,
+        "endMs": 6920
+      },
+      {
+        "word": "and",
+        "startMs": 6920,
+        "endMs": 7220
+      },
+      {
+        "word": "the",
+        "startMs": 7220,
+        "endMs": 7380
+      },
+      {
+        "word": "server",
+        "startMs": 7380,
+        "endMs": 7800
+      },
+      {
+        "word": "refuses",
+        "startMs": 7800,
+        "endMs": 8280
+      }
+    ]
+  },
+  "engineer": {
+    "silences": [
+      [583, 655],
+      [1441, 1538],
+      [2537, 2748],
+      [3491, 3559],
+      [4055, 4130],
+      [5224, 5299],
+      [6223, 6327]
+    ],
+    "src": "voice/demo/engineer.wav",
+    "take": "demo-engineer-darryl-slower.wav",
+    "durationMs": 6438,
+    "gainDb": 6.45,
+    "text": "Next, an engineer approves Fix B and it goes to the installer's crew with a named owner.",
+    "words": [
+      {
+        "word": "Next",
+        "startMs": 0,
+        "endMs": 320
+      },
+      {
+        "word": "an",
+        "startMs": 600,
+        "endMs": 680
+      },
+      {
+        "word": "engineer",
+        "startMs": 680,
+        "endMs": 1260
+      },
+      {
+        "word": "approves",
+        "startMs": 1260,
+        "endMs": 1880
+      },
+      {
+        "word": "Fix",
+        "startMs": 1880,
+        "endMs": 2180
+      },
+      {
+        "word": "B",
+        "startMs": 2180,
+        "endMs": 2500
+      },
+      {
+        "word": "and",
+        "startMs": 2500,
+        "endMs": 2980
+      },
+      {
+        "word": "it",
+        "startMs": 2980,
+        "endMs": 3220
+      },
+      {
+        "word": "goes",
+        "startMs": 3220,
+        "endMs": 3500
+      },
+      {
+        "word": "to",
+        "startMs": 3500,
+        "endMs": 3720
+      },
+      {
+        "word": "the",
+        "startMs": 3720,
+        "endMs": 3860
+      },
+      {
+        "word": "installer's",
+        "startMs": 3860,
+        "endMs": 4700
+      },
+      {
+        "word": "crew",
+        "startMs": 4700,
+        "endMs": 4900
+      },
+      {
+        "word": "with",
+        "startMs": 4900,
+        "endMs": 5260
+      },
+      {
+        "word": "a",
+        "startMs": 5260,
+        "endMs": 5560
+      },
+      {
+        "word": "named",
+        "startMs": 5560,
+        "endMs": 5820
+      },
+      {
+        "word": "owner",
+        "startMs": 5820,
+        "endMs": 6180
+      }
+    ]
+  }
+}

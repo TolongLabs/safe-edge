@@ -84,7 +84,6 @@ export async function recordTake(
 
   let firstFrameSeen = false
   const captureStartWallTime = Date.now()
-  const captureStartTick = performance.now()
 
   let resolveFirstFrame!: () => void
   let rejectFirstFrame!: (error: Error) => void
@@ -101,8 +100,10 @@ export async function recordTake(
     }
   }
 
-  // Cue time keeps advancing on static pages. The actual encoder origin is read from the raw file below.
-  const getElapsedMs = () => Math.max(0, Math.round(performance.now() - captureStartTick))
+  // Cue time keeps advancing on static pages. The encoder stamps frames with wall-clock time, which can step
+  // against performance.now() under WSL time sync, so cues use the wall clock too. The actual encoder origin
+  // is read from the raw file below.
+  const getElapsedMs = () => Math.max(0, Math.round(Date.now() - captureStartWallTime))
 
   const cues: Cue[] = []
   const cue = async (id: string, locator: Locator): Promise<void> => {
