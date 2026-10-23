@@ -152,3 +152,12 @@ test('AC87-4 photos taken offline upload exactly once when the browser comes bac
   await expect(page.getByText(/waiting to upload/)).toHaveCount(0)
   expect(await recorded(page)).toBe(2)
 })
+
+test('AC1 no rendered text on Capture contains Tier', async ({ page }) => {
+  await page.goto('demo/#/capture')
+  await expect(page.getByRole('heading', { level: 1, name: 'Capture' })).toBeVisible()
+  expect(await page.locator('body').innerText()).not.toMatch(/\bTier\b/i)
+  await page.goto(`demo/#/capture/${SEGMENT}`)
+  await expect(page.getByRole('heading', { name: /2 viewpoints/ })).toBeVisible()
+  expect(await page.locator('body').innerText()).not.toMatch(/\bTier\b/i)
+})

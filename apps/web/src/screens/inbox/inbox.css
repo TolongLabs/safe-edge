@@ -39,7 +39,7 @@
 }
 .row {
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 2px var(--space-3);
   width: 100%;
   padding: var(--space-3) var(--space-4);
@@ -58,27 +58,6 @@
   border-color: var(--bg-rail);
   color: var(--text-on-rail);
 }
-.row .tier-mark {
-  grid-row: 1 / span 2;
-  align-self: center;
-  justify-self: center;
-  border-radius: var(--radius-full);
-  background: currentColor;
-}
-.row .tier-mark.t2 {
-  width: 12px;
-  height: 12px;
-}
-.row .tier-mark.t1 {
-  width: 8px;
-  height: 8px;
-}
-.row .tier-mark.t3 {
-  width: 10px;
-  height: 10px;
-  background: none;
-  border: 2px solid currentColor;
-}
 .row .row-title {
   font-weight: 600;
   line-height: var(--lh-dense);
@@ -90,13 +69,13 @@
   white-space: nowrap;
 }
 .row .meta {
-  grid-column: 2;
+  grid-column: 1;
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
   color: var(--text-secondary);
 }
 .row .meta.wide {
-  grid-column: 2 / 4;
+  grid-column: 1 / -1;
 }
 .row[aria-current='true'] .meta {
   color: var(--text-on-rail-muted);
@@ -372,6 +351,11 @@
   color: var(--text-primary);
   font-size: var(--fs-body);
   font-weight: 600;
+  color-scheme: inherit;
+}
+.sev select option {
+  color: var(--text-primary);
+  background-color: var(--bg-raised);
 }
 .reason {
   display: flex;

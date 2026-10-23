@@ -15,7 +15,7 @@ async function rejectBuoy(page: Page) {
   await page.goto('demo/#/inbox')
   await page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Ring buoy/ })
+    .getByRole('button', { name: /Playground path, ring buoy post/ })
     .click()
   await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
   await page.getByLabel('Reason for rejecting').fill('The buoy was moved for the swim lesson')
@@ -91,7 +91,7 @@ test('S1 to S3 the core loop, played through the screens as each role', async ({
   await page.goto('demo/')
   await page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Fence panel 4/ })
+    .getByRole('button', { name: /Playground path, fence line/ })
     .click()
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()

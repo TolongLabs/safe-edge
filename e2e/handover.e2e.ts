@@ -12,7 +12,7 @@ const openBoard = (page: Page) =>
 async function confirmS1(page: Page) {
   await page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Fence panel 4/ })
+    .getByRole('button', { name: /Playground path, fence line/ })
     .click()
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()
