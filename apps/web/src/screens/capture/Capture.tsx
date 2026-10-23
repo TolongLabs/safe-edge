@@ -1,22 +1,25 @@
 import { CheckCircle, Info, Tray, WarningCircle, WifiSlash } from '@phosphor-icons/react'
-import type { Segment } from '@safe-edge/contracts'
-import { elminaSeed } from '@safe-edge/sdk'
+import type { Pose, Segment } from '@safe-edge/contracts'
 import { useCallback, useEffect, useState } from 'react'
 import { ROLE_WORDS } from '../fix-lens/lens'
-import type { Scene } from '../../scenes'
 import { Screen } from '../../shell/Shell'
 import { can, client, useSignedIn } from '../../store'
 import { Camera, type Shot } from './Camera'
-import { capture, drain, explain, IMAGE_TYPES, loadQueue, sendsToApi, sentKey, useCapture, type Sent } from './queue'
+import {
+  capture,
+  drain,
+  explain,
+  IMAGE_TYPES,
+  loadQueue,
+  sendsToApi,
+  sentKey,
+  useCapture,
+  type Queued,
+  type Sent
+} from './queue'
+import { describeViewpoint } from '../../viewpoints'
+import { ReportForm } from './ReportForm'
 import './capture.css'
-
-/** Display words for the viewpoints the demo knows; core carries only an ID and a pose. */
-const NAMES: Record<string, { name: string; scene: Scene }> = {
-  [elminaSeed.story.s1.viewpointId]: { name: 'Playground path, fence line', scene: 'fence' },
-  vp_866518980_11_1: { name: 'Lake bank, grass slope', scene: 'path' }
-}
-const describe = (id: string, index: number): { name: string; scene: Scene | null } =>
-  NAMES[id] ?? { name: `Viewpoint ${index + 1}`, scene: null }
 
 /** The segment number from its name ("... segment 12"), for the code plate; nothing is made up when there is none. */
 const code = (name: string) => {
@@ -222,6 +225,15 @@ function SegmentView({ segmentId }: { segmentId: string }) {
   const { online, upload, error: drainError } = useDrain()
   const [current, setCurrent] = useState<string | null>(null)
   const [last, setLast] = useState<{ viewpointId: string; sent: Sent | null } | null>(null)
+  const [lastShot, setLastShot] = useState<Shot | null>(null)
+  const [lastQueuedId, setLastQueuedId] = useState<number | undefined>(undefined)
+  const [lastOfflineThumb, setLastOfflineThumb] = useState<string | null>(null)
+  const [reporting, setReporting] = useState<{
+    viewpoint: { id: string; name: string; pose: Pose }
+    shot: Shot
+    sent: Sent | null
+    queuedId?: number
+  } | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [failed, setFailed] = useState<Shot | null>(null)
@@ -239,8 +251,9 @@ function SegmentView({ segmentId }: { segmentId: string }) {
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl)
+      if (lastOfflineThumb) URL.revokeObjectURL(lastOfflineThumb)
     }
-  }, [previewUrl])
+  }, [previewUrl, lastOfflineThumb])
 
   const leaveViewpoint = () => {
     clearFailed()
@@ -294,7 +307,7 @@ function SegmentView({ segmentId }: { segmentId: string }) {
       </Screen>
     )
 
-  const views = segment.viewpoints.map((v, i) => ({ ...v, ...describe(v.id, i), n: i + 1 }))
+  const views = segment.viewpoints.map((v, i) => ({ ...v, ...describeViewpoint(v.id, i), n: i + 1 }))
   const mine = waiting.filter((q) => q.segmentId === segmentId)
   const statusOf = (id: string) =>
     sent[sentKey(segmentId, id)] ? 'Sent' : mine.some((q) => q.viewpointId === id) ? 'Waiting' : null
@@ -310,19 +323,26 @@ function SegmentView({ segmentId }: { segmentId: string }) {
       if (!mediaType) {
         throw new Error(`The photo is ${shot.blob.type || 'of unknown type'}, not JPEG, PNG or WebP.`)
       }
-      const result = await capture({
+      const queueItem: Queued = {
         userId: user.id,
         userName: person(user.name),
         segmentId,
         viewpointId: open.id,
-        capturedAt: new Date().toISOString(),
+        capturedAt: shot.capturedAt ?? new Date().toISOString(),
         pose: open.pose,
         sharpness: shot.sharpness,
         mediaType,
-        bytes: await shot.blob.arrayBuffer(),
-        simulated: segment.simulated
-      })
+        bytes: shot.originalBytes ?? (await shot.blob.arrayBuffer()),
+        simulated: segment.simulated,
+        source: shot.source
+      }
+      const result = await capture(queueItem)
       clearFailed()
+      setLastShot(shot)
+      setLastQueuedId(queueItem.id)
+      if (!result) {
+        setLastOfflineThumb(URL.createObjectURL(shot.blob))
+      }
       setLast({ viewpointId: open.id, sent: result })
       setCurrent(null)
     } catch (e) {
@@ -333,6 +353,22 @@ function SegmentView({ segmentId }: { segmentId: string }) {
     } finally {
       setBusy(false)
     }
+  }
+
+  const lastView = last && views.find((v) => v.id === last.viewpointId)
+
+  // Report form view
+  if (reporting) {
+    return (
+      <ReportForm
+        segment={segment}
+        viewpoint={reporting.viewpoint}
+        shot={reporting.shot}
+        sent={reporting.sent}
+        queuedId={reporting.queuedId}
+        onClose={() => setReporting(null)}
+      />
+    )
   }
 
   // Camera
@@ -371,7 +407,6 @@ function SegmentView({ segmentId }: { segmentId: string }) {
     )
 
   // After a capture
-  const lastView = last && views.find((v) => v.id === last.viewpointId)
   const offlineNow = !online
 
   return (
@@ -396,6 +431,52 @@ function SegmentView({ segmentId }: { segmentId: string }) {
               <img src={last.sent.thumb} alt={`The photo you took at ${lastView?.name ?? 'the viewpoint'}`} />
             </figure>
             <p className="note">A sent photo is not a pass.</p>
+            {lastView && lastShot && (
+              <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={() =>
+                    setReporting({
+                      viewpoint: lastView,
+                      shot: lastShot,
+                      sent: last.sent,
+                      queuedId: lastQueuedId
+                    })
+                  }
+                >
+                  Report a problem
+                </button>
+              </div>
+            )}
+          </>
+        )}
+        {last && !last.sent && lastView && lastShot && (
+          <>
+            <Banner kind="warn" icon={<WifiSlash size={22} weight="bold" aria-hidden="true" />}>
+              <b>Photo queued offline.</b> It is saved to your phone and will send when online.
+            </Banner>
+            {lastOfflineThumb && (
+              <figure className="taken">
+                <img src={lastOfflineThumb} alt={`The photo you took at ${lastView.name}`} />
+              </figure>
+            )}
+            <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+              <button
+                className="btn"
+                type="button"
+                onClick={() =>
+                  setReporting({
+                    viewpoint: lastView,
+                    shot: lastShot,
+                    sent: null,
+                    queuedId: lastQueuedId
+                  })
+                }
+              >
+                Report a problem
+              </button>
+            </div>
           </>
         )}
         <WaitingBanner online={online} />

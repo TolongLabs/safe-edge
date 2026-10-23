@@ -77,6 +77,7 @@ test("the crew's damage report and the system's missed-patrol report each suspen
   expect((await auditOf(api)).map((e) => [e.action, e.subjectId, e.actor.id, e.decision, e.rule])).toEqual([
     ['reportDamage', 'cand_1', 'usr_crew', 'allowed', null],
     ['reportDamage', S1_PASS, 'usr_crew', 'allowed', null],
+    ['reportDamage', 'drpt_1', 'usr_crew', 'allowed', null],
     ['reportMissedPatrol', SOON, 'usr_system', 'denied', 'invalid_transition'],
     ['reportMissedPatrol', 'cand_2', 'usr_system', 'allowed', null],
     ['reportMissedPatrol', 'pass_866518980_12', 'usr_system', 'allowed', null]

@@ -678,6 +678,47 @@ paths:
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
   /damage-reports:
+    get:
+      operationId: listDamageReports
+      summary: List damage reports
+      description: "Roles: any. Agents need scope `inspection.read`."
+      tags:
+        - damage-reports
+      parameters:
+        - name: candidateId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: ^cand_
+        - name: segmentId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: ^seg_
+        - name: reportedBy
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: ^usr_
+      responses:
+        "200":
+          description: List damage reports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DamageReportList"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: inspection.read
+      x-safe-edge-events: []
     post:
       operationId: reportDamage
       summary: "A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass"
@@ -711,6 +752,75 @@ paths:
       x-safe-edge-events:
         - edge.candidate.raised.v1
         - edge.pass.suspended.v1
+  /damage-reports/{id}:
+    get:
+      operationId: getDamageReport
+      summary: Read a damage report
+      description: "Roles: any. Agents need scope `inspection.read`."
+      tags:
+        - damage-reports
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^drpt_
+      responses:
+        "200":
+          description: Read a damage report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DamageReport"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: inspection.read
+      x-safe-edge-events: []
+  /damage-reports/{id}/prevention:
+    patch:
+      operationId: setReportPrevention
+      summary: Record prevention steps for a damage report
+      description: "Roles: manager. Agents are refused."
+      tags:
+        - damage-reports
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^drpt_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DamagePrevention"
+      responses:
+        "200":
+          description: Record prevention steps for a damage report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DamageReport"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - manager
+      x-safe-edge-events: []
   /segments/{id}/missed-patrol:
     post:
       operationId: reportMissedPatrol
@@ -4682,6 +4792,198 @@ components:
         - simulated
         - source
       additionalProperties: false
+    DamageReportWhere:
+      type: object
+      properties:
+        lat:
+          type: number
+          minimum: -90
+          maximum: 90
+        lon:
+          type: number
+          minimum: -180
+          maximum: 180
+        accuracyM:
+          anyOf:
+            - type: number
+              minimum: 0
+            - type: "null"
+        source:
+          type: string
+          enum:
+            - photo
+            - phone
+            - viewpoint
+            - manual
+        note:
+          type:
+            - string
+            - "null"
+      required:
+        - lat
+        - lon
+        - accuracyM
+        - source
+        - note
+      additionalProperties: false
+    DamageTimeSource:
+      type: string
+      enum:
+        - photo
+        - capture
+        - manual
+    DamageIssueType:
+      type: string
+      enum:
+        - fence_missing
+        - fence_damaged
+        - path_broken
+        - path_worn
+        - sign_missing
+        - ring_buoy_missing
+        - cover_moved
+        - grating_blocked
+        - debris
+        - other
+    DamageAction:
+      type: string
+      enum:
+        - replace
+        - repair
+        - clear
+        - cordon
+        - not_sure
+    DamageCause:
+      type: string
+      enum:
+        - stolen
+        - vandalism
+        - weather
+        - wear
+        - accident
+        - unknown
+    PreventionStep:
+      type: string
+      enum:
+        - cctv
+        - guard
+        - patrols
+        - material
+        - other
+    DamagePrevention:
+      type: object
+      properties:
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/PreventionStep"
+        other:
+          type:
+            - string
+            - "null"
+      required:
+        - steps
+        - other
+      additionalProperties: false
+    DamageReport:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^drpt_
+        candidateId:
+          type: string
+          pattern: ^cand_
+        segmentId:
+          type: string
+          pattern: ^seg_
+        viewpointId:
+          anyOf:
+            - type: string
+              pattern: ^vp_
+            - type: "null"
+        observationIds:
+          type: array
+          items:
+            type: string
+            pattern: ^obs_
+        reportedBy:
+          type: string
+          pattern: ^usr_
+        reportedAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+        where:
+          anyOf:
+            - $ref: "#/components/schemas/DamageReportWhere"
+            - type: "null"
+        observedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        timeSource:
+          anyOf:
+            - $ref: "#/components/schemas/DamageTimeSource"
+            - type: "null"
+        issueType:
+          anyOf:
+            - $ref: "#/components/schemas/DamageIssueType"
+            - type: "null"
+        issueTypeOther:
+          type:
+            - string
+            - "null"
+        action:
+          anyOf:
+            - $ref: "#/components/schemas/DamageAction"
+            - type: "null"
+        actionNote:
+          type:
+            - string
+            - "null"
+        urgency:
+          anyOf:
+            - $ref: "#/components/schemas/Severity"
+            - type: "null"
+        cause:
+          default: unknown
+          $ref: "#/components/schemas/DamageCause"
+        prevention:
+          $ref: "#/components/schemas/DamagePrevention"
+        costEstimate:
+          anyOf:
+            - $ref: "#/components/schemas/Quote"
+            - type: "null"
+        simulated:
+          type: boolean
+        source:
+          $ref: "#/components/schemas/Source"
+      required:
+        - id
+        - candidateId
+        - segmentId
+        - viewpointId
+        - observationIds
+        - reportedBy
+        - reportedAt
+        - description
+        - where
+        - observedAt
+        - timeSource
+        - issueType
+        - issueTypeOther
+        - action
+        - actionNote
+        - urgency
+        - cause
+        - prevention
+        - costEstimate
+        - simulated
+        - source
+      additionalProperties: false
     EventType:
       type: string
       enum:
@@ -4884,6 +5186,10 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Notice"
+    DamageReportList:
+      type: array
+      items:
+        $ref: "#/components/schemas/DamageReport"
     EdgeContext:
       type: object
       properties:
@@ -5186,6 +5492,66 @@ components:
         - model
         - simulated
       additionalProperties: false
+    DamageReportInput:
+      type: object
+      properties:
+        description:
+          type: string
+          minLength: 1
+        observedAt:
+          type: string
+          format: date-time
+        issueType:
+          $ref: "#/components/schemas/DamageIssueType"
+        urgency:
+          $ref: "#/components/schemas/Severity"
+        viewpointId:
+          default: null
+          anyOf:
+            - type: string
+              pattern: ^vp_
+            - type: "null"
+        where:
+          default: null
+          anyOf:
+            - $ref: "#/components/schemas/DamageReportWhere"
+            - type: "null"
+        timeSource:
+          default: null
+          anyOf:
+            - $ref: "#/components/schemas/DamageTimeSource"
+            - type: "null"
+        issueTypeOther:
+          default: null
+          type:
+            - string
+            - "null"
+        action:
+          default: null
+          anyOf:
+            - $ref: "#/components/schemas/DamageAction"
+            - type: "null"
+        actionNote:
+          default: null
+          type:
+            - string
+            - "null"
+        cause:
+          default: unknown
+          $ref: "#/components/schemas/DamageCause"
+      required:
+        - description
+        - observedAt
+        - issueType
+        - urgency
+        - viewpointId
+        - where
+        - timeSource
+        - issueTypeOther
+        - action
+        - actionNote
+        - cause
+      additionalProperties: false
     ReportDamageRequest:
       type: object
       properties:
@@ -5219,6 +5585,10 @@ components:
           description: What the reporter saw
         simulated:
           type: boolean
+        report:
+          anyOf:
+            - $ref: "#/components/schemas/DamageReportInput"
+            - type: "null"
       required:
         - segmentId
         - observationIds

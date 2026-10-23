@@ -16,6 +16,7 @@ import {
   CreateRemedyRequest,
   CreateRouteRequest,
   CreateWorkOrderRequest,
+  DamageReportList,
   DecideCandidateRequest,
   DemoResetResult,
   DockList,
@@ -35,6 +36,7 @@ import {
   InventoryCheckResult,
   ListAuditQuery,
   ListCandidatesQuery,
+  ListDamageReportsQuery,
   ListFindingsQuery,
   ListInventoryChecksQuery,
   ListNoticesQuery,
@@ -76,6 +78,8 @@ import {
 } from './api.ts'
 import {
   Candidate,
+  DamagePrevention,
+  DamageReport,
   EdgePass,
   Finding,
   Notice,
@@ -400,6 +404,30 @@ export const operations = {
     status: 201,
     events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
   },
+  listDamageReports: {
+    method: 'get',
+    path: '/damage-reports',
+    summary: 'List damage reports',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'inspection.read',
+    query: ListDamageReportsQuery,
+    response: DamageReportList,
+    status: 200,
+    events: []
+  },
+  getDamageReport: {
+    method: 'get',
+    path: '/damage-reports/{id}',
+    summary: 'Read a damage report',
+    handledBy: 'core',
+    roles: 'any',
+    agentScope: 'inspection.read',
+    params: IdParam.damageReport,
+    response: DamageReport,
+    status: 200,
+    events: []
+  },
   reportDamage: {
     method: 'post',
     path: '/damage-reports',
@@ -413,6 +441,19 @@ export const operations = {
     response: Candidate,
     status: 201,
     events: ['edge.candidate.raised.v1', 'edge.pass.suspended.v1']
+  },
+  setReportPrevention: {
+    method: 'patch',
+    path: '/damage-reports/{id}/prevention',
+    summary: 'Record prevention steps for a damage report',
+    handledBy: 'core',
+    roles: ['manager'],
+    agentScope: null,
+    params: IdParam.damageReport,
+    body: DamagePrevention,
+    response: DamageReport,
+    status: 200,
+    events: []
   },
   reportMissedPatrol: {
     method: 'post',

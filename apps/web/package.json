@@ -17,6 +17,7 @@
     "@safe-edge/planner": "workspace:*",
     "@safe-edge/scene": "workspace:*",
     "@safe-edge/sdk": "workspace:*",
+    "exifr": "^7.1.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

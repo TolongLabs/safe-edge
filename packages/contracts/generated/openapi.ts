@@ -405,7 +405,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List damage reports
+         * @description Roles: any. Agents need scope `inspection.read`.
+         */
+        get: operations["listDamageReports"];
         put?: never;
         /**
          * A person reports damage they saw: core files it as a Tier 2 candidate, which suspends a valid or expiring pass
@@ -416,6 +420,46 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/damage-reports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read a damage report
+         * @description Roles: any. Agents need scope `inspection.read`.
+         */
+        get: operations["getDamageReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/damage-reports/{id}/prevention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Record prevention steps for a damage report
+         * @description Roles: manager. Agents are refused.
+         */
+        patch: operations["setReportPrevention"];
         trace?: never;
     };
     "/segments/{id}/missed-patrol": {
@@ -1975,6 +2019,53 @@ export interface components {
             simulated: boolean;
             source: components["schemas"]["Source"];
         };
+        DamageReportWhere: {
+            lat: number;
+            lon: number;
+            accuracyM: number | null;
+            /** @enum {string} */
+            source: "photo" | "phone" | "viewpoint" | "manual";
+            note: string | null;
+        };
+        /** @enum {string} */
+        DamageTimeSource: "photo" | "capture" | "manual";
+        /** @enum {string} */
+        DamageIssueType: "fence_missing" | "fence_damaged" | "path_broken" | "path_worn" | "sign_missing" | "ring_buoy_missing" | "cover_moved" | "grating_blocked" | "debris" | "other";
+        /** @enum {string} */
+        DamageAction: "replace" | "repair" | "clear" | "cordon" | "not_sure";
+        /** @enum {string} */
+        DamageCause: "stolen" | "vandalism" | "weather" | "wear" | "accident" | "unknown";
+        /** @enum {string} */
+        PreventionStep: "cctv" | "guard" | "patrols" | "material" | "other";
+        DamagePrevention: {
+            steps: components["schemas"]["PreventionStep"][];
+            other: string | null;
+        };
+        DamageReport: {
+            id: string;
+            candidateId: string;
+            segmentId: string;
+            viewpointId: string | null;
+            observationIds: string[];
+            reportedBy: string;
+            /** Format: date-time */
+            reportedAt: string;
+            description: string;
+            where: components["schemas"]["DamageReportWhere"] | null;
+            observedAt: string | null;
+            timeSource: components["schemas"]["DamageTimeSource"] | null;
+            issueType: components["schemas"]["DamageIssueType"] | null;
+            issueTypeOther: string | null;
+            action: components["schemas"]["DamageAction"] | null;
+            actionNote: string | null;
+            urgency: components["schemas"]["Severity"] | null;
+            /** @default unknown */
+            cause: components["schemas"]["DamageCause"];
+            prevention: components["schemas"]["DamagePrevention"];
+            costEstimate: components["schemas"]["Quote"] | null;
+            simulated: boolean;
+            source: components["schemas"]["Source"];
+        };
         /** @enum {string} */
         EventType: "edge.patrol.planned.v1" | "edge.patrol.started.v1" | "edge.patrol.completed.v1" | "edge.candidate.raised.v1" | "edge.candidate.decided.v1" | "edge.pass.suspended.v1" | "edge.work_order.drafted.v1" | "edge.work_order.submitted.v1" | "edge.repair.completed.v1" | "edge.retest.recorded.v1" | "edge.pass.issued.v1" | "edge.pass.expiring.v1" | "edge.pass.expired.v1";
         WebhookFailure: {
@@ -2032,6 +2123,7 @@ export interface components {
         WorkOrderList: components["schemas"]["WorkOrder"][];
         EdgePassList: components["schemas"]["EdgePass"][];
         NoticeList: components["schemas"]["Notice"][];
+        DamageReportList: components["schemas"]["DamageReport"][];
         EdgeContext: {
             segment: components["schemas"]["Segment"];
             asset: components["schemas"]["Asset"];
@@ -2122,6 +2214,27 @@ export interface components {
             model: string | null;
             simulated: boolean;
         };
+        DamageReportInput: {
+            description: string;
+            /** Format: date-time */
+            observedAt: string;
+            issueType: components["schemas"]["DamageIssueType"];
+            urgency: components["schemas"]["Severity"];
+            /** @default null */
+            viewpointId: string | null;
+            /** @default null */
+            where: components["schemas"]["DamageReportWhere"] | null;
+            /** @default null */
+            timeSource: components["schemas"]["DamageTimeSource"] | null;
+            /** @default null */
+            issueTypeOther: string | null;
+            /** @default null */
+            action: components["schemas"]["DamageAction"] | null;
+            /** @default null */
+            actionNote: string | null;
+            /** @default unknown */
+            cause: components["schemas"]["DamageCause"];
+        };
         ReportDamageRequest: {
             segmentId: string;
             /** @description Photos of the damage the reporter recorded on this segment (POST /observations); may be empty */
@@ -2133,6 +2246,7 @@ export interface components {
             /** @description What the reporter saw */
             rationale: string;
             simulated: boolean;
+            report?: components["schemas"]["DamageReportInput"] | null;
         };
         DecideCandidateRequest: {
             /** @constant */
@@ -3038,6 +3152,33 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    listDamageReports: {
+        parameters: {
+            query?: {
+                candidateId?: string;
+                segmentId?: string;
+                reportedBy?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List damage reports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DamageReportList"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+        };
+    };
     reportDamage: {
         parameters: {
             query?: never;
@@ -3066,6 +3207,64 @@ export interface operations {
             400: components["responses"]["InvalidInput"];
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["Denied"];
+        };
+    };
+    getDamageReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Read a damage report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DamageReport"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    setReportPrevention: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Replays the stored response for a repeated key; a different body with the same key is 422 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DamagePrevention"];
+            };
+        };
+        responses: {
+            /** @description Record prevention steps for a damage report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DamageReport"];
+                };
+            };
+            400: components["responses"]["InvalidInput"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Denied"];
+            404: components["responses"]["NotFound"];
         };
     };
     reportMissedPatrol: {

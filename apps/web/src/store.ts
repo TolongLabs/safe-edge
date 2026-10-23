@@ -14,6 +14,7 @@ import { createSafeEdgeClient } from '@safe-edge/sdk'
 import { useSyncExternalStore } from 'react'
 import { loadPlanner } from './planner'
 import { raiseSampleCandidates, type SampleMeta } from './sample'
+import type { DamageReport } from './screens/shared/reports'
 
 // Core asks its planner synchronously, but the browser has to fetch the planner's map layers first. So core gets a
 // stand-in that fails the way a missing planner does until the Patrol screen has loaded the real one.
@@ -88,6 +89,7 @@ export type Snapshot = {
   metas: Record<string, SampleMeta>
   /** Core records no one for a finished task, so the page remembers who pressed Mark done. */
   doneBy: Record<string, string>
+  damageReports: DamageReport[]
 }
 
 export type Presenter = { demo: typeof demo; refresh: () => Promise<void> }
@@ -124,18 +126,34 @@ export async function refresh() {
   const role = users.find((u) => u.id === who)?.role
   if (!role) throw new Error(`Signed-in user ${who} is not in the seed`)
   const allowed = rolesOf('listCandidates')
-  const [candidates, findings, tasks, workOrders, passes] = await Promise.all([
-    allowed === 'any' || allowed.includes(role) ? demo.listCandidates() : [],
+  const reportRoles = rolesOf('listDamageReports' as OperationId)
+  const canReadReports = reportRoles === 'any' || reportRoles.includes(role)
+  const [candidates, findings, tasks, workOrders, passes, damageReports] = await Promise.all([
+    allowed === 'any' || allowed.includes(role) ? me.listCandidates() : [],
     me.listFindings(),
     me.listTasks(),
     me.listWorkOrders(),
-    me.listPasses()
+    me.listPasses(),
+    canReadReports ? me.listDamageReports() : []
   ])
-  const evidence = await Promise.all(candidates.map((c) => demo.getCandidate({ params: { id: c.id } })))
+  const evidence = await Promise.all(candidates.map((c) => me.getCandidate({ params: { id: c.id } })))
   if (mine !== latest) return
   signedId = who
   remember(who)
-  set({ snapshot: { users, evidence, findings, tasks, workOrders, passes, metas, doneBy: { ...doneBy } }, error: null })
+  set({
+    snapshot: {
+      users,
+      evidence,
+      findings,
+      tasks,
+      workOrders,
+      passes,
+      metas,
+      doneBy: { ...doneBy },
+      damageReports
+    },
+    error: null
+  })
 }
 
 // Core's events fire while the sample cards are being raised; only redraw once their display extras are known.

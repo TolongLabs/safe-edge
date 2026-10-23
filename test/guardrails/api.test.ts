@@ -119,6 +119,8 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     })
   )
   const ids = {
+    // Refused requests must fail access checks before report lookup.
+    'damage-reports': 'drpt_auth_refusal',
     candidates: proposed.id,
     notices: notice.id,
     'patrol-plans': plan.id,
@@ -274,6 +276,8 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     })
   )
   const ids = {
+    // Refused requests must fail access checks before report lookup.
+    'damage-reports': 'drpt_auth_refusal',
     'patrol-plans': flying.id,
     patrols: patrol.id,
     candidates: played.candidate.id,
@@ -408,6 +412,8 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     rationale: 'The bank has slumped beside the bench',
     simulated: true
   })
+  const [damageReport] = await as('dev_manager', 'get', `/damage-reports?candidateId=${damage.id}`)
+  await as('dev_manager', 'patch', `/damage-reports/${damageReport.id}/prevention`, { steps: ['patrols'], other: null })
   api.setNow(MISSED_PATROL_DUE)
   await as('dev_system', 'post', `/segments/${EXPIRING}/missed-patrol`)
   // A false alarm after S3: the drone reports the panel missing again, the agent summarises it for the Inbox card,
@@ -529,6 +535,8 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     })
   )
   const ids = {
+    // Refused requests must fail access checks before report lookup.
+    'damage-reports': 'drpt_auth_refusal',
     candidates: played.candidate.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,

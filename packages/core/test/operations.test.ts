@@ -218,6 +218,12 @@ describe('the operations table in core', () => {
     h.call('getPass', reader, { params: { id: `pass_${S1.segmentId.slice('seg_'.length)}` } })
     h.call('listAudit', reader, { query: { subject: S1.segmentId } })
     h.call('listNotices', reader, { query: { status: 'sent' } })
+    const report = h.call('listDamageReports', reader, { query: {} }).data[0]!
+    h.call('getDamageReport', reader, { params: { id: report.id } })
+    h.call('setReportPrevention', 'usr_manager', {
+      params: { id: report.id },
+      body: { steps: ['patrols'], other: null }
+    })
 
     expect([...h.succeeded].toSorted()).toEqual(coreOperations.toSorted())
   })

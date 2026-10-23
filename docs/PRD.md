@@ -121,6 +121,7 @@ Priority: **P0** must exist for the demo, **P1** should exist, **P2** is a stret
 
 - **PHONE-1 (P0) Guided capture.** A phone screen lists a segment's fixed viewpoints, ghosts the baseline photo over the camera view, and captures or uploads the new photo. The photo enters Edge Watch exactly like a drone image. Done when S0 runs end to end on a phone.
 - **PHONE-2 (P1) Works without signal.** Captures queue on the phone and upload when the connection returns.
+- **PHONE-3 (P0) Report a problem.** After a photo, the walk crew records what they saw, a problem type, observation time and urgency. Script fills photo or phone coordinates and photo time with their source. Offline reports queue with the photo. The manager sees the human report in Inbox and confirms, rejects or asks for another look. Cause, action, prevention and an explicitly unknown cost slot stay with the report. Done when a real Capture report reaches Inbox and confirmation creates a finding and draft work order.
 
 ### Edge Inbox and agent
 

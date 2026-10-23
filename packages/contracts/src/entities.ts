@@ -5,6 +5,7 @@ import {
   AuditEventId,
   BaselineId,
   CandidateId,
+  DamageReportId,
   DockId,
   DroneProfileId,
   EvidenceRef,
@@ -870,3 +871,107 @@ export const Notice = named(
   })
 )
 export type Notice = z.infer<typeof Notice>
+
+export const DamageReportWhere = named(
+  'DamageReportWhere',
+  z.object({
+    lat: z.number().min(-90).max(90),
+    lon: z.number().min(-180).max(180),
+    accuracyM: z.number().nonnegative().nullable(),
+    source: z.enum(['photo', 'phone', 'viewpoint', 'manual']),
+    note: z.string().nullable()
+  })
+)
+export type DamageReportWhere = z.infer<typeof DamageReportWhere>
+
+export const DamageTimeSource = named('DamageTimeSource', z.enum(['photo', 'capture', 'manual']))
+export type DamageTimeSource = z.infer<typeof DamageTimeSource>
+
+export const DamageIssueType = named(
+  'DamageIssueType',
+  z.enum([
+    'fence_missing',
+    'fence_damaged',
+    'path_broken',
+    'path_worn',
+    'sign_missing',
+    'ring_buoy_missing',
+    'cover_moved',
+    'grating_blocked',
+    'debris',
+    'other'
+  ])
+)
+export type DamageIssueType = z.infer<typeof DamageIssueType>
+
+export const DamageAction = named('DamageAction', z.enum(['replace', 'repair', 'clear', 'cordon', 'not_sure']))
+export type DamageAction = z.infer<typeof DamageAction>
+
+export const DamageCause = named(
+  'DamageCause',
+  z.enum(['stolen', 'vandalism', 'weather', 'wear', 'accident', 'unknown'])
+)
+export type DamageCause = z.infer<typeof DamageCause>
+
+export const PreventionStep = named('PreventionStep', z.enum(['cctv', 'guard', 'patrols', 'material', 'other']))
+export type PreventionStep = z.infer<typeof PreventionStep>
+
+export const DamagePrevention = named(
+  'DamagePrevention',
+  z
+    .object({
+      steps: z.array(PreventionStep),
+      other: z.string().nullable()
+    })
+    .superRefine((data, ctx) => {
+      if (data.steps.includes('other')) {
+        if (!data.other || data.other.trim().length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'other text is required when other is selected in prevention steps',
+            path: ['other']
+          })
+        }
+      }
+    })
+)
+export type DamagePrevention = z.infer<typeof DamagePrevention>
+
+export const DamageReport = named(
+  'DamageReport',
+  z
+    .object({
+      id: DamageReportId,
+      candidateId: CandidateId,
+      segmentId: SegmentId,
+      viewpointId: ViewpointId.nullable(),
+      observationIds: z.array(ObservationId),
+      reportedBy: UserId,
+      reportedAt: Timestamp,
+      description: z.string(),
+      where: DamageReportWhere.nullable(),
+      observedAt: Timestamp.nullable(),
+      timeSource: DamageTimeSource.nullable(),
+      issueType: DamageIssueType.nullable(),
+      issueTypeOther: z.string().nullable(),
+      action: DamageAction.nullable(),
+      actionNote: z.string().nullable(),
+      urgency: Severity.nullable(),
+      cause: DamageCause.default('unknown'),
+      prevention: DamagePrevention,
+      costEstimate: Quote.nullable(),
+      ...provenance
+    })
+    .superRefine((data, ctx) => {
+      if (data.issueType === 'other') {
+        if (!data.issueTypeOther || data.issueTypeOther.trim().length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'issueTypeOther is required when issueType is other',
+            path: ['issueTypeOther']
+          })
+        }
+      }
+    })
+)
+export type DamageReport = z.infer<typeof DamageReport>
