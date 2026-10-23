@@ -10,17 +10,47 @@ const S1 = 'cand_1'
 const BUOY = 'cand_2'
 const PATH = 'cand_3'
 const FIELD = 'cand_4'
+
+// The AI title each sample carries; only a card heading may show it, and never while blind mode hides a guess.
+const AI_TITLE = {
+  S1: 'Fence panel 4 missing',
+  BUOY: 'Ring buoy moved',
+  PATH: 'Worn path towards the water edge',
+  FIELD: 'Fence panel 3 not visible'
+} as const
+
+// Every list row is titled by its viewpoint place name (sample/index.ts), in both blind modes.
+const VIEWPOINT = {
+  S1: 'Playground path, fence line',
+  BUOY: 'Playground path, ring buoy post',
+  PATH: 'Lake bank, grass slope',
+  FIELD: 'Lake bank, fence line under tree cover'
+} as const
+const VIEWPOINTS = new Set<string>(Object.values(VIEWPOINT))
+// Tests name cards by the old AI titles; rows now carry the viewpoint name from the sample mapping.
+const viewpointOf = (title: string) =>
+  title.startsWith('Fence panel 4')
+    ? VIEWPOINT.S1
+    : title.startsWith('Ring buoy')
+      ? VIEWPOINT.BUOY
+      : title.startsWith('Worn path')
+        ? VIEWPOINT.PATH
+        : title.startsWith('Fence panel 3')
+          ? VIEWPOINT.FIELD
+          : title
 const card = (page: Page, id: string) => page.getByRole('article', { name: `Card ${id}` })
 const open = (page: Page, title: string) =>
   page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: new RegExp(title) })
+    .getByRole('button', { name: viewpointOf(title) })
     .click()
 const resetDemo = async (page: Page) => {
   await page.getByRole('button', { name: /Farah Hashim/ }).click()
   await page.getByRole('button', { name: 'Reset demo' }).click()
 }
 const list = (page: Page, group: 'Open' | 'Decided') => page.getByRole('list', { name: group })
+const row = (page: Page, group: 'Open' | 'Decided', title: string) =>
+  list(page, group).getByRole('button', { name: viewpointOf(title) })
 
 // What other people do between the manager's steps, made through the demo core as them (the Fix Lens and crew screens
 // are not built yet). The page exposes a presenter's handle for this.
@@ -76,8 +106,8 @@ test('AC1 S1 card shows its evidence', async ({ page }) => {
   await expect(c.getByText('The safety pass for this fence is paused until it is fixed')).toBeVisible()
   await expect(c.getByRole('figure').filter({ hasText: 'Drone' }).getByText('19 Oct 2026, 15:48 MYT')).toBeVisible()
   await expect(c.getByText('How sure: high')).toBeVisible()
-  await expect(c.getByText('Tier 2 · a person confirms')).toBeVisible()
-  await expect(page.getByRole('img', { name: 'Tier 2 · a person confirms' }).first()).toBeVisible()
+  await expect(c.getByText(/\bTier\b/)).toHaveCount(0)
+  await expect(page.locator('.tier-mark')).toHaveCount(0)
   await expect(c.getByText(/AI label: missing/)).toBeVisible()
   await expect(c.getByText(/AI confidence 82%/)).toBeVisible()
   await expect(c.getByText(/AI suggestion, unvalidated/)).toBeVisible()
@@ -99,6 +129,8 @@ test('AC1 Tier 3 card shows images and core field task only', async ({ page }) =
   await expect(c.getByRole('img', { name: /After image/ })).toBeVisible()
   await expect(c.getByText(/Viewpoint: Lake bank, fence line under tree cover/)).toBeVisible()
   await expect(c.getByText('Not visible: unknown, never a pass')).toBeVisible()
+  await expect(c.getByText(/\bTier\b/)).toHaveCount(0)
+  await expect(page.locator('.tier-mark')).toHaveCount(0)
   await expect(c.getByRole('img', { name: /Flagged region/ })).toHaveCount(0)
   await expect(c.getByRole('img', { name: /Close-up/ })).toHaveCount(0)
   await expect(c.getByText(/AI confidence/)).toHaveCount(0)
@@ -124,8 +156,9 @@ test('AC2 reject needs a reason', async ({ page }) => {
   const c = card(page, S1)
   await expect(c.getByText(/Rejected by Farah Hashim/)).toBeVisible()
   await expect(c.getByText(/Reason: Panel was removed on purpose/)).toBeVisible()
-  await expect(list(page, 'Decided').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
-  await expect(list(page, 'Open').getByRole('button', { name: /Fence panel 4/ })).toHaveCount(0)
+  await expect(row(page, 'Decided', AI_TITLE.S1)).toBeVisible()
+  await expect(row(page, 'Open', AI_TITLE.S1)).toHaveCount(0)
+  await expect(row(page, 'Decided', AI_TITLE.S1)).toContainText(VIEWPOINT.S1)
   await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toHaveCount(0)
 })
 
@@ -224,36 +257,121 @@ test('AC4 submit once the other people have done their steps', async ({ page }) 
   await expect(page.getByRole('region', { name: /^Finding / }).getByText(/Status: work_ordered/)).toBeVisible()
 })
 
-test('AC6 blind-first hides the AI view of Tier 2 until the manager picks a label', async ({ page }) => {
+test('AC6 blind-first hides every AI conclusion until blind mode is off', async ({ page }) => {
   await page.getByLabel('Blind-first mode').check()
   const c = card(page, S1)
-  // the title would give the AI conclusion away, in the detail pane and in the list
-  await expect(page.getByText('Fence panel 4 missing')).toHaveCount(0)
-  await expect(page.getByText('Ring buoy moved')).toHaveCount(0)
-  await expect(c.getByRole('heading', { name: 'Tier 2 flag: Playground path, fence line' })).toBeVisible()
+  const decision = page.getByRole('group', { name: 'Decision' })
+  const severity = decision.getByRole('combobox', { name: /^Severity/ })
+  const confirm = decision.getByRole('button', { name: 'Confirm: needs a fix', exact: true })
+  // the AI title would give the conclusion away, in the list and in the detail heading
+  await expect(page.getByText(AI_TITLE.S1)).toHaveCount(0)
+  await expect(page.getByText(AI_TITLE.BUOY)).toHaveCount(0)
+  await expect(c.getByRole('heading', { name: VIEWPOINT.S1 })).toBeVisible()
+  await expect(row(page, 'Open', AI_TITLE.S1)).toContainText(VIEWPOINT.S1)
   await expect(c.getByText(/AI label/)).toHaveCount(0)
   await expect(c.getByText(/AI confidence/)).toHaveCount(0)
+  await expect(c.getByText(/How sure/)).toHaveCount(0)
   await expect(c.getByText(/Reason: Panel 4/)).toHaveCount(0)
   await expect(c.getByText(/Sample summary/)).toHaveCount(0)
   await expect(c.getByRole('img', { name: /Flagged region/ })).toHaveCount(0)
   await expect(c.getByRole('img', { name: /Close-up/ })).toHaveCount(0)
-  for (const n of ['Confirm: needs a fix', 'Not a problem', 'Look again'])
-    await expect(page.getByRole('button', { name: n, exact: true })).toBeDisabled()
+  // no tier word, chip or list mark may stand in for the hidden AI conclusion
+  await expect(c.getByText(/\bTier\b/)).toHaveCount(0)
+  await expect(page.locator('.tier-mark')).toHaveCount(0)
+  // severity starts blank and Confirm waits for both the manager's label and their own severity
+  await expect(severity).toHaveValue('')
+  await expect(decision.getByText('(pre-filled')).toHaveCount(0)
+  await expect(confirm).toBeDisabled()
+  await expect(decision.getByRole('button', { name: 'Look again' })).toBeDisabled()
+  await expect(decision.getByRole('button', { name: 'Not a problem' })).toBeDisabled()
+
+  // picking our own label keeps the AI answer hidden and enables the choices that do not need a severity
   await page.getByRole('radio', { name: 'changed' }).click()
-  await expect(c.getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
+  await expect(c.getByRole('heading', { name: VIEWPOINT.S1 })).toBeVisible()
+  await expect(c.getByText('Your label: changed')).toBeVisible()
+  await expect(c.getByText(/AI label/)).toHaveCount(0)
+  await expect(c.getByText(/AI confidence/)).toHaveCount(0)
+  await expect(c.getByRole('img', { name: /Flagged region/ })).toHaveCount(0)
+  await expect(confirm).toBeDisabled()
+  await expect(decision.getByText('Pick a severity to confirm.')).toBeVisible()
+  await expect(decision.getByRole('button', { name: 'Look again' })).toBeEnabled()
+  await expect(decision.getByRole('button', { name: 'Not a problem' })).toBeEnabled()
+
+  // an explicit severity is the manager's own, so Confirm proceeds while every AI conclusion stays hidden
+  await severity.selectOption('high')
+  await expect(confirm).toBeEnabled()
+  await confirm.click()
+  await expect(c.getByText(/Confirmed by Farah Hashim/)).toBeVisible()
+  await expect(c.getByText('AI answer hidden while blind mode is on')).toBeVisible()
+  await expect(c.getByText('Your label: changed')).toBeVisible()
+  await expect(c.getByText(/AI label/)).toHaveCount(0)
+  await expect(c.getByText(/AI confidence/)).toHaveCount(0)
+  await expect(c.getByText(/How sure/)).toHaveCount(0)
+  await expect(c.getByText(/Sample summary/)).toHaveCount(0)
+  await expect(c.getByRole('img', { name: /Flagged region/ })).toHaveCount(0)
+  // the interim task reason and work-order notes repeat the AI rationale, so both stay hidden too
+  await expect(page.getByRole('region', { name: /^Task / })).toHaveCount(0)
+  await expect(page.getByRole('region', { name: /^Work order / })).toHaveCount(0)
+  // the manager's decision and chosen severity are not AI conclusions, so they stay visible
+  await expect(page.getByRole('region', { name: /^Finding / }).getByText(/Severity: high/)).toBeVisible()
+
+  // turning blind mode off reveals the AI title and answer, with the manager's label still kept
+  await page.getByLabel('Blind-first mode').uncheck()
+  await expect(c.getByRole('heading', { name: AI_TITLE.S1 })).toBeVisible()
   await expect(c.getByText(/AI label: missing/)).toBeVisible()
-  await expect(c.getByText(/Your label: changed\. Differs with the AI label/)).toBeVisible()
+  await expect(c.getByText(/AI confidence 82%/)).toBeVisible()
+  await expect(c.getByText('Your label: changed. The AI said missing.')).toBeVisible()
   await expect(c.getByRole('img', { name: /Flagged region/ })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toBeEnabled()
+  await expect(page.getByRole('region', { name: /^Work order / })).toBeVisible()
 })
 
-test('AC6 blind-first does not affect Tier 1 and Tier 3', async ({ page }) => {
+test('AC6 blind-first hides the Tier 1 machine guess too', async ({ page }) => {
   await page.getByLabel('Blind-first mode').check()
-  await open(page, 'Worn path')
-  await expect(card(page, PATH).getByText(/AI label: general change/)).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toBeEnabled()
-  await open(page, 'Fence panel 3 not visible')
+  await open(page, AI_TITLE.PATH)
+  const c = card(page, PATH)
+  const decision = page.getByRole('group', { name: 'Decision' })
+  const severity = decision.getByRole('combobox', { name: /^Severity/ })
+  await expect(c.getByRole('heading', { name: VIEWPOINT.PATH })).toBeVisible()
+  await expect(page.getByText(AI_TITLE.PATH)).toHaveCount(0)
+  await expect(c.getByText(/AI label/)).toHaveCount(0)
+  await expect(c.getByText(/How sure/)).toHaveCount(0)
+  await expect(c.getByText(/Sample summary/)).toHaveCount(0)
+  await expect(c.getByRole('img', { name: /Flagged region/ })).toHaveCount(0)
+  await expect(severity).toHaveValue('')
+  await expect(decision.getByText('(pre-filled')).toHaveCount(0)
+  await expect(decision.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toBeDisabled()
+  // turning blind off reveals the same card's AI title, answer and its tier-derived severity
+  await page.getByLabel('Blind-first mode').uncheck()
+  await expect(c.getByRole('heading', { name: AI_TITLE.PATH })).toBeVisible()
+  await expect(c.getByText(/AI label: general change/)).toBeVisible()
+  await expect(severity).toHaveValue('medium')
+  await expect(decision.getByText('(pre-filled')).toBeVisible()
+  await expect(decision.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toBeEnabled()
+})
+
+test('AC6 blind-first keeps each manager label with its candidate', async ({ page }) => {
+  await page.getByLabel('Blind-first mode').check()
+  await page.getByRole('radio', { name: 'changed' }).click()
+  await expect(card(page, S1).getByText('Your label: changed')).toBeVisible()
+  await open(page, AI_TITLE.PATH)
+  await page.getByRole('radio', { name: 'present' }).click()
+  await expect(card(page, PATH).getByText('Your label: present')).toBeVisible()
+  await open(page, AI_TITLE.S1)
+  const c = card(page, S1)
+  await expect(c.getByText('Your label: changed')).toBeVisible()
+  await expect(c.getByText(/AI label/)).toHaveCount(0)
+  await expect(c.getByRole('heading', { name: VIEWPOINT.S1 })).toBeVisible()
+})
+
+test('AC6 blind-first leaves the Tier 3 card as it was', async ({ page }) => {
+  await page.getByLabel('Blind-first mode').check()
+  await open(page, AI_TITLE.FIELD)
+  const c = card(page, FIELD)
+  await expect(c.getByRole('heading', { name: AI_TITLE.FIELD })).toBeVisible()
+  await expect(c.getByText('Not visible: unknown, never a pass')).toBeVisible()
+  await expect(c.getByText(/\bTier\b/)).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Look again', exact: true })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Confirm: needs a fix', exact: true })).toHaveCount(0)
 })
 
 test('AC6 the reject form cannot be used while blind-first hides the card', async ({ page }) => {
@@ -262,6 +380,8 @@ test('AC6 the reject form cannot be used while blind-first hides the card', asyn
   await page.getByLabel('Blind-first mode').check()
   await expect(page.getByLabel('Reason for rejecting')).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Submit rejection' })).toHaveCount(0)
+  await expect(card(page, S1).getByText(/AI label/)).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Not a problem', exact: true })).toBeDisabled()
 })
 
 test('AC7 banner, images without per-image labels, reset', async ({ page }) => {
@@ -275,9 +395,9 @@ test('AC7 banner, images without per-image labels, reset', async ({ page }) => {
   }
   await open(page, 'Fence panel 4')
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
-  await expect(list(page, 'Decided').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
+  await expect(row(page, 'Decided', AI_TITLE.S1)).toBeVisible()
   await resetDemo(page)
-  await expect(list(page, 'Open').getByRole('button', { name: /Fence panel 4/ })).toBeVisible()
+  await expect(row(page, 'Open', AI_TITLE.S1)).toBeVisible()
   await expect(page.getByRole('region', { name: /^Finding / })).toHaveCount(0)
 })
 
@@ -315,24 +435,20 @@ test('list rows show the re-shoot request and empty groups say so', async ({ pag
   await expect(page.getByRole('heading', { name: /^No changes to review/ })).toBeVisible()
 })
 
-test('AC1 every row has a visible tier mark, hollow for Tier 3', async ({ page }) => {
-  const mark = (name: string) => list(page, 'Open').getByRole('img', { name }).first()
-  const style = (name: string) =>
-    mark(name).evaluate((e) => {
-      const s = getComputedStyle(e)
-      return { w: e.getBoundingClientRect().width, bg: s.backgroundColor, border: s.borderTopWidth }
-    })
-  const big = await style('Tier 2 · a person confirms')
-  const small = await style('Tier 1 · watch')
-  const ring = await style('Tier 3 · field check')
-  await expect(mark('Tier 2 · a person confirms')).toBeVisible()
-  await expect(mark('Tier 3 · field check')).toBeVisible()
-  expect(big.w).toBeGreaterThan(small.w)
-  expect(big.bg).not.toBe('rgba(0, 0, 0, 0)')
-  expect(small.w).toBeGreaterThan(0)
-  expect(ring.w).toBeGreaterThan(0)
-  expect(ring.bg).toBe('rgba(0, 0, 0, 0)')
-  expect(ring.border).toBe('2px')
+test('AC1 every row is titled by its viewpoint in both blind modes, with no tier words or marks', async ({ page }) => {
+  const titles = () => list(page, 'Open').locator('.row-title').allTextContents()
+  const expectViewpointTitles = async () => {
+    const got = await titles()
+    expect(got).toHaveLength(VIEWPOINTS.size)
+    expect([...new Set(got)].sort()).toEqual([...VIEWPOINTS].sort())
+    expect(got.join(' ')).not.toMatch(/\bTier\b/i)
+    await expect(page.locator('.tier-mark')).toHaveCount(0)
+    await expect(page.getByRole('img', { name: /Tier/ })).toHaveCount(0)
+    expect(await page.locator('body').innerText()).not.toMatch(/\bTier\b/i)
+  }
+  await expectViewpointTitles()
+  await page.getByLabel('Blind-first mode').check()
+  await expectViewpointTitles()
 })
 
 test('AC1 the context line and rows come from the data, in Malaysian time', async ({ page }) => {
@@ -340,11 +456,45 @@ test('AC1 the context line and rows come from the data, in Malaysian time', asyn
   await expect(page.getByText('To review · 4')).toBeVisible()
   // the top bar's Simulation label covers the list, so neither its head nor a row repeats it
   await expect(page.getByRole('navigation', { name: 'Inbox list' }).getByText(/simulated/i)).toHaveCount(0)
-  await expect(
-    list(page, 'Open')
-      .getByRole('button', { name: /Fence panel 4/ })
-      .getByText('15:48')
-  ).toBeVisible()
+  await expect(row(page, 'Open', AI_TITLE.S1).getByText('15:48')).toBeVisible()
+})
+
+test('AC1 severity native options keep readable colours in both themes', async ({ page }) => {
+  const select = page.getByRole('group', { name: 'Decision' }).getByRole('combobox', { name: /^Severity/ })
+  const read = () =>
+    select.evaluate((el) => {
+      const style = getComputedStyle(el)
+      return {
+        scheme: style.colorScheme,
+        options: [...(el as HTMLSelectElement).options].map((option) => ({
+          label: option.label,
+          color: getComputedStyle(option).color,
+          background: getComputedStyle(option).backgroundColor
+        }))
+      }
+    })
+  const channel = (value: number) => {
+    const c = value / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  }
+  const contrast = (foreground: string, background: string) => {
+    const lum = (color: string) => {
+      const [r, g, b] = color.match(/[\d.]+/g)!.map(Number)
+      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+    }
+    const [hi, lo] = [lum(foreground), lum(background)].sort((a, b) => b - a)
+    return (hi + 0.05) / (lo + 0.05)
+  }
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme })
+    const got = await read()
+    expect(got.scheme).toContain(scheme)
+    expect(got.options.map((option) => option.label)).toEqual(['Low', 'Medium', 'High'])
+    for (const option of got.options) {
+      expect(option.background, `${option.label} background in ${scheme}`).not.toBe('rgba(0, 0, 0, 0)')
+      expect(contrast(option.color, option.background), `${option.label} in ${scheme}`).toBeGreaterThanOrEqual(4.5)
+    }
+  }
 })
 
 test('AC4 the Inbox uses the bundled font', async ({ page }) => {

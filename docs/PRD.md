@@ -124,8 +124,8 @@ Priority: **P0** must exist for the demo, **P1** should exist, **P2** is a stret
 
 ### Edge Inbox and agent
 
-- **INBOX-1 (P0) Evidence card.** Each candidate card shows before and after images, an overlay, a crop, the segment, the time, the tier, the reason, the uncertainty and the agent's summary with evidence IDs.
-- **INBOX-2 (P0) Decisions.** Confirm, reject with a required reason, or recapture. An optional blind-first mode asks for the reviewer's own label on Tier 2 cards before showing the AI's label.
+- **INBOX-1 (P0) Evidence card.** Each candidate card shows before and after images, an overlay, a crop, the segment, the time, the reason, the uncertainty and the agent's summary with evidence IDs.
+- **INBOX-2 (P0) Decisions.** Confirm, reject with a required reason, or recapture. An optional blind-first mode hides every AI conclusion on machine-raised Tier 1 and 2 cards until turned off, requiring the reviewer's own label and explicit severity to confirm.
 - **INBOX-3 (P0) Confirm opens work.** Confirming creates a finding owned by the segment custodian, an interim protection task and a draft work order.
 - **INBOX-4 (P0) Drafts only.** The agent drafts the summary and the work order. People edit and submit; the agent cannot.
 - **INBOX-5 (P1) Few taps.** Confirm a card in one tap. Submit its work order in one more tap once an engineer has approved the remedy (FIX-4) and interim protection is in place; until then, Submit names the missing step.

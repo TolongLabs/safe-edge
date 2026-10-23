@@ -12,7 +12,7 @@ async function openLens(page: Page) {
   await page.goto('demo/')
   await page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Fence panel 4/ })
+    .getByRole('button', { name: /Playground path, fence line/ })
     .click()
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()
@@ -186,7 +186,7 @@ test('AC81-5 sending waits for interim protection', async ({ page }) => {
   await page.goto('demo/')
   await page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Fence panel 4/ })
+    .getByRole('button', { name: /Playground path, fence line/ })
     .click()
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await page.getByRole('link', { name: 'Choose a fix' }).click()

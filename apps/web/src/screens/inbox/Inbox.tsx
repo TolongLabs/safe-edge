@@ -21,7 +21,6 @@ const STATE_TEXT = {
   rejected: 'Rejected',
   needs_recapture: 'Needs recapture'
 } as const
-const TIER_TEXT = { 1: 'Tier 1 · watch', 2: 'Tier 2 · a person confirms', 3: 'Tier 3 · field check' } as const
 // Core's uncertainty is how unsure the AI is; the card shows how sure it is.
 const SURE = { low: 'high', medium: 'medium', high: 'low' } as const
 
@@ -88,11 +87,18 @@ function passSentence(p: EdgePass) {
 
 type Labels = Record<string, ItemStatus>
 
-// Blind-first: until the manager picks a label, a Tier 2 card shows nothing the AI concluded, title included.
-const isHidden = (c: Candidate, blind: boolean, labels: Labels) =>
-  blind && c.tier === 2 && c.status === 'candidate' && !labels[c.id]
+const isMachineGuess = (c: Candidate, users: Snapshot['users']) => {
+  if (c.tier !== 1 && c.tier !== 2) return false
+  if (c.raisedBy.type === 'agent' || c.raisedBy.type === 'provider') return true
+  if (c.raisedBy.type === 'user') {
+    const u = users.find((user) => user.id === c.raisedBy.id)
+    return u?.role === 'provider'
+  }
+  return false
+}
 
-// The row's mark shows core's tier by size alone; a hollow ring (tier 3) shows nothing was seen.
+// In blind-first mode, every AI conclusion for machine tier 1/2 is hidden regardless of status or manager labels.
+const isHidden = (c: Candidate, blind: boolean, users: Snapshot['users']) => blind && isMachineGuess(c, users)
 
 /** The segment number from its name ("... segment 12"), for the code plate; nothing is made up when there is none. */
 const segmentCode = (name: string) => {
@@ -211,9 +217,13 @@ function Triage({ s }: { s: Snapshot }) {
   const selected = selectedId ? s.evidence.find((e) => e.candidate.id === selectedId) : s.evidence[0]
   if (!selected) throw new Error(`Missing candidate ${selectedId ?? '(the first)'}: the sample layer raised none`)
   const group = (open: boolean) => s.evidence.filter((e) => (e.candidate.status === 'candidate') === open)
-  const title = (e: CandidateEvidence) => {
+  const cardTitle = (e: CandidateEvidence) => {
     const meta = must(s.metas[e.candidate.id], `sample details for ${e.candidate.id}`)
-    return isHidden(e.candidate, blind, labels) ? `Tier 2 flag: ${meta.viewpointName}` : meta.title
+    return isHidden(e.candidate, blind, s.users) ? meta.viewpointName : meta.title
+  }
+  const rowTitle = (e: CandidateEvidence) => {
+    const meta = must(s.metas[e.candidate.id], `sample details for ${e.candidate.id}`)
+    return meta.viewpointName
   }
   const firstSeen = s.evidence
     .flatMap((e) => e.observations.map((o) => o.capturedAt))
@@ -264,12 +274,7 @@ function Triage({ s }: { s: Snapshot }) {
                       aria-current={e.candidate.id === selected.candidate.id}
                       onClick={() => setSelectedId(e.candidate.id)}
                     >
-                      <span
-                        className={`tier-mark t${e.candidate.tier}`}
-                        role="img"
-                        aria-label={TIER_TEXT[e.candidate.tier]}
-                      />
-                      <span className="row-title">{title(e)}</span>
+                      <span className="row-title">{rowTitle(e)}</span>
                       <span className="time">
                         {clock(must(e.observations[0], `observation of ${e.candidate.id}`).capturedAt)}
                       </span>
@@ -290,10 +295,10 @@ function Triage({ s }: { s: Snapshot }) {
             key={`${selected.candidate.id}-${resets}`}
             e={selected}
             s={s}
-            hidden={isHidden(selected.candidate, blind, labels)}
+            hidden={isHidden(selected.candidate, blind, s.users)}
             label={labels[selected.candidate.id]}
             onLabel={(l) => setLabels({ ...labels, [selected.candidate.id]: l })}
-            title={title(selected)}
+            title={cardTitle(selected)}
           />
         </main>
       </div>
@@ -406,8 +411,10 @@ function CardDetail({
   const open = c.status === 'candidate'
   const [rejecting, setRejecting] = useState(false)
   const [reason, setReason] = useState('')
-  const [severity, setSeverity] = useState<Severity>(c.tier === 2 ? 'high' : 'medium')
-  const [severityPicked, setSeverityPicked] = useState(false)
+  const [selectedSeverity, setSelectedSeverity] = useState<Severity | null>(null)
+  const severityPicked = selectedSeverity !== null
+  const effectiveSeverity: Severity | null =
+    selectedSeverity !== null ? selectedSeverity : hidden ? null : c.tier === 2 ? 'high' : 'medium'
   const { client } = useSignedIn()
   const { run, denied } = useRun()
   const agent = useAgentRun()
@@ -440,7 +447,6 @@ function CardDetail({
                 <span className="sr">Segment {e.segment.id}</span>
               </span>
             )}
-            <span className="chip">{TIER_TEXT[c.tier]}</span>
             {c.tier === 3 ? (
               <span className="chip">
                 <StateMark state="none" />
@@ -568,17 +574,35 @@ function CardDetail({
             </>
           ) : hidden ? (
             <div role="group" aria-labelledby={`blind-${c.id}`} className="hidden-box">
-              <p id={`blind-${c.id}`} className="blind-title">
-                Blind-first: pick your own label before the AI suggestion is shown
-              </p>
-              <div className="radios">
-                {LABELS.map((l) => (
-                  <label key={l}>
-                    <input type="radio" name={`label-${c.id}`} onChange={() => onLabel(l)} />
-                    {LABEL_TEXT[l]}
-                  </label>
-                ))}
-              </div>
+              {!open ? (
+                <>
+                  <p id={`blind-${c.id}`} className="blind-title">
+                    AI answer hidden while blind mode is on
+                  </p>
+                  {label && <p className="blind-title">Your label: {label.replace('_', ' ')}</p>}
+                </>
+              ) : !label ? (
+                <>
+                  <p id={`blind-${c.id}`} className="blind-title">
+                    Pick your own label. The AI answer stays hidden while blind mode is on.
+                  </p>
+                  <div className="radios">
+                    {LABELS.map((l) => (
+                      <label key={l}>
+                        <input type="radio" name={`label-${c.id}`} onChange={() => onLabel(l)} />
+                        {LABEL_TEXT[l]}
+                      </label>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p id={`blind-${c.id}`} className="blind-title">
+                    AI answer hidden while blind mode is on
+                  </p>
+                  <p className="blind-title">Your label: {label.replace('_', ' ')}</p>
+                </>
+              )}
             </div>
           ) : (
             <>
@@ -601,7 +625,7 @@ function CardDetail({
                   <p>Reason: {c.rationale}</p>
                   {label && (
                     <p>
-                      <b>{`Your label: ${label.replace('_', ' ')}. ${label === c.itemStatus ? 'Agrees' : 'Differs'} with the AI label.`}</b>
+                      <b>{`Your label: ${label.replace('_', ' ')}. The AI said ${c.itemStatus?.replace('_', ' ') ?? 'general change'}.`}</b>
                     </p>
                   )}
                 </div>
@@ -642,15 +666,16 @@ function CardDetail({
         )}
         {tasks
           .filter((t) => t.kind === 'interim_protection' || t.kind === 'recapture')
+          .filter((t) => !hidden || t.kind === 'recapture')
           .map((t) => (
             <TaskCard key={t.id} t={t} s={s} run={run} />
           ))}
-        {wo && finding && (
+        {!hidden && wo && finding && (
           <WorkOrderPanel key={`${wo.id}-${wo.status}-${wo.notes}`} wo={wo} finding={finding} s={s} run={run} />
         )}
       </div>
 
-      {open && rejecting && !hidden && (
+      {open && rejecting && (!hidden || !!label) && (
         <form
           className={`reason${reason.trim() ? '' : ' empty'}`}
           onSubmit={(ev) => {
@@ -694,20 +719,19 @@ function CardDetail({
             <>
               <label className="sev">
                 Severity
-                {/* Says so until the person picks a severity themselves (TRD: a person sets it). */}
-                {!severityPicked && (
+                {!hidden && !severityPicked && (
                   <span>
                     {' '}
                     (pre-filled<span className="sr">, you can change it</span>)
                   </span>
                 )}
                 <select
-                  value={severity}
+                  value={effectiveSeverity ?? ''}
                   onChange={(ev) => {
-                    setSeverity(ev.target.value as Severity)
-                    setSeverityPicked(true)
+                    setSelectedSeverity(ev.target.value as Severity)
                   }}
                 >
+                  {effectiveSeverity === null && <option value="" disabled hidden />}
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
@@ -715,21 +739,27 @@ function CardDetail({
               </label>
               <button
                 className="btn primary"
-                disabled={hidden}
+                disabled={hidden ? !label || effectiveSeverity === null : false}
                 onClick={() =>
                   void run(() =>
-                    client.decideCandidate({ params: { id: c.id }, body: { decision: 'confirm', severity } })
+                    client.decideCandidate({
+                      params: { id: c.id },
+                      body: { decision: 'confirm', severity: effectiveSeverity! }
+                    })
                   )
                 }
               >
                 Confirm: needs a fix
               </button>
-              {hidden && <span className="hint">Pick your own label first.</span>}
+              {hidden && !label && <span className="hint">Pick your own label first.</span>}
+              {hidden && label && effectiveSeverity === null && (
+                <span className="hint">Pick a severity to confirm.</span>
+              )}
             </>
           )}
           <button
             className="btn"
-            disabled={hidden}
+            disabled={hidden && !label}
             onClick={() =>
               void run(() =>
                 client.decideCandidate({
@@ -745,7 +775,7 @@ function CardDetail({
             Look again
           </button>
           {c.tier !== 3 && (
-            <button className="btn danger apart" disabled={hidden} onClick={() => setRejecting(true)}>
+            <button className="btn danger apart" disabled={hidden && !label} onClick={() => setRejecting(true)}>
               Not a problem
             </button>
           )}

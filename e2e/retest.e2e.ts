@@ -15,7 +15,7 @@ async function openLens(page: Page) {
   await page.goto('demo/')
   await page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Fence panel 4/ })
+    .getByRole('button', { name: /Playground path, fence line/ })
     .click()
   await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
   await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()
@@ -132,7 +132,7 @@ async function rejectBuoy(page: Page) {
   await page.goto('demo/#/inbox')
   await page
     .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Ring buoy/ })
+    .getByRole('button', { name: /Playground path, ring buoy post/ })
     .click()
   await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
   await page.getByLabel('Reason for rejecting').fill('The buoy was moved for the swim lesson')
@@ -325,12 +325,12 @@ test('AC82-7 a cleared flag is not offered again while another flag still holds 
   // core keeps as an open suspicion until it is cleared too.
   await page.goto('demo/')
   const list = page.getByRole('navigation', { name: 'Inbox list' })
-  await list.getByRole('button', { name: /Fence panel 4/ }).click()
+  await list.getByRole('button', { name: /Playground path, fence line/ }).click()
   await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
   await page.getByLabel('Reason for rejecting').fill('Panel removed on purpose')
   await page.getByRole('button', { name: 'Submit rejection' }).click()
   await expect(page.getByText(/Rejected by Farah Hashim/)).toBeVisible()
-  await list.getByRole('button', { name: /Ring buoy/ }).click()
+  await list.getByRole('button', { name: /Playground path, ring buoy post/ }).click()
   await page.getByRole('button', { name: 'Look again', exact: true }).click()
   await signInAs(page, 'Priya Nair')
   await page.goto('demo/#/retest')
@@ -400,4 +400,11 @@ test.describe('AC82-6 the guest link', () => {
     await page.goto('demo/?as=nobody')
     await expect(page.getByRole('heading', { level: 1, name: 'Inbox' })).toBeVisible()
   })
+})
+
+test('AC1 no rendered text on Retest contains Tier', async ({ page }) => {
+  await page.goto('demo/#/retest')
+  await expect(page.getByRole('heading', { level: 1, name: 'Repair check' })).toBeVisible()
+  const bodyText = await page.locator('body').innerText()
+  expect(bodyText).not.toMatch(/\bTier\b/i)
 })

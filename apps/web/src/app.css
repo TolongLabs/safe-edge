@@ -329,6 +329,11 @@ select {
   background-size: 16px 16px;
   font-weight: 500;
   cursor: pointer;
+  color-scheme: inherit;
+}
+select option {
+  color: var(--text-primary);
+  background-color: var(--bg-raised);
 }
 /* High-contrast mode drops background images, so the native arrow comes back there. */
 @media (forced-colors: active) {
