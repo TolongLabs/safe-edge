@@ -39,54 +39,198 @@
 .board .banner + .btn {
   color: var(--text-primary);
 }
-/* One scroll per screen: the table flows in its island and the board scrolls it, so no row is cut at a hidden
-   edge. The wrapper sets no overflow, which would capture the sticky header. */
-.edge-table {
-  container: edges / inline-size;
+.action-needed,
+.pass-rest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
-.edge-table table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+.pass-rest {
+  gap: var(--space-2);
+}
+.pass-rest > h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: 600;
+}
+.pass-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+/* Each card is one link over its whole surface; the arrow and border say so without adding another control. */
+.pass-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: start;
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+}
+.pass-card.suspended {
+  border-color: var(--state-suspended-fg);
+}
+.pass-card.expired {
+  border-color: var(--state-expired-fg);
+}
+.pass-card.expiring {
+  border-color: var(--state-expiring-fg);
+}
+.pass-card:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-sunken);
+}
+.pass-card:has(a:focus-visible) {
+  box-shadow: var(--focus-ring);
+}
+.pass-card .plate {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+}
+.pass-card h3 {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.pass-card h3 a {
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.pass-card .pass-badge,
+.pass-fold .pass-badge {
+  max-width: 100%;
+  white-space: normal;
+}
+.pass-card h3 a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+}
+.pass-card h3 a:hover {
+  text-decoration: underline;
+}
+.pass-card h3 a:focus-visible {
+  box-shadow: none;
+}
+.pass-card .pass-go {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  color: var(--text-secondary);
+  font-size: 28px;
+  line-height: 1;
+}
+.pass-card .pass-reason,
+.pass-card .pass-next,
+.pass-card .pass-owner,
+.pass-card .pass-facts {
+  grid-column: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.pass-card .pass-reason {
+  color: var(--text-secondary);
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
-  font-variant-numeric: tabular-nums;
 }
-.edge-table th,
-.edge-table td {
-  padding: var(--space-2) var(--space-3);
-  text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid var(--border-default);
+.pass-card .pass-next {
+  margin-top: var(--space-1);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
 }
-.edge-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: var(--bg-surface);
+.pass-card .pass-next b {
+  font-weight: 600;
+}
+.pass-card .pass-owner {
+  color: var(--text-secondary);
+  font-size: var(--fs-dense);
+  line-height: var(--lh-dense);
+}
+.pass-card .pass-facts {
   color: var(--text-secondary);
   font-size: var(--fs-small);
   line-height: var(--lh-small);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  vertical-align: bottom;
 }
-.edge-table tbody th {
+.pass-folds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.pass-fold {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+.pass-fold summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: 0 var(--space-4);
   font-weight: 600;
+  cursor: pointer;
+  list-style: none;
 }
-.edge-table .owner,
-.edge-table .overdue {
-  white-space: nowrap;
+.pass-fold summary::-webkit-details-marker,
+.pass-fold summary::marker {
+  display: none;
+  content: '';
 }
-.edge-table .num {
-  text-align: right;
+.pass-fold summary::before {
+  content: '';
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
+  transform: rotate(-45deg);
 }
-.edge-table .plate {
-  padding: 1px 6px;
-  font-size: var(--fs-small);
-  line-height: var(--lh-small);
-  white-space: nowrap;
+.pass-fold[open] summary::before {
+  transform: rotate(45deg);
+}
+.pass-fold summary .fold-count {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.pass-fold ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-default);
+}
+.pass-fold li a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 6px var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+  color: inherit;
+  text-decoration: none;
+  flex-wrap: wrap;
+}
+.pass-fold li:last-child a {
+  border-bottom: 0;
+}
+.pass-fold li a:hover {
+  background: var(--bg-sunken);
+}
+.pass-fold li a .fold-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .board .head .btn {
   white-space: nowrap;
@@ -116,15 +260,6 @@
 .pass-badge.expired {
   background: var(--state-expired-bg);
   color: var(--state-expired-fg);
-}
-.reason-line {
-  display: block;
-  /* A long reason wraps under its badge instead of widening the Pass column. */
-  max-width: 36ch;
-  margin-top: var(--space-1);
-  color: var(--text-secondary);
-  font-size: max(12px, var(--fs-small));
-  line-height: var(--lh-small);
 }
 /* Each card flows top-down on its own: heading, hint, what the actions act on, the actions, the lines that say why
    an action is disabled or what failed, then what the actions made. Cards keep their own height. */
@@ -210,56 +345,8 @@
     flex-direction: column;
   }
 }
-/* By the table's own width, whatever the rail takes: everything on one line where every column fits (about
-   976 px), then headers and overdue counts wrap, and below 760 px, where badges would break too, a card per edge.
-   Never a sideways scroll that hides a column. Person names stay on one line throughout. */
-@container edges (max-width: 979px) {
-  .edge-table thead th,
-  .edge-table .overdue {
-    white-space: normal;
-  }
-}
-@container edges (max-width: 759px) {
-  .edge-table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .edge-table table,
-  .edge-table tbody,
-  .edge-table tr,
-  .edge-table th,
-  .edge-table td {
-    display: block;
-  }
-  .edge-table tr {
-    padding: var(--space-3) 0;
-    border-bottom: 1px solid var(--border-default);
-  }
-  .edge-table th,
-  .edge-table td {
-    padding: 2px 0;
-    border: 0;
-  }
-  .edge-table tbody th {
-    margin-bottom: var(--space-1);
-  }
-  .edge-table td[data-label] {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: var(--space-3);
-  }
-  .edge-table td[data-label]::before {
-    content: attr(data-label);
-    flex: none;
-    color: var(--text-secondary);
-    font-size: var(--fs-small);
-  }
-}
 @media (max-width: 1100px) {
+  .pass-cards,
   .lower {
     grid-template-columns: minmax(0, 1fr);
   }

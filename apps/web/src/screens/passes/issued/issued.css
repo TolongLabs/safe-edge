@@ -40,6 +40,20 @@
   background: var(--state-unknown-bg);
   color: var(--state-unknown-fg);
 }
+.pi-seal.suspended {
+  background: var(--state-suspended-bg);
+  color: var(--state-suspended-fg);
+}
+.pi-seal.expired {
+  background: var(--state-expired-bg);
+  color: var(--state-expired-fg);
+}
+.pi-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pi-single .pi-hero {
+  justify-self: start;
+}
 .pi-title {
   font-size: var(--fs-display);
   line-height: var(--lh-display);

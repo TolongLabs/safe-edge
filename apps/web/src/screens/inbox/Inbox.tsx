@@ -606,7 +606,7 @@ function CardDetail({
               ) : !label ? (
                 <>
                   <p id={`blind-${c.id}`} className="blind-title">
-                    Blind-first: pick your own label before the AI suggestion is shown
+                    Pick your own label. The AI answer stays hidden while blind mode is on.
                   </p>
                   <div className="radios">
                     {LABELS.map((l) => (

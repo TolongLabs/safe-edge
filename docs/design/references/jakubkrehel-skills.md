@@ -289,7 +289,7 @@ removed lines for regressions, and classifies each finding as
 
 ## See also
 
-- [Design research](README.md)
+- [Design research](../README.md)
 - [jakubkrehel/skills on GitHub](https://github.com/jakubkrehel/skills)
 - [Its Hover](itshover.md) and [Hugeicons](hugeicons.md), where the icon
   rules apply
