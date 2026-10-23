@@ -196,6 +196,6 @@ footage.
 
 ## See also
 
-- [Design research](README.md#video)
+- [Design research](../README.md#video)
 - [MotionSites](motionsites.md), for the scrub and loop recipes
 - [gemini-watermark-remover on GitHub](https://github.com/GargantuaX/gemini-watermark-remover)

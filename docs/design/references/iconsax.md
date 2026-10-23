@@ -108,6 +108,6 @@ An npm package is listed as "coming soon".
 
 ## See also
 
-- [Design research](README.md#iconography)
+- [Design research](../README.md#iconography)
 - [Hugeicons](hugeicons.md), the other candidate
 - [Iconsax icon browser](https://app.iconsax.io/)

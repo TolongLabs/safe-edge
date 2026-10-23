@@ -212,6 +212,6 @@ seamless loop, and no text in frame.
 
 ## See also
 
-- [Design research](README.md)
+- [Design research](../README.md)
 - [Canvas UI](canvas-ui.md), for scroll effects that need no video
 - [MotionSites Academy](https://motionsites.ai/academy)

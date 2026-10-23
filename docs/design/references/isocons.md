@@ -96,6 +96,6 @@ Before using one inline:
 
 ## See also
 
-- [Design research](README.md#iconography)
+- [Design research](../README.md#iconography)
 - [Hugeicons](hugeicons.md), for UI glyphs
 - [Isocons](https://www.isocons.app/)

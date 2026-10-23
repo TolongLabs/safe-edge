@@ -122,7 +122,7 @@ dashboard, where motion should mean a state changed.
 
 ## See also
 
-- [Design research](README.md#iconography)
+- [Design research](../README.md#iconography)
 - [Jakub Krehel's interface skills](jakubkrehel-skills.md#ui-polish), for
   icon motion values
 - [Its Hover icons](https://www.itshover.com/icons)
