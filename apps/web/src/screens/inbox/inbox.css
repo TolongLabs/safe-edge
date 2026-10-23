@@ -551,3 +551,41 @@
 a.btn {
   text-decoration: none;
 }
+:root {
+  --title-suspends: var(--state-suspended-fg);
+  --title-unseen: var(--state-unknown-fg);
+  --title-watch: var(--text-primary);
+  --title-suspends-on-rail: #f6b3ac;
+  --title-unseen-on-rail: #b4c3bc;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --title-suspends: #f6b3ac;
+    --title-unseen: #b4bdb8;
+  }
+}
+:root[data-theme='dark'] {
+  --title-suspends: #f6b3ac;
+  --title-unseen: #b4bdb8;
+}
+.row-title.consequence-suspends,
+.d-head .consequence-suspends {
+  color: var(--title-suspends);
+}
+.row-title.consequence-unseen,
+.d-head .consequence-unseen {
+  color: var(--title-unseen);
+}
+.row-title.consequence-watch,
+.d-head .consequence-watch {
+  color: var(--title-watch);
+}
+.row[aria-current='true'] .row-title.consequence-suspends {
+  color: var(--title-suspends-on-rail);
+}
+.row[aria-current='true'] .row-title.consequence-unseen {
+  color: var(--title-unseen-on-rail);
+}
+.row[aria-current='true'] .row-title.consequence-watch {
+  color: var(--text-on-rail);
+}
