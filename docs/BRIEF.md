@@ -1,8 +1,10 @@
 # Hackathon brief
 
-What our team needs to know about the Sime Darby Property University Hackathon 2026, "Township of Tomorrow". Pick People or Planet, solve one real township problem, and submit a pitch deck, a video or demo link and a prototype by **11:59 PM, Friday 23 October 2026**.
+What our team needs to know about the Sime Darby Property University Hackathon 2026, "Township of Tomorrow". Pick People or Planet, solve one real township problem, and submit a **PDF pitch deck and YouTube presentation link** by **11:59 PM, Friday 23 October 2026, Malaysia Time**. Supporting written materials use PDF; demos, prototypes and other digital materials use online links.
 
 Synthesized from the opening briefing on 9 October 2026 ([transcript], [slides], [meeting chat]) and the organiser's [official page], [terms and conditions] and [privacy policy]. Citations give slide numbers, transcript times, "official page", "T&C" section numbers or "privacy policy" section numbers. Where the sources disagree, see [Conflicts and open questions](#conflicts-and-open-questions).
+
+Updated for the organiser's [submission reminder](/docs/sources/organiser-submission-reminder.md) and 11-slide flow supplied by the user on **22 October 2026**. The reminder is archived verbatim; its original post URL and publication time were not supplied. These user-supplied clarifications were not independently verified as public announcements.
 
 [transcript]: /docs/sources/opening-briefing/transcript.md
 [slides]: /docs/sources/opening-briefing/slides.md
@@ -30,18 +32,18 @@ Contents:
 
 ## Key dates
 
-| Date                         | Milestone                                 | Notes                                                                   |
-| ---------------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
-| Fri 9 Oct                    | Challenge briefing                        | Slide 22                                                                |
-| **Wed 21 Oct, 11:59 PM**     | **Registration closes**                   | Critical deadline (slide 22; Siva, 47:40)                               |
-| **Fri 23 Oct, 11:59 PM**     | **Proposal submission**                   | Critical deadline; all four components (slide 23)                       |
-| 24 to 28 Oct                 | Evaluation and judging                    | Slide 22                                                                |
-| Wed 28 Oct                   | Top 10 announced                          | Slide 27                                                                |
-| Mon 2 to Fri 6 Nov           | Online mentoring sprint                   | Top 10 only, with Sime Darby Property subject matter experts (slide 27) |
-| Wed 11 Nov                   | Final submission                          | Top 10 only (slide 27)                                                  |
-| **Sat 14 Nov, from 9:30 AM** | **Pitch to Judges Day**                   | Physical; every member of every Top 10 team attends (slides 28, 34)     |
-| Tue 17 Nov                   | Finalists notified                        | Top 5, or Top 3 on slide 22; ranking not revealed (slide 29)            |
-| **Thu 3 Dec**                | **Final presentation and award ceremony** | Physical, Elmina; all Top 10 teams attend; winners announced (slide 29) |
+| Date                         | Milestone                                 | Notes                                                                                          |
+| ---------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Fri 9 Oct                    | Challenge briefing                        | Slide 22                                                                                       |
+| **Wed 21 Oct, 11:59 PM**     | **Registration closes**                   | Critical deadline (slide 22; Siva, 47:40)                                                      |
+| **Fri 23 Oct, 11:59 PM**     | **Proposal submission**                   | Malaysia Time; PDF deck and YouTube video; supporting materials optional (22 October reminder) |
+| 24 to 28 Oct                 | Evaluation and judging                    | Slide 22                                                                                       |
+| Wed 28 Oct                   | Top 10 announced                          | Slide 27                                                                                       |
+| Mon 2 to Fri 6 Nov           | Online mentoring sprint                   | Top 10 only, with Sime Darby Property subject matter experts (slide 27)                        |
+| Wed 11 Nov                   | Final submission                          | Top 10 only (slide 27)                                                                         |
+| **Sat 14 Nov, from 9:30 AM** | **Pitch to Judges Day**                   | Physical; every member of every Top 10 team attends (slides 28, 34)                            |
+| Tue 17 Nov                   | Finalists notified                        | Top 5, or Top 3 on slide 22; ranking not revealed (slide 29)                                   |
+| **Thu 3 Dec**                | **Final presentation and award ceremony** | Physical, Elmina; all Top 10 teams attend; winners announced (slide 29)                        |
 
 ## The challenge
 
@@ -88,20 +90,22 @@ An idea must be within Sime Darby Property's reach: "We build homes, we build of
 
 ## What to submit
 
-Due **11:59 PM, 23 October 2026**. Incomplete or late submissions are not considered (slide 23; T&C section 4).
+Due **11:59 PM, 23 October 2026, Malaysia Time**. Incomplete or late submissions are not considered (slide 23; T&C section 4; [22 October reminder](/docs/sources/organiser-submission-reminder.md)).
 
-| Component            | Required? | Rules                                                                    |
-| -------------------- | --------- | ------------------------------------------------------------------------ |
-| Pitch deck           | Required  | At most 10 main slides; an appendix is allowed for supporting details    |
-| Video or demo link   | Required  | A 5-minute video or a live demo link demonstrating the solution          |
-| Prototype or code    | Required  | Link to the prototype, codebase or GitHub repository                     |
-| Supporting documents | Optional  | Links or documents that strengthen the submission, such as your evidence |
+| Component                    | Required? | Rules                                                                                                         |
+| ---------------------------- | --------- | ------------------------------------------------------------------------------------------------------------- |
+| Pitch deck                   | Required  | PDF only; 11 slides in the user-confirmed organiser flow; resubmit as PDF if PPT/PPTX was already submitted   |
+| Presentation video           | Required  | A 5-minute presentation video on YouTube, accessible to the judges                                            |
+| Written supporting materials | Optional  | Documents, sketches and diagrams in PDF format                                                                |
+| Other supporting materials   | Optional  | Videos, demos, prototypes and other digital materials as online links accessible without a permission request |
 
-Sources: slide 23; Dina, 29:08.
+Current formats and supporting-material status: [organiser reminder supplied by the user on 22 October](/docs/sources/organiser-submission-reminder.md). Five-minute duration: slide 23. The 9 October briefing required a prototype/code link and allowed a video or live demo; the later reminder asks for a YouTube presentation and places prototypes among optional additional materials.
 
 Before submitting, test every link, check every file and have someone outside the team review it. "Don't wait until 11.58 PM" (Dina, 28:02).
 
 ### Pitch deck
+
+Use **Team Information plus ten numbered sections, 11 slides total**, as the user confirmed from the organiser's flow on 22 October. The [section plan](/docs/CONTEXT.md#eleven-slide-submission-deck) gives the exact order: Implementation is section 8, Visual Concept is 9, and Why Your Team Should Win is 10. Merge the project title into Team Information and the closing links into section 10. Keep the six-page [supporting deck](/docs/demo/deck/supporting-deck.html) separate from the main PDF. The [submission audit](/docs/research/competition/pitch-deck-submission-audit.md) preserves the earlier 10-main-slide wording and records the clarification's source.
 
 Cover 8 areas and carry one clear problem through every slide (slides 24, 25). Slide 25 walks the parking example through all 8.
 
@@ -118,6 +122,7 @@ The official page frames the pitch as two parts: the **mechanism** (the solution
 
 ### Video and prototype
 
+- **Current submission format:** upload the presentation video to YouTube and submit its link. Judges must be able to open every link without requesting permission. Submit supporting prototypes or demos as online links. [Source: organiser reminder supplied by the user on 22 October](/docs/sources/organiser-submission-reminder.md).
 - **Video:** show the solution, not the team. Any number of members can appear, and testers can be outsiders (Dina, 51:18; Dr Lam, 51:53).
 - **Prototype form:** software, a cardboard model, a physical build or a storyboard all count (Dina, 49:22; Dr Lam, 57:38). The official page lists apps, AI assistants, IoT concepts, dashboards, service prototypes and physical models, among others.
 - **Effort:** it "doesn't have to be perfect" (Dina, 50:07). Vibe-coded prototypes are fine and raise your chances (Siva, 48:58). Don't spend much; simulations are fine (Siva, 56:54). "Fail fast, fail cheap" (Dr Lam, 58:04).
@@ -216,17 +221,17 @@ The submission and T&C links come from QR codes on slides 23 and 33. Telegram ca
 
 ## Conflicts and open questions
 
-| Topic                  | Sources say                                                                                                       | Act on                                         |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Registration close     | 21 Oct (slide 22; Siva, 47:40) vs "11 September – 8 October" (official page)                                      | 21 Oct                                         |
-| Team size              | 3 to 5 (official page FAQ; slide 36) vs 2 to 5 (official page, "How it works")                                    | 3 to 5                                         |
-| Finalists after 14 Nov | Top 5 (Dina, 27:38; slides 29, 34) vs "Top 3 Notified" and "Top 3 Presentation" (slide 22)                        | Top 5; confirm on Telegram                     |
-| Final ceremony date    | 3 Dec (slides 22, 27, 29, 34) vs "Innovation Day, 2 December 2026" (official page)                                | 3 Dec                                          |
-| Pitch day venue        | "Sime Darby Property Office" (slide 28) vs "Sime Darby Property HQ" (slide 34)                                    | Wait for the finalist notice                   |
-| Pitch day hours        | "9:30 A.M. – 5:00 P.M." vs talent spotlight "2.30 PM – 5.30 PM" (both slide 28)                                   | Plan to stay until 5:30 PM                     |
-| Prototype              | Required link (slide 23) vs non-software is fine (Dina, 49:22) vs needs a coder for a working one (official page) | Submit something demonstrable, ideally working |
-| Innovation bar         | New in Malaysia is enough (Dr Lam, 23:02) vs not implemented elsewhere (Dina, 31:04)                              | Aim for genuinely new; show why it's new here  |
-| Strategic fit weight   | 50% (Dina, 37:04) vs 15% (slide 26; the weights total 100%)                                                       | 15%                                            |
-| IP owner               | Sime Darby Property (Siva, 50:46) vs IKolaxus Sdn Bhd as organiser (T&C sections 1, 7)                            | Either way, the team doesn't keep it           |
+| Topic                  | Sources say                                                                                                                        | Act on                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Registration close     | 21 Oct (slide 22; Siva, 47:40) vs "11 September – 8 October" (official page)                                                       | 21 Oct                                                                           |
+| Team size              | 3 to 5 (official page FAQ; slide 36) vs 2 to 5 (official page, "How it works")                                                     | 3 to 5                                                                           |
+| Finalists after 14 Nov | Top 5 (Dina, 27:38; slides 29, 34) vs "Top 3 Notified" and "Top 3 Presentation" (slide 22)                                         | Top 5; confirm on Telegram                                                       |
+| Final ceremony date    | 3 Dec (slides 22, 27, 29, 34) vs "Innovation Day, 2 December 2026" (official page)                                                 | 3 Dec                                                                            |
+| Pitch day venue        | "Sime Darby Property Office" (slide 28) vs "Sime Darby Property HQ" (slide 34)                                                     | Wait for the finalist notice                                                     |
+| Pitch day hours        | "9:30 A.M. – 5:00 P.M." vs talent spotlight "2.30 PM – 5.30 PM" (both slide 28)                                                    | Plan to stay until 5:30 PM                                                       |
+| Prototype              | Required link in the 9 October briefing; optional additional material in the organiser reminder supplied by the user on 22 October | Submit the working prototype as an optional online link under the later reminder |
+| Innovation bar         | New in Malaysia is enough (Dr Lam, 23:02) vs not implemented elsewhere (Dina, 31:04)                                               | Aim for genuinely new; show why it's new here                                    |
+| Strategic fit weight   | 50% (Dina, 37:04) vs 15% (slide 26; the weights total 100%)                                                                        | 15%                                                                              |
+| IP owner               | Sime Darby Property (Siva, 50:46) vs IKolaxus Sdn Bhd as organiser (T&C sections 1, 7)                                             | Either way, the team doesn't keep it                                             |
 
 Not answered by any source: a page limit for supporting documents, permitted programming languages (no restriction found), whether drainage counts as a township problem, whether low model accuracy from scarce data matters, and whether the hackathon will run again. Ask on Telegram.
