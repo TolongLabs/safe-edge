@@ -3,6 +3,7 @@ import { createSafeEdgeClient, SafeEdgeDeniedError } from '@safe-edge/sdk'
 import { useSyncExternalStore } from 'react'
 import { base64 } from './base64'
 import { client, onReset } from '../../store'
+import { type DamageReportInput, itemStatusMapping, classMapping } from './report-metadata'
 
 export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const
 export type ImageType = (typeof IMAGE_TYPES)[number]
@@ -20,6 +21,9 @@ export type Queued = {
   mediaType: ImageType
   bytes: ArrayBuffer
   simulated: boolean
+  observationId?: string
+  source?: 'camera' | 'upload'
+  report?: DamageReportInput
 }
 
 export type Sent = {
@@ -30,6 +34,8 @@ export type Sent = {
   local: boolean
   sharpness: number
   captureSource: 'drone' | 'phone'
+  capturedAt?: string
+  source?: 'camera' | 'upload'
 }
 
 /** A reason without a trailing full stop, so callers can put it after a colon. */
@@ -141,6 +147,8 @@ async function record(item: Queued): Promise<Sent> {
     simulated: item.simulated
   }
   const who = http ?? client()
+  if (!http && client().actor.id !== item.userId)
+    throw new Error('Sign in as the person who took this photo before sending it')
   const observation = await who.recordObservation({ body })
   return {
     observationId: observation.id,
@@ -149,7 +157,9 @@ async function record(item: Queued): Promise<Sent> {
     thumb: URL.createObjectURL(new Blob([item.bytes], { type: item.mediaType })),
     local: !http,
     sharpness: item.sharpness,
-    captureSource: observation.captureSource
+    captureSource: observation.captureSource,
+    capturedAt: item.capturedAt,
+    source: item.source
   }
 }
 
@@ -159,13 +169,78 @@ const markSent = (item: Queued, sent: Sent) =>
 /** Takes a photo: records it now, or queues it while the browser is offline. Returns the record, or null if queued. */
 export async function capture(item: Queued): Promise<Sent | null> {
   if (!navigator.onLine) {
-    await tx('queue', 'readwrite', (s) => s.add(item))
+    const id = await tx<number>('queue', 'readwrite', (s) => s.add(item) as IDBRequest<number>)
+    item.id = id
     await loadQueue()
     return null
   }
   const sent = await record(item)
   markSent(item, sent)
   return sent
+}
+
+/** Updates an existing offline-queued photo with its report rather than duplicating the photo. */
+export async function attachReportToQueued(queueId: number, report: DamageReportInput): Promise<void> {
+  const item = await tx<Queued | undefined>('queue', 'readonly', (s) => s.get(queueId))
+  if (!item) {
+    throw new Error(`Queued photo #${queueId} was not found on this phone`)
+  }
+  item.report = report
+  await tx('queue', 'readwrite', (s) => s.put(item))
+  await loadQueue()
+}
+
+/** Sends rich report online using an existing observation. */
+export async function sendReportOnline(params: {
+  segmentId: string
+  observationId: string
+  simulated: boolean
+  report: DamageReportInput
+}): Promise<unknown> {
+  const who = http ?? client()
+  const body = {
+    segmentId: params.segmentId,
+    observationIds: [params.observationId],
+    inventoryItemId: null,
+    itemStatus: itemStatusMapping(params.report.issueType),
+    class: classMapping(params.report.issueType),
+    rationale: params.report.description.trim(),
+    simulated: params.simulated,
+    report: params.report
+  }
+  return await who.reportDamage({ body })
+}
+
+/** Queues a report for an existing observation when reporting offline. */
+export async function queueReportForObservation(params: {
+  userId: string
+  userName: string
+  segmentId: string
+  viewpointId: string
+  capturedAt: string
+  pose: Pose
+  simulated: boolean
+  observationId: string
+  report: DamageReportInput
+}): Promise<number> {
+  const queuedItem: Queued = {
+    userId: params.userId,
+    userName: params.userName,
+    segmentId: params.segmentId,
+    viewpointId: params.viewpointId,
+    capturedAt: params.capturedAt,
+    pose: params.pose,
+    sharpness: 1,
+    mediaType: 'image/jpeg',
+    bytes: new ArrayBuffer(0),
+    simulated: params.simulated,
+    observationId: params.observationId,
+    report: params.report
+  }
+  const id = await tx<number>('queue', 'readwrite', (s) => s.add(queuedItem) as IDBRequest<number>)
+  queuedItem.id = id
+  await loadQueue()
+  return id
 }
 
 let draining: Promise<void> | null = null
@@ -175,9 +250,39 @@ export function drain(userId: string) {
     try {
       await loadQueue()
       for (const item of snap.waiting.filter((q) => q.userId === userId)) {
-        if (!navigator.onLine) return
-        markSent(item, await record(item))
-        // shortcut: if the tab dies between recordObservation and the delete, that photo is recorded twice on the next drain; upgrade with an idempotency key when the API is the default
+        if (!navigator.onLine || (!http && client().actor.id !== userId)) return
+
+        let observationId = item.observationId
+        if (!observationId && item.bytes.byteLength > 0) {
+          const sent = await record(item)
+          observationId = sent.observationId
+          item.observationId = observationId
+          markSent(item, sent)
+          // If a report is attached, persist the observationId so retry does not duplicate observation
+          if (item.report && item.id) {
+            await tx('queue', 'readwrite', (s) => s.put(item))
+          }
+        }
+
+        if (item.report) {
+          if (!observationId) {
+            throw new Error('Cannot send reportDamage: observation was not recorded')
+          }
+          const who = http ?? client()
+          const body = {
+            segmentId: item.segmentId,
+            observationIds: [observationId],
+            inventoryItemId: null,
+            itemStatus: itemStatusMapping(item.report.issueType),
+            class: classMapping(item.report.issueType),
+            rationale: item.report.description.trim(),
+            simulated: item.simulated,
+            report: item.report
+          }
+          await who.reportDamage({ body })
+        }
+
+        // Marks completed only after both observation and reportDamage succeed
         await tx('queue', 'readwrite', (s) => s.delete(item.id!))
         await loadQueue()
       }

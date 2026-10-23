@@ -27,6 +27,8 @@ type ReadOperation =
   | 'getPass'
   | 'listAudit'
   | 'listNotices'
+  | 'listDamageReports'
+  | 'getDamageReport'
 
 const matches = <T>(value: T, filter: T | undefined) => filter === undefined || value === filter
 
@@ -118,5 +120,20 @@ export const reads: Handlers<ReadOperation> = {
     return pass ? ok(pass) : tx.notFound(`No pass ${params.id}`)
   },
   listAudit: (tx, { query }) => ok(tx.audit(query.subject)),
-  listNotices: (tx, { query }) => ok(tx.all('notices').filter((n) => matches(n.status, query.status)))
+  listNotices: (tx, { query }) => ok(tx.all('notices').filter((n) => matches(n.status, query.status))),
+  listDamageReports: (tx, { query }) =>
+    ok(
+      tx
+        .all('damageReports')
+        .filter(
+          (r) =>
+            matches(r.candidateId, query.candidateId) &&
+            matches(r.segmentId, query.segmentId) &&
+            matches(r.reportedBy, query.reportedBy)
+        )
+    ),
+  getDamageReport: (tx, { params }) => {
+    const report = tx.get('damageReports', params.id)
+    return report ? ok(report) : tx.notFound(`No damage report ${params.id}`)
+  }
 }

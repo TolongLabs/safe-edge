@@ -46,7 +46,8 @@ describe('a damage report suspends the pass', () => {
     const written = h.audit().slice(before)
     expect(written.map((e) => [e.action, e.subjectId, e.actor.id, e.decision])).toEqual([
       ['reportDamage', 'cand_1', 'usr_crew', 'allowed'],
-      ['reportDamage', 'pass_866518980_11', 'usr_crew', 'allowed']
+      ['reportDamage', 'pass_866518980_11', 'usr_crew', 'allowed'],
+      ['reportDamage', 'drpt_1', 'usr_crew', 'allowed']
     ])
     expect(written[1]).toMatchObject({ before: { state: 'valid' }, after: { state: 'suspended' } })
     expect(verifyAuditChain(h.audit()).ok).toBe(true)

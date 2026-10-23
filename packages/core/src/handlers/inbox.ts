@@ -1,4 +1,14 @@
-import type { Candidate, Denial, Finding, InventoryCheck, NotFound, Task, Tier, WorkOrder } from '@safe-edge/contracts'
+import type {
+  Candidate,
+  DamageReport,
+  Denial,
+  Finding,
+  InventoryCheck,
+  NotFound,
+  Task,
+  Tier,
+  WorkOrder
+} from '@safe-edge/contracts'
 import { falseFlagReport, flagClassOf, missedPatrolDue, movePass, tierFor } from '../policy.ts'
 import type { Tx } from '../store.ts'
 import { ok, type Handlers } from './handler.ts'
@@ -100,6 +110,7 @@ export const inbox: Handlers<
   | 'raiseCandidate'
   | 'recordInventoryCheck'
   | 'reportDamage'
+  | 'setReportPrevention'
   | 'reportMissedPatrol'
   | 'decideCandidate'
   | 'recordAgentSummary'
@@ -174,8 +185,91 @@ export const inbox: Handlers<
   },
 
   // A person saw the damage, so it waits for the manager's confirmation as Tier 2 whatever item it names (PROOF-4).
-  reportDamage: (tx, { body }) =>
-    raise(tx, { ...body, score: 1, uncertainty: null, gridCell: null, model: null }, 'Damage report', 2),
+  reportDamage: (tx, { body }) => {
+    const segment = tx.get('segments', body.segmentId)
+    if (!segment) return tx.notFound(`No segment ${body.segmentId}`)
+
+    if (body.report != null && body.observationIds.length === 0) {
+      return tx.deny('invalid_transition', 'A damage report must attach at least one observation', segment.id)
+    }
+
+    const viewpointId = body.report?.viewpointId ?? null
+    if (viewpointId !== null) {
+      if (!segment.viewpoints.some((v) => v.id === viewpointId)) {
+        return tx.notFound(`Segment ${segment.id} has no viewpoint ${viewpointId}`)
+      }
+    }
+
+    for (const id of body.observationIds) {
+      const obs = tx.get('observations', id)
+      if (!obs || obs.segmentId !== segment.id) {
+        return tx.notFound(`No observation ${id} on ${segment.id}`)
+      }
+      if (viewpointId !== null && obs.viewpointId !== viewpointId) {
+        return tx.notFound(`Observation ${id} is at ${obs.viewpointId}, not ${viewpointId}`)
+      }
+    }
+
+    const candidateInput: CandidateInput = {
+      segmentId: body.segmentId,
+      observationIds: body.observationIds,
+      inventoryItemId: body.inventoryItemId,
+      itemStatus: body.itemStatus,
+      class: body.class,
+      score: 1,
+      uncertainty: null,
+      gridCell: null,
+      rationale: body.rationale,
+      model: null,
+      simulated: body.simulated
+    }
+
+    const raised = raise(tx, candidateInput, 'Damage report', 2)
+    if (!('data' in raised)) return raised
+    const candidate = raised.data
+
+    const reportData = body.report
+    const damageReport: DamageReport = {
+      id: tx.id('drpt'),
+      candidateId: candidate.id,
+      segmentId: candidate.segmentId,
+      viewpointId: reportData?.viewpointId ?? null,
+      observationIds: candidate.observationIds,
+      reportedBy: tx.actor.id,
+      reportedAt: tx.now,
+      description: reportData ? reportData.description : body.rationale,
+      where: reportData?.where ?? null,
+      observedAt: reportData ? reportData.observedAt : null,
+      timeSource: reportData?.timeSource ?? null,
+      issueType: reportData ? reportData.issueType : null,
+      issueTypeOther: reportData?.issueTypeOther ?? null,
+      action: reportData?.action ?? null,
+      actionNote: reportData?.actionNote ?? null,
+      urgency: reportData ? reportData.urgency : null,
+      cause: reportData?.cause ?? 'unknown',
+      prevention: { steps: [], other: null },
+      costEstimate: null,
+      simulated: candidate.simulated,
+      source: candidate.source
+    }
+    tx.put('damageReports', damageReport)
+
+    return ok(candidate)
+  },
+
+  setReportPrevention: (tx, { params, body }) => {
+    const report = tx.get('damageReports', params.id)
+    if (!report) return tx.notFound(`No damage report ${params.id}`)
+    const updated: DamageReport = {
+      ...report,
+      prevention: {
+        steps: body.steps,
+        other: body.other ?? null
+      }
+    }
+    tx.put('damageReports', updated)
+    return ok(updated)
+  },
 
   // Nobody has inspected the segment for a whole patrol interval, so nobody can vouch for its pass (PROOF-4). The
   // interval runs from the last patrol that inspected some of it, or from the re-test that issued the pass if later.

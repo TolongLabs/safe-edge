@@ -29,7 +29,15 @@ function sharpness(source: CanvasImageSource, w: number, h: number) {
   return Math.min(1, variance / 200) // shortcut: 200 is a guess at "sharp" for a 160 px copy; tune on real phone shots
 }
 
-export type Shot = { blob: Blob; sharpness: number }
+export type Shot = {
+  blob: Blob
+  sharpness: number
+  source: 'camera' | 'upload'
+  capturedAt?: string
+  originalBytes?: ArrayBuffer
+  originalDate?: Date | null
+  file?: File
+}
 
 function whyOff(error: unknown) {
   if (!window.isSecureContext)
@@ -88,7 +96,14 @@ export function Camera({
     const s = sharpness(c, c.width, c.height)
     c.toBlob(
       (blob) =>
-        blob ? onShot({ blob, sharpness: s }) : setError('The browser could not make a picture from the camera.'),
+        blob
+          ? onShot({
+              blob,
+              sharpness: s,
+              source: 'camera',
+              capturedAt: new Date().toISOString()
+            })
+          : setError('The browser could not make a picture from the camera.'),
       'image/jpeg',
       0.9
     )
@@ -111,8 +126,17 @@ export function Camera({
       }
       throw e
     }
+    const originalBytes = await file.arrayBuffer()
+    const originalDate = file.lastModified ? new Date(file.lastModified) : null
     try {
-      onShot({ blob: file, sharpness: sharpness(bitmap, bitmap.width, bitmap.height) })
+      onShot({
+        blob: file,
+        sharpness: sharpness(bitmap, bitmap.width, bitmap.height),
+        source: 'upload',
+        originalBytes,
+        originalDate,
+        file
+      })
     } finally {
       bitmap.close()
     }
