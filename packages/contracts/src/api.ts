@@ -7,6 +7,13 @@ import {
   Candidate,
   CandidateStatus,
   ContextSnapshot,
+  DamageAction,
+  DamageCause,
+  DamageIssueType,
+  DamagePrevention,
+  DamageReport,
+  DamageReportWhere,
+  DamageTimeSource,
   Dock,
   DroneProfile,
   DroneProviderKind,
@@ -47,6 +54,7 @@ import {
 import { EventType, Webhook } from './events.ts'
 import {
   CandidateId,
+  DamageReportId,
   DockId,
   DroneProfileId,
   EvidenceId,
@@ -94,6 +102,8 @@ export const TaskList = list('TaskList', Task)
 export const WorkOrderList = list('WorkOrderList', WorkOrder)
 export const EdgePassList = list('EdgePassList', EdgePass)
 export const NoticeList = list('NoticeList', Notice)
+export const DamageReportList = list('DamageReportList', DamageReport)
+export type DamageReportList = z.infer<typeof DamageReportList>
 
 /** A segment with its asset, pass and baseline: what `get_edge_context` returns. */
 export const EdgeContext = named(
@@ -233,20 +243,61 @@ export const RaiseCandidateRequest = named(
 )
 export type RaiseCandidateRequest = z.infer<typeof RaiseCandidateRequest>
 
+export const DamageReportInput = named(
+  'DamageReportInput',
+  z
+    .object({
+      description: z.string().trim().min(1),
+      observedAt: Timestamp,
+      issueType: DamageIssueType,
+      urgency: Severity,
+      viewpointId: ViewpointId.nullable().optional().default(null),
+      where: DamageReportWhere.nullable().optional().default(null),
+      timeSource: DamageTimeSource.nullable().optional().default(null),
+      issueTypeOther: z.string().trim().nullable().optional().default(null),
+      action: DamageAction.nullable().optional().default(null),
+      actionNote: z.string().nullable().optional().default(null),
+      cause: DamageCause.optional().default('unknown')
+    })
+    .superRefine((data, ctx) => {
+      if (data.issueType === 'other') {
+        if (!data.issueTypeOther || data.issueTypeOther.trim().length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'issueTypeOther is required when issueType is other',
+            path: ['issueTypeOther']
+          })
+        }
+      }
+    })
+)
+export type DamageReportInput = z.infer<typeof DamageReportInput>
+
 /** A person's first-hand report of damage on a segment (PRD PROOF-4). Core files it as a Tier 2 candidate. */
 export const ReportDamageRequest = named(
   'ReportDamageRequest',
-  z.object({
-    segmentId: SegmentId,
-    observationIds: z
-      .array(ObservationId)
-      .describe('Photos of the damage the reporter recorded on this segment (POST /observations); may be empty'),
-    inventoryItemId: InventoryItemId.nullable().describe('The damaged expected item, when it is one'),
-    itemStatus: ItemStatus.extract(['missing', 'changed']).nullable(),
-    class: ReportedClass,
-    rationale: z.string().min(1).describe('What the reporter saw'),
-    simulated: z.boolean()
-  })
+  z
+    .object({
+      segmentId: SegmentId,
+      observationIds: z
+        .array(ObservationId)
+        .describe('Photos of the damage the reporter recorded on this segment (POST /observations); may be empty'),
+      inventoryItemId: InventoryItemId.nullable().describe('The damaged expected item, when it is one'),
+      itemStatus: ItemStatus.extract(['missing', 'changed']).nullable(),
+      class: ReportedClass,
+      rationale: z.string().min(1).describe('What the reporter saw'),
+      simulated: z.boolean(),
+      report: DamageReportInput.nullable().optional()
+    })
+    .superRefine((data, ctx) => {
+      if (data.report != null && data.observationIds.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'report supplied must attach at least one observation',
+          path: ['observationIds']
+        })
+      }
+    })
 )
 export type ReportDamageRequest = z.infer<typeof ReportDamageRequest>
 
@@ -590,8 +641,16 @@ export const IdParam = {
   pass: z.object({ id: PassId }),
   remedy: z.object({ id: RemedyId }),
   notice: z.object({ id: NoticeId }),
-  evidence: z.object({ id: EvidenceId })
+  evidence: z.object({ id: EvidenceId }),
+  damageReport: z.object({ id: DamageReportId })
 }
+
+export const ListDamageReportsQuery = z.object({
+  candidateId: CandidateId.optional(),
+  segmentId: SegmentId.optional(),
+  reportedBy: UserId.optional()
+})
+export type ListDamageReportsQuery = z.infer<typeof ListDamageReportsQuery>
 
 export const ListInventoryChecksQuery = z.object({ segmentId: SegmentId.optional(), patrolId: PatrolId.optional() })
 export const ListCandidatesQuery = z.object({ status: CandidateStatus.optional(), segmentId: SegmentId.optional() })

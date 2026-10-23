@@ -5,6 +5,7 @@ import {
   type AuditEvent,
   type Baseline,
   type Candidate,
+  type DamageReport,
   type Denial,
   type Dock,
   type DroneProfile,
@@ -57,6 +58,7 @@ export interface Collections {
   remedies: Remedy
   notices: Notice
   thirdPartyReports: ThirdPartyReport
+  damageReports: DamageReport
 }
 export type CollectionName = keyof Collections
 export type AnyRecord = Collections[CollectionName]
@@ -83,7 +85,8 @@ const COLLECTION_BY_PREFIX: Partial<Record<string, CollectionName>> = {
   [ID_PREFIXES.route]: 'routes',
   [ID_PREFIXES.remedy]: 'remedies',
   [ID_PREFIXES.notice]: 'notices',
-  [ID_PREFIXES.thirdPartyReport]: 'thirdPartyReports'
+  [ID_PREFIXES.thirdPartyReport]: 'thirdPartyReports',
+  [ID_PREFIXES.damageReport]: 'damageReports'
 }
 
 /** One link of the chain, plus the segment it concerns so `listAudit?subject=seg_…` returns a segment's history. */
@@ -118,6 +121,7 @@ export function createState(seed: Seed): State {
     remedies: new Map(),
     notices: new Map(),
     thirdPartyReports: new Map(),
+    damageReports: new Map(),
     audit: []
   }
 }

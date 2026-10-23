@@ -6,6 +6,9 @@ import { CloseUp, closeUp, outlinesBaseline, SampleImage, type Box, type Scene }
 import { AgentByline, AgentProblemLine, NeedsKey, useAgentRun } from '../shared/AgentRun'
 import { Screen } from '../../shell/Shell'
 import { onReset, refresh, rememberDone, useSignedIn, useStore, can, type Snapshot } from '../../store'
+import { ReportPanel } from './ReportPanel'
+import { candidateMeta } from '../shared/reports'
+import { EvidencePhoto } from '../shared/EvidencePhoto'
 import './inbox.css'
 
 const LABELS: ItemStatus[] = ['present', 'missing', 'changed', 'not_visible']
@@ -224,15 +227,17 @@ function Triage({ s }: { s: Snapshot }) {
       }),
     []
   )
-  const selected = selectedId ? s.evidence.find((e) => e.candidate.id === selectedId) : s.evidence[0]
+  const selected = selectedId ? (s.evidence.find((e) => e.candidate.id === selectedId) ?? s.evidence[0]) : s.evidence[0]
   if (!selected) throw new Error(`Missing candidate ${selectedId ?? '(the first)'}: the sample layer raised none`)
   const group = (open: boolean) => s.evidence.filter((e) => (e.candidate.status === 'candidate') === open)
   const cardTitle = (e: CandidateEvidence) => {
-    const meta = must(s.metas[e.candidate.id], `sample details for ${e.candidate.id}`)
-    return isHidden(e.candidate, blind, s.users) ? meta.viewpointName : meta.title
+    const meta = candidateMeta(e, s)
+    return s.damageReports.some((r) => r.candidateId === e.candidate.id) || isHidden(e.candidate, blind, s.users)
+      ? meta.viewpointName
+      : meta.title
   }
   const rowTitle = (e: CandidateEvidence) => {
-    const meta = must(s.metas[e.candidate.id], `sample details for ${e.candidate.id}`)
+    const meta = candidateMeta(e, s)
     return meta.viewpointName
   }
   const firstSeen = s.evidence
@@ -289,9 +294,7 @@ function Triage({ s }: { s: Snapshot }) {
                       >
                         {rowTitle(e)}
                       </span>
-                      <span className="time">
-                        {clock(must(e.observations[0], `observation of ${e.candidate.id}`).capturedAt)}
-                      </span>
+                      <span className="time">{clock(e.observations[0]?.capturedAt ?? e.candidate.raisedAt)}</span>
                       <span className="meta clamp">{e.segment.name}</span>
                       {!open && <span className="meta wide">{STATE_TEXT[e.candidate.status]}</span>}
                       {e.candidate.status === 'needs_recapture' && (
@@ -414,8 +417,9 @@ function CardDetail({
   consequence?: Consequence
 }) {
   const c = e.candidate
-  const meta = must(s.metas[c.id], `sample details for ${c.id}`)
-  const after = must(e.observations[0], `observation of ${c.id}`)
+  const meta = candidateMeta(e, s)
+  const report = s.damageReports.find((r) => r.candidateId === c.id)
+  const after = e.observations[0]
   const name = (id: string) =>
     must(
       s.users.find((u) => u.id === id),
@@ -431,7 +435,9 @@ function CardDetail({
   const [selectedSeverity, setSelectedSeverity] = useState<Severity | null>(null)
   const severityPicked = selectedSeverity !== null
   const effectiveSeverity: Severity | null =
-    selectedSeverity !== null ? selectedSeverity : hidden ? null : c.tier === 2 ? 'high' : 'medium'
+    selectedSeverity !== null
+      ? selectedSeverity
+      : (report?.urgency ?? (hidden ? null : c.tier === 2 ? 'high' : 'medium'))
   const { client } = useSignedIn()
   const { run, denied } = useRun()
   const agent = useAgentRun()
@@ -448,7 +454,7 @@ function CardDetail({
   const baseline = e.baseline
   const box = hidden ? null : meta.box
   // The agent may summarise a card awaiting a decision; blind-first keeps it away like every other AI conclusion.
-  const summarise = open && !hidden && can('draftInbox')
+  const summarise = !report && open && !hidden && can('draftInbox')
   const keyHint = `agent-key-${c.id}`
 
   return (
@@ -475,7 +481,7 @@ function CardDetail({
             )}
           </p>
           <p className="sub">
-            Viewpoint: {meta.viewpointName} ({after.viewpointId})
+            Viewpoint: {meta.viewpointName} ({after?.viewpointId ?? report?.viewpointId ?? 'not recorded'})
           </p>
         </div>
 
@@ -500,31 +506,45 @@ function CardDetail({
           </p>
         )}
 
-        <div className="frames">
-          <figure className="frame-photo">
-            <SampleImage scene={meta.scene} variant="before" />
-            <figcaption>
-              <div className="cap-line">
-                <b>{baseline ? `Before · ${dayMonth(baseline.capturedAt)}` : 'Before · no baseline recorded'}</b>
-                <span>
-                  {baseline?.acceptedBy ? `Accepted by ${name(baseline.acceptedBy)}` : 'Not accepted by a person'}
-                </span>
+        {!report && (
+          <div className="frames">
+            <figure className="frame-photo">
+              {s.metas[c.id] ? (
+                <SampleImage scene={s.metas[c.id]!.scene} variant="before" />
+              ) : baseline?.images[0] ? (
+                <EvidencePhoto image={baseline.images[0]} alt="Baseline photo" />
+              ) : (
+                <p>No baseline photo recorded</p>
+              )}
+              <figcaption>
+                <div className="cap-line">
+                  <b>{baseline ? `Before · ${dayMonth(baseline.capturedAt)}` : 'Before · no baseline recorded'}</b>
+                  <span>
+                    {baseline?.acceptedBy ? `Accepted by ${name(baseline.acceptedBy)}` : 'Not accepted by a person'}
+                  </span>
+                </div>
+              </figcaption>
+            </figure>
+            <figure className="frame-photo">
+              <div className="after-wrap">
+                {s.metas[c.id] ? (
+                  <SampleImage scene={s.metas[c.id]!.scene} variant="after" />
+                ) : after ? (
+                  <EvidencePhoto image={after.image} alt="Observation photo" />
+                ) : (
+                  <p>No observation photo recorded</p>
+                )}
+                {box && <FlagOutline box={box} title={meta.title} />}
               </div>
-            </figcaption>
-          </figure>
-          <figure className="frame-photo">
-            <div className="after-wrap">
-              <SampleImage scene={meta.scene} variant="after" />
-              {box && <FlagOutline box={box} title={meta.title} />}
-            </div>
-            <figcaption>
-              <div className="cap-line">
-                <b>{fmt(after.capturedAt)}</b>
-                <span>{after.captureSource === 'drone' ? 'Drone' : 'Phone'}</span>
-              </div>
-            </figcaption>
-          </figure>
-        </div>
+              <figcaption>
+                <div className="cap-line">
+                  <b>{fmt(after?.capturedAt ?? c.raisedAt)}</b>
+                  <span>{after?.captureSource === 'drone' ? 'Drone' : 'Phone'}</span>
+                </div>
+              </figcaption>
+            </figure>
+          </div>
+        )}
 
         {c.tier === 3 && (
           <p className="banner info">
@@ -534,7 +554,7 @@ function CardDetail({
             </span>
           </p>
         )}
-        {!hidden && (c.agentSummary || c.tier !== 3 || summarise) && (
+        {!report && !hidden && (c.agentSummary || meta.summary || summarise) && (
           <div className="summary">
             {c.agentSummary ? (
               <>
@@ -543,7 +563,7 @@ function CardDetail({
               </>
             ) : (
               c.tier !== 3 && (
-                <p className="why-text">{`Sample summary, not written by the agent: ${meta.summary} Evidence: ${after.id}, ${c.id}.`}</p>
+                <p className="why-text">{`Sample summary, not written by the agent: ${meta.summary} Evidence: ${after?.id ?? 'none'}, ${c.id}.`}</p>
               )
             )}
             {summarise && (
@@ -580,7 +600,9 @@ function CardDetail({
         )}
 
         <div className="panel">
-          {c.tier === 3 ? (
+          {report ? (
+            <ReportPanel report={report} evidence={e} s={s} />
+          ) : c.tier === 3 ? (
             <>
               <h3>What the AI saw</h3>
               <p>Nothing could be checked here, so nothing can be confirmed or rejected.</p>
@@ -626,12 +648,14 @@ function CardDetail({
             <>
               <h3>Zoom on the flagged item</h3>
               <div className="ai-panel">
-                <Zoom
-                  scene={meta.scene}
-                  box={must(meta.box ?? undefined, `flagged region of ${c.id}`)}
-                  title={meta.title}
-                  baseline={baseline}
-                />
+                {meta.scene && meta.box && (
+                  <Zoom
+                    scene={meta.scene}
+                    box={must(meta.box ?? undefined, `flagged region of ${c.id}`)}
+                    title={meta.title}
+                    baseline={baseline}
+                  />
+                )}
                 <div className="ai-box">
                   <p className="label">AI suggestion, unvalidated</p>
                   <p className="big">AI label: {c.itemStatus?.replace('_', ' ') ?? 'general change'}</p>
@@ -651,8 +675,8 @@ function CardDetail({
             </>
           )}
           <dl className="facts">
-            <dt>Captured</dt>
-            <dd>{fmt(after.capturedAt)}</dd>
+            <dt>{after ? 'Captured' : 'Raised'}</dt>
+            <dd>{fmt(after?.capturedAt ?? c.raisedAt)}</dd>
             <dt>Source</dt>
             <dd>{c.source}</dd>
           </dl>
@@ -740,7 +764,8 @@ function CardDetail({
                 {!hidden && !severityPicked && (
                   <span>
                     {' '}
-                    (pre-filled<span className="sr">, you can change it</span>)
+                    ({report?.urgency ? 'From the reporter' : 'pre-filled'}
+                    <span className="sr">, you can change it</span>)
                   </span>
                 )}
                 <select
@@ -784,7 +809,7 @@ function CardDetail({
                   params: { id: c.id },
                   body: {
                     decision: 'recapture',
-                    reason: `Re-shoot viewpoint: ${meta.viewpointName} (${after.viewpointId})`
+                    reason: `Re-shoot viewpoint: ${meta.viewpointName} (${after?.viewpointId ?? report?.viewpointId ?? 'not recorded'})`
                   }
                 })
               )
