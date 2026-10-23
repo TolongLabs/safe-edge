@@ -2,10 +2,10 @@ import { MapTrifold, Tray, WarningCircle } from '@phosphor-icons/react'
 import { useEffect, useMemo, useState } from 'react'
 import { Screen } from '../../shell/Shell'
 import { can, onReset, useSignedIn, useStore } from '../../store'
-import { day, rows as buildRows, type Data } from './board'
+import { actionOf, day, rows as buildRows, type Data } from './board'
 import { HandoverSlot } from './HandoverSlot'
 import { Escalation, Report } from './Notices'
-import { PassTable } from './PassTable'
+import { PassBoard } from './PassTable'
 import './passes.css'
 
 type Load = { data: Data; now: number } | { error: Error } | null
@@ -51,6 +51,7 @@ export function Passes() {
   const rows = useMemo(() => (ok ? buildRows(ok.data, ok.now) : []), [ok])
   const titles = Object.fromEntries(Object.entries(snapshot?.metas ?? {}).map(([id, m]) => [id, m.title]))
   const noPass = rows.filter((r) => (r.pass?.state ?? 'none') === 'none').length
+  const action = rows.filter((r) => actionOf(r, titles) !== null).length
   return (
     <Screen
       title="Passes"
@@ -81,11 +82,16 @@ export function Passes() {
         )}
         {ok && (
           <>
-            <section className="island panel table-island" aria-labelledby="edges-h">
+            <div className="island panel table-island">
               <div className="head">
                 <div>
-                  <h2 id="edges-h">Every edge, worst first</h2>
+                  <h2 id="edges-h">Action needed</h2>
                   <p className="hint">
+                    {action === 0
+                      ? 'No edge needs action right now.'
+                      : action === 1
+                        ? '1 edge needs action.'
+                        : `${action} edges need action.`}{' '}
                     {noPass} edge{noPass === 1 ? ' has' : 's have'} no pass yet. Unknown is never shown as safe.
                   </p>
                 </div>
@@ -103,13 +109,13 @@ export function Passes() {
                   </p>
                 </div>
               ) : (
-                <PassTable rows={rows} titles={titles} />
+                <PassBoard rows={rows} titles={titles} />
               )}
               <p className="hint">
                 Showing {rows.length} edge{rows.length === 1 ? '' : 's'}. The Map shows the demo&apos;s starting data
                 and the scenario player, not this session&apos;s decisions.
               </p>
-            </section>
+            </div>
             <div className="lower">
               <Escalation d={ok.data} rows={rows} lead={lead} reload={reload} />
               <Report d={ok.data} rows={rows} now={ok.now} lead={lead} reload={reload} />
