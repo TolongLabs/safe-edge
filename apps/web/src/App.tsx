@@ -69,7 +69,15 @@ function RouteView({ route }: { route: Route }) {
     case 'passIssued': {
       const { passId } = route
       return (
-        <Guard key={passId} title="Pass issued" check={() => client().getPass({ params: { id: passId } })}>
+        <Guard
+          key={passId}
+          title="Pass issued"
+          check={() =>
+            passId.startsWith('seg_')
+              ? client().getSegment({ params: { id: passId } })
+              : client().getPass({ params: { id: passId } })
+          }
+        >
           <PassIssued passId={passId} />
         </Guard>
       )

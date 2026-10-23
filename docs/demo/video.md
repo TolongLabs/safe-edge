@@ -1,6 +1,6 @@
 # Demo video
 
-The submission video is the narrated pitch deck with one live-demo segment of the prototype after slide "5. How it Works". [`director-script.md`](/docs/demo/director-script.md) holds the words and what each segment shows. This page holds the timeline, the shots to capture and the steps that make the video. Two Claude Code sessions do the work: a **Director** edits, and a **Recorder** films the real app with Playwright. Remotion assembles everything. The demo is its own short video, voiced by ElevenLabs and built in three labelled parts (problem, solution, outcome); the main video, read by one team member, places it at V8.
+The submission video is the narrated pitch deck with one live-demo segment of the prototype after slide "5. How It Works". [`director-script.md`](/docs/demo/director-script.md) holds the words and what each segment shows. This page holds the timeline, the shots to capture and the steps that make the video. Two Claude Code sessions do the work: a **Director** edits, and a **Recorder** films the real app with Playwright. Remotion assembles everything. The demo is its own short video, voiced by ElevenLabs and built in three labelled parts (problem, solution, outcome); the main video, read by one team member, places it at V8.
 
 Issue: [#97](https://github.com/TolongLabs/safe-edge/issues/97).
 
@@ -52,8 +52,9 @@ Contents:
 ## Rules for the video
 
 - **At most five minutes.** Target 4:40; the hard cap is 4:50 ([context][video-context]). Issue #15 confirms the limit.
+- **Submit a YouTube link.** Upload as Public or Unlisted so judges can watch without requesting permission. The organiser's [submission reminder](/docs/sources/organiser-submission-reminder.md), supplied by the user on 22 October 2026, specifies YouTube; a live demo link is optional supporting material.
 - **Show the solution, not the team** ([brief][brief-video]).
-- **The deck carries the pitch.** The slides keep the organisers' template order ([deck README](/docs/demo/README.md)). The live demo sits after "5. How it Works".
+- **The deck carries the pitch.** The slides follow the 11-slide organiser flow confirmed by the user on 22 October 2026 ([deck README](/docs/demo/README.md)). The live demo sits after "5. How It Works".
 - **Simulated means labelled.** Every app and scene shot keeps the app's own **Simulation** label on screen, and the edit adds a "Simulation · sample data" tag. The narration never calls a sample drawing a site photo, a simulated flight real, or a finding confirmed in the field ([`PRODUCT.md`](/docs/PRODUCT.md#product-principles), principle 7). False claims can disqualify the team.
 - **Who, what and why first.** Judges skim, so the team, the track and the problem are named in the first 12 seconds, and the stories and their evidence finish by 0:50 ([context][judges]).
 - **The real stories are told exactly as reported.** V3 opens on two reported drownings. The narration adds nothing to the reports and claims no cause; the [director script's notes](/docs/demo/director-script.md#v3-1-the-problem) set the limits.
@@ -63,24 +64,24 @@ Contents:
 
 ## Video plan
 
-The director script owns the words and the on-screen detail of each segment; this table owns the times. Change both together. "Deck N" is the slide position in [`pitch-deck.html`](/docs/demo/deck/pitch-deck.html); the appendix, Deck 16 to 21, is not in the video.
+The director script owns the words and the on-screen detail of each segment; this table owns the times. Change both together. "Deck N" is the slide position in [`pitch-deck.html`](/docs/demo/deck/pitch-deck.html); the six evidence pages in [`supporting-deck.html`](/docs/demo/deck/supporting-deck.html) are separate and are not in the video.
 
-| Seg | Time      | Part                        | Source                              |
-| --- | --------- | --------------------------- | ----------------------------------- |
-| V1  | 0:00–0:12 | Title                       | Deck 2, then Deck 3                 |
-| V3  | 0:12–0:50 | 1. The Problem              | Story cards 1 and 2, then Deck 5    |
-| V4  | 0:50–1:02 | 2. Target User              | Deck 6                              |
-| V5  | 1:02–1:23 | 3. Your Solution            | Deck 7, optional H2                 |
-| V6  | 1:23–1:35 | 4. Innovation               | Deck 8                              |
-| V7  | 1:35–1:42 | 5. How it Works             | Deck 9                              |
-| V8  | 1:42–3:05 | **Live demo**               | The demo video: H1, then D1 to D5   |
-| V9  | 3:05–3:30 | 6. Impact                   | Deck 10                             |
-| V10 | 3:30–3:55 | 7. Feasibility              | Deck 11, optional D7                |
-| V11 | 3:55–4:09 | 7. Implementation           | Deck 12                             |
-| V13 | 4:09–4:37 | 8. Why Your Team Should Win | Deck 14                             |
-| V14 | 4:37–4:47 | Thank You                   | Deck 15, with the demo and repo URL |
+| Seg | Time      | Part                         | Source                                      |
+| --- | --------- | ---------------------------- | ------------------------------------------- |
+| V1  | 0:00–0:12 | Team Information             | Deck 1, with project title and team         |
+| V3  | 0:12–0:50 | 1. The Problem               | Story cards 1 and 2, then Deck 2            |
+| V4  | 0:50–1:02 | 2. Target User               | Deck 3                                      |
+| V5  | 1:02–1:23 | 3. Your Solution             | Deck 4, optional H2                         |
+| V6  | 1:23–1:35 | 4. Innovation                | Deck 5                                      |
+| V7  | 1:35–1:42 | 5. How It Works              | Deck 6                                      |
+| V8  | 1:42–3:05 | **Live demo**                | The demo video: H1, then D1 to D5           |
+| V9  | 3:05–3:30 | 6. Impact                    | Deck 7                                      |
+| V10 | 3:30–3:55 | 7. Feasibility               | Deck 8, optional D7                         |
+| V11 | 3:55–4:09 | 8. Implementation            | Deck 9                                      |
+| V13 | 4:09–4:37 | 10. Why Your Team Should Win | Deck 11                                     |
+| V14 | 4:37–4:47 | Closing hold                 | Deck 11 continues, with demo and repo links |
 
-Inside V8, the demo video (83 seconds): Problem, H1, 1:42–1:54; Solution, D1 find 1:54–2:04, D2 confirm 2:04–2:14, D3 fix 2:14–2:38, D4 prove 2:38–2:50; Outcome, D5, 2:50–3:05. One narrator reads everything outside the demo, and every narrator take plays at 1.2× with its pitch kept; an ElevenLabs voice reads the demo at its own pace. Not in the default cut: V2 (Deck 4, Team Information), V12 (Deck 13, Visual Concept) and the optional demo shots D3b and D6; adding one means trimming another ([optional segments](/docs/demo/director-script.md#optional-segments)).
+Inside V8, the demo video (83 seconds): Problem, H1, 1:42–1:54; Solution, D1 find 1:54–2:04, D2 confirm 2:04–2:14, D3 fix 2:14–2:38, D4 prove 2:38–2:50; Outcome, D5, 2:50–3:05. One narrator reads everything outside the demo, and every narrator take plays at 1.2× with its pitch kept; an ElevenLabs voice reads the demo at its own pace. Team Information appears in V1, so there is no separate V2 segment. Not in the default cut: V12 (Deck 10, "9. Visual Concept") and the optional demo shots D3b and D6; adding one means trimming another ([optional segments](/docs/demo/director-script.md#optional-segments)).
 
 ## Roles
 
@@ -132,7 +133,7 @@ flowchart LR
 
     It takes about 35 minutes; the frame-stepped scene takes are about 25 of them. The output is every take in `video/public/footage/raw/` and `video/public/footage/manifest.json` with the commit hash. Send the Director the manifest path and every shot that failed, with the reason.
 
-1.  **Export the slides (Director).** Run `bunx playwright test -c video/record/playwright.config.ts --grep @slides` for `video/public/slides/S01.png` to `S15.png`. Run it again whenever the deck changes.
+1.  **Export the slides (Director).** Run `bunx playwright test -c video/record/playwright.config.ts --grep @slides` for `video/public/slides/S01.png` to `S11.png`. Run it again whenever the deck changes.
 1.  **Record the voiceover (narrator; Director for the speed-up and the demo voice).** Follow [Recording the voiceover](/docs/demo/director-script.md#recording-the-voiceover). The narrator records one file per segment outside the demo, plus room tone, into `vo/`. The Director speeds each chosen take up to 1.2× with ffmpeg's pitch-keeping `atempo` filter, writing it to `video/public/voice/` (`ffmpeg -i vo/V09.wav -af atempo=1.2 -ar 48000 video/public/voice/V09.wav`), then runs Whisper with word timestamps on the sped-up file, so the timings match what plays, and writes `video/src/data/voice.json` ([Data files](#data-files)). The Director generates the six demo lines with ElevenLabs' text-to-speech with timestamps and writes their timings to `video/src/data/demo-voice.json`. A take that still runs past its segment is read again from its pickup line, never sped up further.
 1.  **Ingest (Director).** `bun scripts/ingest.ts` reads the manifest, picks the newest take marked `"ok"` for each shot, and converts each screencast take to constant 30 fps H.264. Frame-stepped takes are already 30 fps H.264 and are copied as they are:
 
@@ -148,7 +149,7 @@ flowchart LR
 1.  **Freeze and record the final takes (kymil4, Recorder).** kymil4 posts the frozen commit on #97. The Recorder runs step 4 again on that commit, and the Director runs step 7 again. After gate G3, nobody records again.
 1.  **Review (AlaskanTuna).** Gate G2: five stills from the edit, one per chapter. Gate G3: a half-scale rough cut of the whole video.
 1.  **Finish (Director).** Run `video/scripts/finish.sh` ([Finish script](#finish-script)): the tests, then the renders of `Demo`, `Main` and `MainNoMusic`, loudness normalised in linear passes to −14 LUFS and −1 dBTP, so the two voices sit at the same level, the English SRT, and the [quality checks](#quality-checks). Then stop at gate G4.
-1.  **Upload and submit (AlaskanTuna).** Upload to YouTube as Public or Unlisted, never Private. Open the link from a signed-out browser, then submit the deck PDF, the video link and the repo link on Kolaxus ([#99](https://github.com/TolongLabs/safe-edge/issues/99)).
+1.  **Upload and submit (AlaskanTuna).** Upload to YouTube as Public or Unlisted. Open every link from a signed-out browser, then submit the **11-page deck PDF and YouTube link** through the [official submission page](https://simedarbyproperty.com/universityhackathon/submission/). Add the separate **six-page supporting PDF** and online demo/repository links as supporting materials. If the deck was already submitted as PPT/PPTX, resubmit it as PDF. [Source: organiser reminder supplied by the user on 22 October](/docs/sources/organiser-submission-reminder.md).
 
 ### Fallback cut
 
@@ -183,7 +184,7 @@ Every shot below is captured in headless Chromium, the scene as well as the app 
 | D6           |        12 s | Agent, desktop                                 | Screencast       | Optional       |
 | D6b          |        10 s | Agent, recorded answer, desktop                | Screencast       | Optional       |
 | D7           |         3 s | Developers, desktop                            | Screencast       | V10            |
-| S01–S15      |           – | Deck slides 1 to 15, 1920 × 1080               | Stills           | Deck           |
+| S01–S11      |           – | Deck slides 1 to 11, 1920 × 1080               | Stills           | Deck           |
 
 A cue is the moment its state is visible, not the moment of the click. Each cue below names the locator the harness waits for.
 
@@ -284,8 +285,8 @@ Optional; not in the default demo. Record it anyway, for a longer cut and for Q&
 ### Slides
 
 - **Setup:** a plain Playwright page, without the offline fixture, because the deck loads its stand-in fonts from Google Fonts. Use a 1920 × 1080 viewport and open `docs/demo/deck/pitch-deck.html` as a `file://` URL. Wait for `document.fonts.ready`.
-- **Capture:** for each slide `i` from 0 to 14, call `document.querySelector('deck-stage').goTo(i)`. Wait until the deck's control overlay hides (its `.overlay` in the shadow root loses `data-visible`), then screenshot `video/public/slides/S01.png` to `S15.png`.
-- **Push-in targets:** on the same pass, read the box of every element with a `data-focus` attribute on the slide, and write them to `video/src/data/slides.json`: `{ "S10": { "main-measure": { "x": 112, "y": 330, "width": 820, "height": 260 } } }`, in CSS pixels of the 1920 × 1080 slide. The director script names push-ins by these ids ("the main-measure card"), so a slide can change its layout without breaking the edit.
+- **Capture:** for each slide `i` from 0 to 10, call `document.querySelector('deck-stage').goTo(i)`. Wait until the deck's control overlay hides (its `.overlay` in the shadow root loses `data-visible`), then screenshot `video/public/slides/S01.png` to `S11.png`.
+- **Push-in targets:** on the same pass, read the box of every element with a `data-focus` attribute on the slide, and write them to `video/src/data/slides.json`: `{ "S07": { "main-measure": { "x": 112, "y": 330, "width": 820, "height": 260 } } }`, in CSS pixels of the 1920 × 1080 slide. The director script names push-ins by these ids ("the main-measure card"), so a slide can change its layout without breaking the edit.
 
 ## Recording the prototype
 
@@ -527,7 +528,7 @@ For example, a callout fades in over 8 frames and rises 16 px over 10: `opacity 
 
 `Main` mounts the same `Demo` component inside a `<Sequence from={sec(102)}>`, so the demo is never encoded twice.
 
-**Segments.** `edit.ts` lists the segments in the [video plan](#video-plan)'s order, each with its length in frames: `{ id: 'V9', frames: sec(25), slides: [{ slide: 'S10', push: ['main-measure', 'speed', 'park', 'value'] }] }`. `lib/timeline.ts` lays them end to end:
+**Segments.** `edit.ts` lists the segments in the [video plan](#video-plan)'s order, each with its length in frames: `{ id: 'V9', frames: sec(25), slides: [{ slide: 'S07', push: ['main-measure', 'speed', 'park', 'value'] }] }`. `lib/timeline.ts` lays them end to end:
 
 ```ts
 export type Segment = { id: string; frames: number }
@@ -724,7 +725,7 @@ The submission is due at 11:59 PM on Friday 23 October; the team submits by noon
 | An Inbox, Passes or repair-check change lands before the final takes (#212, #213, #216, #230 or #234) | Keep them out of the freeze. If one lands, record the affected shots again and update their cues; #212 renames the "Fence panel 4" row                             |
 | The story capture is slow, about 19 minutes                                                           | Run `--grep @scene` first, while the Director exports the slides                                                                                                   |
 | A voice take runs past its segment                                                                    | Read the segment's pickup line from the director script; never speed the audio past 1.2×                                                                           |
-| Deck 13's screenshots go stale after a frontend change                                                | Capture `docs/demo/deck/assets/screens/` again on the frozen commit, as the deck README says                                                                       |
+| Deck 10's screenshots go stale after a frontend change                                                | Capture `docs/demo/deck/assets/screens/` again on the frozen commit, as the deck README says                                                                       |
 | The V3 stories read as using children's deaths                                                        | They stay unnamed, told only as reported, with no cause claimed; the team chose to open on them. Fallback hook: the H1 scene and its headline, then the 371 figure |
 | The Remotion edit misses gate G3                                                                      | Make the [fallback cut](#fallback-cut)                                                                                                                             |
 | A slide's layout changes after the slide stills are exported                                          | Export the slides again; push-ins follow the `data-focus` boxes in `slides.json`, so the edit needs no other change                                                |
