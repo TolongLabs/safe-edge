@@ -211,7 +211,7 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 **TIME:** `2:04–2:14` · **PART:** 2 Solution · Confirm
 
-**ON SCREEN:** the Inbox, signed in as Farah Hashim, Park manager, a sample persona: the card "Fence panel 4 missing", the before and after drawings, "Tier 2 · a person confirms", the top bar's "SIMULATION" tag, then **Confirm: needs a fix** and the new finding. Push in on the drawings, then the button.
+**ON SCREEN:** the Inbox, signed in as Farah Hashim, Park manager, a sample persona: the card "Fence panel 4 missing", the before and after drawings, the plain explanation that the flag paused the pass and confirmation does not restore it, the top bar's "SIMULATION" tag, then **Confirm: needs a fix** and the new finding. Push in on the drawings, then the button.
 
 **VOICEOVER:**
 
@@ -243,7 +243,7 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 **TIME:** `2:50–3:05` · **PART:** 3 Outcome
 
-**ON SCREEN:** "Safety pass issued", its valid-to date, the line "All 2 ways to the water … are closed. Issued by Priya Nair, who signed the check", and the history "How it got here", scrolled slowly. For the last 4 seconds, the Passes board: "Every edge, worst first" and "Unknown is never shown as safe." Chapter bar: Outcome.
+**ON SCREEN:** "Safety pass issued", its valid-to date, the line "All 2 ways to the water … are closed. Issued by Priya Nair, who signed the check", and the history "How it got here", scrolled slowly. For the last 4 seconds, the Passes board: "Action needed" and "Unknown is never shown as safe." Chapter bar: Outcome.
 
 **VOICEOVER:**
 
