@@ -28,7 +28,8 @@
     "readme:assets": "bun scripts/readme-assets.ts",
     "test": "bun test --pass-with-no-tests",
     "typecheck": "tsc && bun --filter '@safe-edge/*' typecheck",
-    "fetch:osm": "bun packages/scene/scripts/fetch-osm.ts"
+    "fetch:osm": "bun packages/scene/scripts/fetch-osm.ts",
+    "record:demo": "bun scripts/record-demo.ts"
   },
   "lint-staged": {
     "*": "prettier --write --ignore-unknown"

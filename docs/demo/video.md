@@ -6,6 +6,7 @@ Issue: [#97](https://github.com/TolongLabs/safe-edge/issues/97).
 
 Contents:
 
+1.  [Record the live demo](#record-the-live-demo)
 1.  [Rules for the video](#rules-for-the-video)
 1.  [Video plan](#video-plan)
 1.  [Roles](#roles)
@@ -48,6 +49,38 @@ Contents:
     1.  [Director prompt](#director-prompt)
     1.  [Recorder prompt](#recorder-prompt)
 1.  [Sources](#sources)
+
+## Record the live demo
+
+Run these commands from the repository root. The recording build includes the Inbox, title-colour, Passes, reporting and repair-tracker changes. The recorder drives the app itself: it selects the sample people, completes interim protection, approves and sends fix B, uploads the simulated re-test image and issues the pass. No API key or live AI service is needed.
+
+1.  Install the locked dependencies once:
+
+    ```shell
+    rtk bun install --frozen-lockfile
+    ```
+
+1.  Check the complete recording path before the final take:
+
+    ```shell
+    rtk bun run record:demo --check
+    ```
+
+    This drives the real flow with short holds and low scene frame rate. It checks that the cues and required controls still work. Its footage is a preflight, not a final take.
+
+1.  At **12:00 PM MYT on Friday 23 October**, record the final footage:
+
+    ```shell
+    rtk bun run record:demo
+    ```
+
+    Leave the terminal running. The browser runs headless, so no clicking or role switching is required. The earlier scene probe budgets about 35 minutes for a full capture; the command prints the actual run directory when it finishes. The recorder checks for ffmpeg and ffprobe and installs its pinned Chromium if needed.
+
+Each run has its own directory under `video/public/footage/runs/`. It contains `manifest.json` with the source commit, raw takes and cue times, the cut windows in `edit-windows.json`, and an **83-second silent `demo-preview.mp4`**. Earlier takes are retained. The preview keeps the app's Simulation label and adds the problem, solution and outcome chapter labels. Add the approved narration in the video edit; this command makes no speech-service calls.
+
+For a faster visual draft, use `rtk bun run record:demo --draft`. Its scene motion has fewer captured frames, so use the default command for the final take. `--grep @app` and `--grep @scene` record only that group and leave assembly to a complete run.
+
+A failed cue or upload stops the command with an error. Fix the named step and run the check again. A green preflight on the frozen commit is the readiness gate. The capture source is in [`video/record/`](/video/record); the rest of this page explains the shots and the full submission edit.
 
 ## Rules for the video
 
@@ -124,16 +157,16 @@ flowchart LR
     Done when the root e2e suite's Chromium starts and `ffmpeg` runs.
 
 1.  **Lock the script (AlaskanTuna, gate G1).** Approve [`director-script.md`](/docs/demo/director-script.md) and the [shot list](#scenes-to-capture), and pick the narrator and the ElevenLabs voice ([open decisions](/docs/demo/director-script.md#decisions-for-the-team)). The Director then writes `video/src/data/shots.json`: one entry per shot with its cue ids, copied from this page, and sends it to the Recorder.
-1.  **Build the harness (Recorder).** Write the files in [Harness](#harness). Done when one command records every take on the current `main`.
+1.  **Check the harness (Recorder).** Run `rtk bun run record:demo --check` on the frozen commit. The [Harness](#harness) is implemented.
 1.  **Record draft takes (Recorder).** Run the whole harness on the current `main`:
 
     ```shell
-    bunx playwright test -c video/record/playwright.config.ts
+    rtk bun run record:demo --draft
     ```
 
-    It takes about 35 minutes; the frame-stepped scene takes are about 25 of them. The output is every take in `video/public/footage/raw/` and `video/public/footage/manifest.json` with the commit hash. Send the Director the manifest path and every shot that failed, with the reason.
+    It takes about 35 minutes; the frame-stepped scene takes are about 25 of them. The output is a unique folder under `video/public/footage/runs/` with raw takes, `manifest.json`, edit windows and the silent demo preview, tied to the commit hash. Send the Director the manifest path and every shot that failed, with the reason.
 
-1.  **Export the slides (Director).** Run `bunx playwright test -c video/record/playwright.config.ts --grep @slides` for `video/public/slides/S01.png` to `S11.png`. Run it again whenever the deck changes.
+1.  **Export the slides (Director; full submission tooling).** Build a separate slide export step for `video/public/slides/S01.png` to `S11.png`. Run it again whenever the deck changes.
 1.  **Record the voiceover (narrator; Director for the speed-up and the demo voice).** Follow [Recording the voiceover](/docs/demo/director-script.md#recording-the-voiceover). The narrator records one file per segment outside the demo, plus room tone, into `vo/`. The Director speeds each chosen take up to 1.2× with ffmpeg's pitch-keeping `atempo` filter, writing it to `video/public/voice/` (`ffmpeg -i vo/V09.wav -af atempo=1.2 -ar 48000 video/public/voice/V09.wav`), then runs Whisper with word timestamps on the sped-up file, so the timings match what plays, and writes `video/src/data/voice.json` ([Data files](#data-files)). The Director generates the six demo lines with ElevenLabs' text-to-speech with timestamps and writes their timings to `video/src/data/demo-voice.json`. A take that still runs past its segment is read again from its pickup line, never sped up further.
 1.  **Ingest (Director).** `bun scripts/ingest.ts` reads the manifest, picks the newest take marked `"ok"` for each shot, and converts each screencast take to constant 30 fps H.264. Frame-stepped takes are already 30 fps H.264 and are copied as they are:
 
@@ -235,7 +268,7 @@ D2 to D5 run in **one test, one page and one browser context**, because the demo
 
 - **Setup:** the Inbox opens with "Fence panel 4 missing" selected.
 - **On camera:** hold 2 seconds on the card, move to **Confirm: needs a fix**, click, hold on the new finding.
-- **Cues:** `d2-card`, the heading "Fence panel 4 missing"; `d2-tier`, "Tier 2 · a person confirms"; `d2-confirm`, the button **Confirm: needs a fix**; `d2-finding`, the region named "Finding …".
+- **Cues:** `d2-card`, the heading "Fence panel 4 missing"; `d2-consequence`, the plain explanation of why the flag paused the pass; `d2-confirm`, the button **Confirm: needs a fix**; `d2-finding`, the region named "Finding …".
 - **Off camera after:** sign in as Siti Aminah, click **Mark done** on the interim protection task, and wait for "Marked done by Siti Aminah". Sign in as Farah Hashim again. Fix B cannot be sent until the interim protection is done.
 
 ### D3 and D3b: fix
@@ -247,9 +280,9 @@ D2 to D5 run in **one test, one page and one browser context**, because the demo
 
 ### D4: prove on the phone
 
-- **On camera:** the repair check. For the two route checks ("Playground path, through the panel gap" and "Playground path, around the fence end"), choose **Pass** and type "Seen on site" at a visible pace (`pressSequentially` with a 40 ms delay). Fill the other five checks quickly. Then click **Sign and issue the pass**.
-- **Cues:** `d4-heading`, "A different person checks this repair"; `d4-count`, "7 checks at the fence"; `d4-first`, the first route check's reason typed; `d4-sign`, the button **Sign and issue the pass**; `d4-issued`, the heading "Safety pass issued".
-- **Edit windows:** `d4-heading` +0 to +3 s, `d4-first` −1 to +6 s, then `d4-sign` −1 s to +2 s: 12 seconds. "Safety pass issued" opens D5.
+- **On camera:** the repair check. Upload the recorder's labelled simulated after-image through the real photo-upload control before passing the photo check. The new photo is required; the recorder cannot bypass it. For the two route checks ("Playground path, through the panel gap" and "Playground path, around the fence end"), choose **Pass** and type "Seen on site" at a visible pace (`pressSequentially` with a 40 ms delay). Fill the other five checks quickly. Then click **Sign and issue the pass**.
+- **Cues:** `d4-heading`, "A different person checks this repair"; `d4-count`, "7 checks at the fence"; `d4-first`, the first route check's reason typed; `d4-photo`, the newly uploaded re-test image; `d4-sign`, the button **Sign and issue the pass**; `d4-issued`, the heading "Safety pass issued".
+- **Edit windows:** `d4-heading` +0 to +2 s, `d4-first` −1 to +4 s, `d4-photo` +0 to +2 s, then `d4-sign` −1 s to +2 s: 12 seconds. "Safety pass issued" opens D5.
 - **Off camera after:** resize the page to 1920 × 1080 and sign in as Farah Hashim. The pass page now shows the history.
 
 ### D5: pass and record
@@ -257,7 +290,7 @@ D2 to D5 run in **one test, one page and one browser context**, because the demo
 - **Take 1, on camera:** the pass page; scroll the history slowly, one mouse-wheel step every 150 ms.
 - **Cues, take 1:** `d5-pass`, the heading "Safety pass issued"; `d5-signed`, the text "who signed the check"; `d5-timeline`, "Checked and signed" in the region "How it got here".
 - **Take 2, on camera:** click **Passes** in the rail.
-- **Cues, take 2:** `d5-board`, "Every edge, worst first"; `d5-unknown`, "Unknown is never shown as safe."
+- **Cues, take 2:** `d5-board`, "Action needed"; `d5-unknown`, "Unknown is never shown as safe."
 - **Edit windows:** take 1 for 11 seconds, opening on "Safety pass issued" and the line "All 2 ways to the water … are closed"; take 2 for the last 4.
 
 ### D6: guardrail
@@ -302,39 +335,27 @@ Throwaway probes on 22 Oct 2026, against the deployed `main` (`e73a5d1`), set th
 
 ### Harness
 
-- **Files:** `video/record/playwright.config.ts`, `video/record/takes.rec.ts`, `video/record/scene.rec.ts`, `video/record/slides.rec.ts` and `video/record/take.ts` (the take helpers and the manifest writer). Nothing goes in `e2e/`, so CI never records video. The one exception is the shared `e2e/claude.ts` helper (D6b).
-- **Config:** copy the root [`playwright.config.ts`](/playwright.config.ts) with these differences: `testDir: '.'`, `testMatch: /.*\.rec\.ts/`, `headless: true` always, no GPU flags, `timeout: 45 * 60_000`, and the web server's `cwd` set to the repository root (`resolve(__dirname, '../..')`). Like the root config, it builds the demo site into the system temp folder and serves it at `http://127.0.0.1:4173/`. That is what the judges get, and it needs no network.
-- **Tags:** `@scene` (H1, D1), `@app` (D2 to D7, H2) and `@slides`, so one group can run again alone with `--grep`.
-- **Fixture:** app takes import `test` and `expect` from [`e2e/fixtures.ts`](/e2e/fixtures.ts), which blocks calls to other sites. Scene takes use plain `@playwright/test`, as `story.e2e.ts` does, and so do the slides.
-- **Dependencies:** use the root's Playwright 1.64.1. Don't add Playwright to `video/package.json`.
+The live-demo recorder is implemented. The later full-submission edit, slide export, voiceover and Remotion sections are production instructions; those tools are separate from `record:demo`.
+
+- **Entry:** `rtk bun run record:demo --check` verifies the flow. `rtk bun run record:demo --draft` captures a quick scene draft and assembles the preview. `rtk bun run record:demo` captures the final scene at 30 fps.
+- **Files:** `video/record/playwright.config.ts`, `takes.rec.ts`, `scene.rec.ts`, `take.ts`, `contract.ts` and `assemble.ts`. The command runner is `scripts/record-demo.ts`. The root typecheck includes these files. CI does not run recording tests.
+- **Config:** headless Chromium, one worker, light theme, desktop 1920 × 1080, phone 390 × 844, and a 45-minute limit per test. It builds a fresh demo site into the system temp folder and serves it on port 4197. No API keys or paid services are needed.
+- **Tags:** `--grep @scene` records H1 and D1; `--grep @app` records the app takes. Partial runs keep their manifest but do not assemble a preview.
+- **Outputs:** each run has its own commit-and-time directory under `video/public/footage/runs/`. `manifest.json` records each take, cue, viewport, duration and failure. `assemble.ts` makes the 83-second silent `demo-preview.mp4` from successful takes only. Raw takes remain available for the full edit.
 
 ### Screencast takes
 
-One file per take: set the shot up off camera, then start the screencast, act, and stop it ([Playwright screencast][pw-screencast]):
+App takes use `recordTake` to start capture, verify visible cues and the Simulation label, and save the result even when a step fails. `hold` shortens waits during `--check`. Role changes use the profile menu between takes. The D4 re-test requires the bundled simulated repair photo to pass through the real upload control.
 
 ```ts
-let firstFrame: number | undefined
-await page.screencast.start({
-  path: `video/public/footage/raw/${shot}-take${take}.webm`,
-  size: { width: 1920, height: 1080 }, // the phone: { width: 780, height: 1688 }
-  fps: 30,
-  onFrame: ({ timestamp }) => {
-    firstFrame ??= timestamp
-  }
+await recordTake(page, 'D2', async (cue) => {
+  await cue('d2-card', page.getByRole('heading', { name: 'Fence panel 4 missing' }))
+  await hold(page, 2000)
+  // Perform the real action, then record its visible result.
 })
-
-// A cue is the moment the expected state is visible, not the moment of the click.
-async function cue(id: string, visible: Locator) {
-  await expect(visible).toBeVisible()
-  if (labelled) await expect(page.getByText('Simulation', { exact: true }).first()).toBeVisible()
-  cues.push({ id, tMs: Date.now() - firstFrame!, box: await visible.boundingBox() })
-}
-
-// ...the shot's actions and cues...
-await page.screencast.stop()
 ```
 
-Turn on the cursor once per page with `showActions`, as above. Check the real frame size of the first desktop and phone takes with `ffprobe`.
+Cues use a monotonic clock aligned to the encoder creation time stored in each raw file. `ffprobe` checks the assembled frame size and duration. The desktop capture is 1920 × 1080. The phone records a native 390 × 844 WebM, then makes a 780 × 1688 MP4 with Lanczos scaling. Both files remain in the run folder. This avoids the screencast canvas padding smaller phone content into a larger frame.
 
 ### Frame-stepped takes
 
@@ -388,7 +409,7 @@ await closed
 - **A fresh browser context for every test.** Identity and keys live in `sessionStorage`, and the demo's data lives in the page, so nothing carries over. The D2 to D5 chain is one test on purpose.
 - **Sign in by URL first:** `demo/?as=manager`. The app reads `as` only on the tab's first load; later switches go through the profile menu, off camera.
 - **Clocks:** the chain runs on the real clock, as `s1-s3.e2e.ts` does, so record every final take in one run and the dates match. D6b fixes the page clock at the recording day. The scene takes step their own clock.
-- **Same build for every final take.** Re-record every shot after any frontend change, and record the commit in the manifest.
+- **Same build for every final take.** All five PR groups must be present before the recording check. Re-record every shot after any frontend change, and record the commit in the manifest.
 
 ### Manifest and cue sheets
 
@@ -703,32 +724,33 @@ By hand, before upload:
 
 ## Review gates and timeline
 
-The submission is due at 11:59 PM on Friday 23 October; the team submits by noon ([#99](https://github.com/TolongLabs/safe-edge/issues/99)). The times below are re-planned from Thursday evening.
+The submission is due at 11:59 PM on Friday 23 October. The user moved the final live-demo recording to **12:00 PM MYT on Friday 23 October**. That replaces the earlier noon submission target in [#99](https://github.com/TolongLabs/safe-edge/issues/99). Finish the recording preflight before noon; review, edit and upload after the final capture.
 
-| Gate | AlaskanTuna approves                                                      | By                   |
-| ---- | ------------------------------------------------------------------------- | -------------------- |
-| G1   | The director script, the shot list, the narrator and the ElevenLabs voice | Thu 22 Oct, 8:00 PM  |
-| —    | Frontend freeze (kymil4), then final takes                                | Thu 22 Oct, 10:00 PM |
-| —    | Voiceover takes in `video/public/voice/`                                  | Thu 22 Oct, 11:00 PM |
-| G2   | Five stills from the edit                                                 | Thu 22 Oct, 11:30 PM |
-| G3   | A half-scale rough cut                                                    | Fri 23 Oct, 7:00 AM  |
-| G4   | The final files, after the automated checks                               | Fri 23 Oct, 10:00 AM |
-| —    | Upload, link check, submission                                            | Fri 23 Oct, 12:00 PM |
+| Gate | AlaskanTuna approves / recording milestone                              | By                   |
+| ---- | ----------------------------------------------------------------------- | -------------------- |
+| G1   | Approved script, updated cues, narrator and demo voice                  | Fri 23 Oct, 11:00 AM |
+| —    | All five groups merged; frozen commit passes `record:demo --check`      | Fri 23 Oct, 11:30 AM |
+| —    | Start final live-demo capture with `record:demo`                        | Fri 23 Oct, 12:00 PM |
+| —    | Final footage and manifest available; narration and slide exports ready | Fri 23 Oct, 1:00 PM  |
+| G2   | Five stills from the edit, one per chapter                              | Fri 23 Oct, 2:00 PM  |
+| G3   | Half-scale rough cut of the complete video                              | Fri 23 Oct, 4:00 PM  |
+| G4   | Final files after render, loudness, captions and link checks            | Fri 23 Oct, 7:00 PM  |
+| —    | Upload, signed-out link check and submission                            | Fri 23 Oct, 8:00 PM  |
 
-- **Start the final render by 7:30 AM on Friday,** right after the G3 notes. Expect roughly 5 to 7 minutes per 3,000 frames of 1080p at Remotion's default concurrency on a laptop (an estimate from render progress, not a timed run). This video is about 8,600 frames and the demo about 2,500, so budget about 30 minutes for the finish script.
-- **Final takes need the frozen frontend.** If the freeze slips past 10:00 PM on Thursday, record on the `main` of that hour and note the commit. Fixes that land later are not in the video.
+- **Start the final render by 4:30 PM on Friday,** right after the G3 notes. Expect roughly 5 to 7 minutes per 3,000 frames of 1080p at Remotion's default concurrency on a laptop (an estimate from render progress, not a timed run). This video is about 8,600 frames and the demo about 2,500, so budget about 30 minutes for the finish script.
+- **Final takes need the frozen frontend.** Run the recording check after all five PR groups merge, freeze that exact commit, then start the final capture at noon MYT. Do not silently record an older build that lacks a required group. If a later fix changes the screens, repeat the check and the final capture.
 
 ## Risks and fallbacks
 
-| Risk                                                                                                  | Response                                                                                                                                                           |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| An Inbox, Passes or repair-check change lands before the final takes (#212, #213, #216, #230 or #234) | Keep them out of the freeze. If one lands, record the affected shots again and update their cues; #212 renames the "Fence panel 4" row                             |
-| The story capture is slow, about 19 minutes                                                           | Run `--grep @scene` first, while the Director exports the slides                                                                                                   |
-| A voice take runs past its segment                                                                    | Read the segment's pickup line from the director script; never speed the audio past 1.2×                                                                           |
-| Deck 10's screenshots go stale after a frontend change                                                | Capture `docs/demo/deck/assets/screens/` again on the frozen commit, as the deck README says                                                                       |
-| The V3 stories read as using children's deaths                                                        | They stay unnamed, told only as reported, with no cause claimed; the team chose to open on them. Fallback hook: the H1 scene and its headline, then the 371 figure |
-| The Remotion edit misses gate G3                                                                      | Make the [fallback cut](#fallback-cut)                                                                                                                             |
-| A slide's layout changes after the slide stills are exported                                          | Export the slides again; push-ins follow the `data-focus` boxes in `slides.json`, so the edit needs no other change                                                |
+| Risk                                                                                                  | Response                                                                                                                                                                             |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| An Inbox, Passes or repair-check change lands before the final takes (#212, #213, #216, #230 or #234) | Complete all five required groups before the freeze. Run the updated recording check; any later screen change requires new takes and matching cues. #212 renames the Inbox list row. |
+| The story capture is slow, about 19 minutes                                                           | Run `--grep @scene` first, while the Director exports the slides                                                                                                                     |
+| A voice take runs past its segment                                                                    | Read the segment's pickup line from the director script; never speed the audio past 1.2×                                                                                             |
+| Deck 10's screenshots go stale after a frontend change                                                | Capture `docs/demo/deck/assets/screens/` again on the frozen commit, as the deck README says                                                                                         |
+| The V3 stories read as using children's deaths                                                        | They stay unnamed, told only as reported, with no cause claimed; the team chose to open on them. Fallback hook: the H1 scene and its headline, then the 371 figure                   |
+| The Remotion edit misses gate G3                                                                      | Make the [fallback cut](#fallback-cut)                                                                                                                                               |
+| A slide's layout changes after the slide stills are exported                                          | Export the slides again; push-ins follow the `data-focus` boxes in `slides.json`, so the edit needs no other change                                                                  |
 
 ## Known pitfalls
 
@@ -736,7 +758,7 @@ The submission is due at 11:59 PM on Friday 23 October; the team submits by noon
 - **Actions run ahead of the screen.** An automation's log time can come 0.8 to 1.7 seconds before the screen shows the result. Log a cue when its state is visible, as the harness does, then check it on a still.
 - **Screencasts are variable frame rate and can drop their last still frames.** Re-encode them to constant 30 fps, pad the last frame and cut to the take's true length, as the ingest does.
 - **Loudnorm can fall back to dynamic mode,** which pumps the music. The finish script's limiter pre-chain prevents it, and the script fails if it happens anyway.
-- **A UI change means new takes.** The open Inbox and Passes issues are our known risk.
+- **A UI change means new takes.** Inbox, Passes and the repair check must match the merged five-group build; the preflight verifies the current selectors before final recording.
 - **Agree the contract first:** cue ids, time base, coordinate scale and file paths, before either session builds on them.
 - **Label every render** with its version, its source takes and its review state, so notes map to a cut.
 
