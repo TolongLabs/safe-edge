@@ -1,9 +1,11 @@
-import type { Opening, RetestCheck, RetestOutcome } from '@safe-edge/contracts'
+import type { EvidenceRef, Opening, RetestCheck, RetestOutcome } from '@safe-edge/contracts'
 import { Check, Warning, X } from '@phosphor-icons/react'
 import { useState } from 'react'
 import type { Scene } from '../../scenes'
-import { Photo } from '../fix-lens/Photo'
+import { Camera, type Shot } from '../capture/Camera'
+import { savePhotoEvidence } from '../capture/evidence'
 import { useRun } from '../fix-lens/lens'
+import { EvidencePhoto } from '../shared/EvidencePhoto'
 import { OPEN_FLAG_RULE } from './names'
 
 type Item = {
@@ -22,6 +24,7 @@ export function CheckForm({
   items,
   intro,
   scene,
+  beforeImage,
   acceptance,
   signLabel,
   failLabel,
@@ -31,12 +34,18 @@ export function CheckForm({
 }: {
   items: Item[]
   intro: string
-  scene: Scene
+  scene: Scene | null
+  beforeImage?: EvidenceRef | null
   acceptance?: string
   signLabel: string
   failLabel: string
   rule?: string
-  record: (result: 'accepted' | 'rejected', checklist: RetestCheck[], reason: string) => Promise<RetestOutcome>
+  record: (
+    result: 'accepted' | 'rejected',
+    checklist: RetestCheck[],
+    reason: string,
+    evidence: EvidenceRef[]
+  ) => Promise<RetestOutcome>
   onDone: (outcome: RetestOutcome) => void
 }) {
   // The gap reading starts at the mockup's 6 cm.
@@ -45,6 +54,32 @@ export function CheckForm({
   const [cm, setCm] = useState<Record<string, string>>({})
   const { run, denied } = useRun(() => undefined)
   const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [afterEvidence, setAfterEvidence] = useState<EvidenceRef | null>(null)
+  const photoItem = items.find((i) => i.kind === 'photo')
+  const photoMissing = Boolean(photoItem && !afterEvidence)
+
+  const handleShot = async (shot: Shot) => {
+    setUploadError(null)
+    setUploading(true)
+    setAfterEvidence(null)
+    if (photoItem) {
+      setAnswers((prev) => ({
+        ...prev,
+        [photoItem.key]: { reason: prev[photoItem.key]?.reason ?? '', result: undefined }
+      }))
+    }
+    try {
+      const saved = await savePhotoEvidence(shot)
+      setAfterEvidence(saved)
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const answer = (k: string): Answer => answers[k] ?? { reason: '' }
   const put = (k: string, patch: Partial<Answer>) => setAnswers({ ...answers, [k]: { ...answer(k), ...patch } })
   const reading = (it: Item) => cm[it.key] ?? SAMPLE_CM
@@ -58,18 +93,25 @@ export function CheckForm({
   const failed = items.filter((i) => answer(i.key).result === 'fail').length
   const passed = items.filter((i) => answer(i.key).result === 'pass').length
   const complete = unanswered === 0 && noReason === 0 && bad === 0
-  const why =
-    unanswered > 0
-      ? `Choose Pass or Fail for ${unanswered} more ${unanswered === 1 ? 'check' : 'checks'}.`
-      : noReason > 0
-        ? `Write a reason for ${noReason} more ${noReason === 1 ? 'check' : 'checks'}.`
-        : bad > 0
-          ? 'Fix the gauge reading: it must be a number of centimetres.'
-          : failed > 0
-            ? `A failed check cannot be signed as a pass. Use ${failLabel}.`
-            : null
+
+  const why = uploading
+    ? 'Uploading photo…'
+    : photoMissing && failed === 0 && complete
+      ? 'Take or upload a re-test photo before signing.'
+      : photoMissing && passed === items.length - 1 && unanswered === 1
+        ? 'Take or upload a photo to pass the re-test photo check.'
+        : unanswered > 0
+          ? `Choose Pass or Fail for ${unanswered} more ${unanswered === 1 ? 'check' : 'checks'}.`
+          : noReason > 0
+            ? `Write a reason for ${noReason} more ${noReason === 1 ? 'check' : 'checks'}.`
+            : bad > 0
+              ? 'Fix the gauge reading: it must be a number of centimetres.'
+              : failed > 0
+                ? `A failed check cannot be signed as a pass. Use ${failLabel}.`
+                : null
 
   async function submit(result: 'accepted' | 'rejected') {
+    if (result === 'accepted' && photoMissing) return
     const checklist: RetestCheck[] = items.map((i) => ({
       kind: i.kind,
       subjectId: i.subjectId,
@@ -84,11 +126,12 @@ export function CheckForm({
             .filter((i) => answer(i.key).result === 'fail')
             .map((i) => `${i.title}, ${answer(i.key).reason.trim()}`)
             .join('; ')}`
+    const evidenceList: EvidenceRef[] = afterEvidence ? [afterEvidence] : []
     setBusy(true)
     try {
       let outcome: RetestOutcome | null = null
       const ok = await run(async () => {
-        outcome = await record(result, checklist, reason)
+        outcome = await record(result, checklist, reason, evidenceList)
       })
       if (ok && outcome) onDone(outcome)
     } finally {
@@ -110,7 +153,74 @@ export function CheckForm({
                   <legend>{it.title}</legend>
                   {it.kind === 'saved_view' && <p className="rt-help">Compare with the baseline view.</p>}
                   {it.kind === 'route_check' && <p className="rt-help">Is this way to the water closed now?</p>}
-                  {it.kind === 'photo' && <Photo scene={scene} plates={[]} when="Re-test photo" />}
+                  {it.kind === 'photo' && (
+                    <div className="rt-photo-area" role="region" aria-label="Re-test photo">
+                      <div
+                        className="rt-photo-comparison"
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                          gap: 'var(--space-3)',
+                          marginBottom: 'var(--space-3)'
+                        }}
+                      >
+                        <figure style={{ margin: 0 }}>
+                          <figcaption className="rt-help" style={{ marginBottom: 'var(--space-1)' }}>
+                            <b>Before repair</b>
+                          </figcaption>
+                          {beforeImage ? (
+                            <EvidencePhoto image={beforeImage} alt="Before repair" />
+                          ) : (
+                            <div
+                              role="status"
+                              className="rt-help"
+                              style={{
+                                padding: 'var(--space-4)',
+                                textAlign: 'center',
+                                background: 'var(--bg-sunken)',
+                                borderRadius: 'var(--radius-md)'
+                              }}
+                            >
+                              Before photo unavailable
+                            </div>
+                          )}
+                        </figure>
+                        <figure style={{ margin: 0 }}>
+                          <figcaption className="rt-help" style={{ marginBottom: 'var(--space-1)' }}>
+                            <b>After repair</b>
+                          </figcaption>
+                          {afterEvidence ? (
+                            <EvidencePhoto image={afterEvidence} alt="After repair" />
+                          ) : (
+                            <div
+                              role="status"
+                              className="rt-help"
+                              style={{
+                                padding: 'var(--space-4)',
+                                textAlign: 'center',
+                                background: 'var(--bg-sunken)',
+                                borderRadius: 'var(--radius-md)'
+                              }}
+                            >
+                              No photo taken yet
+                            </div>
+                          )}
+                        </figure>
+                      </div>
+                      {uploadError && (
+                        <div className="banner error rt-error" role="alert" style={{ marginBottom: 'var(--space-2)' }}>
+                          <Warning size={16} weight="bold" aria-hidden="true" />
+                          <span>{uploadError}</span>
+                        </div>
+                      )}
+                      <Camera
+                        scene={null}
+                        busy={uploading || busy}
+                        onShot={handleShot}
+                        note="Take or upload a photo showing the completed repair."
+                      />
+                    </div>
+                  )}
                   {it.opening && (
                     <>
                       <label className="rt-field">
@@ -138,23 +248,34 @@ export function CheckForm({
                     </>
                   )}
                   <div className="rt-pf" role="radiogroup" aria-label={`${it.title} result`}>
-                    {(['pass', 'fail'] as const).map((r) => (
-                      <label key={r} className={`rt-seg ${r}${a.result === r ? ' on' : ''}`}>
-                        <input
-                          type="radio"
-                          name={it.key}
-                          aria-label={r === 'pass' ? 'Pass' : 'Fail'}
-                          checked={a.result === r}
-                          onChange={() => put(it.key, { result: r })}
-                        />
-                        {r === 'pass' ? (
-                          <Check size={20} weight="bold" aria-hidden="true" />
-                        ) : (
-                          <X size={20} weight="bold" aria-hidden="true" />
-                        )}
-                        <span>{r === 'pass' ? 'Pass' : 'Fail'}</span>
-                      </label>
-                    ))}
+                    {(['pass', 'fail'] as const).map((r) => {
+                      const disabled = it.kind === 'photo' && r === 'pass' && !afterEvidence
+                      return (
+                        <label
+                          key={r}
+                          className={`rt-seg ${r}${a.result === r ? ' on' : ''}${disabled ? ' disabled' : ''}`}
+                          aria-disabled={disabled}
+                        >
+                          <input
+                            type="radio"
+                            name={it.key}
+                            aria-label={r === 'pass' ? 'Pass' : 'Fail'}
+                            checked={a.result === r}
+                            disabled={disabled}
+                            onChange={() => {
+                              if (disabled) return
+                              put(it.key, { result: r })
+                            }}
+                          />
+                          {r === 'pass' ? (
+                            <Check size={20} weight="bold" aria-hidden="true" />
+                          ) : (
+                            <X size={20} weight="bold" aria-hidden="true" />
+                          )}
+                          <span>{r === 'pass' ? 'Pass' : 'Fail'}</span>
+                        </label>
+                      )
+                    })}
                   </div>
                   <label className="rt-field">
                     <span>
@@ -183,14 +304,18 @@ export function CheckForm({
         <div className="rt-buttons">
           <button
             className="btn primary"
-            disabled={!complete || failed > 0 || busy}
+            disabled={!complete || failed > 0 || busy || uploading || photoMissing}
             aria-describedby="rt-why"
             onClick={() => void submit('accepted')}
           >
             {signLabel}
           </button>
           {failed > 0 && (
-            <button className="btn danger" disabled={!complete || busy} onClick={() => void submit('rejected')}>
+            <button
+              className="btn danger"
+              disabled={!complete || busy || uploading}
+              onClick={() => void submit('rejected')}
+            >
               {failLabel}
             </button>
           )}

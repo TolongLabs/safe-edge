@@ -48,7 +48,9 @@ import {
   Uncertainty,
   User,
   WorkOrder,
+  WorkOrderDueDateChange,
   WorkOrderExternalError,
+  WorkOrderProgress,
   WorkOrderStatus
 } from './entities.ts'
 import { EventType, Webhook } from './events.ts'
@@ -366,9 +368,50 @@ export type SubmitWorkOrderRequest = z.infer<typeof SubmitWorkOrderRequest>
 
 export const CompleteWorkOrderRequest = named(
   'CompleteWorkOrderRequest',
-  z.object({ evidence: z.array(EvidenceRef), note: z.string() })
+  z.object({
+    evidence: z.array(EvidenceRef),
+    note: z.string(),
+    spent: Quote.nullable().optional(),
+    overspendReason: z.string().nullable().optional()
+  })
 )
 export type CompleteWorkOrderRequest = z.infer<typeof CompleteWorkOrderRequest>
+
+export const UpdateWorkOrderProgressRequest = named(
+  'UpdateWorkOrderProgressRequest',
+  z.object({
+    progress: WorkOrderProgress,
+    expectedDeliveryAt: Timestamp.nullable().optional(),
+    trackingNumber: z.string().nullable().optional(),
+    noTracking: z.boolean().optional()
+  })
+)
+export type UpdateWorkOrderProgressRequest = z.infer<typeof UpdateWorkOrderProgressRequest>
+
+export const ChangeWorkOrderDueDateRequest = named(
+  'ChangeWorkOrderDueDateRequest',
+  z.object({
+    dueAt: Timestamp,
+    reason: z.string().trim().min(1)
+  })
+)
+export type ChangeWorkOrderDueDateRequest = z.infer<typeof ChangeWorkOrderDueDateRequest>
+
+export const RepairJourney = named(
+  'RepairJourney',
+  z.object({
+    candidate: Candidate,
+    report: DamageReport.nullable(),
+    finding: Finding.nullable(),
+    workOrder: WorkOrder.nullable(),
+    remedy: Remedy.nullable(),
+    retest: Retest.nullable(),
+    planApprovedAt: Timestamp.nullable(),
+    assignedAt: Timestamp.nullable(),
+    startedAt: Timestamp.nullable()
+  })
+)
+export type RepairJourney = z.infer<typeof RepairJourney>
 
 export const RecordRetestRequest = named(
   'RecordRetestRequest',

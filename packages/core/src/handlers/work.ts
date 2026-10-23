@@ -12,6 +12,8 @@ type WorkOperation =
   | 'retryWorkOrderHandOff'
   | 'submitWorkOrder'
   | 'startWorkOrder'
+  | 'updateWorkOrderProgress'
+  | 'changeWorkOrderDueDate'
   | 'completeWorkOrder'
   | 'recordRetest'
   | 'recordClearance'
@@ -230,6 +232,90 @@ export const work: Handlers<WorkOperation> = {
     return ok(started)
   },
 
+  updateWorkOrderProgress: (tx, { params, body }) => {
+    const workOrder = tx.get('workOrders', params.id)
+    if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    if (workOrder.status !== 'in_progress') {
+      return tx.deny('invalid_transition', `${workOrder.id} is ${workOrder.status}, not in progress`, workOrder.id)
+    }
+    if (workOrder.installerUserId !== tx.actor.id) {
+      return tx.deny('role_forbidden', `${workOrder.id} is assigned to ${workOrder.installerUserId}`, workOrder.id)
+    }
+    const expectedDeliveryAt =
+      body.expectedDeliveryAt === undefined ? (workOrder.expectedDeliveryAt ?? null) : body.expectedDeliveryAt
+    const noTracking = body.noTracking ?? workOrder.noTracking ?? false
+    const suppliedTracking =
+      body.trackingNumber !== undefined && body.trackingNumber !== null && body.trackingNumber.trim() !== ''
+    if (noTracking && suppliedTracking) {
+      return tx.deny(
+        'invalid_transition',
+        `${workOrder.id} cannot say the supplier gave no tracking number and give one`,
+        workOrder.id
+      )
+    }
+    const trackingNumber = noTracking
+      ? null
+      : body.trackingNumber === undefined
+        ? (workOrder.trackingNumber ?? null)
+        : body.trackingNumber
+    const hasTracking = trackingNumber !== null && trackingNumber.trim() !== ''
+    if (body.progress === 'waiting_for_delivery') {
+      if (expectedDeliveryAt === null) {
+        return tx.deny(
+          'invalid_transition',
+          `${workOrder.id} needs an expected delivery date while waiting for delivery`,
+          workOrder.id
+        )
+      }
+      if (!noTracking && !hasTracking) {
+        return tx.deny(
+          'invalid_transition',
+          `${workOrder.id} needs a tracking number or an explicit no tracking number while waiting for delivery`,
+          workOrder.id
+        )
+      }
+    }
+    const updated: WorkOrder = {
+      ...workOrder,
+      progress: body.progress,
+      progressUpdatedAt: tx.now,
+      expectedDeliveryAt,
+      trackingNumber: noTracking ? null : trackingNumber,
+      noTracking
+    }
+    tx.put('workOrders', updated)
+    return ok(updated)
+  },
+
+  changeWorkOrderDueDate: (tx, { params, body }) => {
+    const workOrder = tx.get('workOrders', params.id)
+    if (!workOrder) return tx.notFound(`No work order ${params.id}`)
+    if (workOrder.status !== 'submitted' && workOrder.status !== 'in_progress') {
+      return tx.deny(
+        'invalid_transition',
+        `${workOrder.id} is ${workOrder.status}; only a submitted or in-progress work order can change its due date`,
+        workOrder.id
+      )
+    }
+    if (workOrder.installerUserId !== tx.actor.id) {
+      return tx.deny('role_forbidden', `${workOrder.id} is assigned to ${workOrder.installerUserId}`, workOrder.id)
+    }
+    const reason = body.reason.trim()
+    if (reason === '') {
+      return tx.deny('invalid_transition', `${workOrder.id} needs a reason to change its due date`, workOrder.id)
+    }
+    const updated: WorkOrder = {
+      ...workOrder,
+      dueAt: body.dueAt,
+      dueAtChanges: [
+        ...(workOrder.dueAtChanges ?? []),
+        { from: workOrder.dueAt, to: body.dueAt, reason, byUserId: tx.actor.id, at: tx.now }
+      ]
+    }
+    tx.put('workOrders', updated)
+    return ok(updated)
+  },
+
   completeWorkOrder: (tx, { params, body }) => {
     const workOrder = tx.get('workOrders', params.id)
     if (!workOrder) return tx.notFound(`No work order ${params.id}`)
@@ -239,12 +325,40 @@ export const work: Handlers<WorkOperation> = {
     if (workOrder.installerUserId !== tx.actor.id) {
       return tx.deny('role_forbidden', `${workOrder.id} is assigned to ${workOrder.installerUserId}`, workOrder.id)
     }
+    const quote =
+      workOrder.remedyId === null
+        ? null
+        : (() => {
+            const remedy = tx.get('remedies', workOrder.remedyId)
+            return remedy && remedy.quote !== 'quote_needed' ? remedy.quote : null
+          })()
+    if (body.spent !== undefined && body.spent !== null && quote !== null) {
+      if (body.spent.currency !== quote.currency) {
+        return tx.deny(
+          'invalid_transition',
+          `${workOrder.id} was quoted in ${quote.currency}; the amount spent is in ${body.spent.currency}`,
+          workOrder.id
+        )
+      }
+      if (
+        body.spent.amount > quote.amount * 1.2 &&
+        (body.overspendReason === undefined || body.overspendReason === null || body.overspendReason.trim() === '')
+      ) {
+        return tx.deny(
+          'invalid_transition',
+          `${workOrder.id} spent more than 20% over the quote; a reason is required`,
+          workOrder.id
+        )
+      }
+    }
     const completed: WorkOrder = {
       ...workOrder,
       status: 'completed',
       completedAt: tx.now,
       completionEvidence: body.evidence,
-      notes: body.note === '' ? workOrder.notes : `${workOrder.notes}\n\nInstaller: ${body.note}`
+      notes: body.note === '' ? workOrder.notes : `${workOrder.notes}\n\nInstaller: ${body.note}`,
+      ...(body.spent !== undefined && { spent: body.spent }),
+      ...(body.overspendReason !== undefined && { overspendReason: body.overspendReason })
     }
     tx.put('workOrders', completed)
     // Repaired, and now owed a re-test by someone else.

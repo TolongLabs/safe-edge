@@ -1,8 +1,10 @@
 import { WarningCircle } from '@phosphor-icons/react'
-import type { WorkOrder } from '@safe-edge/contracts'
+import type { RepairJourney, WorkOrder } from '@safe-edge/contracts'
+import { useEffect, useState } from 'react'
 import { NotInSession, Screen } from '../../shell/Shell'
-import { can, useSignedIn, useStore } from '../../store'
+import { can, client, useSignedIn, useStore, type Snapshot } from '../../store'
 import { must, plain } from '../fix-lens/lens'
+import { StageTracker } from '../shared/StageTracker'
 import { Checklist } from './Checklist'
 import { Clearance } from './Clearance'
 import { Held } from './Held'
@@ -17,10 +19,42 @@ const fixedWhen = (iso: string) => {
   return `${d.toDateString() === new Date().toDateString() ? 'today' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} at ${time}`
 }
 
+function useJourney(candidateId: string | null, s: Snapshot) {
+  const [state, setState] = useState<{ journey: RepairJourney; journeys: RepairJourney[] } | { error: Error } | null>(
+    null
+  )
+  useEffect(() => {
+    let live = true
+    setState(null)
+    if (!candidateId) return
+    const historyIds = [
+      ...new Set(
+        s.workOrders
+          .filter((w) => w.status === 'accepted')
+          .flatMap((w) => s.findings.filter((f) => f.id === w.findingId).map((f) => f.candidateId))
+      )
+    ]
+    Promise.all([
+      client().getRepairJourney({ params: { id: candidateId } }),
+      Promise.all(historyIds.map((id) => client().getRepairJourney({ params: { id } })))
+    ]).then(
+      ([journey, journeys]) => live && setState({ journey, journeys }),
+      (error: unknown) => live && setState({ error: error instanceof Error ? error : new Error(String(error)) })
+    )
+    return () => {
+      live = false
+    }
+  }, [candidateId, s])
+  return state && 'journey' in state
+    ? { journey: state.journey, journeys: state.journeys, error: null }
+    : { journey: null, journeys: [], error: state && 'error' in state ? state.error : null }
+}
+
 function Detail({ workOrder }: { workOrder: WorkOrder }) {
   const s = useStore().snapshot!
   const { user } = useSignedIn()
   const { repair, error, retry } = useRepair(workOrder)
+  const { journey, journeys, error: journeyError } = useJourney(repair?.finding.candidateId ?? null, s)
   const who = (id: string | null) =>
     plain(
       must(
@@ -57,7 +91,9 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
       </div>
     )
   const { finding, segment, assetName, closure } = repair
-  const meta = must(s.metas[finding.candidateId], `sample details for ${finding.candidateId}`)
+  const meta = s.metas[finding.candidateId]
+  const scene = meta?.scene ?? null
+  const title = meta?.title ?? journey?.report?.description ?? 'Repair check'
   const remedy = closure.remedies[0]
   const status = workOrder.status
   const mine = user.id === workOrder.installerUserId
@@ -69,7 +105,7 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
   } else if (status === 'submitted' || status === 'in_progress') {
     body =
       can('startWorkOrder') && mine ? (
-        <Installer workOrder={workOrder} remedy={remedy} closure={closure} finding={finding} scene={meta.scene} />
+        <Installer workOrder={workOrder} remedy={remedy} closure={closure} finding={finding} scene={scene} />
       ) : (
         card(
           <p>
@@ -86,7 +122,7 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
         finding={finding}
         segment={segment}
         closure={closure}
-        meta={meta}
+        meta={meta ?? null}
         installerName={who(workOrder.installerUserId)}
         fixedAt={fixedWhen(must(workOrder.completedAt ?? undefined, 'when the repair was completed'))}
       />
@@ -107,7 +143,6 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
       )
     )
   } else if (status === 'accepted') {
-    // An expiring pass was issued too.
     const issued = pass !== undefined && (pass.state === 'valid' || pass.state === 'expiring')
     body = card(
       <>
@@ -133,7 +168,7 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
     )
   }
   return frame(
-    meta.title,
+    title,
     <>
       <p className="rt-help">
         {segment.name.includes(assetName) ? segment.name : `${segment.name} · ${assetName}`} ·{' '}
@@ -141,6 +176,18 @@ function Detail({ workOrder }: { workOrder: WorkOrder }) {
         {workOrder.dueAt &&
           ` · due ${new Date(workOrder.dueAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' })}`}
       </p>
+      {journey?.report?.description && <p className="rt-help">{journey.report.description}</p>}
+      {journeyError ? (
+        <p className="rt-help" role="status">
+          Could not load the repair stages: {journeyError.message}
+        </p>
+      ) : journey ? (
+        <StageTracker journey={journey} journeys={journeys} users={s.users} />
+      ) : (
+        <p className="rt-help" role="status">
+          Loading the repair stages…
+        </p>
+      )}
       {body}
     </>
   )

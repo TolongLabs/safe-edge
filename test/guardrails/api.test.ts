@@ -122,6 +122,7 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     // Refused requests must fail access checks before report lookup.
     'damage-reports': 'drpt_auth_refusal',
     candidates: proposed.id,
+    'damage-reports': 'dmg_placeholder',
     notices: notice.id,
     'patrol-plans': plan.id,
     patrols: patrol.id,
@@ -281,6 +282,7 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     'patrol-plans': flying.id,
     patrols: patrol.id,
     candidates: played.candidate.id,
+    'damage-reports': 'dmg_placeholder',
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
     openings: closure.openings[0].id,
@@ -538,6 +540,7 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     // Refused requests must fail access checks before report lookup.
     'damage-reports': 'drpt_auth_refusal',
     candidates: played.candidate.id,
+    'damage-reports': damage.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
     openings: closure.openings[0].id,
@@ -599,6 +602,8 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
   // Every row of the operations table is accounted for: exercised above as an allowed write, a read (GET writes
   // nothing; refused reads are with the refusals), or listed here with the reason it is not. A new row fails here.
   const notExercised: Partial<Record<OperationId, string>> = {
+    updateWorkOrderProgress: 'tracker paths in apps/api/test/tracker.test.ts',
+    changeWorkOrderDueDate: 'tracker paths in apps/api/test/tracker.test.ts',
     triageImages: 'answers 501 until #74',
     resetDemo: 'the in-browser demo only; the HTTP API has no such route'
   }

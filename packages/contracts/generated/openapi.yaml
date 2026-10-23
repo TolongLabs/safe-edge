@@ -677,6 +677,36 @@ paths:
         - system
       x-safe-edge-agent-scope: inspection.read
       x-safe-edge-events: []
+  /candidates/{id}/journey:
+    get:
+      operationId: getRepairJourney
+      summary: Repair journey for a candidate
+      description: "Roles: any. Agents need scope `inspection.read`."
+      tags:
+        - candidates
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^cand_
+      responses:
+        "200":
+          description: Repair journey for a candidate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairJourney"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles: any
+      x-safe-edge-agent-scope: inspection.read
+      x-safe-edge-events: []
   /damage-reports:
     get:
       operationId: listDamageReports
@@ -1745,6 +1775,84 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkOrder"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - installer
+      x-safe-edge-events: []
+  /work-orders/{id}/progress:
+    post:
+      operationId: updateWorkOrderProgress
+      summary: Update work order progress
+      description: "Roles: installer. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateWorkOrderProgressRequest"
+      responses:
+        "200":
+          description: Update work order progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Denied"
+        "404":
+          $ref: "#/components/responses/NotFound"
+      x-safe-edge-roles:
+        - installer
+      x-safe-edge-events: []
+  /work-orders/{id}/due-date:
+    post:
+      operationId: changeWorkOrderDueDate
+      summary: Change work order due date
+      description: "Roles: installer. Agents are refused."
+      tags:
+        - work-orders
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: ^wo_
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeWorkOrderDueDateRequest"
+      responses:
+        "200":
+          description: Change work order due date
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkOrder"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
         "401":
           $ref: "#/components/responses/Unauthenticated"
         "403":
@@ -4418,6 +4526,39 @@ components:
         - message
         - at
       additionalProperties: false
+    WorkOrderProgress:
+      type: string
+      enum:
+        - buying_materials
+        - waiting_for_delivery
+        - fixing
+    WorkOrderDueDateChange:
+      type: object
+      properties:
+        from:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        to:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          minLength: 1
+        byUserId:
+          type: string
+          pattern: ^usr_
+        at:
+          type: string
+          format: date-time
+      required:
+        - from
+        - to
+        - reason
+        - byUserId
+        - at
+      additionalProperties: false
     WorkOrder:
       type: object
       properties:
@@ -4472,6 +4613,38 @@ components:
             - $ref: "#/components/schemas/WorkOrderExternalError"
             - type: "null"
           description: Why handing this work order to the work-order system failed; recorded by the system, cleared when a manager or engineer retries it
+        progress:
+          anyOf:
+            - $ref: "#/components/schemas/WorkOrderProgress"
+            - type: "null"
+        expectedDeliveryAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        trackingNumber:
+          type:
+            - string
+            - "null"
+        noTracking:
+          type: boolean
+        progressUpdatedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        dueAtChanges:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkOrderDueDateChange"
+        spent:
+          anyOf:
+            - $ref: "#/components/schemas/Quote"
+            - type: "null"
+        overspendReason:
+          type:
+            - string
+            - "null"
         createdAt:
           type: string
           format: date-time
@@ -5747,9 +5920,100 @@ components:
             $ref: "#/components/schemas/EvidenceRef"
         note:
           type: string
+        spent:
+          anyOf:
+            - $ref: "#/components/schemas/Quote"
+            - type: "null"
+        overspendReason:
+          type:
+            - string
+            - "null"
       required:
         - evidence
         - note
+      additionalProperties: false
+    UpdateWorkOrderProgressRequest:
+      type: object
+      properties:
+        progress:
+          $ref: "#/components/schemas/WorkOrderProgress"
+        expectedDeliveryAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        trackingNumber:
+          type:
+            - string
+            - "null"
+        noTracking:
+          type: boolean
+      required:
+        - progress
+      additionalProperties: false
+    ChangeWorkOrderDueDateRequest:
+      type: object
+      properties:
+        dueAt:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          minLength: 1
+      required:
+        - dueAt
+        - reason
+      additionalProperties: false
+    RepairJourney:
+      type: object
+      properties:
+        candidate:
+          $ref: "#/components/schemas/Candidate"
+        report:
+          anyOf:
+            - $ref: "#/components/schemas/DamageReport"
+            - type: "null"
+        finding:
+          anyOf:
+            - $ref: "#/components/schemas/Finding"
+            - type: "null"
+        workOrder:
+          anyOf:
+            - $ref: "#/components/schemas/WorkOrder"
+            - type: "null"
+        remedy:
+          anyOf:
+            - $ref: "#/components/schemas/Remedy"
+            - type: "null"
+        retest:
+          anyOf:
+            - $ref: "#/components/schemas/Retest"
+            - type: "null"
+        planApprovedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        assignedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        startedAt:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+      required:
+        - candidate
+        - report
+        - finding
+        - workOrder
+        - remedy
+        - retest
+        - planApprovedAt
+        - assignedAt
+        - startedAt
       additionalProperties: false
     RecordRetestRequest:
       type: object

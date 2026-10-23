@@ -18,6 +18,7 @@ type ReadOperation =
   | 'listCandidates'
   | 'getFalseFlags'
   | 'getCandidate'
+  | 'getRepairJourney'
   | 'listFindings'
   | 'getFinding'
   | 'listTasks'
@@ -84,6 +85,47 @@ export const reads: Handlers<ReadOperation> = {
   },
   listFindings: (tx, { query }) =>
     ok(tx.all('findings').filter((f) => matches(f.status, query.status) && matches(f.segmentId, query.segmentId))),
+  getRepairJourney: (tx, { params }) => {
+    const candidate = tx.get('candidates', params.id)
+    if (!candidate) return tx.notFound(`No candidate ${params.id}`)
+    const report =
+      tx
+        .all('damageReports')
+        .filter((r) => r.candidateId === candidate.id)
+        .at(-1) ?? null
+    const finding =
+      tx
+        .all('findings')
+        .filter((f) => f.candidateId === candidate.id)
+        .at(-1) ?? null
+    const workOrder = finding
+      ? (tx
+          .all('workOrders')
+          .filter((w) => w.findingId === finding.id)
+          .at(-1) ?? null)
+      : null
+    const remedy = workOrder?.remedyId == null ? null : (tx.get('remedies', workOrder.remedyId) ?? null)
+    const retest =
+      tx
+        .all('retests')
+        .filter((r) => (workOrder !== null && r.workOrderId === workOrder.id) || r.candidateId === candidate.id)
+        .at(-1) ?? null
+    const at = (action: string, subjectId: string | null) =>
+      subjectId === null
+        ? null
+        : (tx.audit(subjectId).findLast((e) => e.action === action && e.decision === 'allowed')?.at ?? null)
+    return ok({
+      candidate,
+      report,
+      finding,
+      workOrder,
+      remedy,
+      retest,
+      planApprovedAt: at('approveRemedy', remedy?.id ?? null),
+      assignedAt: at('submitWorkOrder', workOrder?.id ?? null),
+      startedAt: at('startWorkOrder', workOrder?.id ?? null)
+    })
+  },
   getFinding: (tx, { params }) => {
     const finding = tx.get('findings', params.id)
     return finding ? ok(finding) : tx.notFound(`No finding ${params.id}`)
