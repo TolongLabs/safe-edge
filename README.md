@@ -15,6 +15,8 @@
     <br />
     <a href="https://safe-edge-two.vercel.app"><strong>Live Demo &rarr;</strong></a>
     &middot;
+    <a href="https://youtu.be/Fv841z0VsMc"><strong>Watch the Video &rarr;</strong></a>
+    &middot;
     <a href="#screenshots">Screenshots</a>
     &middot;
     <a href="https://github.com/TolongLabs/safe-edge/issues/new?labels=bug">Report a Bug</a>
@@ -77,7 +79,7 @@ Safe Edge is built to keep the water edges in Sime Darby Property (SDP) township
 
 This repository is the hackathon prototype: a web app, a 3D simulation of City of Elmina built from OpenStreetMap, a REST API, a TypeScript SDK and an MCP server. Flights, detections and repairs are simulated, and every screen says so.
 
-Built for the [Sime Darby Property University Hackathon 2026](https://simedarbyproperty.com/universityhackathon/), "Township of Tomorrow", in the People track.
+Built for the [Sime Darby Property University Hackathon 2026](https://simedarbyproperty.com/universityhackathon/), "Township of Tomorrow", in the People track. The [presentation video](https://youtu.be/Fv841z0VsMc) walks through the pitch and a live demo in about four minutes.
 
 <p align="right"><a href="#readme-top">&uarr;</a></p>
 
