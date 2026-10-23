@@ -70,7 +70,7 @@ function Lens({ finding }: { finding: Finding }) {
   useEffect(() => {
     let live = true
     setFetched(null)
-    if (cachedEvidence) return
+    if (cachedEvidence || meta) return
     client()
       .getCandidate({ params: { id: finding.candidateId } })
       .then(
@@ -90,10 +90,10 @@ function Lens({ finding }: { finding: Finding }) {
     return () => {
       live = false
     }
-  }, [cachedEvidence, finding.candidateId, user.id])
+  }, [cachedEvidence, finding.candidateId, user.id, meta])
   const loaded = fetched?.candidateId === finding.candidateId && fetched.userId === user.id ? fetched : null
   const evidence = cachedEvidence ?? loaded?.evidence
-  const evidenceLoading = !cachedEvidence && !loaded
+  const evidenceLoading = !meta && !cachedEvidence && !loaded
   const evidenceError = loaded?.error
   const image = evidence?.observations.find((o) => o.image)?.image ?? null
   const title = meta?.title ?? report?.description ?? 'Reported repair'
