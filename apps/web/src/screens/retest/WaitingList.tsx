@@ -74,7 +74,10 @@ export function WaitingList() {
                   s.findings.find((f) => f.id === w.findingId),
                   `finding ${w.findingId}`
                 )
-                const title = must(s.metas[finding.candidateId], `sample details for ${finding.candidateId}`).title
+                const title =
+                  s.metas[finding.candidateId]?.title ??
+                  s.damageReports.find((report) => report.candidateId === finding.candidateId)?.description ??
+                  'Reported repair'
                 const mine = forInstaller && user.id === w.installerUserId
                 const action =
                   w.status === 'completed'

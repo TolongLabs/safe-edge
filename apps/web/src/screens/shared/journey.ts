@@ -37,29 +37,22 @@ export type DerivedStages = {
 }
 
 const KL = 'Asia/Kuala_Lumpur'
+const fullDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: KL })
+const shortDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: KL })
 
 /** A real record date in park time, or null when the record has no date. */
 export const journeyDate = (iso: string | null | undefined): string | null => {
   if (!iso) return null
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return null
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: KL
-  }).format(d)
+  return fullDate.format(d)
 }
 
 export const journeyShortDate = (iso: string | null | undefined): string | null => {
   if (!iso) return null
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return null
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: KL
-  }).format(d)
+  return shortDate.format(d)
 }
 
 const plainName = (name: string) => name.replace(/\s*\([^)]*\)$/, '')
@@ -101,24 +94,16 @@ const progressStep = (
   label: string
 ): StageStep => {
   if (!workOrder) return { label, state: 'todo', detail: null }
-  const done = workOrder.completedAt !== null || ['completed', 'accepted', 'rejected'].includes(workOrder.status)
-  if (done) return { label, state: 'done', detail: journeyDate(workOrder.completedAt) }
-  const progress = workOrder.progress ?? null
-  const order = ['buying_materials', 'waiting_for_delivery', 'fixing']
-  const current = progress ? order.indexOf(progress) : -1
-  const index = order.indexOf(step)
-  if (progress === step) {
-    return {
-      label,
-      state: 'now',
-      detail:
-        step === 'waiting_for_delivery'
-          ? `${waitingWords(workOrder)}${workOrder.progressUpdatedAt ? ` · ${journeyDate(workOrder.progressUpdatedAt)}` : ''}`
-          : journeyDate(workOrder.progressUpdatedAt)
-    }
+  const completed = ['completed', 'accepted', 'rejected'].includes(workOrder.status)
+  if (workOrder.progress !== step) return { label, state: 'todo', detail: 'Not recorded' }
+  return {
+    label,
+    state: completed ? 'done' : 'now',
+    detail:
+      step === 'waiting_for_delivery'
+        ? `${waitingWords(workOrder)}${workOrder.progressUpdatedAt ? ` · ${journeyDate(workOrder.progressUpdatedAt)}` : ''}`
+        : journeyDate(workOrder.progressUpdatedAt)
   }
-  if (current >= 0 && index < current) return { label, state: 'done', detail: null }
-  return { label, state: 'todo', detail: null }
 }
 
 const spentView = (journey: RepairJourney): SpentView | null => {

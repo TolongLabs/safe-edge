@@ -1,350 +1,322 @@
+import type { DamageIssueType, EvidenceRef } from '@safe-edge/contracts'
 import type { Page } from '@playwright/test'
+import type { MemoryClient } from '@safe-edge/sdk'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { expect, test } from './fixtures'
+import { uploadRetestPhoto } from './repair-photo'
 
-// Every screen here is a phone screen.
-test.use({ viewport: { width: 390, height: 844 } })
+type Presenter = { demo: MemoryClient; refresh: () => Promise<void> }
 
+test.use({ viewport: { width: 390, height: 844 }, actionTimeout: 10_000 })
+const beforePhoto = `data:image/jpeg;base64,${readFileSync(join(__dirname, 'fixtures', 'report-no-exif.jpg')).toString('base64')}`
+const description = 'Tracker report: a fence panel is missing beside the lake.'
 const profile = (page: Page) => page.getByRole('banner').getByRole('button', { expanded: false })
 async function signInAs(page: Page, name: string) {
   await profile(page).click()
   await page.getByRole('button', { name: new RegExp(`^${name}`) }).click()
+  await page.keyboard.press('Escape')
 }
+const stages = (page: Page) => page.getByRole('region', { name: 'Repair stages', exact: true }).first()
 
-// S1 confirmed by the manager, interim protection done by the crew, then Fix Lens opened from the Inbox.
-async function openLens(page: Page) {
+/** Real core operations set up the people and records; every assertion and progress edit uses the UI. */
+async function repair(page: Page, submitted = true, issueType: DamageIssueType = 'fence_missing', assigned = true) {
   await page.goto('demo/')
-  await page
-    .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Fence panel 4/ })
-    .click()
-  await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
-  await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()
-  await signInAs(page, 'Siti Aminah')
-  await page.getByRole('button', { name: 'Mark done' }).click()
-  await expect(page.getByText('Marked done by Siti Aminah')).toBeVisible()
-  await signInAs(page, 'Farah Hashim')
-  await page.getByRole('link', { name: 'Choose a fix' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Fix Lens' })).toBeVisible()
-}
-
-// S2: the panel gap by clicking the photo, the fence end by the form.
-async function markOpenings(page: Page) {
-  await page.getByRole('textbox', { name: 'Size' }).fill('120')
-  const photo = page.getByRole('img', { name: 'Sample illustration of the finding' })
-  const box = (await photo.boundingBox())!
-  await photo.click({ position: { x: box.width * 0.45, y: box.height * 0.6 } })
-  await expect(page.getByRole('img', { name: 'Opening 1, Panel gap, 120 cm' })).toBeVisible()
-  await page.getByLabel('Add an opening: type').selectOption({ label: 'Fence end' })
-  await page.getByLabel('Across the photo').fill('90')
-  await page.getByLabel('Down the photo').fill('60')
-  await page.getByRole('textbox', { name: 'Size' }).fill('45')
-  await page.getByRole('button', { name: 'Add opening' }).click()
-  await expect(page.getByRole('img', { name: 'Opening 2, Fence end, 45 cm' })).toBeVisible()
-}
-
-async function propose(page: Page, label: string, blocks: string[], test: string) {
-  await page.getByLabel('Name of the fix').fill(label)
-  for (const b of blocks) await page.getByRole('checkbox', { name: b }).check()
-  await page.getByLabel('Quantity of').fill('Fence panel')
-  await page.getByLabel('Amount', { exact: true }).fill('1')
-  await page.getByLabel('Unit', { exact: true }).fill('panel')
-  await page.getByLabel('Acceptance test').fill(test)
-  await page.getByRole('button', { name: 'Add this fix' }).click()
-  await expect(page.getByRole('radio', { name: new RegExp(label) })).not.toBeChecked()
-}
-
-async function compare(page: Page) {
-  await markOpenings(page)
-  await page.getByRole('button', { name: 'Next: compare fixes' }).click()
-  await propose(page, 'Replace panel 4', ['Opening 1, Panel gap'], 'No gap over 10 cm at panel 4')
-  await propose(
-    page,
-    'Replace panel 4 and extend the fence end',
-    ['Opening 1, Panel gap', 'Opening 2, Fence end'],
-    'No gap over 10 cm along the run and around both fence ends'
-  )
-  await page.getByRole('radio', { name: /^B ·/ }).check()
-}
-
-async function sendFix(page: Page) {
-  await signInAs(page, 'Lim Wei Jie')
-  await page.getByRole('button', { name: 'Approve fix B as Lim Wei Jie' }).click()
-  await expect(page.getByText('Approved by Lim Wei Jie')).toBeVisible()
-  await signInAs(page, 'Farah Hashim')
-  await page.getByRole('button', { name: /^Send fix B to .+ crew$/ }).click()
-  await expect(page.getByRole('heading', { name: /^Fix B sent to .+ crew$/ })).toBeVisible()
-}
-
-// S1 through to a submitted work order: the manager chose fix B and sent it to the installer.
-async function toSubmitted(page: Page) {
-  await openLens(page)
-  await compare(page)
-  await sendFix(page)
-}
-
-// A path report filed through the presenter, on the server segment the demo seed already carries.
-async function reportPathDamage(page: Page) {
-  await page.evaluate(async () => {
-    const demo = (
-      window as unknown as {
-        safeEdgeDemo: {
-          demo: {
-            as: (id: string) => {
-              recordObservation: (call: unknown) => Promise<{ id: string }>
-              reportDamage: (call: unknown) => Promise<{ id: string }>
-            }
+  await expect(page.getByRole('heading', { name: 'Fence panel 4 missing' })).toBeVisible()
+  return page.evaluate(
+    async ({ submitted, issueType, beforePhoto, description, assigned }) => {
+      const { demo: d, refresh } = (window as unknown as { safeEdgeDemo: Presenter }).safeEdgeDemo
+      const crew = d.as('usr_crew'),
+        manager = d.as('usr_manager'),
+        engineer = d.as('usr_engineer')
+      const segmentId = 'seg_866518980_11'
+      const segment = (await d.listSegments()).find((s) => s.id === segmentId)!
+      const viewpoint = segment.viewpoints[1]!
+      for (const c of await manager.listCandidates()) {
+        if (c.status === 'candidate' && c.tier !== 3)
+          await manager.decideCandidate({
+            params: { id: c.id },
+            body: { decision: 'reject', reason: 'Reviewed separately before this repair test.' }
+          })
+      }
+      const image = {
+        id: 'evd_tracker_before',
+        mediaType: 'image/jpeg',
+        uri: beforePhoto,
+        sha256: null,
+        capturedAt: new Date().toISOString(),
+        simulated: true,
+        source: 'fixture'
+      } satisfies EvidenceRef
+      const obs = await crew.recordObservation({
+        body: {
+          patrolId: null,
+          segmentId,
+          viewpointId: viewpoint.id,
+          captureSource: 'phone',
+          image,
+          pose: viewpoint.pose,
+          capturedAt: image.capturedAt,
+          quality: { sharpness: 0.9, alignmentResidualPx: 1.2, occlusion: 0.05 },
+          privacyAction: 'none',
+          simulated: true
+        }
+      })
+      const candidate = await crew.reportDamage({
+        body: {
+          segmentId,
+          observationIds: [obs.id],
+          inventoryItemId: null,
+          itemStatus: null,
+          class: 'worn_path',
+          rationale: description,
+          simulated: true,
+          report: {
+            description,
+            observedAt: image.capturedAt,
+            issueType,
+            urgency: 'high',
+            viewpointId: viewpoint.id,
+            where: null,
+            timeSource: 'manual',
+            issueTypeOther: null,
+            action: null,
+            actionNote: null,
+            cause: 'weather'
           }
         }
+      })
+      if (!submitted) {
+        await refresh()
+        return { candidateId: candidate.id, findingId: '', workOrderId: '', dueAt: '' }
       }
-    ).safeEdgeDemo.demo
-    const crew = demo.as('usr_crew')
-    const observation = await crew.recordObservation({
-      body: {
-        patrolId: null,
-        segmentId: 'seg_866518980_10',
-        viewpointId: null,
-        captureSource: 'phone',
-        image: null,
-        pose: null,
-        capturedAt: new Date().toISOString(),
-        quality: { sharpness: 0.9, alignmentResidualPx: 1.2, occlusion: 0.05 },
-        privacyAction: 'none',
-        simulated: true
-      }
-    })
-    await demo.as('usr_manager').reportDamage({
-      body: {
-        segmentId: 'seg_866518980_10',
-        observationIds: [observation.id],
-        inventoryItemId: null,
-        itemStatus: null,
-        class: 'worn_path',
-        rationale: 'The path is broken by the boardwalk',
-        simulated: true,
-        report: {
-          description: 'The path is broken by the boardwalk',
-          observedAt: new Date().toISOString(),
-          issueType: 'path_broken',
-          urgency: 'medium',
-          viewpointId: null,
-          where: null,
-          timeSource: null,
-          issueTypeOther: null,
-          action: null,
-          actionNote: null,
-          cause: 'wear',
-          prevention: null
+      await manager.decideCandidate({ params: { id: candidate.id }, body: { decision: 'confirm', severity: 'high' } })
+      const finding = (await manager.listFindings()).find((f) => f.candidateId === candidate.id)!
+      const task = (await crew.listTasks()).find((t) => t.findingId === finding.id && t.kind === 'interim_protection')!
+      await crew.completeTask({ params: { id: task.id } })
+      const opening = await manager.createOpening({
+        body: { segmentId, type: 'fence_gap', photoMarks: [{ evidenceId: image.id, x: 0.5, y: 0.5 }], measuredMm: 1200 }
+      })
+      await manager.createRoute({
+        body: {
+          segmentId,
+          fromFeature: { kind: 'play_area', label: 'Reported fence approach' },
+          openingIds: [opening.id],
+          status: 'open'
         }
-      }
-    })
+      })
+      const remedy = await engineer.createRemedy({
+        body: {
+          segmentId,
+          type: 'panel_replacement',
+          label: 'Replace the reported panel',
+          blocksOpeningIds: [opening.id],
+          quantities: [{ item: 'Fence panel', amount: 1, unit: 'panel' }],
+          acceptanceTest: 'No gap over 100 mm',
+          quote: { amount: 500, currency: 'MYR', date: new Date().toISOString().slice(0, 10) }
+        }
+      })
+      await engineer.approveRemedy({ params: { id: remedy.id } })
+      const order = (await manager.listWorkOrders()).find((w) => w.findingId === finding.id)!
+      await manager.updateWorkOrder({ params: { id: order.id }, body: { remedyId: remedy.id } })
+      const dueAt = new Date(Date.now() + 3 * 86_400_000).toISOString()
+      if (assigned)
+        await manager.submitWorkOrder({ params: { id: order.id }, body: { installerUserId: 'usr_installer', dueAt } })
+      await refresh()
+      return { candidateId: candidate.id, findingId: finding.id, workOrderId: order.id, dueAt }
+    },
+    { submitted, issueType, beforePhoto, description, assigned }
+  )
+}
+
+async function openReportedCard(page: Page, decided = true) {
+  await page.goto('demo/#/inbox')
+  await page
+    .getByRole('navigation', { name: 'Inbox list' })
+    .getByRole('list', { name: decided ? 'Decided' : 'Open', exact: true })
+    .getByRole('button', { name: /Playground path, fence line/ })
+    .last()
+    .click()
+}
+async function openInstaller(page: Page, workOrderId: string) {
+  await signInAs(page, 'Hafiz Rahman')
+  await page.goto(`demo/#/retest/${workOrderId}`)
+  await page.getByRole('button', { name: 'Start work', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Repair started' })).toBeVisible()
+}
+
+test('AC230 one assigned journey appears in Inbox, the work order and the walker’s My reports; folds use mouse and Enter', async ({
+  page
+}) => {
+  const ids = await repair(page)
+  await openReportedCard(page)
+  await expect(stages(page)).toContainText('Now with the installer: Hafiz Rahman')
+  await expect(stages(page).locator('.nowline')).toContainText('Assigned')
+  const installer = stages(page)
+    .locator('details')
+    .filter({ has: page.locator('summary .nm', { hasText: /^Installer$/ }) })
+  await expect(installer).toHaveAttribute('open', '')
+  await installer.locator('summary').click()
+  await expect(installer).not.toHaveAttribute('open')
+  await installer.locator('summary').focus()
+  await page.keyboard.press('Enter')
+  await expect(installer).toHaveAttribute('open', '')
+  await expect(installer.getByText('Buying materials', { exact: true })).toBeVisible()
+  await page.goto(`demo/#/retest/${ids.workOrderId}`)
+  await expect(stages(page)).toContainText('Now with the installer: Hafiz Rahman')
+  await signInAs(page, 'Siti Aminah')
+  await page.goto('demo/#/capture')
+  const reports = page.getByRole('region', { name: 'My reports', exact: true })
+  await expect(reports).toContainText(description)
+  await expect(reports).toContainText('Now with the installer: Hafiz Rahman')
+  await expect(reports.locator('.nowline')).toContainText('Assigned')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({ path: 'test-results/tracker-my-reports-phone.png', fullPage: true })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.screenshot({ path: 'test-results/tracker-my-reports-phone-dark.png', fullPage: true })
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({ path: 'test-results/tracker-my-reports-desktop-dark.png', fullPage: true })
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.screenshot({ path: 'test-results/tracker-my-reports-desktop.png', fullPage: true })
+})
+
+for (const decision of ['reject', 'recapture'] as const) {
+  test(`AC230 a ${decision} report ends truthfully without a work order or forecast crash`, async ({ page }) => {
+    await repair(page, false)
+    await openReportedCard(page, false)
+    if (decision === 'reject') {
+      await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
+      await page.getByLabel('Reason for rejecting').fill('The panel was moved for planned maintenance.')
+      await page.getByRole('button', { name: 'Submit rejection' }).click()
+    } else await page.getByRole('button', { name: 'Look again', exact: true }).click()
+    await expect(stages(page)).toContainText(decision === 'reject' ? 'Not a problem' : 'Look again')
+    await expect(stages(page)).not.toContainText('Now with the installer')
+    await expect(page.getByRole('alert')).toHaveCount(0)
   })
 }
 
-// The buoy flag must be decided first: a pass is issued only once no other Tier 2 flag is open.
-async function rejectBuoy(page: Page) {
-  await page.goto('demo/#/inbox')
-  await page
-    .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /Ring buoy/ })
-    .click()
-  await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
-  await page.getByLabel('Reason for rejecting').fill('The buoy was moved for the swim lesson')
-  await page.getByRole('button', { name: 'Submit rejection' }).click()
-  await expect(page.getByText(/Rejected by Farah Hashim/)).toBeVisible()
-}
+test('AC231 and AC232 installer progress, delivery and reasoned due-date changes reach the manager', async ({
+  page
+}) => {
+  const ids = await repair(page)
+  await openInstaller(page, ids.workOrderId)
+  await page.getByRole('combobox', { name: 'Repair progress', exact: true }).selectOption('buying_materials')
+  await page.getByRole('button', { name: 'Save progress', exact: true }).click()
+  await expect(stages(page).locator('.nowline')).toContainText('Buying materials')
+  await page.getByRole('combobox', { name: 'Repair progress', exact: true }).selectOption('waiting_for_delivery')
+  await page.getByLabel('Expected delivery date').fill('2026-10-31')
+  await page.getByLabel('Shipment tracking number').fill('ABC123')
+  await page.getByRole('button', { name: 'Save progress', exact: true }).click()
+  await expect(stages(page).locator('.nowline')).toContainText('tracking ABC123')
+  await expect(stages(page).locator('.nowline')).toContainText('expected 31 Oct 2026')
+  await page.getByLabel('The supplier gave no tracking number').check()
+  await page.getByRole('button', { name: 'Save progress', exact: true }).click()
+  await expect(stages(page).locator('.nowline')).toContainText('supplier gave no tracking number')
+  await page.getByRole('combobox', { name: 'Repair progress', exact: true }).selectOption('fixing')
+  await page.getByRole('button', { name: 'Save progress', exact: true }).click()
+  await expect(stages(page).locator('.nowline')).toContainText('Fixing')
+  await expect(page.getByRole('button', { name: 'Change finish date' })).toBeDisabled()
+  await page.getByLabel('New finish date').fill('2026-11-06')
+  await page.getByLabel('Reason for changing finish date').fill('Delivery needs seven more days.')
+  await page.getByRole('button', { name: 'Change finish date' }).click()
+  await signInAs(page, 'Farah Hashim')
+  await expect(stages(page)).toContainText('6 Nov 2026')
+  await expect(stages(page)).toContainText('Delivery needs seven more days.')
+  await expect(stages(page)).toContainText('Hafiz Rahman')
+  const old = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Kuala_Lumpur'
+  }).format(new Date(ids.dueAt))
+  await expect(stages(page)).toContainText(`Finish date moved ${old} → 6 Nov 2026`)
+})
 
-// S1 to a submitted work order, with the buoy decided, then the installer starts and completes the repair.
-async function toCompleted(page: Page) {
-  await toSubmitted(page)
-  const href = (await page.getByRole('link', { name: 'Open the repair check' }).getAttribute('href'))!
-  await rejectBuoy(page)
-  await page.goto(`demo/${href}`)
-  await expect(page.getByRole('heading', { level: 1, name: 'Repair check' })).toBeVisible()
-  await signInAs(page, 'Hafiz Rahman')
-  await page.getByRole('button', { name: 'Start work' }).click()
-  await page.getByRole('textbox', { name: 'Note for the person who checks it' }).fill('Panel 4 replaced')
+test('AC233 sample fence history shows its range and median; sparse types show no forecast', async ({ page }) => {
+  const draft = await repair(page, true, 'fence_missing', false)
+  await page.goto(`demo/#/fix-lens/${draft.findingId}`)
+  await expect(page.getByRole('img', { name: 'Reported finding', exact: true })).toBeVisible()
+  await signInAs(page, 'Lim Wei Jie')
+  await page.evaluate(() => (window as unknown as { safeEdgeDemo: Presenter }).safeEdgeDemo.refresh())
+  await expect(page.getByRole('banner').getByRole('button', { name: /Lim Wei Jie, Engineer/ })).toBeVisible()
+  const engineerPhoto = page.getByRole('img', { name: 'Reported finding', exact: true })
+  await expect(engineerPhoto).toBeVisible()
+  await expect
+    .poll(() => engineerPhoto.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+    .toBeGreaterThan(0)
+  await expect(page.getByRole('banner')).toContainText('Elmina Central Park lake, segment 12')
+  await signInAs(page, 'Farah Hashim')
+  await page.getByRole('button', { name: 'Compare fixes', exact: true }).click()
+  await expect(page.getByLabel('Repair forecast', { exact: true })).toContainText(
+    'Usually 4–9 days (median 6), from 4 past jobs, includes sample data'
+  )
+  await expect(page.getByRole('img', { name: 'Reported finding', exact: true })).toHaveCount(0)
+  await page.reload()
+  const ids = await repair(page)
+  await page.goto(`demo/#/retest/${ids.workOrderId}`)
+  await expect(stages(page)).toContainText('Usually 4–9 days (median 6), from 4 past jobs, includes sample data')
+  await page.reload()
+  const sparse = await repair(page, true, 'path_broken')
+  await page.goto(`demo/#/retest/${sparse.workOrderId}`)
+  await expect(stages(page).locator('.nowline')).toContainText('Assigned')
+  await expect(stages(page).locator('.fc')).toHaveCount(0)
+})
+
+test('AC234 and AC235 spending is explained; a new real photo is required and shown beside the original', async ({
+  page
+}) => {
+  const ids = await repair(page)
+  await openInstaller(page, ids.workOrderId)
+  await page
+    .getByRole('textbox', { name: 'Note for the person who checks it' })
+    .fill('Panel replaced and the approach closed.')
+  await page.getByLabel('Amount spent (RM)').fill('620')
+  await expect(page.getByRole('button', { name: 'Mark work complete' })).toBeDisabled()
+  await page.getByLabel('Reason for spending more').fill('The supplier charged for a stronger panel.')
   await page.getByRole('button', { name: 'Mark work complete' }).click()
   await expect(page.getByRole('heading', { name: 'A different person checks this repair' })).toBeVisible()
-}
-
-// What each repair check is called; the failures and reasons on screen are found by these names.
-const REPAIR_CHECKS = [
-  'Saved view 1',
-  'Saved view 2',
-  'Playground path, through the panel gap',
-  'Playground path, around the fence end',
-  'Panel gap gauge',
-  'Fence end gauge',
-  'Re-test photo'
-]
-
-// The tracker for a submitted job names every stage from confirm to the work order, with the real person.
-async function expectTrackerSubmitted(page: Page) {
-  const tracker = page.getByRole('region', { name: /Repair tracker|Repair progress|tracker/i }).first()
-  await expect(tracker).toContainText(/Report confirmed|Confirmed/)
-  await expect(tracker).toContainText(/Work order submitted|Sent to work order/)
-  await expect(tracker).toContainText('Hafiz Rahman')
-}
-
-// The tracker of a job that has only been confirmed still names its confirmed state.
-async function expectTrackerConfirmed(page: Page) {
-  const tracker = page.getByRole('region', { name: /Repair tracker|My reports|tracker/i }).first()
-  await expect(tracker).toContainText(/Report confirmed|Confirmed/)
-}
-
-test('AC230 the tracker shows report confirmed to WO submitted with the assigned name in the Inbox', async ({
-  page
-}) => {
-  await toSubmitted(page)
-  await expectTrackerSubmitted(page)
-  // The stage details open with a click and with the keyboard.
-  const details = page.getByRole('button', { name: /details/i }).first()
-  await details.click()
-  await expect(page.getByText(/Submitted by Farah Hashim|submitted/i).first()).toBeVisible()
-  await details.press('Enter')
-  await expect(page.getByText(/Submitted by Farah Hashim|submitted/i).first()).toBeVisible()
-})
-
-test('AC230 the same tracker shows on the re-test waiting list', async ({ page }) => {
-  await toSubmitted(page)
-  await signInAs(page, 'Priya Nair')
-  await expectTrackerSubmitted(page)
-})
-
-test('AC230 and AC233 My reports in Capture shows the tracker, and a path report has no forecast', async ({ page }) => {
-  await reportPathDamage(page)
-  await page.goto('demo/#/capture')
-  const reports = page.getByRole('region', { name: /My reports/i })
-  await expect(reports).toContainText(/path/i)
-  await expectTrackerConfirmed(page)
-  // The manager confirms it through the Inbox card.
-  await page.goto('demo/')
-  const card = page
-    .getByRole('navigation', { name: 'Inbox list' })
-    .getByRole('button', { name: /The path is broken by the boardwalk/ })
-  await card.click()
-  await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
-  await expect(page.getByRole('region', { name: /^Finding / })).toBeVisible()
-  // No forecast for a type with fewer than three past jobs and no accepted history.
-  await page.getByRole('link', { name: 'Choose a fix' }).click()
-  await expect(page.getByRole('heading', { level: 1, name: 'Fix Lens' })).toBeVisible()
-  await markOpenings(page)
-  await page.getByRole('button', { name: 'Next: compare fixes' }).click()
-  await expect(page.getByText(/Usually \d+–\d+ days/)).toHaveCount(0)
-})
-
-test('AC233 the S1 fix submission shows the forecast, and it counts the sample past jobs', async ({ page }) => {
-  await openLens(page)
-  await compare(page)
-  // Four sample fence jobs {4,5,6,9}; the demo seed has no accepted repair, so the samples alone decide it.
-  await expect(page.getByText('Usually 4–9 days (median 6), from 4 past jobs, includes sample data')).toBeVisible()
-})
-
-test('AC231 a rejected report shows Not a problem in the tracker', async ({ page }) => {
-  await page.goto('demo/')
-  const list = page.getByRole('navigation', { name: 'Inbox list' })
-  await list.getByRole('button', { name: /Ring buoy/ }).click()
-  await page.getByRole('button', { name: 'Not a problem', exact: true }).click()
-  await page.getByLabel('Reason for rejecting').fill('The buoy was moved for the swim lesson')
-  await page.getByRole('button', { name: 'Submit rejection' }).click()
-  await expect(page.getByText(/Rejected by Farah Hashim/)).toBeVisible()
-  await expect(page.getByRole('region', { name: /^Finding |^Card / }).or(page.locator('body'))).toContainText(
-    'Not a problem'
-  )
-})
-
-test('AC232 the installer records buying progress, then waiting delivery, then fixing', async ({ page }) => {
-  await toSubmitted(page)
-  await signInAs(page, 'Hafiz Rahman')
-  await page
-    .getByRole('link', { name: /Start work|Fence panel 4/ })
-    .first()
-    .click()
-  const progress = page.getByRole('region', { name: 'Repair progress' })
-  // Buying: an expected delivery date and a tracking number are saved.
-  await progress.getByLabel('Expected delivery date').fill('2026-10-30')
-  await progress.getByLabel('Shipment tracking number').fill('TRK-2026-0042')
-  await progress.getByRole('button', { name: 'Save progress' }).click()
-  await expect(progress).toContainText(/buying/i)
-  await expect(progress).toContainText('TRK-2026-0042')
-  // Waiting delivery: the supplier gave no tracking number is the checkbox way out.
-  await progress.getByLabel('Shipment tracking number').fill('')
-  await progress.getByLabel('The supplier gave no tracking number').check()
-  await progress.getByRole('button', { name: 'Save progress' }).click()
-  await expect(progress).toContainText(/waiting (for )?delivery|waiting delivery/i)
-  // Fixing hands the work order to Start work.
-  await page.getByRole('button', { name: 'Start work' }).click()
-  await expect(page.getByRole('heading', { name: 'Repair started' })).toBeVisible()
-})
-
-test('AC233 the manager changes the finish date and sees the old and new date and the reason', async ({ page }) => {
-  await toSubmitted(page)
-  await signInAs(page, 'Hafiz Rahman')
-  await page
-    .getByRole('link', { name: /Start work|Fence panel 4/ })
-    .first()
-    .click()
-  await page.getByRole('button', { name: 'Change finish date' }).click()
-  await page.getByLabel('New finish date').fill('2026-11-06')
-  await page.getByLabel('Reason for changing finish date').fill('The panel order slips a week')
-  await page.getByRole('button', { name: 'Save progress' }).click()
   await signInAs(page, 'Farah Hashim')
-  await page.goto('demo/#/inbox')
-  await page
-    .getByRole('button', { name: /Fence panel 4/ })
-    .first()
-    .click()
-  await expect(page.getByText(/2026-11-06|6 Nov 2026|6 November 2026/).first()).toBeVisible()
-  await expect(page.getByText(/The panel order slips a week/)).toBeVisible()
-})
-
-test('AC234 and AC235 the reviewer cannot pass the photo or sign before upload; the spending is shown', async ({
-  page
-}) => {
-  await toCompleted(page)
+  await expect(stages(page)).toContainText('RM 500')
+  await expect(stages(page)).toContainText('RM 620')
+  await expect(stages(page)).toContainText('The supplier charged for a stronger panel.')
   await signInAs(page, 'Priya Nair')
-  // No photo evidence yet: the re-test photo cannot pass and nothing can sign.
-  const radio = page.getByRole('radiogroup', { name: 'Re-test photo result' }).getByRole('radio', { name: 'Pass' })
-  await expect(radio).toBeDisabled()
+  await expect(page.getByRole('heading', { name: 'A different person checks this repair' })).toBeVisible()
+  const photoPass = page.getByRole('radiogroup', { name: 'Re-test photo result' }).getByRole('radio', { name: 'Pass' })
+  await expect(photoPass).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Sign and issue the pass' })).toBeDisabled()
-  // Upload the before fixture through the gallery picker; before and after photos show.
-  await page.getByLabel(/Upload from gallery/i).setInputFiles('e2e/fixtures/report-no-exif.jpg')
-  await expect(page.getByRole('img', { name: /after/i })).toBeVisible()
-  await expect(radio).toBeEnabled()
-  await radio.check()
-  await page.getByRole('textbox', { name: 'Reason for Re-test photo', exact: true }).fill('Photo matches')
-  // The installer's spending is visible to the reviewer, in ringgit.
-  await expect(page.getByText(/Amount spent \(RM\)|RM \d+/)).toBeVisible()
-  // The rest of the checklist still has to be answered before the sign.
-  for (const name of REPAIR_CHECKS.slice(0, -1))
-    await page
-      .getByRole('radiogroup', { name: `${name} result` })
-      .getByRole('radio', { name: 'Pass' })
-      .check()
-  for (const name of REPAIR_CHECKS.slice(0, -1))
-    await page.getByRole('textbox', { name: `Reason for ${name}`, exact: true }).fill('Looks right')
-  await expect(page.getByRole('button', { name: 'Sign and issue the pass' })).toBeEnabled()
-})
-
-test('AC235 the installer records what the repair cost and the manager sees the amount and reason', async ({
-  page
-}) => {
-  await toSubmitted(page)
-  await signInAs(page, 'Hafiz Rahman')
+  for (const group of await page.getByRole('radiogroup').all()) {
+    const name = (await group.getAttribute('aria-label'))!.replace(/ result$/, '')
+    if (name === 'Re-test photo') continue
+    await group.getByRole('radio', { name: 'Pass' }).check()
+    await page.getByRole('textbox', { name: `Reason for ${name}`, exact: true }).fill('Seen closed on site.')
+  }
+  await expect(page.getByText('Take or upload a photo to pass the re-test photo check.')).toBeVisible()
+  await uploadRetestPhoto(page)
+  const before = page.getByRole('img', { name: 'Before repair', exact: true })
+  const after = page.getByRole('img', { name: 'After repair', exact: true })
+  await expect(before).toBeVisible()
+  await expect(after).toBeVisible()
+  const left = (await before.boundingBox())!,
+    right = (await after.boundingBox())!
+  expect(left.x + left.width).toBeLessThanOrEqual(right.x + 1)
+  await photoPass.check()
   await page
-    .getByRole('link', { name: /Start work|Fence panel 4/ })
-    .first()
-    .click()
-  await page.getByLabel('Amount spent (RM)').fill('150')
-  await page.getByLabel('Reason for spending more').fill('The panel cost more than quoted')
-  await page.getByRole('button', { name: 'Save progress' }).click()
-  await expect(page.getByText(/RM 150|Amount spent \(RM\)/)).toBeVisible()
-  await signInAs(page, 'Farah Hashim')
-  await page.goto('demo/#/inbox')
-  await page
-    .getByRole('button', { name: /Fence panel 4/ })
-    .first()
-    .click()
-  await expect(page.getByText(/RM 150/)).toBeVisible()
-  await expect(page.getByText(/The panel cost more than quoted/)).toBeVisible()
+    .getByRole('textbox', { name: 'Reason for Re-test photo', exact: true })
+    .fill('The new photo shows the closed approach.')
+  await uploadRetestPhoto(page)
+  await expect(photoPass).not.toBeChecked()
+  await photoPass.check()
+  await page.screenshot({ path: 'test-results/tracker-photo-phone.png', fullPage: true })
+  await page.getByRole('button', { name: 'Sign and issue the pass' }).click()
+  await expect(page.getByRole('heading', { name: 'Safety pass issued' })).toBeVisible()
+  const evidence = await page.evaluate(async (id) => {
+    const { retest } = await (window as unknown as { safeEdgeDemo: Presenter }).safeEdgeDemo.demo.getRepairJourney({
+      params: { id }
+    })
+    return retest!.evidence[0]!
+  }, ids.candidateId)
+  expect(evidence.uri).toMatch(/^local:\/\//)
+  expect(evidence.simulated).toBe(false)
+  expect(evidence.id).not.toMatch(/sample/)
 })

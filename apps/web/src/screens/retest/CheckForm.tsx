@@ -159,7 +159,7 @@ export function CheckForm({
                         className="rt-photo-comparison"
                         style={{
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                           gap: 'var(--space-3)',
                           marginBottom: 'var(--space-3)'
                         }}

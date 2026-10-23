@@ -276,3 +276,19 @@
 .rt-check input {
   margin-top: 2px;
 }
+
+.rt-photo-comparison {
+  min-width: 0;
+}
+.rt-photo-comparison figure {
+  min-width: 0;
+}
+.rt-photo-comparison .evidence-photo-img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+}
+.rt-photo-area .capture-body {
+  min-width: 0;
+}

@@ -11,7 +11,7 @@ import {
   XCircle
 } from '@phosphor-icons/react'
 import { RemedyType, type Finding, type Remedy, type WorkOrder } from '@safe-edge/contracts'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { can, client, useSignedIn, useStore } from '../../store'
 import {
   OPENING_LABEL,
@@ -28,6 +28,7 @@ import {
   type Lens
 } from './lens'
 import { PlanDrawing } from './PlanDrawing'
+import { forecastFor } from '../shared/forecast'
 
 type Closure = Lens['per'][string]
 
@@ -57,6 +58,49 @@ function result(c: Closure) {
 
 const summary = (r: Remedy) =>
   `${r.quantities.map(quantityWords).join('; ') || 'no quantities'} · ${quoteWords(r.quote)}`
+
+/** The same real-history forecast the tracker shows, available before the manager sends the fix. */
+function SubmissionForecast({ candidateId }: { candidateId: string }) {
+  const { snapshot } = useStore()
+  const [state, setState] = useState<{ text: string | null; error: string | null } | null>(null)
+  useEffect(() => {
+    let live = true
+    setState(null)
+    if (!snapshot) return
+    const ids = [
+      ...new Set(
+        snapshot.workOrders
+          .filter((w) => w.status === 'accepted')
+          .flatMap((w) => snapshot.findings.filter((f) => f.id === w.findingId).map((f) => f.candidateId))
+      )
+    ]
+    Promise.all([
+      client().getRepairJourney({ params: { id: candidateId } }),
+      Promise.all(ids.map((id) => client().getRepairJourney({ params: { id } })))
+    ]).then(
+      ([journey, journeys]) => {
+        if (live) setState({ text: forecastFor(journey, journeys), error: null })
+      },
+      (error: unknown) => {
+        if (live) setState({ text: null, error: error instanceof Error ? error.message : String(error) })
+      }
+    )
+    return () => {
+      live = false
+    }
+  }, [candidateId, snapshot])
+  if (state?.error)
+    return (
+      <p className="fl-muted" role="status">
+        Could not load the repair forecast: {state.error}
+      </p>
+    )
+  return state?.text ? (
+    <p className="banner info" aria-label="Repair forecast">
+      {state.text}
+    </p>
+  ) : null
+}
 
 /** Step 2: one option card per proposed fix, with the engineer's approval and the send action. */
 export function Compare({
@@ -297,6 +341,7 @@ export function Compare({
 
       {can('createRemedy') && <Propose finding={finding} openings={lens.base.openings} run={run} />}
 
+      {maySend && !sent && <SubmissionForecast candidateId={finding.candidateId} />}
       <div className="fl-bar">
         {sent ? (
           <button className="btn primary" onClick={onSent}>

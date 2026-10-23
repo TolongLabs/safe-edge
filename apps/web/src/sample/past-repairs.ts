@@ -28,5 +28,6 @@ export const PAST_REPAIRS: PastRepair[] = [
   repair('ring_buoy_missing', 2),
   repair('ring_buoy_missing', 4),
   repair('ring_buoy_missing', 6),
-  repair('debris', 1)
+  repair('debris', 1),
+  repair('other', 2)
 ]

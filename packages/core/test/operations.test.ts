@@ -62,7 +62,25 @@ describe('the operations table in core', () => {
       source: 'fixture'
     }
     const h = startCore({ planner: await plannerWith({ thirdParties: [onTheEdge] }) })
-    const played = playS1toRepair(h)
+    const played = playS1toRepair(h, 'submitted')
+    h.setNow('2026-10-22T02:00:00.000Z')
+    h.call('startWorkOrder', 'usr_installer', { params: { id: played.workOrderId } })
+    expect(
+      h.call('updateWorkOrderProgress', 'usr_installer', {
+        params: { id: played.workOrderId },
+        body: { progress: 'fixing' }
+      }).data.progress
+    ).toBe('fixing')
+    const changed = h.call('changeWorkOrderDueDate', 'usr_installer', {
+      params: { id: played.workOrderId },
+      body: { dueAt: '2026-10-24T10:00:00.000Z', reason: 'Material delivery moved by one hour' }
+    }).data
+    expect(changed.dueAtChanges?.[0]?.reason).toBe('Material delivery moved by one hour')
+    h.setNow('2026-10-22T05:30:00.000Z')
+    h.call('completeWorkOrder', 'usr_installer', {
+      params: { id: played.workOrderId },
+      body: { evidence: [], note: 'Panel replaced, fence extended 1.5 m to the headwall' }
+    })
     h.call('recordRetest', 'usr_reviewer', { body: played.retest })
     // Then a false alarm: the drone reports the panel missing again, the agent summarises it for the Inbox card, the
     // manager rejects it, a reviewer clears it.
@@ -208,6 +226,7 @@ describe('the operations table in core', () => {
     h.call('getPatrol', reader, { params: { id: patrol.id } })
     h.call('listCandidates', 'usr_manager', { query: { status: 'confirmed' } })
     h.call('getFalseFlags', reader, {})
+    h.call('getRepairJourney', 'usr_crew', { params: { id: played.raised.data.id } })
     h.call('getCandidate', 'usr_reviewer', { params: { id: played.raised.data.id } })
     h.call('listFindings', reader, { query: { segmentId: S1.segmentId } })
     h.call('getFinding', reader, { params: { id: played.findingId } })

@@ -42,7 +42,7 @@ const randomId = () =>
     : Math.random().toString(36).slice(2) + Date.now().toString(36)
 
 export async function savePhotoEvidence(shot: Shot): Promise<EvidenceRef> {
-  const bytes = shot.originalBytes ?? (await shot.blob.arrayBuffer())
+  const bytes = await shot.blob.arrayBuffer()
   const mediaType: 'image/jpeg' | 'image/png' | 'image/webp' =
     shot.blob.type === 'image/png' || shot.blob.type === 'image/webp' ? shot.blob.type : 'image/jpeg'
   const capturedAt = shot.capturedAt ?? (shot.originalDate ? shot.originalDate.toISOString() : new Date().toISOString())

@@ -24,7 +24,7 @@ const word = (n: number) => (n === 1 ? 'day' : 'days')
  * What past repairs of the same issue type took, without any model: min–max and median in whole days over
  * genuine accepted journeys (no duplicate work order, a positive duration from raised to accepted re-test,
  * the current job only once it is genuinely accepted too) plus the sample past repairs of that type.
- * Null when the type has fewer than four unknowns and three matching past jobs to speak of (#233).
+ * Null when fewer than three past jobs match the issue type (#233).
  */
 export function forecastFor(journey: RepairJourney, journeys: RepairJourney[]): string | null {
   const issueType = issueTypeOf(journey.candidate, journey.report)

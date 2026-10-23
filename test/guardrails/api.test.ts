@@ -122,7 +122,6 @@ test('an agent token cannot confirm, accept, issue or send: every operation the 
     // Refused requests must fail access checks before report lookup.
     'damage-reports': 'drpt_auth_refusal',
     candidates: proposed.id,
-    'damage-reports': 'dmg_placeholder',
     notices: notice.id,
     'patrol-plans': plan.id,
     patrols: patrol.id,
@@ -282,7 +281,6 @@ test('no system or provider call makes a pass valid, whichever operation it trie
     'patrol-plans': flying.id,
     patrols: patrol.id,
     candidates: played.candidate.id,
-    'damage-reports': 'dmg_placeholder',
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
     openings: closure.openings[0].id,
@@ -540,7 +538,6 @@ test('every write, refused or allowed, is on the audit chain, and GET /v1/audit 
     // Refused requests must fail access checks before report lookup.
     'damage-reports': 'drpt_auth_refusal',
     candidates: played.candidate.id,
-    'damage-reports': damage.id,
     'work-orders': played.workOrderId,
     remedies: played.remedy.id,
     openings: closure.openings[0].id,

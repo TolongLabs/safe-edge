@@ -5,7 +5,16 @@ import { useEffect, useState } from 'react'
 import { CloseUp, closeUp, outlinesBaseline, SampleImage, type Box, type Scene } from '../../scenes'
 import { AgentByline, AgentProblemLine, NeedsKey, useAgentRun } from '../shared/AgentRun'
 import { Screen } from '../../shell/Shell'
-import { onReset, refresh, rememberDone, useSignedIn, useStore, can, type Snapshot } from '../../store'
+import {
+  onReset,
+  refresh,
+  rememberDone,
+  useSignedIn,
+  useStore,
+  can,
+  client as signedClient,
+  type Snapshot
+} from '../../store'
 import { ReportPanel } from './ReportPanel'
 import { candidateMeta } from '../shared/reports'
 import { EvidencePhoto } from '../shared/EvidencePhoto'
@@ -402,7 +411,6 @@ function Zoom({
 
 /** Read the same linked repair facts for decided cards that the other roles see. */
 function CandidateStages({ candidateId, s }: { candidateId: string; s: Snapshot }) {
-  const { client } = useSignedIn()
   const [state, setState] = useState<{ journey: RepairJourney; journeys: RepairJourney[] } | { error: Error } | null>(
     null
   )
@@ -419,8 +427,8 @@ function CandidateStages({ candidateId, s }: { candidateId: string; s: Snapshot 
       )
     ]
     Promise.all([
-      client.getRepairJourney({ params: { id: candidateId } }),
-      Promise.all(historyIds.map((id) => client.getRepairJourney({ params: { id } })))
+      signedClient().getRepairJourney({ params: { id: candidateId } }),
+      Promise.all(historyIds.map((id) => signedClient().getRepairJourney({ params: { id } })))
     ]).then(
       ([journey, journeys]) => live && setState({ journey, journeys }),
       (error: unknown) => live && setState({ error: error instanceof Error ? error : new Error(String(error)) })

@@ -29,10 +29,10 @@ export function Installer({
   const id = { params: { id: workOrder.id } }
 
   const [progress, setProgress] = useState<WorkOrderProgress>(workOrder.progress ?? 'buying_materials')
-  const [expectedDate, setExpectedDate] = useState(datePart(workOrder.expectedDeliveryAt))
+  const [expectedDate, setExpectedDate] = useState(() => datePart(workOrder.expectedDeliveryAt))
   const [tracking, setTracking] = useState(workOrder.trackingNumber ?? '')
   const [noTracking, setNoTracking] = useState(workOrder.noTracking ?? false)
-  const [newDueDate, setNewDueDate] = useState(datePart(workOrder.dueAt))
+  const [newDueDate, setNewDueDate] = useState(() => datePart(workOrder.dueAt))
   const [dueReason, setDueReason] = useState('')
   const [spent, setSpent] = useState('')
   const [overspendReason, setOverspendReason] = useState('')
@@ -49,13 +49,15 @@ export function Installer({
   const spentText = spent.trim()
   const spentAmount = spentText === '' ? null : Number(spentText)
   const spentInvalid = spentAmount !== null && (!Number.isFinite(spentAmount) || spentAmount < 0)
-  const estimate = remedy && remedy.quote !== 'quote_needed' ? remedy.quote.amount : null
-  const overEstimate =
-    spentAmount !== null && !spentInvalid && estimate !== null && estimate > 0 && spentAmount > estimate * 1.2
+  const quote = remedy && remedy.quote !== 'quote_needed' ? remedy.quote : null
+  const estimate = quote?.amount ?? null
+  const currency = quote?.currency ?? 'MYR'
+  const currencyLabel = currency === 'MYR' ? 'RM' : currency
+  const overEstimate = spentAmount !== null && !spentInvalid && estimate !== null && spentAmount > estimate * 1.2
   const needsOverspendReason = overEstimate && overspendReason.trim() === ''
   const spentQuote =
     spentAmount !== null && !spentInvalid
-      ? { amount: spentAmount, currency: 'MYR', date: new Date().toISOString().slice(0, 10) }
+      ? { amount: spentAmount, currency, date: new Date().toISOString().slice(0, 10) }
       : null
   const canComplete = !noNote && !spentInvalid && !needsOverspendReason
 
@@ -199,7 +201,7 @@ export function Installer({
 
             <div className="rt-progress">
               <label className="rt-field">
-                <span>Amount spent (RM)</span>
+                <span>Amount spent ({currencyLabel})</span>
                 <input
                   type="number"
                   min="0"
@@ -209,10 +211,10 @@ export function Installer({
                   onChange={(e) => setSpent(e.target.value)}
                 />
               </label>
-              {spentInvalid && <p className="rt-error">Enter the amount spent in ringgit, or leave it blank.</p>}
+              {spentInvalid && <p className="rt-error">Enter a valid amount spent, or leave it blank.</p>}
               {estimate !== null && (
                 <p className="rt-help">
-                  Estimate: RM {estimate.toLocaleString('en-MY')}.
+                  Estimate: {currencyLabel} {estimate.toLocaleString('en-MY')}.
                   {overEstimate && ' This is more than 20% over the estimate.'}
                 </p>
               )}
@@ -253,7 +255,7 @@ export function Installer({
             : noNote
               ? 'Write a note first.'
               : spentInvalid
-                ? 'Enter the amount spent in ringgit, or leave it blank.'
+                ? 'Enter a valid amount spent, or leave it blank.'
                 : needsOverspendReason
                   ? 'Say why the repair cost more than the estimate.'
                   : 'A different person checks the repair.'}

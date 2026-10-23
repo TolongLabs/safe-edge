@@ -3,6 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  container-type: inline-size;
 }
 
 .stage-tracker .nowline {
@@ -58,7 +59,7 @@
   grid-template-columns: repeat(2, 1fr);
   max-width: 420px;
 }
-.stage-tracker .trk li {
+.stage-tracker .trk > li {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -69,7 +70,7 @@
   font-size: var(--fs-dense);
   line-height: var(--lh-dense);
 }
-.stage-tracker .trk li::before {
+.stage-tracker .trk > li::before {
   content: '';
   position: absolute;
   top: 13px;
@@ -79,11 +80,11 @@
   background: var(--border-default);
   z-index: 0;
 }
-.stage-tracker .trk li:first-child::before {
+.stage-tracker .trk > li:first-child::before {
   display: none;
 }
-.stage-tracker .trk li.done::before,
-.stage-tracker .trk li.now::before {
+.stage-tracker .trk > li.done::before,
+.stage-tracker .trk > li.now::before {
   background: var(--accent-default);
 }
 .stage-tracker .dot {
@@ -97,46 +98,46 @@
   border-radius: 50%;
   background: var(--bg-surface);
 }
-.stage-tracker .trk li.done .dot {
+.stage-tracker .trk > li.done .dot {
   border: 2px solid var(--accent-default);
   background: var(--accent-default);
   color: var(--text-on-accent);
 }
-.stage-tracker .trk li.now .dot {
+.stage-tracker .trk > li.now .dot {
   border: 3px solid var(--accent-default);
   background: var(--bg-surface);
   box-shadow: 0 0 0 4px var(--accent-subtle);
 }
-.stage-tracker .trk li.now .dot::after {
+.stage-tracker .trk > li.now .dot::after {
   content: '';
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: var(--accent-default);
 }
-.stage-tracker .trk li.rej .dot {
+.stage-tracker .trk > li.rej .dot {
   border-color: var(--danger-default);
   color: var(--danger-text);
 }
-.stage-tracker .trk li.rej .dot::after {
+.stage-tracker .trk > li.rej .dot::after {
   display: none;
 }
 .stage-tracker .trk .nm {
   font-weight: 500;
 }
-.stage-tracker .trk li.now .nm {
+.stage-tracker .trk > li.now .nm {
   font-weight: 700;
 }
-.stage-tracker .trk li.todo {
+.stage-tracker .trk > li.todo {
   color: var(--text-secondary);
 }
-.stage-tracker .trk li .dt,
-.stage-tracker .trk li .who {
+.stage-tracker .trk > li .dt,
+.stage-tracker .trk > li .who {
   font-size: var(--fs-small);
   line-height: var(--lh-small);
   color: var(--text-secondary);
 }
-.stage-tracker .trk li .nowtag {
+.stage-tracker .trk > li .nowtag {
   padding: 0 6px;
   border-radius: var(--radius-sm);
   background: var(--accent-default);
@@ -146,13 +147,13 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.stage-tracker .trk li details {
+.stage-tracker .trk > li details {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
 }
-.stage-tracker .trk li summary {
+.stage-tracker .trk > li summary {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -163,10 +164,10 @@
   list-style: none;
   cursor: pointer;
 }
-.stage-tracker .trk li summary::-webkit-details-marker {
+.stage-tracker .trk > li summary::-webkit-details-marker {
   display: none;
 }
-.stage-tracker .trk li summary:hover .nm {
+.stage-tracker .trk > li summary:hover .nm {
   text-decoration: underline;
 }
 .stage-tracker .trk .txt {
@@ -246,7 +247,7 @@
 .stage-tracker .steps b {
   font-weight: 600;
 }
-.stage-tracker .trk li.todo .who {
+.stage-tracker .trk > li.todo .who {
   color: var(--text-secondary);
   font-weight: 400;
 }
@@ -366,36 +367,36 @@
   margin: 0;
 }
 
-@media (max-width: 820px) {
+@container (max-width: 820px) {
   .stage-tracker .trk,
   .stage-tracker .trk.two {
     grid-template-columns: 1fr;
     max-width: none;
     gap: 0;
   }
-  .stage-tracker .trk li {
+  .stage-tracker .trk > li {
     flex-direction: row;
     align-items: flex-start;
     gap: var(--space-3);
     padding: 0 0 var(--space-4);
     text-align: left;
   }
-  .stage-tracker .trk li::before {
+  .stage-tracker .trk > li::before {
     top: 28px;
     left: 13px;
     width: 3px;
     height: calc(100% - 28px);
   }
-  .stage-tracker .trk li:first-child::before {
+  .stage-tracker .trk > li:first-child::before {
     display: block;
   }
-  .stage-tracker .trk li:last-child::before {
+  .stage-tracker .trk > li:last-child::before {
     display: none;
   }
-  .stage-tracker .trk li details {
+  .stage-tracker .trk > li details {
     align-items: stretch;
   }
-  .stage-tracker .trk li summary {
+  .stage-tracker .trk > li summary {
     flex-direction: row;
     align-items: flex-start;
     gap: var(--space-3);

@@ -7,7 +7,8 @@ import { ISSUE_LABELS } from '../shared/reports'
 import { journeyDate } from '../shared/journey'
 
 type Row = { report: DamageReport; journey: RepairJourney }
-type State = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; rows: Row[] }
+type State =
+  { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ready'; rows: Row[]; journeys: RepairJourney[] }
 
 const placeWords = (report: DamageReport) => {
   const where = report.where
@@ -36,10 +37,18 @@ export function MyReports() {
             journey: await client().getRepairJourney({ params: { id: report.candidateId } })
           }))
         )
-        return rows
+        const historyIds = [
+          ...new Set(
+            snapshot.workOrders
+              .filter((w) => w.status === 'accepted')
+              .flatMap((w) => snapshot.findings.filter((f) => f.id === w.findingId).map((f) => f.candidateId))
+          )
+        ]
+        const journeys = await Promise.all(historyIds.map((id) => client().getRepairJourney({ params: { id } })))
+        return { rows, journeys }
       })
       .then(
-        (rows) => live && setState({ kind: 'ready', rows }),
+        ({ rows, journeys }) => live && setState({ kind: 'ready', rows, journeys }),
         (error: unknown) =>
           live &&
           setState({
@@ -92,7 +101,7 @@ export function MyReports() {
                 </p>
               </div>
               <p>{report.description}</p>
-              <StageTracker journey={journey} journeys={state.rows.map((row) => row.journey)} users={users} />
+              <StageTracker journey={journey} journeys={state.journeys} users={users} />
             </li>
           ))}
         </ul>

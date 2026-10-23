@@ -1,7 +1,6 @@
 import type { Candidate, EdgePass } from '@safe-edge/contracts'
 import { useEffect, useState } from 'react'
 import { can, client, onReset, useStore } from '../../store'
-import { must } from '../fix-lens/lens'
 
 export type Clearable = { candidateId: string; title: string; status: 'rejected' | 'needs_recapture' }
 
@@ -38,7 +37,11 @@ export function useClearable() {
       setFound([])
       return
     }
-    Promise.all(Object.keys(s.metas).map((id) => client().getCandidate({ params: { id } }))).then(
+    Promise.all(
+      [...new Set([...Object.keys(s.metas), ...s.damageReports.map((report) => report.candidateId)])].map((id) =>
+        client().getCandidate({ params: { id } })
+      )
+    ).then(
       (all) =>
         live &&
         (setError(null),
@@ -48,7 +51,10 @@ export function useClearable() {
               ? [
                   {
                     candidateId: c.id,
-                    title: must(s.metas[c.id], `sample details for ${c.id}`).title,
+                    title:
+                      s.metas[c.id]?.title ??
+                      s.damageReports.find((report) => report.candidateId === c.id)?.description ??
+                      c.rationale,
                     status: c.status as Clearable['status']
                   }
                 ]
