@@ -155,15 +155,15 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 **TIME:** `1:23–1:35` · **VOICE:** Narrator · **PURPOSE:** concede the drone, claim the proof.
 
-**ON SCREEN:** Deck 5, "4. Innovation". Push in on `exists` (PUB) on the first sentence, then `protocol`, the chain from flag to expiry, on "what follows the flag". The headline, "The drone is optional. The proof is the product.", is on screen for the last two sentences.
+**ON SCREEN:** Deck 5, "4. Innovation". Push in on `exists` (Public Utilities Board) on the first sentence, then `protocol`, the chain from flag to expiry, on "what follows the flag". The headline, "The drone is optional. The proof is the product.", is on screen for the last two sentences.
 
 **DELIVERY:** Concede first, plainly and without apology; it buys the credibility for the claim, as MyTakziah's "AI alone is not the innovation" did. Then name what is new, one item at a time; "Fix Lens" now lands as a name the judge knows. Slow down for the last two sentences and let them fall: they are the line a judge should repeat.
 
 **VOICEOVER:**
 
-> The drone isn't new; Singapore's PUB already flies them. What's new is what follows the flag: an owner, Fix Lens, and independent proof. [pause 0.3s] The drone is optional. The proof is the product.
+> The drone isn't new; Singapore's Public Utilities Board already flies them. What's new is what follows the flag: an owner, Fix Lens, and independent proof. [pause 0.3s] The drone is optional. The proof is the product.
 
-**NOTES:** PUB flies drones over its reservoirs and inside closed drains, and ran a challenge for AI drain inspection ([prior art][prior-art]). We claim the protocol, never the drone or the AI. Deck 5's `ai-rule` card, "AI can flag and suspend. Never approve.", stays on screen unspoken; D2 says it in the demo.
+**NOTES:** Public Utilities Board flies drones over its reservoirs and inside closed drains, and ran a challenge for AI drain inspection ([prior art][prior-art]). We claim the protocol, never the drone or the AI. Deck 5's `ai-rule` card, "AI can flag and suspend. Never approve.", stays on screen unspoken; D2 says it in the demo.
 
 ### V7: 5. How It Works
 
@@ -335,7 +335,7 @@ Use these only when a take runs short, or for a longer cut. V12 adds 2 seconds (
 
 1.  **One team member reads everything outside the demo,** one file per segment, recorded whole, two or three takes each; keep the best. Don't stitch inside a segment. Files: `vo/V01.wav`, `vo/V03.wav` to `vo/V07.wav`, `vo/V09.wav`, `vo/V10.wav`, `vo/V11.wav`, `vo/V13.wav` and `vo/V14.wav`.
 1.  **Room tone:** 10 seconds of silence in the same room at the same mic distance, `vo/room-tone.wav`. Leave 0.3 seconds of silence at the head and tail of every take.
-1.  **Pronunciation:** T010NG is "Tolong" (TOH-long), one word; Bomba (BOM-bah); Mahkota Cheras (mah-KOH-tah CHEH-rahs); Kajang (KAH-jahng); Elmina (el-MEE-nah); SDP and PUB as letters; MyTakziah (my-TAHK-zee-ah); ringgit (RING-git).
+1.  **Pronunciation:** T010NG is "Tolong" (TOH-long), one word; Bomba (BOM-bah); Mahkota Cheras (mah-KOH-tah CHEH-rahs); Kajang (KAH-jahng); Elmina (el-MEE-nah); SDP and Public Utilities Board as letters; MyTakziah (my-TAHK-zee-ah); ringgit (RING-git).
 1.  **Pace:** about 150 words a minute with the marked pauses. Time each take against the "Read" column in [Timing](#timing). If it runs long, read the [pickup line](#pickup-lines) rather than rushing.
 1.  **Speed-up (Director):** play every chosen take at 1.2× with ffmpeg's [`atempo`][atempo] filter, which changes the tempo and keeps the pitch: `ffmpeg -i vo/V09.wav -af atempo=1.2 -ar 48000 video/public/voice/V09.wav`. Pause marks are reading time; at 1.2×, a 0.6-second pause plays as 0.5 seconds. Listen to the first sped-up take before the narrator records the rest: every word must stay clear. Never speed a take past 1.2× to fit; read the pickup line instead.
 1.  **Lines to cut first,** in this order, if the whole video runs long: "Bomba counted three hundred and seventy-one child and teen drowning deaths." (V3, about 4 s played; the slide shows the figure), then "with the whole history behind it" (D5, about 2.5 s). Cut whole phrases, and keep each segment's linking first sentence. Never cut the two stories, the Fix Lens introduction, the honesty line in V9, the team lines, the ask or the last line of V13.
@@ -403,7 +403,7 @@ Status: **External** is a published source, **Team** is our own statement, resea
 | A drone or phone spots the change; a named owner decides                                                                  | V5      | Team            | Deck 4 `patrol` step                                                                                                                      |
 | Fix Lens maps every way to the water and shows whether a repair closes them all, before paying                            | V5      | Code            | Deck 4 `fix-lens` step; [`PRODUCT.md`](/docs/PRODUCT.md#fix-lens); [`PRD.md`][prd] FIX-1                                                  |
 | A second person proves it; the edge earns a pass that expires                                                             | V5      | Team            | Deck 4 `proof` step                                                                                                                       |
-| The drone isn't new; Singapore's PUB already flies them                                                                   | V6      | External        | Deck 5 `exists` card; [prior art][prior-art] (PUB reservoir and drain drones)                                                             |
+| The drone isn't new; Singapore's Public Utilities Board already flies them                                                | V6      | External        | Deck 5 `exists` card; [prior art][prior-art] (Public Utilities Board reservoir and drain drones)                                          |
 | What's new is what follows the flag: an owner, Fix Lens, independent proof                                                | V6      | Team            | Deck 5 `protocol` chain; [`PRODUCT.md`](/docs/PRODUCT.md#what-makes-it-different)                                                         |
 | The drone is optional; the proof is the product                                                                           | V6      | Team            | [`PRODUCT.md`][product-principles], principle 9                                                                                           |
 | Elmina's map is real; everything on it is simulated and labelled                                                          | V7      | Code            | Supporting 2 lines 1 and 6; the app's Simulation labels                                                                                   |
