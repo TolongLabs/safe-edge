@@ -27,6 +27,16 @@ const STATE_TEXT = {
 // Core's uncertainty is how unsure the AI is; the card shows how sure it is.
 const SURE = { low: 'high', medium: 'medium', high: 'low' } as const
 
+const CONSEQUENCE = {
+  1: { style: 'watch', text: 'Watch only. The pass stays as it is.' },
+  2: {
+    style: 'suspends',
+    text: 'A new flag like this pauses a valid pass. Confirming it does not restore the pass.'
+  },
+  3: { style: 'unseen', text: 'The drone could not see this part. It is never treated as safe.' }
+} as const
+type Consequence = (typeof CONSEQUENCE)[Candidate['tier']]
+
 // Every date and time the Inbox shows is Malaysian time, whatever the machine's zone.
 const KL = 'Asia/Kuala_Lumpur'
 const intl = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-GB', { ...o, timeZone: KL })
@@ -279,7 +289,11 @@ function Triage({ s }: { s: Snapshot }) {
                       aria-current={e.candidate.id === selected.candidate.id}
                       onClick={() => setSelectedId(e.candidate.id)}
                     >
-                      <span className="row-title">{rowTitle(e)}</span>
+                      <span
+                        className={`row-title${blind ? '' : ` consequence-${CONSEQUENCE[e.candidate.tier].style}`}`}
+                      >
+                        {rowTitle(e)}
+                      </span>
                       <span className="time">{clock(e.observations[0]?.capturedAt ?? e.candidate.raisedAt)}</span>
                       <span className="meta clamp">{e.segment.name}</span>
                       {!open && <span className="meta wide">{STATE_TEXT[e.candidate.status]}</span>}
@@ -302,6 +316,7 @@ function Triage({ s }: { s: Snapshot }) {
             label={labels[selected.candidate.id]}
             onLabel={(l) => setLabels({ ...labels, [selected.candidate.id]: l })}
             title={cardTitle(selected)}
+            consequence={blind ? undefined : CONSEQUENCE[selected.candidate.tier]}
           />
         </main>
       </div>
@@ -390,7 +405,8 @@ function CardDetail({
   hidden,
   label,
   onLabel,
-  title
+  title,
+  consequence
 }: {
   e: CandidateEvidence
   s: Snapshot
@@ -398,6 +414,7 @@ function CardDetail({
   label: ItemStatus | undefined
   onLabel: (l: ItemStatus) => void
   title: string
+  consequence?: Consequence
 }) {
   const c = e.candidate
   const meta = candidateMeta(e, s)
@@ -444,7 +461,8 @@ function CardDetail({
     <>
       <article aria-label={`Card ${c.id}`}>
         <div className="d-head">
-          <h2>{title}</h2>
+          <h2 className={consequence && `consequence-${consequence.style}`}>{title}</h2>
+          {consequence && <p className="consequence-line sub">{consequence.text}</p>}
           <p className="sub">
             <span>{e.segment.name}</span>
             {code && (

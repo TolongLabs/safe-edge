@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import type { MemoryClient } from '@safe-edge/sdk'
 import { expect, test } from './fixtures'
 
@@ -51,6 +51,27 @@ const resetDemo = async (page: Page) => {
 const list = (page: Page, group: 'Open' | 'Decided') => page.getByRole('list', { name: group })
 const row = (page: Page, group: 'Open' | 'Decided', title: string) =>
   list(page, group).getByRole('button', { name: viewpointOf(title) })
+
+const contrast = (foreground: string, background: string) => {
+  const lum = (color: string) => {
+    const channels = color
+      .match(/[\d.]+/g)!
+      .slice(0, 3)
+      .map(Number)
+      .map((value) => {
+        const c = value / 255
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      })
+    return channels[0]! * 0.2126 + channels[1]! * 0.7152 + channels[2]! * 0.0722
+  }
+  const [hi, lo] = [lum(foreground), lum(background)].sort((a, b) => b - a)
+  return (hi! + 0.05) / (lo! + 0.05)
+}
+const titleStyle = (title: Locator) =>
+  title.evaluate((el) => ({
+    color: getComputedStyle(el).color,
+    background: getComputedStyle(el.closest('.row') ?? el.closest('.detail')!).backgroundColor
+  }))
 
 // What other people do between the manager's steps, made through the demo core as them (the Fix Lens and crew screens
 // are not built yet). The page exposes a presenter's handle for this.
@@ -459,6 +480,91 @@ test('AC1 the context line and rows come from the data, in Malaysian time', asyn
   await expect(row(page, 'Open', AI_TITLE.S1).getByText('15:48')).toBeVisible()
 })
 
+test('AC214 title colours and meaning lines keep approved contrast in both themes', async ({ page }) => {
+  const cases = [
+    {
+      id: S1,
+      title: AI_TITLE.S1,
+      kind: 'suspends',
+      meaning: 'A new flag like this pauses a valid pass. Confirming it does not restore the pass.'
+    },
+    { id: PATH, title: AI_TITLE.PATH, kind: 'watch', meaning: 'Watch only. The pass stays as it is.' },
+    {
+      id: FIELD,
+      title: AI_TITLE.FIELD,
+      kind: 'unseen',
+      meaning: 'The drone could not see this part. It is never treated as safe.'
+    }
+  ] as const
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme })
+    const palette = {
+      suspends: scheme === 'light' ? 'rgb(176, 46, 40)' : 'rgb(246, 179, 172)',
+      unseen: scheme === 'light' ? 'rgb(93, 107, 102)' : 'rgb(180, 189, 184)',
+      watch: scheme === 'light' ? 'rgb(28, 41, 37)' : 'rgb(251, 252, 251)'
+    }
+    const selected = { suspends: 'rgb(246, 179, 172)', unseen: 'rgb(180, 195, 188)', watch: 'rgb(230, 238, 234)' }
+    for (const item of cases) {
+      await open(page, item.id === S1 ? AI_TITLE.PATH : AI_TITLE.S1)
+      const rowTitle = row(page, 'Open', item.title).locator('.row-title')
+      const unselected = await titleStyle(rowTitle)
+      expect(unselected.color).toBe(palette[item.kind])
+      expect(
+        contrast(unselected.color, unselected.background),
+        `${item.kind} unselected ${scheme}`
+      ).toBeGreaterThanOrEqual(4.5)
+      await open(page, item.title)
+      const active = await titleStyle(rowTitle)
+      expect(active.color).toBe(selected[item.kind])
+      expect(contrast(active.color, active.background), `${item.kind} selected ${scheme}`).toBeGreaterThanOrEqual(4.5)
+      const heading = card(page, item.id).getByRole('heading', { name: item.title, exact: true })
+      const detail = await titleStyle(heading)
+      expect(detail.color).toBe(palette[item.kind])
+      expect(contrast(detail.color, detail.background), `${item.kind} heading ${scheme}`).toBeGreaterThanOrEqual(4.5)
+      await expect(card(page, item.id).locator('.consequence-line')).toHaveText(item.meaning)
+    }
+    expect(palette.suspends).not.toBe(palette.watch)
+  }
+})
+
+test('AC214 chosen appearance overrides the system title palette', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page
+    .getByRole('banner')
+    .getByRole('button', { name: /Farah Hashim/ })
+    .click()
+  await page.getByRole('button', { name: 'Light', exact: true }).click()
+  expect((await titleStyle(card(page, S1).getByRole('heading', { name: AI_TITLE.S1 }))).color).toBe('rgb(176, 46, 40)')
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.getByRole('button', { name: 'Dark', exact: true }).click()
+  expect((await titleStyle(card(page, S1).getByRole('heading', { name: AI_TITLE.S1 }))).color).toBe(
+    'rgb(246, 179, 172)'
+  )
+})
+
+test('AC214 blind mode keeps titles neutral and meaning lines absent after a decision', async ({ page }) => {
+  await page.getByLabel('Blind-first mode').check()
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme })
+    for (const title of [AI_TITLE.S1, AI_TITLE.PATH]) {
+      await open(page, title)
+      const style = await titleStyle(row(page, 'Open', title).locator('.row-title'))
+      expect(style.color).toBe('rgb(230, 238, 234)')
+      const heading = page.getByRole('main').getByRole('heading', { name: viewpointOf(title), exact: true })
+      expect((await titleStyle(heading)).color).toBe(scheme === 'light' ? 'rgb(28, 41, 37)' : 'rgb(251, 252, 251)')
+    }
+    await expect(page.locator('.row-title[class*="consequence-"]')).toHaveCount(0)
+    await expect(page.locator('.consequence-line')).toHaveCount(0)
+  }
+  await open(page, AI_TITLE.S1)
+  await page.getByRole('radio', { name: 'Changed', exact: true }).click()
+  await page.getByRole('combobox', { name: /^Severity/ }).selectOption('medium')
+  await page.getByRole('button', { name: 'Confirm: needs a fix', exact: true }).click()
+  await expect(card(page, S1).getByText('AI answer hidden while blind mode is on', { exact: true })).toBeVisible()
+  await expect(page.locator('.consequence-line')).toHaveCount(0)
+  await expect(page.locator('.row-title[class*="consequence-"]')).toHaveCount(0)
+})
+
 test('AC1 severity native options keep readable colours in both themes', async ({ page }) => {
   const select = page.getByRole('group', { name: 'Decision' }).getByRole('combobox', { name: /^Severity/ })
   const read = () =>
@@ -473,18 +579,6 @@ test('AC1 severity native options keep readable colours in both themes', async (
         }))
       }
     })
-  const channel = (value: number) => {
-    const c = value / 255
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-  }
-  const contrast = (foreground: string, background: string) => {
-    const lum = (color: string) => {
-      const [r, g, b] = color.match(/[\d.]+/g)!.map(Number)
-      return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
-    }
-    const [hi, lo] = [lum(foreground), lum(background)].sort((a, b) => b - a)
-    return (hi + 0.05) / (lo + 0.05)
-  }
   for (const scheme of ['light', 'dark'] as const) {
     await page.emulateMedia({ colorScheme: scheme })
     const got = await read()
