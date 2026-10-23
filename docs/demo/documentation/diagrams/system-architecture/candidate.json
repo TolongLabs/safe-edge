@@ -1,0 +1,581 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Safe Edge: one core, two transports",
+    "output": "docs/demo/documentation/diagrams/system-architecture/system-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/TolongLabs/safe-edge.git",
+      "revision": "b35b782e2ca6634a39cd3cfae1830109bc8bfc32",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "people",
+      "type": "external",
+      "label": "Township roles",
+      "sublabel": "manager, crew, engineer, pilot",
+      "pos": [
+        40,
+        300
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "README.md",
+          "line": 234,
+          "end_line": 234,
+          "label": "seeded people"
+        }
+      ]
+    },
+    {
+      "id": "site",
+      "type": "frontend",
+      "label": "@safe-edge/site",
+      "sublabel": "landing page, no framework",
+      "pos": [
+        40,
+        110
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/site/package.json",
+          "line": 2,
+          "end_line": 2
+        },
+        {
+          "path": "apps/site/src/main.ts",
+          "line": 1,
+          "end_line": 4
+        }
+      ]
+    },
+    {
+      "id": "contracts",
+      "type": "backend",
+      "label": "@safe-edge/contracts",
+      "sublabel": "Zod schemas, operations table",
+      "pos": [
+        40,
+        490
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/contracts/package.json",
+          "line": 2,
+          "end_line": 2
+        },
+        {
+          "path": "packages/contracts/src/operations.ts",
+          "line": 133,
+          "end_line": 142
+        }
+      ]
+    },
+    {
+      "id": "webapp",
+      "type": "frontend",
+      "label": "@safe-edge/web",
+      "sublabel": "React screens and the scene",
+      "pos": [
+        380,
+        300
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/web/package.json",
+          "line": 2,
+          "end_line": 2
+        },
+        {
+          "path": "apps/web/src/App.tsx",
+          "line": 4,
+          "end_line": 15
+        }
+      ]
+    },
+    {
+      "id": "scene",
+      "type": "frontend",
+      "label": "@safe-edge/scene",
+      "sublabel": "Three.js Elmina from OpenStreetMap",
+      "pos": [
+        380,
+        490
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/scene/package.json",
+          "line": 2,
+          "end_line": 2
+        },
+        {
+          "path": "apps/web/src/ElminaScene.tsx",
+          "line": 8,
+          "end_line": 9
+        }
+      ]
+    },
+    {
+      "id": "planner",
+      "type": "backend",
+      "label": "@safe-edge/planner",
+      "sublabel": "routes, windows, holds",
+      "pos": [
+        40,
+        680
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/planner/package.json",
+          "line": 2,
+          "end_line": 2
+        },
+        {
+          "path": "packages/planner/src/index.ts",
+          "line": 6,
+          "end_line": 12
+        }
+      ]
+    },
+    {
+      "id": "dji",
+      "type": "external",
+      "label": "DJI Pilot 2 and QGroundControl",
+      "sublabel": "mission files opened by a pilot",
+      "pos": [
+        380,
+        680
+      ],
+      "size": [
+        250,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/planner/scripts/export-mission.ts",
+          "line": 1,
+          "end_line": 3
+        },
+        {
+          "path": "package.json",
+          "line": 18,
+          "end_line": 18,
+          "label": "bun run export:mission"
+        }
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "@safe-edge/core",
+      "sublabel": "state machines, policy, audit chain",
+      "tag": "the one core",
+      "pos": [
+        720,
+        300
+      ],
+      "size": [
+        180,
+        80
+      ],
+      "sources": [
+        {
+          "path": "packages/core/src/core.ts",
+          "line": 104,
+          "end_line": 113
+        },
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 155,
+          "end_line": 161,
+          "label": "PASS_MOVES"
+        }
+      ]
+    },
+    {
+      "id": "agentTools",
+      "type": "backend",
+      "label": "@safe-edge/agent-tools",
+      "sublabel": "eight read, propose, draft tools",
+      "pos": [
+        1060,
+        110
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/agent-tools/src/index.ts",
+          "line": 369,
+          "end_line": 369
+        },
+        {
+          "path": "packages/agent-tools/src/claude.ts",
+          "line": 30,
+          "end_line": 32
+        }
+      ]
+    },
+    {
+      "id": "sdk",
+      "type": "backend",
+      "label": "@safe-edge/sdk",
+      "sublabel": "memory or http transport",
+      "pos": [
+        720,
+        490
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/sdk/src/index.ts",
+          "line": 26,
+          "end_line": 30
+        },
+        {
+          "path": "packages/sdk/src/memory.ts",
+          "line": 40,
+          "end_line": 40,
+          "label": "elminaSeed"
+        }
+      ]
+    },
+    {
+      "id": "perception",
+      "type": "backend",
+      "label": "@safe-edge/perception",
+      "sublabel": "placeholder, exports nothing",
+      "pos": [
+        380,
+        860
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/perception/src/index.ts",
+          "line": 1,
+          "end_line": 1
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "@safe-edge/api",
+      "sublabel": "Hono REST /v1 on Bun",
+      "pos": [
+        1060,
+        300
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/app.ts",
+          "line": 137,
+          "end_line": 139
+        },
+        {
+          "path": "apps/api/src/app.ts",
+          "line": 116,
+          "end_line": 116
+        }
+      ]
+    },
+    {
+      "id": "providers",
+      "type": "backend",
+      "label": "@safe-edge/providers",
+      "sublabel": "sim drone, weather, Procore",
+      "pos": [
+        1060,
+        490
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/providers/src/index.ts",
+          "line": 1,
+          "end_line": 8
+        },
+        {
+          "path": "apps/api/src/automation.ts",
+          "line": 10,
+          "end_line": 15
+        }
+      ]
+    },
+    {
+      "id": "sqlite",
+      "type": "database",
+      "label": "bun:sqlite journal",
+      "sublabel": "apps/api/.data/api.sqlite",
+      "pos": [
+        1400,
+        490
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/api/src/journal.ts",
+          "line": 1,
+          "end_line": 6
+        },
+        {
+          "path": "apps/api/src/app.ts",
+          "line": 23,
+          "end_line": 23
+        }
+      ]
+    },
+    {
+      "id": "mcp",
+      "type": "backend",
+      "label": "@safe-edge/mcp",
+      "sublabel": "stdio server for MCP clients",
+      "pos": [
+        1400,
+        300
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "apps/mcp/src/index.ts",
+          "line": 28,
+          "end_line": 31
+        },
+        {
+          "path": "apps/mcp/src/server.ts",
+          "line": 16,
+          "end_line": 23
+        }
+      ]
+    },
+    {
+      "id": "anthropic",
+      "type": "external",
+      "label": "Anthropic API",
+      "sublabel": "claude-opus-5-5",
+      "pos": [
+        1400,
+        110
+      ],
+      "size": [
+        180,
+        76
+      ],
+      "sources": [
+        {
+          "path": "packages/agent-tools/src/claude.ts",
+          "line": 32,
+          "end_line": 32
+        },
+        {
+          "path": "apps/web/src/agent.ts",
+          "line": 26,
+          "end_line": 34
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "people-open-demo",
+      "from": "people",
+      "to": "webapp",
+      "label": "opens the demo",
+      "variant": "emphasis"
+    },
+    {
+      "id": "site-links-demo",
+      "from": "site",
+      "to": "webapp",
+      "label": "links to /demo/",
+      "variant": "dashed"
+    },
+    {
+      "id": "webapp-runs-core",
+      "from": "webapp",
+      "to": "core",
+      "label": "runs the same core",
+      "variant": "emphasis"
+    },
+    {
+      "id": "webapp-agent",
+      "from": "webapp",
+      "to": "agentTools",
+      "label": "runs the agent in the page"
+    },
+    {
+      "id": "webapp-scene",
+      "from": "webapp",
+      "to": "scene",
+      "label": "mounts the scene"
+    },
+    {
+      "id": "agent-claude",
+      "from": "agentTools",
+      "to": "anthropic",
+      "label": "calls Claude"
+    },
+    {
+      "id": "core-planner",
+      "from": "core",
+      "to": "planner",
+      "label": "calls for a patrol route"
+    },
+    {
+      "id": "planner-dji",
+      "from": "planner",
+      "to": "dji",
+      "label": "writes WPML and .plan files"
+    },
+    {
+      "id": "core-contracts",
+      "from": "core",
+      "to": "contracts",
+      "label": "parses every record"
+    },
+    {
+      "id": "webapp-sdk",
+      "from": "webapp",
+      "to": "sdk",
+      "label": "acts through a client"
+    },
+    {
+      "id": "sdk-core-memory",
+      "from": "sdk",
+      "to": "core",
+      "label": "memory transport",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sdk-api-http",
+      "from": "sdk",
+      "to": "api",
+      "label": "http transport calls /v1"
+    },
+    {
+      "id": "api-runs-core",
+      "from": "api",
+      "to": "core",
+      "label": "hosts the same core",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-sqlite",
+      "from": "api",
+      "to": "sqlite",
+      "label": "journals every write"
+    },
+    {
+      "id": "api-providers",
+      "from": "api",
+      "to": "providers",
+      "label": "drives the adapters"
+    },
+    {
+      "id": "mcp-api",
+      "from": "mcp",
+      "to": "api",
+      "label": "calls /v1 with the agent token"
+    },
+    {
+      "id": "mcp-agentTools",
+      "from": "mcp",
+      "to": "agentTools",
+      "label": "serves the same tools"
+    },
+    {
+      "id": "core-refuses-agent",
+      "from": "core",
+      "to": "agentTools",
+      "label": "refuses the agent every approval",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "One core, two transports",
+      "items": [
+        "The public demo runs @safe-edge/core in the page on the labelled Elmina seed, so it needs no backend",
+        "The local stack runs the same core inside the Hono REST API, with a bun:sqlite journal",
+        "The SDK picks the transport: memory runs core in the page, http calls /v1"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "One set of agent tools",
+      "items": [
+        "The MCP server and the in-page agent both wrap @safe-edge/agent-tools",
+        "The agent reads, proposes and drafts only; eight tools, each naming the API scope it needs",
+        "Core refuses the agent every approval: approveRemedy, recordRetest and submitWorkOrder name no agent scope"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Outside the prototype",
+      "items": [
+        "A patrol plan exports as a DJI WPML KMZ or a QGroundControl .plan, stamped NOT FLIGHT-READY",
+        "The agent calls the Anthropic API with claude-opus-5-5 and the key it is given",
+        "With PROCORE_* set, a submitted work order becomes a Procore observation through @safe-edge/providers"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "What the diagram leaves out",
+      "items": [
+        "@safe-edge/perception is an empty placeholder: packages/perception/src/index.ts exports nothing",
+        "@safe-edge/contracts is read by every app and package, so only one of those edges is drawn",
+        "Simulated flights, detections and repairs carry simulated: true and say so on every screen"
+      ]
+    }
+  ]
+}

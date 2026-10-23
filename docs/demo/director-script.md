@@ -69,10 +69,10 @@ Contents:
 | V9      | 3:05–3:30 | Narrator | How we'd know it works: the measure, the target, who gains |    71 | 29.5 s | 24.6 s |
 | V10     | 3:30–3:55 | Narrator | Built, cheap to start, and honest about drones             |    71 | 29.2 s | 24.3 s |
 | V11     | 3:55–4:09 | Narrator | Therefore, a small, strict pilot that can fail honestly    |    41 | 16.4 s | 13.7 s |
-| V13     | 4:09–4:37 | Narrator | Why us, then ultimately the ask and the line               |    75 | 32.3 s | 26.9 s |
+| V13     | 4:09–4:37 | Narrator | Why us, then ultimately the ask and the line               |    74 | 31.9 s | 26.5 s |
 | V14     | 4:37–4:47 | Narrator | The name's meaning, the team, the tagline                  |    26 | 10.9 s |  9.1 s |
 
-Total: 763 words, 4:47. The demo video runs 83 seconds (1:42 to 3:05 in the edit) and carries 195 of those words. The 1.2× speed-up shortened the other narrator segments by 25 seconds, and Impact, Feasibility and Implementation got all of it: 95 words became 183.
+Total: 762 words, 4:47. The demo video runs 83 seconds (1:42 to 3:05 in the edit) and carries 195 of those words. The 1.2× speed-up shortened the other narrator segments by 25 seconds, and Impact, Feasibility and Implementation got all of it: 95 words became 183.
 
 ## Director transcript
 
@@ -163,7 +163,7 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 > The drone isn't new; Singapore's Public Utilities Board already flies them. What's new is what follows the flag: an owner, Fix Lens, and independent proof. [pause 0.3s] The drone is optional. The proof is the product.
 
-**NOTES:** Public Utilities Board flies drones over its reservoirs and inside closed drains, and ran a challenge for AI drain inspection ([prior art][prior-art]). We claim the protocol, never the drone or the AI. Deck 5's `ai-rule` card, "AI can flag and suspend. Never approve.", stays on screen unspoken; D2 says it in the demo.
+**NOTES:** Public Utilities Board flies drones over its reservoirs and inside closed drains, and ran a challenge for AI drain inspection ([prior art][prior-art]). We claim the protocol, never the drone or the AI. Deck 5's `ai-rule` card, "AI flags. People decide. No model approves.", stays on screen unspoken; D2 says it in the demo.
 
 ### V7: 5. How It Works
 
@@ -225,7 +225,7 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 **VOICEOVER:**
 
-> Now the hidden problem. The obvious fix is a new panel. Fix Lens maps both ways a child could reach the water: through the gap, and around the fence end. [pause 0.4s] A new panel closes one. The other stays open. [pause 0.6s] Extending the fence would close both, so that's the fix the manager chooses, before anyone pays.
+> Now the hidden problem. The obvious fix is a new panel. Fix Lens records both ways a child could reach the water: through the gap, and around the fence end. [pause 0.4s] A new panel closes one. The other stays open. [pause 0.6s] Extending the fence would close both, so that's the fix the manager chooses, before anyone pays.
 
 **NOTES:** This is the moment the video exists for. "Would close": the drawing is a proposal, and the screen says so; no frame may suggest the repair is built.
 
@@ -299,11 +299,11 @@ Pause marks such as `[pause 0.4s]` are silence of that length. Everything else i
 
 **ON SCREEN:** Deck 11, "10. Why Your Team Should Win". Push in on `team` as the team lines are spoken, then on `ask`; keep the demo and repository QR cards visible and hold through the last line. This is also the closing slide used in V14.
 
-**DELIVERY:** "So why us?" is the turn to the team: ask it plainly, the way a judge would. The answer is quiet confidence, not a brag, as MyTakziah's "This is not our first time shipping" was. Give "and a lawyer" its own small beat; it is the surprise. "Ultimately" then gathers everything into the ask: slow, clear and level, with slight stress on "named owner". Then a full beat of silence before the last sentence, as MyTakziah held before "the family should be allowed to grieve". Say it to one person, not to a room.
+**DELIVERY:** "So why us?" is the turn to the team: ask it plainly, the way a judge would. The answer is quiet confidence, not a brag, as MyTakziah's "This is not our first time shipping" was. Give "and law" its own small beat; it is the surprise. "Ultimately" then gathers everything into the ask: slow, clear and level, with slight stress on "named owner". Then a full beat of silence before the last sentence, as MyTakziah held before "the family should be allowed to grieve". Say it to one person, not to a room.
 
 **VOICEOVER:**
 
-> So why us? We're three computer science students and a lawyer. Between us, we've won Grand Champion with Layak and with MyTakziah, and every one of us has taken a project from zero to production, with real users. [pause 0.3s] Ultimately, our ask is an eight-week pilot on one retained drain in Elmina Central Park, with a named owner and a ten-thousand-ringgit ceiling. [pause 0.8s] A fence after a storm shouldn't depend on someone happening to walk past it.
+> So why us? We're three computer science and law students. Between us, we've won Grand Champion with Layak and with MyTakziah, and every one of us has taken a project from zero to production, with real users. [pause 0.3s] Ultimately, our ask is an eight-week pilot on one retained drain in Elmina Central Park, with a named owner and a ten-thousand-ringgit ceiling. [pause 0.8s] A fence after a storm shouldn't depend on someone happening to walk past it.
 
 **NOTES:** The team lines are the team's own account, confirmed on 22 Oct 2026: members of the team won Grand Champion with Layak and with MyTakziah, and all four have taken projects from zero to production. "Between us" claims the wins for the team as a whole, not for each member. "With real users" makes no user count; add a number only if it can be shown. RM10,000 is a ceiling we set, for one asset, before any drone; not a quote. The last line is about the fence and who checks it; it makes no claim about the children in V3 or what would have changed.
 
@@ -363,7 +363,7 @@ Each keeps every claim it makes.
 | V9      | So how would we know it works? Before the repair, we count every confirmed open route, then measure how many are still closed at day thirty. That measures the hazard, not drownings. And the park must stay usable.                                                            |
 | V10     | Better still, the software runs end to end, and the walk crew's phone can start now, with no aviation approval. We've capped the pilot at ten thousand ringgit. Drones come later, priced on top, after about two months of approvals.                                          |
 | V11     | Therefore, the pilot is small and strict: we test Fix Lens against today's repair method, and scale only if it holds.                                                                                                                                                           |
-| V13     | So why us? Three computer science students and a lawyer; two Grand Champion wins; every one of us has shipped to production. Ultimately, our ask: an eight-week pilot, a named owner, a ten-thousand-ringgit ceiling.                                                           |
+| V13     | So why us? Three computer science and law students; two Grand Champion wins; every one of us has shipped to production. Ultimately, our ask: an eight-week pilot, a named owner, a ten-thousand-ringgit ceiling.                                                                |
 
 ## Claim guardrails
 
@@ -422,7 +422,7 @@ Status: **External** is a published source, **Team** is our own statement, resea
 | A ten-thousand-ringgit cap, and half of it is the repair                                                                  | V10     | Team            | Deck 8 cost card; Supporting 4 lines 2 and 6 (RM5,000 of RM10,000; a ceiling we set, not a quote)                                         |
 | Drones later, priced on top; Elmina is inside Subang's control zone; about two months of approvals                        | V10     | Team / External | Deck 8 drone card; Supporting 5; [`PRODUCT.md`](/docs/PRODUCT.md#drone-integration-phases) (CAAM rules); the two months are our estimate  |
 | Test Fix Lens against today's repair method on the same evidence; say so if it isn't better; scale only if the gate holds | V11     | Team            | Deck 9 comparison step and gate; Deck 9 speaker note                                                                                      |
-| We're three computer science students and a lawyer                                                                        | V13     | Team            | Team-reported, 22 Oct 2026; Deck 1                                                                                                        |
+| We're three computer science and law students                                                                             | V13     | Team            | Team-reported, 22 Oct 2026; Deck 1                                                                                                        |
 | Between us, we've won Grand Champion with Layak and with MyTakziah                                                        | V13     | Team            | Team-reported, 22 Oct 2026; Deck 11                                                                                                       |
 | Every one of us has taken a project from zero to production, with real users                                              | V13     | Team            | Team-reported, 22 Oct 2026; no user count is claimed                                                                                      |
 | The ask: eight weeks, one retained drain in Elmina Central Park, a named owner, RM10,000                                  | V13     | Team            | Deck 9 headline and footnote; Deck 11 `ask` card; Supporting 4 line 6 (a ceiling we set, before any drone)                                |
@@ -431,7 +431,7 @@ Status: **External** is a published source, **Team** is our own statement, resea
 
 **Settled:**
 
-- **The team** is Team T010NG, said "Team Tolong": three computer science students, Hee Zi Jie, Lim Yuh Kang and Yow Li Hao (all Asia Pacific University), and a lawyer, Liau Jin Siang (University of Reading). Deck 1 shows all four.
+- **The team** is Team T010NG, said "Team Tolong": three computer science students, Hee Zi Jie, Lim Yuh Kang and Yow Li Hao (all Asia Pacific University), and a law graduate, Liau Jin Siang (University of Reading). Deck 1 shows all four.
 - **The stories in V3** open the problem: the girl in Bandar Mahkota Cheras, then the brothers in Kajang. Nobody is named in any cut.
 - **The team lines in V13** are the team's own account, as worded.
 - **Voices:** one narrator outside the demo; an ElevenLabs voice for the demo video.

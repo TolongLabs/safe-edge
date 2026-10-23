@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <title>Safe Edge project documentation</title>
+    <!-- scripts/render-documentation.ts fills #contents and #content, then prints this page to A4 PDF. -->
+    <style>
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('../../design/submission/fonts/AtkinsonHyperlegibleNext-400.ttf') format('truetype');
+        font-weight: 400;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('../../design/submission/fonts/AtkinsonHyperlegibleNext-500.ttf') format('truetype');
+        font-weight: 500;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('../../design/submission/fonts/AtkinsonHyperlegibleNext-600.ttf') format('truetype');
+        font-weight: 600;
+        font-display: block;
+      }
+      @font-face {
+        font-family: 'Atkinson Hyperlegible Next';
+        src: url('../../design/submission/fonts/AtkinsonHyperlegibleNext-700.ttf') format('truetype');
+        font-weight: 700;
+        font-display: block;
+      }
+
+      /* Tokens from docs/DESIGN.md, light mode only: the PDF prints on white. */
+      :root {
+        --ink: #1c2925;
+        --moss: #5d6b66;
+        --hair: #cfd6d2;
+        --field: #8e9994;
+        --sunken: #eef2ef;
+        --park: #17302a;
+        --f: 'Atkinson Hyperlegible Next', ui-sans-serif, system-ui, sans-serif;
+      }
+
+      @page {
+        size: A4;
+        margin: 20mm 20mm 22mm;
+        @bottom-left {
+          content: 'Safe Edge · Project documentation';
+          font: 500 9pt/1 var(--f);
+          color: var(--moss);
+        }
+        @bottom-right {
+          content: counter(page) ' / ' counter(pages);
+          font: 500 9pt/1 var(--f);
+          color: var(--moss);
+        }
+      }
+      @page :first {
+        margin: 0;
+        @bottom-left {
+          content: none;
+        }
+        @bottom-right {
+          content: none;
+        }
+      }
+
+      html,
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--ink);
+        font: 400 10pt/1.5 var(--f);
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      /* Cover */
+      .cover {
+        box-sizing: border-box;
+        width: 210mm;
+        height: 297mm;
+        padding: 26mm 22mm 22mm;
+        display: flex;
+        flex-direction: column;
+        break-after: page;
+      }
+      .cover .mark {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 12pt;
+      }
+      .cover .mark img {
+        width: 28px;
+        height: 28px;
+      }
+      .cover h1 {
+        margin: 28mm 0 0;
+        font: 700 44pt/1.02 var(--f);
+        letter-spacing: -0.02em;
+        color: var(--park);
+      }
+      .cover .kind {
+        margin: 6mm 0 0;
+        font: 600 18pt/1.2 var(--f);
+      }
+      .cover .claim {
+        margin: 8mm 0 0;
+        max-width: 140mm;
+        font: 400 13pt/1.45 var(--f);
+        color: var(--moss);
+      }
+      .cover .art {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .cover .art img {
+        max-width: 150mm;
+        max-height: 100%;
+        mix-blend-mode: multiply;
+      }
+      .cover dl {
+        display: grid;
+        grid-template-columns: 34mm 1fr;
+        gap: 2.5mm 6mm;
+        margin: 0;
+        padding-top: 6mm;
+        border-top: 1px solid var(--hair);
+        font-size: 9.5pt;
+      }
+      .cover dt {
+        color: var(--moss);
+        font-weight: 600;
+      }
+      .cover dd {
+        margin: 0;
+      }
+
+      /* Contents */
+      .contents {
+        break-after: page;
+      }
+      .contents h2 {
+        margin: 0 0 8mm;
+        font: 600 22pt/1.2 var(--f);
+        color: var(--park);
+      }
+      .contents ol {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .contents li {
+        display: flex;
+        align-items: baseline;
+        gap: 3mm;
+        padding: 2.6mm 0;
+        border-bottom: 1px solid var(--hair);
+        font-size: 11.5pt;
+      }
+      .contents li a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .contents li .dots {
+        flex: 1;
+      }
+      .contents li .pg {
+        color: var(--moss);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Chapters */
+      /* Chapters run on, so the document stays near 30 pages; the contents page links each one. */
+      .chapter + .chapter {
+        margin-top: 14mm;
+      }
+      h2 {
+        margin: 0 0 5mm;
+        font: 600 22pt/1.2 var(--f);
+        color: var(--park);
+        break-after: avoid;
+      }
+      h3 {
+        margin: 7mm 0 2mm;
+        font: 600 13.5pt/1.3 var(--f);
+        break-after: avoid;
+      }
+      h4 {
+        margin: 5mm 0 1.5mm;
+        font: 600 11pt/1.35 var(--f);
+        break-after: avoid;
+      }
+      p {
+        margin: 0 0 3mm;
+        orphans: 3;
+        widows: 3;
+      }
+      p.lede {
+        margin-bottom: 5mm;
+        font-size: 12.5pt;
+        line-height: 1.5;
+        color: var(--ink);
+      }
+      ul,
+      ol {
+        margin: 0 0 3.5mm;
+        padding-left: 6mm;
+      }
+      li {
+        margin: 0 0 1.2mm;
+      }
+      a {
+        color: var(--park);
+      }
+      strong {
+        font-weight: 600;
+      }
+      code {
+        font: 700 9.5pt/1 var(--f);
+        letter-spacing: 0.02em;
+        padding: 0.4mm 1.2mm;
+        border-radius: 3px;
+        background: var(--sunken);
+      }
+      sup.ref {
+        font-size: 7pt;
+        line-height: 0;
+      }
+      sup.ref a {
+        text-decoration: none;
+      }
+
+      table {
+        width: 100%;
+        margin: 2mm 0 5mm;
+        border-collapse: collapse;
+        font-size: 9.5pt;
+        line-height: 1.45;
+      }
+      caption {
+        break-after: avoid;
+        caption-side: top;
+        padding-bottom: 2mm;
+        text-align: left;
+        font-weight: 600;
+        font-size: 10pt;
+      }
+      th,
+      td {
+        padding: 2mm 2.5mm;
+        border-bottom: 1px solid var(--hair);
+        text-align: left;
+        vertical-align: top;
+      }
+      thead th {
+        background: var(--sunken);
+        font-weight: 600;
+        border-bottom-color: var(--field);
+      }
+      thead {
+        display: table-header-group;
+      }
+      tr {
+        break-inside: avoid;
+      }
+
+      blockquote {
+        margin: 4mm 0 5mm;
+        padding: 4mm 6mm;
+        border-radius: 8px;
+        background: var(--sunken);
+        break-inside: avoid;
+      }
+      blockquote p {
+        margin: 0;
+        font-size: 12pt;
+        font-weight: 500;
+      }
+      blockquote footer {
+        margin-top: 2mm;
+        color: var(--moss);
+        font-size: 9pt;
+      }
+      aside.note {
+        margin: 4mm 0 5mm;
+        padding: 4mm 6mm;
+        border: 1px solid var(--park);
+        border-radius: 8px;
+        background: #ffffff;
+        break-inside: avoid;
+      }
+      aside.note p:last-child {
+        margin: 0;
+      }
+
+      figure {
+        margin: 5mm 0 6mm;
+        break-inside: avoid;
+      }
+      figure img {
+        display: block;
+        max-width: 100%;
+        margin: 0 auto;
+      }
+      figure.diagram img {
+        max-height: 205mm;
+      }
+      figure.shot img {
+        max-height: 78mm;
+        border: 1px solid var(--hair);
+        border-radius: 8px;
+      }
+      figcaption {
+        margin-top: 2.5mm;
+        color: var(--moss);
+        font-size: 9pt;
+        text-align: center;
+      }
+
+      ol.refs {
+        padding-left: 7mm;
+        font-size: 9pt;
+        line-height: 1.45;
+      }
+      ol.refs li {
+        margin-bottom: 1.6mm;
+      }
+      ol.refs a {
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="cover">
+      <div class="mark"><img src="../deck/assets/mark.svg" alt="" /><span>Safe Edge</span></div>
+      <h1>Safe Edge</h1>
+      <p class="kind">Project documentation</p>
+      <p class="claim">
+        We help Sime Darby Property's park teams find, fix and prove the gaps at township water edges.
+      </p>
+      <div class="art"><img src="../deck/assets/art/cover.webp" alt="" /></div>
+      <dl>
+        <dt>Team</dt>
+        <dd>T010NG</dd>
+        <dt>Challenge</dt>
+        <dd>Sime Darby Property University Hackathon 2026 · Township of Tomorrow</dd>
+        <dt>Track</dt>
+        <dd>People · Safety and security</dd>
+        <dt>Live demo</dt>
+        <dd><a href="https://safe-edge-two.vercel.app">safe-edge-two.vercel.app</a></dd>
+        <dt>Source code</dt>
+        <dd><a href="https://github.com/TolongLabs/safe-edge">github.com/TolongLabs/safe-edge</a></dd>
+        <dt>Date</dt>
+        <dd>23 October 2026</dd>
+      </dl>
+    </section>
+
+    <nav class="contents">
+      <h2>Contents</h2>
+      <ol id="contents"></ol>
+    </nav>
+
+    <main id="content"></main>
+  </body>
+</html>

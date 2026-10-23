@@ -1,0 +1,241 @@
+{
+  "schema_version": 2,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Edge Pass lifecycle",
+    "output": "docs/demo/documentation/diagrams/edge-pass-lifecycle/edge-pass-lifecycle.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/TolongLabs/safe-edge.git",
+      "revision": "b35b782e2ca6634a39cd3cfae1830109bc8bfc32",
+      "provider": "github"
+    }
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "Pass validity"
+    },
+    {
+      "id": "suspension",
+      "label": "Safety suspension"
+    }
+  ],
+  "states": [
+    {
+      "id": "none",
+      "type": "start",
+      "label": "None",
+      "sublabel": "pass never issued",
+      "lane": "main",
+      "col": 0,
+      "tag": "unissued",
+      "step": "01",
+      "sources": [
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 155,
+          "end_line": 161,
+          "label": "PASS_MOVES definition"
+        },
+        {
+          "path": "packages/core/src/core.ts",
+          "line": 224,
+          "end_line": 224,
+          "label": "Initial unissued pass on segment"
+        },
+        {
+          "path": "packages/contracts/src/entities.ts",
+          "line": 832,
+          "end_line": 833,
+          "label": "PassState schema"
+        }
+      ]
+    },
+    {
+      "id": "valid",
+      "type": "success",
+      "label": "Valid",
+      "sublabel": "up to 12 months",
+      "lane": "main",
+      "col": 1,
+      "tag": "active",
+      "step": "02",
+      "sources": [
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 174,
+          "end_line": 186,
+          "label": "oneWayRule reviewer check"
+        },
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 188,
+          "end_line": 217,
+          "label": "movePass to valid"
+        },
+        {
+          "path": "packages/core/src/handlers/work.ts",
+          "line": 38,
+          "end_line": 66,
+          "label": "restorePass issuance"
+        }
+      ]
+    },
+    {
+      "id": "expiring",
+      "type": "waiting",
+      "label": "Expiring",
+      "sublabel": "30-day renewal window",
+      "lane": "main",
+      "col": 2,
+      "tag": "pending",
+      "step": "03",
+      "sources": [
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 164,
+          "end_line": 165,
+          "label": "EXPIRING_WINDOW_DAYS"
+        },
+        {
+          "path": "packages/core/src/core.ts",
+          "line": 200,
+          "end_line": 206,
+          "label": "tick moves valid to expiring"
+        }
+      ]
+    },
+    {
+      "id": "expired",
+      "type": "failure",
+      "label": "Expired",
+      "sublabel": "validity date passed",
+      "lane": "main",
+      "col": 3,
+      "tag": "lapsed",
+      "step": "04",
+      "sources": [
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 155,
+          "end_line": 161,
+          "label": "PASS_MOVES expired state"
+        },
+        {
+          "path": "packages/core/src/core.ts",
+          "line": 207,
+          "end_line": 215,
+          "label": "tick moves expiring to expired"
+        }
+      ]
+    },
+    {
+      "id": "suspended",
+      "type": "failure",
+      "label": "Suspended",
+      "sublabel": "open safety suspicion",
+      "lane": "suspension",
+      "col": 1,
+      "tag": "hold",
+      "sources": [
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 224,
+          "end_line": 233,
+          "label": "openSuspicions holding pass"
+        },
+        {
+          "path": "packages/core/src/handlers/inbox.ts",
+          "line": 76,
+          "end_line": 85,
+          "label": "Tier 2 candidate suspends"
+        },
+        {
+          "path": "packages/core/src/handlers/inbox.ts",
+          "line": 276,
+          "end_line": 305,
+          "label": "Missed patrol suspends"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "none",
+      "to": "valid",
+      "label": "accepted re-test",
+      "variant": "emphasis"
+    },
+    {
+      "from": "valid",
+      "to": "expiring",
+      "label": "within 30 days of validTo"
+    },
+    {
+      "from": "expiring",
+      "to": "expired",
+      "label": "validTo reached",
+      "variant": "dashed"
+    },
+    {
+      "from": "valid",
+      "to": "suspended",
+      "label": "Tier 2 flag, damage report or missed patrol",
+      "variant": "security"
+    },
+    {
+      "from": "expiring",
+      "to": "suspended",
+      "label": "missed patrol or Tier 2 flag",
+      "variant": "security"
+    },
+    {
+      "from": "suspended",
+      "to": "valid",
+      "label": "accepted re-test",
+      "variant": "emphasis"
+    },
+    {
+      "from": "expiring",
+      "to": "valid",
+      "label": "accepted re-test",
+      "variant": "emphasis"
+    },
+    {
+      "from": "expired",
+      "to": "valid",
+      "label": "accepted re-test",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "The one-way rule",
+      "items": [
+        "Only a reviewer with an accepted re-test can make an edge pass valid",
+        "System, agent and provider actors can only expire or suspend a pass",
+        "Every valid pass is scoped to checked routes and issued for at most 12 months"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Suspicion suspends",
+      "items": [
+        "A Tier 2 candidate, damage report, or missed patrol suspends a pass immediately",
+        "Suspension is executed by core in the same transaction as the trigger",
+        "A suspended pass records what holds it until all open suspicions are resolved"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Time and renewal",
+      "items": [
+        "Core tick moves a valid pass to expiring 30 days before its expiry date",
+        "A pass expires when validTo is reached without an accepted renewal re-test",
+        "An expired pass remains restorable only through an accepted reviewer re-test"
+      ]
+    }
+  ]
+}

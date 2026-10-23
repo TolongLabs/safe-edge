@@ -1,0 +1,394 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Roles across one repair: from drone patrol to independent proof",
+    "output": "docs/demo/documentation/diagrams/roles-sequence/roles-sequence.html",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "repository": {
+      "url": "https://github.com/TolongLabs/safe-edge.git",
+      "revision": "b35b782e2ca6634a39cd3cfae1830109bc8bfc32",
+      "provider": "github"
+    },
+    "viewBox": [
+      1080,
+      690
+    ]
+  },
+  "participants": [
+    {
+      "id": "patrol",
+      "type": "external",
+      "label": "Patrol or drone",
+      "sublabel": "pilot or walk crew",
+      "sources": [
+        {
+          "path": "packages/contracts/src/operations.ts",
+          "line": 334,
+          "end_line": 344,
+          "label": "recordObservation operation"
+        },
+        {
+          "path": "packages/core/src/handlers/inbox.ts",
+          "line": 188,
+          "end_line": 208,
+          "label": "reportDamage handler"
+        }
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "Safe Edge core",
+      "sublabel": "domain rules engine",
+      "sources": [
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 32,
+          "end_line": 44,
+          "label": "authorize access rules"
+        },
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 72,
+          "end_line": 76,
+          "label": "tierFor flag classification"
+        },
+        {
+          "path": "packages/core/src/handlers/work.ts",
+          "line": 375,
+          "end_line": 448,
+          "label": "recordRetest and restorePass"
+        }
+      ]
+    },
+    {
+      "id": "manager",
+      "type": "frontend",
+      "label": "Park manager",
+      "sublabel": "Farah Hashim",
+      "sources": [
+        {
+          "path": "packages/core/src/handlers/inbox.ts",
+          "line": 307,
+          "end_line": 324,
+          "label": "decideCandidate handler"
+        },
+        {
+          "path": "packages/core/src/handlers/notices.ts",
+          "line": 26,
+          "end_line": 40,
+          "label": "sendNotice handler"
+        }
+      ]
+    },
+    {
+      "id": "engineer",
+      "type": "security",
+      "label": "Engineer",
+      "sublabel": "Lim Wei Jie",
+      "sources": [
+        {
+          "path": "packages/core/src/handlers/fix-lens.ts",
+          "line": 86,
+          "end_line": 99,
+          "label": "approveRemedy handler"
+        },
+        {
+          "path": "packages/core/src/handlers/work.ts",
+          "line": 177,
+          "end_line": 203,
+          "label": "submitWorkOrder handler"
+        }
+      ]
+    },
+    {
+      "id": "gm",
+      "type": "security",
+      "label": "Township GM",
+      "sublabel": "Rosli Ahmad",
+      "sources": [
+        {
+          "path": "packages/core/src/handlers/notices.ts",
+          "line": 13,
+          "end_line": 15,
+          "label": "notices recipient policy"
+        },
+        {
+          "path": "docs/PRODUCT.md",
+          "line": 72,
+          "end_line": 72,
+          "label": "budget holder funds remedy"
+        }
+      ]
+    },
+    {
+      "id": "installer",
+      "type": "external",
+      "label": "Installer",
+      "sublabel": "Hafiz Rahman",
+      "sources": [
+        {
+          "path": "packages/core/src/handlers/work.ts",
+          "line": 221,
+          "end_line": 233,
+          "label": "startWorkOrder handler"
+        },
+        {
+          "path": "packages/core/src/handlers/work.ts",
+          "line": 319,
+          "end_line": 373,
+          "label": "completeWorkOrder handler"
+        }
+      ]
+    },
+    {
+      "id": "reviewer",
+      "type": "security",
+      "label": "Reviewer",
+      "sublabel": "Priya Nair",
+      "sources": [
+        {
+          "path": "packages/core/src/handlers/work.ts",
+          "line": 386,
+          "end_line": 396,
+          "label": "two-person rule enforcement"
+        },
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 174,
+          "end_line": 186,
+          "label": "one-way rule enforcement"
+        }
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "AI agent",
+      "sublabel": "Claude tools",
+      "sources": [
+        {
+          "path": "packages/contracts/src/actors.ts",
+          "line": 30,
+          "end_line": 38,
+          "label": "agent scopes definition"
+        },
+        {
+          "path": "packages/core/src/policy.ts",
+          "line": 33,
+          "end_line": 36,
+          "label": "agents_draft_only rule"
+        }
+      ]
+    }
+  ],
+  "messages": [
+    {
+      "id": "patrol-observation",
+      "from": "patrol",
+      "to": "core",
+      "y": 165,
+      "label": "POST /observations (flag damaged fence panel)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "core-suspend-pass",
+      "from": "core",
+      "to": "manager",
+      "y": 194,
+      "label": "Alert: Tier 2 candidate raised, pass suspended",
+      "variant": "security"
+    },
+    {
+      "id": "manager-confirm",
+      "from": "manager",
+      "to": "core",
+      "y": 223,
+      "label": "POST /candidates/{id}/decision (confirm finding)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "agent-draft-wo",
+      "from": "agent",
+      "to": "core",
+      "y": 252,
+      "label": "POST /work-orders (propose draft work order)",
+      "variant": "dashed"
+    },
+    {
+      "id": "agent-attempt-submit",
+      "from": "agent",
+      "to": "core",
+      "y": 281,
+      "label": "POST /work-orders/{id}/submit (attempt approval)",
+      "variant": "security"
+    },
+    {
+      "id": "core-deny-agent",
+      "from": "core",
+      "to": "agent",
+      "y": 310,
+      "label": "Deny: agents_draft_only (agents draft only, submit needs a person)",
+      "variant": "return"
+    },
+    {
+      "id": "engineer-approve-remedy",
+      "from": "engineer",
+      "to": "core",
+      "y": 339,
+      "label": "POST /remedies/{id}/approve (approve physical barrier)",
+      "variant": "security"
+    },
+    {
+      "id": "core-escalate-gm",
+      "from": "core",
+      "to": "gm",
+      "y": 368,
+      "label": "POST /notices/{id}/send (deliver escalation and repair quote)",
+      "variant": "default"
+    },
+    {
+      "id": "gm-fund-repair",
+      "from": "gm",
+      "to": "core",
+      "y": 397,
+      "label": "Authorise remedy funding and budget release",
+      "variant": "emphasis"
+    },
+    {
+      "id": "manager-submit-wo",
+      "from": "manager",
+      "to": "core",
+      "y": 426,
+      "label": "POST /work-orders/{id}/submit (assign installer)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "installer-complete-work",
+      "from": "installer",
+      "to": "core",
+      "y": 455,
+      "label": "POST /work-orders/{id}/complete (upload physical evidence)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "installer-attempt-retest",
+      "from": "installer",
+      "to": "core",
+      "y": 484,
+      "label": "POST /retests (installer attempts self re-test)",
+      "variant": "security"
+    },
+    {
+      "id": "core-deny-installer",
+      "from": "core",
+      "to": "installer",
+      "y": 513,
+      "label": "Deny: two_person_rule (installer cannot re-test own work)",
+      "variant": "return"
+    },
+    {
+      "id": "reviewer-submit-retest",
+      "from": "reviewer",
+      "to": "core",
+      "y": 542,
+      "label": "POST /retests (independent reviewer submits accepted re-test)",
+      "variant": "security"
+    },
+    {
+      "id": "core-issue-pass",
+      "from": "core",
+      "to": "reviewer",
+      "y": 571,
+      "label": "Pass valid again, up to 12 months (edge.pass.issued.v1)",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "patrol",
+      "from": 155,
+      "to": 175,
+      "type": "external"
+    },
+    {
+      "participant": "core",
+      "from": 160,
+      "to": 578,
+      "type": "backend"
+    },
+    {
+      "participant": "manager",
+      "from": 190,
+      "to": 232,
+      "type": "frontend"
+    },
+    {
+      "participant": "agent",
+      "from": 245,
+      "to": 318,
+      "type": "backend"
+    },
+    {
+      "participant": "engineer",
+      "from": 332,
+      "to": 348,
+      "type": "security"
+    },
+    {
+      "participant": "gm",
+      "from": 362,
+      "to": 404,
+      "type": "security"
+    },
+    {
+      "participant": "manager",
+      "from": 420,
+      "to": 434,
+      "type": "frontend"
+    },
+    {
+      "participant": "installer",
+      "from": 450,
+      "to": 520,
+      "type": "external"
+    },
+    {
+      "participant": "reviewer",
+      "from": 535,
+      "to": 578,
+      "type": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Core governance rules",
+      "items": [
+        "Only named people can confirm findings, submit work orders, or approve remedies",
+        "AI agents read, propose, and draft paperwork but cannot execute approvals",
+        "Independent reviewers verify completed physical repairs on site before pass restoration"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Enforced policy refusals",
+      "items": [
+        "agents_draft_only blocks non-human tokens from approving or submitting operations",
+        "two_person_rule prohibits the installer or finding creator from re-testing work",
+        "one_way_rule ensures only a designated reviewer with an accepted test restores a pass"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Township accountability chain",
+      "items": [
+        "Drones and walk patrols feed identical fixed viewpoints into the Edge Inbox",
+        "The park manager triages flags while the drainage engineer approves remedies",
+        "The township general manager releases funding and tracks overdue repairs"
+      ]
+    }
+  ]
+}

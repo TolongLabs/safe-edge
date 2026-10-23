@@ -5,3 +5,6 @@ packages/contracts/generated/
 data/**/*.geojson
 apps/api/test/fixtures/claude/
 docs/demo/example-pitch-deck.html
+
+# Archify output and its source carry content hashes; formatting either breaks the provenance check.
+docs/demo/documentation/diagrams/
